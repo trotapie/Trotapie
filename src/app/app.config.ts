@@ -84,7 +84,7 @@ export const appConfig: ApplicationConfig = {
                 service: MockApiService,
             },
             fuse: {
-                layout: 'classy',
+                layout: 'material',
                 scheme: 'light',
                 screens: {
                     sm: '600px',
@@ -92,7 +92,7 @@ export const appConfig: ApplicationConfig = {
                     lg: '1280px',
                     xl: '1440px',
                 },
-                theme: 'theme-default',
+                theme: 'theme-teal',
                 themes: [
                     {
                         id: 'theme-default',
