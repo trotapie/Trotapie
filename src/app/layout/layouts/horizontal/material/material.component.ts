@@ -24,7 +24,7 @@ import { Subject, takeUntil } from 'rxjs';
         MatButtonModule,
         MatIconModule,
         // FuseFullscreenComponent,
-        FuseHorizontalNavigationComponent,
+        //FuseHorizontalNavigationComponent,
         RouterOutlet,
     ],
 })

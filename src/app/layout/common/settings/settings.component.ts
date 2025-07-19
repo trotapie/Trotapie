@@ -37,9 +37,9 @@ import { Subject, takeUntil } from 'rxjs';
     encapsulation: ViewEncapsulation.None,
     imports: [
         MatIconModule,
-        FuseDrawerComponent,
+        //FuseDrawerComponent,
         MatButtonModule,
-        NgClass,
+        //NgClass,
         MatTooltipModule,
     ],
 })

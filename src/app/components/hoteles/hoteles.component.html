@@ -1,0 +1,21 @@
+<div class="flex min-w-0 flex-auto flex-col">
+
+    <!-- Main -->
+    <div class="flex-auto p-6 sm:p-10">
+        <form [formGroup]="hotelesForm">
+            <div class="flex flex-col space-y-2">
+                <div class="flex items-center space-x-4">
+                    <mat-button-toggle-group formControlName="hotelSeleccionado" class="inline-flex gap-2">
+                        <mat-button-toggle *ngFor="let item of listaHoteles" [value]="item.nombrePadron"
+                            class=" text-center flex items-center justify-center">
+                            <span>
+                                {{ item.ciudad }}
+                            </span>
+                        </mat-button-toggle>
+                    </mat-button-toggle-group>
+                </div>
+            </div>
+        </form>
+        <!-- Cards  -->
+    </div>
+</div>
