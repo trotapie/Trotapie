@@ -39,6 +39,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatBottomSheetModule } from '@angular/material/bottom-sheet';
 import { NgApexchartsModule } from 'ng-apexcharts';
+import { HttpClientJsonpModule } from '@angular/common/http';
 @NgModule({
   imports: [
     MatButtonModule,
@@ -99,6 +100,7 @@ import { NgApexchartsModule } from 'ng-apexcharts';
     MatStepper,
     NgApexchartsModule,
     NgSwitch, 
+    HttpClientJsonpModule
   ],
   exports: [
     MatButtonModule,
@@ -157,7 +159,8 @@ import { NgApexchartsModule } from 'ng-apexcharts';
     MatError,
     MatDialogModule,
     NgApexchartsModule,
-    NgSwitch 
+    NgSwitch,
+    HttpClientJsonpModule
   ]
 })
 export class MaterialModule {}

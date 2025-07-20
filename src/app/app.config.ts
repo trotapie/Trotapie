@@ -1,4 +1,4 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors, withJsonpSupport } from '@angular/common/http';
 import {
     ApplicationConfig,
     inject,
@@ -17,11 +17,18 @@ import { provideIcons } from 'app/core/icons/icons.provider';
 import { MockApiService } from 'app/mock-api';
 import { firstValueFrom } from 'rxjs';
 import { TranslocoHttpLoader } from './core/transloco/transloco.http-loader';
+import { mockApiInterceptor } from '@fuse/lib/mock-api';
 
 export const appConfig: ApplicationConfig = {
     providers: [
         provideAnimations(),
-        provideHttpClient(),
+        provideHttpClient(
+            withJsonpSupport(),
+            withInterceptors([
+                mockApiInterceptor,
+                // fuseLoadingInterceptor,
+            ])
+        ),
         provideRouter(
             appRoutes,
             withInMemoryScrolling({ scrollPositionRestoration: 'enabled' })
