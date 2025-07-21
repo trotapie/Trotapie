@@ -38,21 +38,30 @@ export class HotelesComponent {
         //         error: err => console.error('Error JSONP:', err)
         //     });
 
-
+        const ciudad = sessionStorage.getItem('ciudad');     
         console.log(HOTELES_DATA);
         this.listaHoteles = HOTELES_DATA;
         this.hotelesForm = this.formBuilder.group({
             hotelSeleccionado: ['']
         });
+
+        if (ciudad) {
+        const destino = this.listaHoteles.find(item => item.ciudad === ciudad);
+        if (destino) {
+            this.hotelesForm.patchValue({ hotelSeleccionado: ciudad });
+            this.destinoSeleccionado(destino);
+        }
+    }
     }
 
     destinoSeleccionado(event) {
         this.ciudadSeleccionada = true;
         this.hotelesPorCiudad = event.hoteles;
+        sessionStorage.setItem('ciudad', event.ciudad)
     }
 
     verDetalleHotel(hotel: any): void {
-        sessionStorage.setItem('hotel',JSON.stringify(hotel))
+        sessionStorage.setItem('hotel', JSON.stringify(hotel))
         this.router.navigate(['/hoteles/detalle-hotel', hotel.id], {
             state: { hotel }
         });

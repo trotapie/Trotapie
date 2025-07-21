@@ -1,33 +1,35 @@
-<div class="flex min-w-0 flex-auto flex-col m-6">
-    <fuse-card class="filter-article flex w-full flex-col p-8">
-        <div>
-            <div class="grid grid-cols-2">
-                <div class="text-3xl font-semibold italic leading-tight">
-                    {{hotel.nombre}}
+<div class="absolute inset-0 flex flex-col min-w-0 overflow-y-auto" cdkScrollable>
+    <div class="flex min-w-0 flex-auto flex-col m-6">
+        <fuse-card class="filter-article flex w-full flex-col p-8">
+            <div>
+                <div class="grid grid-cols-2">
+                    <div class="text-3xl font-semibold italic leading-tight">
+                        {{hotel.nombre}}
+                    </div>
+                    <div class="flex justify-end mt-4 mb-2">
+                        <button mat-flat-button color="warn" class="mr-2" (click)="regresar()">
+                            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
+                            Regresar
+                        </button>
+                    </div>
+    
                 </div>
-                <div class="flex justify-end mt-4 mb-2">
-                    <button mat-flat-button color="warn" class="mr-2" (click)="regresar()">
-                        <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
-                        Regresar
-                    </button>
+                <div class="mt-4 text-base leading-relaxed">
+                    <p class="mb-4">{{ descripcionParrafo }}</p>
+                    <ul class="list-none space-y-2">
+                        <li *ngFor="let punto of descripcionLista">{{ punto }}</li>
+                    </ul>
                 </div>
-
             </div>
-            <div class="mt-4 text-base leading-relaxed">
-                <p class="mb-4">{{ descripcionParrafo }}</p>
-                <ul class="list-none space-y-2">
-                    <li *ngFor="let punto of descripcionLista">{{ punto }}</li>
-                </ul>
+            <div class="mt-10">
+                <div class="text-2xl font-semibold italic leading-tight">
+                    Galeria
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-2">
+                    <div *ngFor="let imagen of hotel.imagenes" class="w-full h-40 bg-cover bg-center rounded-xl shadow-md"
+                        [ngStyle]="{ 'background-image': 'url(' + imagen + ')' }"></div>
+                </div>
             </div>
-        </div>
-        <div class="mt-10">
-            <div class="text-2xl font-semibold italic leading-tight">
-                Galeria
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-2">
-                <div *ngFor="let imagen of hotel.imagenes" class="w-full h-40 bg-cover bg-center rounded-xl shadow-md"
-                    [ngStyle]="{ 'background-image': 'url(' + imagen + ')' }"></div>
-            </div>
-        </div>
-    </fuse-card>
+        </fuse-card>
+    </div>
 </div>
