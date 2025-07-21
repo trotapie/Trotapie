@@ -28,51 +28,18 @@
         </form>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 p-4">
+            <div *ngIf="hotelesPorCiudad.length === 0 && ciudadSeleccionada" class="text-center text-red-500/80 text-lg mt-8">
+                No hay hoteles disponibles para esta ciudad.
+            </div>
             <div *ngFor="let hotel of hotelesPorCiudad">
-                <!-- <fuse-card class="filter-listing flex w-full max-w-80 flex-col bg-cover bg-center text-white"
-                    [ngStyle]="{ 'background-image': 'url(' + (hotel.fondo || fallback) + ')' }">
-                    <div class="m-8 mb-4">
-                        <div class="text-2xl font-semibold leading-tight">
-                            {{hotel.nombre}}
-                        </div>
-                        <div class="-ml-1 mt-2 flex items-center leading-none">
-                            <div class="flex items-center">
-                                <mat-icon class="text-orange-500 icon-size-5" [svgIcon]="'mat_outline:star'"></mat-icon>
-                                <mat-icon class="text-orange-500 icon-size-5" [svgIcon]="'mat_outline:star'"></mat-icon>
-                                <mat-icon class="text-orange-500 icon-size-5" [svgIcon]="'mat_outline:star'"></mat-icon>
-                                <mat-icon class="text-orange-500 icon-size-5" [svgIcon]="'mat_outline:star'"></mat-icon>
-                                <mat-icon class="text-orange-500 icon-size-5"
-                                    [svgIcon]="'mat_outline:star_half'"></mat-icon>
-                            </div>
-                            <div class="text-secondary ml-2">4.5</div>
-                            <div class="text-secondary mx-2">&bull;</div>
-                            <div class="text-secondary">98 reviews</div>
-                        </div>
-                        <div class="mt-6">
-                        Puzzles coffee shop is one of the finest coffee shops in
-                            central downtown in New York. It's quiet; far away from
-                            busy streets and never ending constructions.
-                        </div>
-                        <div class="-mx-3 mt-3 flex items-center">
-                            <a class="mr-1 px-3" mat-button [color]="'primary'" [routerLink]="['./']">
-                                Ubicacion
-                            </a>
-                            <a class="px-3" mat-button [color]="'primary'" [routerLink]="['./']">
-                                Galeria
-                            </a>
-                        </div>
-                    </div>
-                </fuse-card> -->
-                <!-- <a [routerLink]="['/detalle-hotel', hotel.id]" class="block"> -->
+
                 <fuse-card
-                    class="cursor-pointer filter-listing relative flex w-full max-w-80 flex-col bg-cover bg-center text-white rounded-2xl overflow-hidden transition duration-200 hover:scale-105 hover:ring-2 hover:ring-white"
+                    class="cursor-pointer filter-listing relative flex w-full flex-col bg-cover bg-center text-white rounded-2xl overflow-hidden transition duration-200 hover:scale-105 card-animada"
                     [ngStyle]="{ 'background-image': 'url(' + (hotel.fondo || fallback) + ')' }"
                     (click)="verDetalleHotel(hotel)">
 
-                    <!-- Capa de opacidad -->
                     <div class="absolute inset-0 bg-black/40 z-0"></div>
 
-                    <!-- Contenido -->
                     <div class="relative z-10 m-8 mb-4">
                         <div class="text-2xl font-semibold leading-tight">{{ hotel.nombre }}</div>
 
@@ -86,8 +53,6 @@
                                     [svgIcon]="'mat_outline:star_half'"></mat-icon>
                             </div>
                             <div class="ml-2">4.5</div>
-                            <div class="mx-2">&bull;</div>
-                            <div>98 reviews</div>
                         </div>
                     </div>
                 </fuse-card>

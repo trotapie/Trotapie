@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Component, inject, ViewEncapsulation } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { HOTELES_DATA } from 'assets/data/hoteles';
-import { IHoteles } from './hoteles.interface';
+import { Hotel, IHoteles } from './hoteles.interface';
 import { MaterialModule } from 'app/shared/material.module';
 import { JsonpClientBackend, HttpClientJsonpModule } from '@angular/common/http';
 
@@ -22,7 +22,8 @@ export class HotelesComponent {
 
     hotelesForm: FormGroup;
     listaHoteles: IHoteles[];
-    hotelesPorCiudad: any;
+    hotelesPorCiudad: Hotel[] = [];
+    ciudadSeleccionada:boolean;
     constructor(private http: HttpClient) {
     }
 
@@ -43,9 +44,10 @@ export class HotelesComponent {
     }
 
     destinoSeleccionado(event) {
+        this.ciudadSeleccionada= true;
         console.log(event);
         this.hotelesPorCiudad = event.hoteles;
-        console.log(this.hotelesPorCiudad);
+        console.log(this.hotelesPorCiudad.length);
 
     }
 
