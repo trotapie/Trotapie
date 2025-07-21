@@ -5,6 +5,8 @@ import { HOTELES_DATA } from 'assets/data/hoteles';
 import { Hotel, IHoteles } from './hoteles.interface';
 import { MaterialModule } from 'app/shared/material.module';
 import { JsonpClientBackend, HttpClientJsonpModule } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { stringify } from 'crypto-js/enc-base64';
 
 @Component({
     selector: 'hoteles',
@@ -15,6 +17,7 @@ import { JsonpClientBackend, HttpClientJsonpModule } from '@angular/common/http'
 })
 export class HotelesComponent {
     private formBuilder = inject(FormBuilder);
+    private router = inject(Router);
 
     /**
      * Constructor
@@ -23,7 +26,7 @@ export class HotelesComponent {
     hotelesForm: FormGroup;
     listaHoteles: IHoteles[];
     hotelesPorCiudad: Hotel[] = [];
-    ciudadSeleccionada:boolean;
+    ciudadSeleccionada: boolean;
     constructor(private http: HttpClient) {
     }
 
@@ -44,18 +47,14 @@ export class HotelesComponent {
     }
 
     destinoSeleccionado(event) {
-        this.ciudadSeleccionada= true;
-        console.log(event);
+        this.ciudadSeleccionada = true;
         this.hotelesPorCiudad = event.hoteles;
-        console.log(this.hotelesPorCiudad.length);
-
     }
 
-verDetalleHotel(hotel: any): void {
-    console.log(hotel);
-    
-//   this.router.navigate(['/detalle-hotel', hotel.id], {
-//     state: { hotel } // <-- Aquí mandas toda la info
-//   });
-}
+    verDetalleHotel(hotel: any): void {
+        sessionStorage.setItem('hotel',JSON.stringify(hotel))
+        this.router.navigate(['/hoteles/detalle-hotel', hotel.id], {
+            state: { hotel }
+        });
+    }
 }

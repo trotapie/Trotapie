@@ -4,11 +4,13 @@
     <div class="flex-auto p-3 sm:p-5">
         <form [formGroup]="hotelesForm">
             <div class="flex flex-wrap gap-2">
+                <h1 class="text-2xl font-bold italic w-full">Seleccione un destino</h1>
+
                 <mat-button-toggle-group formControlName="hotelSeleccionado" class="flex flex-wrap w-full gap-2">
                     <mat-button-toggle *ngFor="let item of listaHoteles" [value]="item.nombrePadron"
                         (change)="destinoSeleccionado(item)" class="text-center flex items-center justify-center
-                   flex-grow-0 flex-shrink-0 
-                   w-[calc(100%/2-0.5rem)] md:w-auto">
+               flex-grow-0 flex-shrink-0 
+               w-[calc(100%/2-0.5rem)] md:w-auto">
                         <span class="text-md text-center">
                             {{ item.ciudad }}
                         </span>
@@ -18,7 +20,8 @@
         </form>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 p-6">
-            <div *ngIf="hotelesPorCiudad.length === 0 && ciudadSeleccionada" class="text-center text-red-500/80 text-lg mt-8">
+            <div *ngIf="hotelesPorCiudad.length === 0 && ciudadSeleccionada"
+                class="text-center text-red-500/80 text-lg mt-8">
                 No hay hoteles disponibles para esta ciudad.
             </div>
             <div *ngFor="let hotel of hotelesPorCiudad">
