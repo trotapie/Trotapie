@@ -30,18 +30,20 @@ export class DetalleHotelComponent {
     get edadesNinos() {
         return this.reservacionForm.get('edadesNinos') as FormArray;
     }
-
     constructor() {
         const nav = this.router.getCurrentNavigation();
         this.hotel = nav?.extras.state?.hotel;
+    }
+
+    ngOnInit() {
+        this.hotel = JSON.parse(sessionStorage.getItem('hotel'))
+        console.log(this.hotel.descripcion);
         const partes = this.hotel.descripcion.split('\n');
         this.descripcionParrafo = partes[0];
         this.descripcionLista = partes.slice(1);
         this.cargarImagenesConDelay();
     }
 
-    ngOnInit() {
-            }
 
     async cargarImagenesConDelay() {
         this.imagenes = [];

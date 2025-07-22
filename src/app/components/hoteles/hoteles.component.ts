@@ -39,7 +39,6 @@ export class HotelesComponent {
         //     });
 
         const ciudad = sessionStorage.getItem('ciudad');     
-        console.log(HOTELES_DATA);
         this.listaHoteles = HOTELES_DATA;
         this.hotelesForm = this.formBuilder.group({
             hotelSeleccionado: ['']
@@ -61,6 +60,7 @@ export class HotelesComponent {
     }
 
     verDetalleHotel(hotel: any): void {
+        sessionStorage.setItem('hotel', JSON.stringify(hotel))
         this.router.navigate(['/hoteles/detalle-hotel', hotel.id], {
             state: { hotel }
         });
