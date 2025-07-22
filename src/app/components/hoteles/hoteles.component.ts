@@ -61,7 +61,6 @@ export class HotelesComponent {
     }
 
     verDetalleHotel(hotel: any): void {
-        sessionStorage.setItem('hotel', JSON.stringify(hotel))
         this.router.navigate(['/hoteles/detalle-hotel', hotel.id], {
             state: { hotel }
         });
