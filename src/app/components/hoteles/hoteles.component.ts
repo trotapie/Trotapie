@@ -7,6 +7,9 @@ import { MaterialModule } from 'app/shared/material.module';
 import { JsonpClientBackend, HttpClientJsonpModule } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { stringify } from 'crypto-js/enc-base64';
+import { Observable } from 'rxjs';
+import { DatosService } from './hoteles.service';
+import { FuseSplashScreenService } from '@fuse/services/splash-screen';
 
 @Component({
     selector: 'hoteles',
@@ -18,6 +21,8 @@ import { stringify } from 'crypto-js/enc-base64';
 export class HotelesComponent {
     private formBuilder = inject(FormBuilder);
     private router = inject(Router);
+    private datosService = inject(DatosService);
+    private splashScreen = inject(FuseSplashScreenService)
 
     /**
      * Constructor
@@ -27,30 +32,50 @@ export class HotelesComponent {
     listaHoteles: IHoteles[];
     hotelesPorCiudad: Hotel[] = [];
     ciudadSeleccionada: boolean;
-    constructor(private http: HttpClient) {
+    cargando = false;
+
+    rating = 0.5;
+    constructor() {
     }
 
     ngOnInit() {
-        //TODO: Hacer que funcione la consulta
-        // this.http.jsonp('https://script.google.com/macros/s/AKfycbyhBAdrLnNLcvH93749J9OQMEMQlhlqCSTz9qcOZJ-DV48FFCmml8GSqFZOxYGBXEH7Ag/exec', 'callback')
-        //     .subscribe({
-        //         next: data => console.log('Datos:', data),
-        //         error: err => console.error('Error JSONP:', err)
-        //     });
-
-        const ciudad = sessionStorage.getItem('ciudad');     
-        this.listaHoteles = HOTELES_DATA;
+        this.splashScreen.show();
+        this.listaHoteles = JSON.parse(sessionStorage.getItem('hoteles'));
         this.hotelesForm = this.formBuilder.group({
             hotelSeleccionado: ['']
         });
-
-        if (ciudad) {
-        const destino = this.listaHoteles.find(item => item.ciudad === ciudad);
-        if (destino) {
-            this.hotelesForm.patchValue({ hotelSeleccionado: ciudad });
-            this.destinoSeleccionado(destino);
+        if (this.listaHoteles !== null) {
+            this.splashScreen.hide();
+            const ciudad = sessionStorage.getItem('ciudad');
+            if (ciudad) {
+                const destino = this.listaHoteles.find(item => item.ciudad === ciudad);
+                if (destino) {
+                    this.hotelesForm.patchValue({ hotelSeleccionado: ciudad });
+                    this.destinoSeleccionado(destino);
+                }
+            }
+        } else {
+            this.datosService.obtenerJson().subscribe({
+                next: (data) => {
+                    sessionStorage.setItem('hoteles', JSON.stringify(data))
+                    const ciudad = sessionStorage.getItem('ciudad');
+                    this.listaHoteles = data;
+                    if (ciudad) {
+                        const destino = this.listaHoteles.find(item => item.ciudad === ciudad);
+                        if (destino) {
+                            this.hotelesForm.patchValue({ hotelSeleccionado: ciudad });
+                            this.destinoSeleccionado(destino);
+                        }
+                    }
+                },
+                error: (error) => {
+                    console.error('Error al cargar JSON:', error);
+                },
+                complete: () => {
+                    this.splashScreen.hide();
+                }
+            });
         }
-    }
     }
 
     destinoSeleccionado(event) {
@@ -64,5 +89,28 @@ export class HotelesComponent {
         this.router.navigate(['/hoteles/detalle-hotel', hotel.id], {
             state: { hotel }
         });
+    }
+
+    getFullStars(rating: number): any[] {
+        return Array(Math.floor(rating));
+    }
+
+    hasHalfStar(rating: number): boolean {
+        const decimal = rating % 1;
+        return decimal >= 0.25 && decimal < 0.75;
+    }
+
+    getEmptyStars(rating: number): any[] {
+        const full = Math.floor(rating);
+        const half = this.hasHalfStar(rating) ? 1 : 0;
+        return Array(5 - full - half);
+    }
+
+    getDiamantes(diamantes: number): any[] {
+        return Array(diamantes);
+    }
+
+    getEmptyDiamantes(diamantes: number): any[] {
+        return Array(5 - diamantes);
     }
 }

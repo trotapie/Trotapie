@@ -38,23 +38,31 @@
 
                             <div class="-ml-1 mt-2 flex items-center leading-none">
                                 <div class="flex items-center">
-                                    <mat-icon class="text-yellow-400 icon-size-5"
-                                        [svgIcon]="'mat_outline:star'"></mat-icon>
-                                    <mat-icon class="text-yellow-400 icon-size-5"
-                                        [svgIcon]="'mat_outline:star'"></mat-icon>
-                                    <mat-icon class="text-yellow-400 icon-size-5"
-                                        [svgIcon]="'mat_outline:star'"></mat-icon>
-                                    <mat-icon class="text-yellow-400 icon-size-5"
-                                        [svgIcon]="'mat_outline:star'"></mat-icon>
-                                    <mat-icon class="text-yellow-400 icon-size-5"
-                                        [svgIcon]="'mat_outline:star_half'"></mat-icon>
+                                    <ng-container *ngFor="let _ of getFullStars(hotel?.ratingEstrellas)">
+                                        <mat-icon class="text-yellow-400 icon-size-5"
+                                            [svgIcon]="'mat_outline:star'"></mat-icon>
+                                    </ng-container>
+                                    <ng-container *ngIf="hasHalfStar(hotel?.ratingEstrellas)">
+                                        <mat-icon class="text-yellow-400 icon-size-5"
+                                            [svgIcon]="'mat_outline:star_half'"></mat-icon>
+                                    </ng-container>
+                                    <ng-container *ngFor="let _ of getEmptyStars(hotel?.ratingEstrellas)">
+                                        <mat-icon class="text-yellow-400 icon-size-5"
+                                            [svgIcon]="'mat_outline:star_outline'"></mat-icon>
+                                    </ng-container>
                                 </div>
-                                <div class="ml-2">4.5</div>
+                                <div class="ml-2">{{ hotel?.ratingEstrellas }}</div>
                             </div>
+
                         </div>
                     </fuse-card>
                 </div>
             </div>
         </div>
     </div>
+</div>
+
+<div *ngIf="cargando" class="flex justify-center items-center p-6">
+    <div class="animate-spin rounded-full h-10 w-10 border-t-4 border-blue-500"></div>
+    <span class="ml-3 text-blue-700 font-medium">Cargando hoteles...</span>
 </div>
