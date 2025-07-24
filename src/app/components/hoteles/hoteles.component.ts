@@ -33,8 +33,8 @@ export class HotelesComponent {
     hotelesPorCiudad: Hotel[] = [];
     ciudadSeleccionada: boolean;
     cargando = false;
-
-    rating = 0.5;
+    hotel: Hotel;
+    rating: Number;
     constructor() {
     }
 
@@ -44,8 +44,11 @@ export class HotelesComponent {
         this.hotelesForm = this.formBuilder.group({
             hotelSeleccionado: ['']
         });
-        if (this.listaHoteles !== null) {
+
+        this.hotel = JSON.parse(sessionStorage.getItem('hotel'))
+        if (this.hotel !== null) {
             this.splashScreen.hide();
+            sessionStorage.removeItem('hotel')
             const ciudad = sessionStorage.getItem('ciudad');
             if (ciudad) {
                 const destino = this.listaHoteles.find(item => item.ciudad === ciudad);
