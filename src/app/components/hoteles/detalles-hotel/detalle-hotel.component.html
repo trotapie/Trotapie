@@ -25,10 +25,41 @@
                 <div class="text-2xl font-semibold italic leading-tight">
                     Galeria
                 </div>
+                @if(isScreenSmall){
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-2">
                     <div *ngFor="let imagen of imagenes" class="w-full h-40 bg-cover bg-center rounded-xl shadow-md"
                         [ngStyle]="{ 'background-image': 'url(' + imagen + ')' }"></div>
                 </div>
+                }
+                @if(!isScreenSmall){
+                <!-- <div #scrollContainer
+                    class="flex overflow-x-auto gap-4 p-4 snap-x snap-mandatory cursor-grab active:cursor-grabbing select-none"
+                    (mousedown)="startDrag($event)">
+                    <div *ngFor="let imagen of hotel.imagenes; let i = index" (click)="seleccionarImagen(i)"
+                        class="shrink-0 h-140 bg-cover bg-center shadow-md snap-center transition-all duration-300"
+                        [ngStyle]="{
+      'background-image': 'url(' + imagen + ')',
+      'width.px': i === imagenSeleccionadaIndex ? 700 : 80,
+      'border-radius': i === imagenSeleccionadaIndex ? '20px' : '50% / 10%'
+    }"></div>
+                </div> -->
+
+                <div #scrollContainer
+                    class="scroll-container flex overflow-x-auto gap-4 p-4 pr-20 snap-x snap-mandatory cursor-grab active:cursor-grabbing select-none"
+                    (scroll)="onScroll()" (mousedown)="startDrag($event)">
+
+                    <div *ngFor="let imagen of hotel.imagenes; let i = index" (click)="seleccionarImagen(i)"
+                        class="shrink-0 h-100 bg-cover bg-center shadow-md snap-center transition-all duration-300"
+                        [ngStyle]="{
+      'background-image': 'url(' + imagen + ')',
+      'width.px': i === imagenSeleccionadaIndex ? 700 : 60,
+      'border-radius': i === imagenSeleccionadaIndex ?'20px' : '50% / 10%'
+    }" [attr.id]="'img-' + i">
+                    </div>
+                    <div style="flex: 0 0 700px;"></div>
+                </div>
+
+                }
             </div>
         </fuse-card>
     </div>

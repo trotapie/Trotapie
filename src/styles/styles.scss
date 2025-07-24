@@ -16,3 +16,12 @@
 .card-animada {
   animation: fadeInUp 0.6s ease-out forwards;
 }
+
+.scroll-container {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;  /* IE y Edge */
+}
+
+.scroll-container::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}

@@ -1,11 +1,13 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, ViewEncapsulation } from '@angular/core';
+import { Component, ElementRef, inject, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { HOTELES_DATA } from 'assets/data/hoteles';
 import { MaterialModule } from 'app/shared/material.module';
 import { JsonpClientBackend, HttpClientJsonpModule } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Hotel, IHoteles } from '../hoteles.interface';
+import { FuseMediaWatcherService } from '@fuse/services/media-watcher';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
     selector: 'detalle-hotel',
@@ -17,6 +19,8 @@ import { Hotel, IHoteles } from '../hoteles.interface';
 export class DetalleHotelComponent {
     private formBuilder = inject(FormBuilder);
     private router = inject(Router);
+    private _fuseMediaWatcherService = inject(FuseMediaWatcherService)
+
 
     hotel: Hotel;
     descripcionParrafo: string = '';
@@ -26,10 +30,26 @@ export class DetalleHotelComponent {
     modalAbierto = false;
     reservacionForm: FormGroup;
     hoy: string;
+    isScreenSmall: boolean;
+    imagenSeleccionadaIndex = 0;
+
+    @ViewChild('scrollContainer') scrollContainer!: ElementRef;
+
+    isDragging = false;
+    startX = 0;
+    scrollLeft = 0;
+    isClicking = false;
+
+    private _unsubscribeAll: Subject<any> = new Subject<any>();
+
 
     get edadesNinos() {
         return this.reservacionForm.get('edadesNinos') as FormArray;
     }
+
+    onDragBound!: (e: MouseEvent) => void;
+    endDragBound!: () => void;
+
     constructor() {
         const nav = this.router.getCurrentNavigation();
         this.hotel = nav?.extras.state?.hotel;
@@ -37,13 +57,22 @@ export class DetalleHotelComponent {
 
     ngOnInit() {
         this.hotel = JSON.parse(sessionStorage.getItem('hotel'))
-        console.log(this.hotel.descripcion);
         const partes = this.hotel.descripcion.split('\n');
         this.descripcionParrafo = partes[0];
         this.descripcionLista = partes.slice(1);
         this.cargarImagenesConDelay();
+
+        this._fuseMediaWatcherService.onMediaChange$
+            .pipe(takeUntil(this._unsubscribeAll))
+            .subscribe(({ matchingAliases }) => {
+                this.isScreenSmall = !matchingAliases.includes('md');
+            });
     }
 
+    ngAfterViewInit(): void {
+        this.onDragBound = this.onDrag.bind(this);
+        this.endDragBound = this.endDrag.bind(this);
+    }
 
     async cargarImagenesConDelay() {
         this.imagenes = [];
@@ -118,6 +147,67 @@ Fecha de entrada: ${fechaFormateada}`;
         this.modalAbierto = false;
     }
 
+    startDrag(event: MouseEvent): void {
+        this.isDragging = true;
+        this.startX = event.pageX - this.scrollContainer.nativeElement.offsetLeft;
+        this.scrollLeft = this.scrollContainer.nativeElement.scrollLeft;
+
+        document.addEventListener('mousemove', this.onDragBound);
+        document.addEventListener('mouseup', this.endDragBound);
+
+        this.scrollContainer.nativeElement.classList.add('scrolling');
+    }
+
+    endDrag = (): void => {
+        this.isDragging = false;
+        document.removeEventListener('mousemove', this.onDragBound);
+        document.removeEventListener('mouseup', this.endDragBound);
+        this.scrollContainer.nativeElement.classList.remove('scrolling');
+    };
+
+    onDrag = (event: MouseEvent): void => {
+        if (!this.isDragging) return;
+        event.preventDefault();
+        const x = event.pageX - this.scrollContainer.nativeElement.offsetLeft;
+        const walk = (x - this.startX) * 1.5;
+        this.scrollContainer.nativeElement.scrollLeft = this.scrollLeft - walk;
+    };
+
+    onScroll(): void {
+        const container = this.scrollContainer.nativeElement as HTMLElement;
+        const children = Array.from(container.children) as HTMLElement[];
+
+        const containerCenter = container.scrollLeft + container.offsetWidth / 2;
+
+        let closestIndex = 0;
+        let closestDistance = Infinity;
+
+        children.forEach((child, index) => {
+            const childCenter = child.offsetLeft + child.offsetWidth / 2;
+            const distance = Math.abs(containerCenter - childCenter);
+
+            if (distance < closestDistance) {
+                closestDistance = distance;
+                closestIndex = index;
+            }
+        });
+
+        this.imagenSeleccionadaIndex = closestIndex;
+    }
+
+    seleccionarImagen(index: number): void {
+        this.imagenSeleccionadaIndex = index;
+        this.isClicking = true;
+
+        setTimeout(() => {
+            const el = document.getElementById('img-' + index);
+            el?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            
+            setTimeout(() => {
+                this.isClicking = false;
+            }, 400);
+        }, 0);
+    }
 
 
 }
