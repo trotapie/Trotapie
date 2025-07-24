@@ -39,10 +39,10 @@ export class DetalleHotelComponent {
     startX = 0;
     scrollLeft = 0;
     isClicking = false;
-
+    intervalId: any;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
-
+    private scrollManual = true;
     get edadesNinos() {
         return this.reservacionForm.get('edadesNinos') as FormArray;
     }
@@ -67,11 +67,17 @@ export class DetalleHotelComponent {
             .subscribe(({ matchingAliases }) => {
                 this.isScreenSmall = !matchingAliases.includes('md');
             });
+
+        // this.iniciarCarruselAutomatico();
     }
 
     ngAfterViewInit(): void {
         this.onDragBound = this.onDrag.bind(this);
         this.endDragBound = this.endDrag.bind(this);
+    }
+
+    ngOnDestroy() {
+        clearInterval(this.intervalId);
     }
 
     async cargarImagenesConDelay() {
@@ -174,6 +180,8 @@ Fecha de entrada: ${fechaFormateada}`;
     };
 
     onScroll(): void {
+        if (!this.scrollManual) return;
+
         const container = this.scrollContainer.nativeElement as HTMLElement;
         const children = Array.from(container.children) as HTMLElement[];
 
@@ -197,17 +205,31 @@ Fecha de entrada: ${fechaFormateada}`;
 
     seleccionarImagen(index: number): void {
         this.imagenSeleccionadaIndex = index;
-        this.isClicking = true;
-
-        setTimeout(() => {
-            const el = document.getElementById('img-' + index);
-            el?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-            
-            setTimeout(() => {
-                this.isClicking = false;
-            }, 400);
-        }, 0);
+        this.scrollAImagen(index, true);
     }
 
+
+    scrollAImagen(index: number, reacomodar?: boolean): void {
+        const container = this.scrollContainer.nativeElement as HTMLElement;
+        const children = Array.from(container.children) as HTMLElement[];
+        const target = children[index];
+
+        if (!target) return;
+
+        this.scrollManual = false;
+        
+        const containerCenter = container.offsetWidth / 2;
+        const targetCenter = target.offsetLeft + target.offsetWidth / 2;
+        if(reacomodar){
+
+            const newScrollLeft = targetCenter - containerCenter;
+    
+            container.scrollTo({ left: newScrollLeft, behavior: 'smooth' });
+        }
+
+        setTimeout(() => {
+            this.scrollManual = true;
+        }, 500);
+    }
 
 }
