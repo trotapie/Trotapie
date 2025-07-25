@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, ViewEncapsulation } from '@angular/core';
+import { Component, ElementRef, inject, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { Hotel, IHoteles } from './hoteles.interface';
 import { MaterialModule } from 'app/shared/material.module';
@@ -35,6 +35,7 @@ export class HotelesComponent {
     hotel: Hotel;
     rating: Number;
     descuentoEstilos = ['descuento-rect', 'descuento-estrella', 'descuento-circulo'];
+    @ViewChild('scrollContainer') scrollContainer!: ElementRef;
     constructor() {
     }
 
@@ -81,6 +82,16 @@ export class HotelesComponent {
         }
     }
 
+    ngAfterViewInit(): void {
+        const savedScroll = sessionStorage.getItem('scrollTopHoteles');
+        if (savedScroll) {
+            setTimeout(() => {
+                this.scrollContainer.nativeElement.scrollTop = +savedScroll;
+                sessionStorage.removeItem('scrollTopHoteles');
+            }, 100);
+        }
+    }
+
     destinoSeleccionado(event) {
         this.ciudadSeleccionada = true;
         this.hotelesPorCiudad = event.hoteles;
@@ -88,6 +99,8 @@ export class HotelesComponent {
     }
 
     verDetalleHotel(hotel: any): void {
+        const scrollTop = this.scrollContainer.nativeElement.scrollTop;
+        sessionStorage.setItem('scrollTopHoteles', scrollTop.toString());
         sessionStorage.setItem('hotel', JSON.stringify(hotel))
         this.router.navigate(['/hoteles/detalle-hotel', hotel.id], {
             state: { hotel }
