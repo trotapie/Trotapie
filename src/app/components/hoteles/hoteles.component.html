@@ -10,7 +10,14 @@
                         <mat-button-toggle *ngFor="let item of listaHoteles" [value]="item.ciudad"
                             (change)="destinoSeleccionado(item)" class="text-center flex items-center justify-center
                    flex-grow-0 flex-shrink-0 
-                   w-[calc(100%/2-0.5rem)] md:w-auto">
+                   w-[calc(100%/2-0.5rem)] md:w-auto
+                   border border-green-600 shadow-sm
+           [&:not(.mat-button-toggle-checked)]:bg-yellow-500/80
+           [&:not(.mat-button-toggle-checked)]:text-green-600
+           [&.mat-button-toggle-checked]:bg-green-600
+           [&.mat-button-toggle-checked]:text-white
+           [&.mat-button-toggle-checked]:border-green-700/50
+          ">
                             <span class="text-md text-center">
                                 {{ item.ciudad }}
                             </span>
@@ -32,6 +39,11 @@
                         (click)="verDetalleHotel(hotel)">
 
                         <div class="absolute inset-0 bg-black/40 z-0"></div>
+                        <div *ngIf="hotel.descuento" class="absolute top-2 right-2 z-20">
+                            <div [ngClass]="getDescuentoClass(hotel)" class="text-xs font-bold px-2 py-1">
+                                {{ hotel.descuento }}% descuento
+                            </div>
+                        </div>
 
                         <div class="relative z-10 m-8 mb-4">
                             <div class="text-2xl font-semibold leading-tight">{{ hotel.nombre }}</div>
@@ -53,15 +65,24 @@
                                 </div>
                                 <div class="ml-2">{{ hotel?.ratingEstrellas }}</div>
                             </div>
+                            {{hotel.tipo}}
+                        </div>
+
+                        <div class="absolute bottom-4 right-2 z-20 flex items-center gap-2">
+                            <div class="text-sm text-right leading-tight">
+                                <div>Ver</div>
+                                <div>Galería</div>
+                            </div>
+
+                            <div
+                                class="w-10 h-10 rounded-full text-white flex items-center justify-center shadow-md">
+                                <mat-icon [svgIcon]="'heroicons_outline:arrow-right-circle'"
+                                    class="text-white w-6 h-6"></mat-icon>
+                            </div>
                         </div>
                     </fuse-card>
                 </div>
             </div>
         </div>
     </div>
-</div>
-
-<div *ngIf="cargando" class="flex justify-center items-center p-6">
-    <div class="animate-spin rounded-full h-10 w-10 border-t-4 border-blue-500"></div>
-    <span class="ml-3 text-blue-700 font-medium">Cargando hoteles...</span>
 </div>

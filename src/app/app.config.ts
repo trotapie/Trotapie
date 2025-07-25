@@ -6,7 +6,7 @@ import {
     provideAppInitializer,
 } from '@angular/core';
 import { LuxonDateAdapter } from '@angular/material-luxon-adapter';
-import { DateAdapter, MAT_DATE_FORMATS } from '@angular/material/core';
+import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { provideFuse } from '@fuse';
@@ -39,6 +39,7 @@ export const appConfig: ApplicationConfig = {
             provide: DateAdapter,
             useClass: LuxonDateAdapter,
         },
+        { provide: MAT_DATE_LOCALE, useValue: 'es-MX' },
         {
             provide: MAT_DATE_FORMATS,
             useValue: {

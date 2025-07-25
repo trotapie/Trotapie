@@ -34,6 +34,7 @@ export class HotelesComponent {
     cargando = false;
     hotel: Hotel;
     rating: Number;
+    descuentoEstilos = ['descuento-rect', 'descuento-estrella', 'descuento-circulo'];
     constructor() {
     }
 
@@ -114,5 +115,13 @@ export class HotelesComponent {
 
     getEmptyDiamantes(diamantes: number): any[] {
         return Array(5 - diamantes);
+    }
+
+    getDescuentoClass(hotel: any): string {
+        if (!hotel._descuentoClase) {
+            const randomIndex = Math.floor(Math.random() * this.descuentoEstilos.length);
+            hotel._descuentoClase = this.descuentoEstilos[randomIndex];
+        }
+        return hotel._descuentoClase;
     }
 }

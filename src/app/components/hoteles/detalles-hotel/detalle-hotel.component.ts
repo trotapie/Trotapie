@@ -40,23 +40,21 @@ export class DetalleHotelComponent {
     scrollLeft = 0;
     isClicking = false;
     intervalId: any;
-    selectedDateRange: { startDate: moment.Moment; endDate: moment.Moment };
+    mesActual = new Date();
+    dateFilter = (date: Date | null): boolean => {
+        if (!date) return false;
 
-    fechasDelMes: Date[] = [];
-    fechaEntrada: Date | null = null;
-    fechaSalida: Date | null = null;
-    localeEs = {
-        applyLabel: 'Aplicar',
-        cancelLabel: 'Cancelar',
-        customRangeLabel: 'Rango personalizado',
-        daysOfWeek: ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa'],
-        monthNames: [
-            'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-            'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-        ],
-        firstDay: 1, 
-        format: 'DD/MM/YYYY'
-    };
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const d = new Date(date);
+        d.setHours(0, 0, 0, 0);
+
+
+        return d >= today;
+    }
+
+    primeraSeleccion: moment.Moment | null = null;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
     private scrollManual = true;
@@ -84,8 +82,6 @@ export class DetalleHotelComponent {
             .subscribe(({ matchingAliases }) => {
                 this.isScreenSmall = !matchingAliases.includes('md');
             });
-        this.generarFechasDelMes();
-        // this.iniciarCarruselAutomatico();
     }
 
     ngAfterViewInit(): void {
@@ -116,45 +112,65 @@ export class DetalleHotelComponent {
     abrirWhatsApp() {
         const ciudad = sessionStorage.getItem('ciudad');
 
-        const { adultos, ninos, noches, fecha, edadesNinos } = this.reservacionForm.value;
+        const { adultos, ninos, noches, rangoFechas, edadesNinos, nombre, apellido } = this.reservacionForm.getRawValue();
 
-        const edadesTexto = edadesNinos.map((edad: number, index: number) => `${edad} años`).join(', ');
-
-        console.log(this.hotel);
         const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-        const [year, month, day] = fecha.split('-');
-        const mesTexto = meses[parseInt(month, 10) - 1];
-        const fechaFormateada = `${day}/${mesTexto}/${year}`;
-        const mensaje = `Hola, me interesa una cotización en el hotel ${this.hotel.nombre} en ${ciudad}.
+
+        const fechaInicio = new Date(rangoFechas.start);
+        const diaInicio = fechaInicio.getDate().toString().padStart(2, '0');
+        const mesInicio = meses[fechaInicio.getMonth()];
+        const anioInicio = fechaInicio.getFullYear();
+        const fechaFormateadaInicio = `${diaInicio}/${mesInicio}/${anioInicio}`;
+
+        const fechaFin = new Date(rangoFechas.end);
+        const diaFin = fechaFin.getDate().toString().padStart(2, '0');
+        const mesFin = meses[fechaFin.getMonth()];
+        const anioFin = fechaFin.getFullYear();
+        const fechaFormateadaFin = `${diaFin}/${mesFin}/${anioFin}`;
+
+        let edadesTexto = '';
+        if (ninos > 0 && edadesNinos?.length) {
+            const edadesFormateadas = edadesNinos.map((edad: number) => `${edad} años`).join(', ');
+            edadesTexto = `Edades de los niños: ${edadesFormateadas}\n`;
+        }
+
+        const mensaje = `Hola, soy ${nombre} ${apellido} y me interesa una cotización en el hotel ${this.hotel.nombre} en ${ciudad}.
 Adultos: ${adultos}
 Niños: ${ninos}
-Edades de los niños: ${edadesTexto}
-Noches: ${noches}
-Fecha de entrada: ${fechaFormateada}`;
+${edadesTexto}Noches: ${noches}
+Fecha de entrada: ${fechaFormateadaInicio}
+Fecha de salida: ${fechaFormateadaFin}`;
 
         window.open(`https://wa.me/5216188032003?text=${encodeURIComponent(mensaje)}`);
     }
+
 
     abrirModal() {
         const hoyDate = new Date();
         this.hoy = hoyDate.toISOString().split('T')[0];
         this.modalAbierto = true;
         this.reservacionForm = this.formBuilder.group({
+            nombre: ['', [Validators.required]],
+            apellido: ['', [Validators.required]],
             adultos: ['', [Validators.required, Validators.min(1)]],
             ninos: ['', [Validators.required, Validators.min(0)]],
-            noches: ['', [Validators.required, Validators.min(1)]],
-            fecha: [null, Validators.required],
+            noches: [{ value: '', disabled: true }, [Validators.required, Validators.min(1)]],
+            rangoFechas: this.formBuilder.group({
+                start: [null],
+                end: [null],
+            }),
             edadesNinos: this.formBuilder.array([]),
-            rangoFechas: [null]
         });
 
         this.reservacionForm.get('ninos')!.valueChanges.subscribe(cantidad => {
-            console.log(cantidad);
-
             this.actualizarEdadesNinos(cantidad);
         });
 
         this.actualizarEdadesNinos(0);
+
+        this.reservacionForm.get('rangoFechas')!.valueChanges.subscribe(range => {
+            this.calcularNoches(range?.start, range?.end);
+        });
     }
 
     actualizarEdadesNinos(cantidad: number) {
@@ -163,7 +179,7 @@ Fecha de entrada: ${fechaFormateada}`;
         }
 
         for (let i = 0; i < cantidad; i++) {
-            this.edadesNinos.push(this.formBuilder.control(0, [Validators.required, Validators.min(0), Validators.max(18)]));
+            this.edadesNinos.push(this.formBuilder.control('', [Validators.required, Validators.min(0), Validators.max(17)]));
         }
     }
 
@@ -250,41 +266,26 @@ Fecha de entrada: ${fechaFormateada}`;
         }, 500);
     }
 
-    generarFechasDelMes() {
-        const fecha = new Date();
-        const year = fecha.getFullYear();
-        const month = fecha.getMonth();
+    calcularNoches(start: Date | null, end: Date | null): void {
+        if (start && end) {
+            const startDate = new Date(start);
+            const endDate = new Date(end);
 
-        const totalDias = new Date(year, month + 1, 0).getDate();
-        for (let i = 1; i <= totalDias; i++) {
-            this.fechasDelMes.push(new Date(year, month, i));
-        }
-    }
+            startDate.setHours(0, 0, 0, 0);
+            endDate.setHours(0, 0, 0, 0);
 
-    seleccionarFecha(fecha: Date) {
-        if (!this.fechaEntrada || (this.fechaEntrada && this.fechaSalida)) {
-            this.fechaEntrada = fecha;
-            this.fechaSalida = null;
-        } else if (fecha > this.fechaEntrada) {
-            this.fechaSalida = fecha;
+            const diffMs = endDate.getTime() - startDate.getTime();
+            const noches = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+            if (noches > 0) {
+                this.reservacionForm.get('noches')?.setValue(noches);
+            } else {
+                this.reservacionForm.get('noches')?.setValue('');
+            }
         } else {
-            this.fechaEntrada = fecha;
-            this.fechaSalida = null;
+            this.reservacionForm.get('noches')?.setValue('');
         }
     }
 
-    esFechaSeleccionada(fecha: Date): boolean {
-        if (!this.fechaEntrada) return false;
-        if (this.fechaEntrada && !this.fechaSalida) {
-            return fecha.toDateString() === this.fechaEntrada.toDateString();
-        }
-        console.log(fecha >= this.fechaEntrada &&
-            fecha <= this.fechaSalida);
-
-        return (
-            fecha >= this.fechaEntrada &&
-            fecha <= this.fechaSalida
-        );
-    }
 
 }

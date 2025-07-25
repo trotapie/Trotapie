@@ -3,25 +3,84 @@
 /*  @ Styles from this file will override 'vendors.scss' and Fuse's base styles.
 /* ----------------------------------------------------------------------------------------------------- */
 @keyframes fadeInUp {
-  0% {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .card-animada {
-  animation: fadeInUp 0.6s ease-out forwards;
+    animation: fadeInUp 0.6s ease-out forwards;
 }
 
 .scroll-container {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none;  /* IE y Edge */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE y Edge */
 }
 
 .scroll-container::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+    display: none;
+    /* Chrome, Safari, Opera */
+}
+
+.animate-fade {
+    animation: fadeout 0.4s ease-out;
+}
+
+@keyframes fadeout {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+}
+
+.descuento-rect {
+    @apply bg-red-600 rounded-md shadow-lg;
+}
+
+.descuento-circulo {
+    @apply bg-blue-600 rounded-md shadow-lg;
+}
+
+.descuento-estrella {
+    @apply bg-orange-600 rounded-md shadow-lg;
+}
+
+.promo-badge {
+    @apply text-white px-4 py-2 rounded-[1.5rem] shadow-lg text-right w-36;
+    background: linear-gradient(90deg, #ff7c00, #ff4d00);
+    font-family: 'Poppins', sans-serif;
+}
+
+::ng-deep mat-button-toggle {
+  @apply rounded-xl overflow-hidden;
+}
+
+::ng-deep mat-button-toggle button.mat-button-toggle-button {
+  @apply text-center flex items-center justify-center
+         flex-grow-0 flex-shrink-0 
+         w-full md:w-auto
+         rounded-xl px-4 py-2
+         border-2 border-emerald-500 text-emerald-600
+         transition-all duration-200 bg-white;
+}
+
+::ng-deep mat-button-toggle:not(.mat-button-toggle-checked) button.mat-button-toggle-button {
+  @apply bg-white hover:bg-emerald-50;
+}
+
+::ng-deep mat-button-toggle.mat-button-toggle-checked button.mat-button-toggle-button {
+  @apply bg-emerald-100 text-emerald-800;
 }
