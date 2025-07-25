@@ -1,13 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, ElementRef, inject, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { HOTELES_DATA } from 'assets/data/hoteles';
 import { MaterialModule } from 'app/shared/material.module';
 import { JsonpClientBackend, HttpClientJsonpModule } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Hotel, IHoteles } from '../hoteles.interface';
 import { FuseMediaWatcherService } from '@fuse/services/media-watcher';
 import { Subject, takeUntil } from 'rxjs';
+import moment from 'moment';
 
 @Component({
     selector: 'detalle-hotel',
@@ -40,6 +40,23 @@ export class DetalleHotelComponent {
     scrollLeft = 0;
     isClicking = false;
     intervalId: any;
+    selectedDateRange: { startDate: moment.Moment; endDate: moment.Moment };
+
+    fechasDelMes: Date[] = [];
+    fechaEntrada: Date | null = null;
+    fechaSalida: Date | null = null;
+    localeEs = {
+        applyLabel: 'Aplicar',
+        cancelLabel: 'Cancelar',
+        customRangeLabel: 'Rango personalizado',
+        daysOfWeek: ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa'],
+        monthNames: [
+            'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+            'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+        ],
+        firstDay: 1, 
+        format: 'DD/MM/YYYY'
+    };
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
     private scrollManual = true;
@@ -67,7 +84,7 @@ export class DetalleHotelComponent {
             .subscribe(({ matchingAliases }) => {
                 this.isScreenSmall = !matchingAliases.includes('md');
             });
-
+        this.generarFechasDelMes();
         // this.iniciarCarruselAutomatico();
     }
 
@@ -101,7 +118,7 @@ export class DetalleHotelComponent {
 
         const { adultos, ninos, noches, fecha, edadesNinos } = this.reservacionForm.value;
 
-        const edadesTexto = edadesNinos.map((edad: number, index: number) => `Niño ${index + 1}: ${edad} años`).join(', ');
+        const edadesTexto = edadesNinos.map((edad: number, index: number) => `${edad} años`).join(', ');
 
         console.log(this.hotel);
         const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
@@ -123,11 +140,12 @@ Fecha de entrada: ${fechaFormateada}`;
         this.hoy = hoyDate.toISOString().split('T')[0];
         this.modalAbierto = true;
         this.reservacionForm = this.formBuilder.group({
-            adultos: [1, [Validators.required, Validators.min(1)]],
-            ninos: [0, [Validators.required, Validators.min(0)]],
-            noches: [1, [Validators.required, Validators.min(1)]],
+            adultos: ['', [Validators.required, Validators.min(1)]],
+            ninos: ['', [Validators.required, Validators.min(0)]],
+            noches: ['', [Validators.required, Validators.min(1)]],
             fecha: [null, Validators.required],
-            edadesNinos: this.formBuilder.array([])
+            edadesNinos: this.formBuilder.array([]),
+            rangoFechas: [null]
         });
 
         this.reservacionForm.get('ninos')!.valueChanges.subscribe(cantidad => {
@@ -217,19 +235,56 @@ Fecha de entrada: ${fechaFormateada}`;
         if (!target) return;
 
         this.scrollManual = false;
-        
+
         const containerCenter = container.offsetWidth / 2;
         const targetCenter = target.offsetLeft + target.offsetWidth / 2;
-        if(reacomodar){
+        if (reacomodar) {
 
             const newScrollLeft = targetCenter - containerCenter;
-    
+
             container.scrollTo({ left: newScrollLeft, behavior: 'smooth' });
         }
 
         setTimeout(() => {
             this.scrollManual = true;
         }, 500);
+    }
+
+    generarFechasDelMes() {
+        const fecha = new Date();
+        const year = fecha.getFullYear();
+        const month = fecha.getMonth();
+
+        const totalDias = new Date(year, month + 1, 0).getDate();
+        for (let i = 1; i <= totalDias; i++) {
+            this.fechasDelMes.push(new Date(year, month, i));
+        }
+    }
+
+    seleccionarFecha(fecha: Date) {
+        if (!this.fechaEntrada || (this.fechaEntrada && this.fechaSalida)) {
+            this.fechaEntrada = fecha;
+            this.fechaSalida = null;
+        } else if (fecha > this.fechaEntrada) {
+            this.fechaSalida = fecha;
+        } else {
+            this.fechaEntrada = fecha;
+            this.fechaSalida = null;
+        }
+    }
+
+    esFechaSeleccionada(fecha: Date): boolean {
+        if (!this.fechaEntrada) return false;
+        if (this.fechaEntrada && !this.fechaSalida) {
+            return fecha.toDateString() === this.fechaEntrada.toDateString();
+        }
+        console.log(fecha >= this.fechaEntrada &&
+            fecha <= this.fechaSalida);
+
+        return (
+            fecha >= this.fechaEntrada &&
+            fecha <= this.fechaSalida
+        );
     }
 
 }
