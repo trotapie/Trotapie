@@ -13,24 +13,30 @@
             </div>
         </div>
         <fuse-card class="filter-article flex w-full flex-col p-8">
-            <div>
-                <div class="mt-4 text-base leading-relaxed">
-                    <div class="text-2xl mb-4 font-semibold italic leading-tight text-center">
-                        Descripcion
+            <mat-tab-group class="sm:px-2" mat-stretch-tabs="false" [animationDuration]="'0'">
+                <mat-tab label="Descripcion">
+                    <div class="mt-4 text-base leading-relaxed">
+                        <p class="mb-4">{{ descripcionParrafo }}</p>
                     </div>
-                    <p class="mb-4">{{ descripcionParrafo }}</p>
-                    <div class="text-2xl mt-5 mb-3 font-semibold italic leading-tight text-center">
-                        Amenidades
-                    </div>
+                    <button mat-flat-button color="primary" class="mr-2 text-white" (click)="abrirUbicacion()">
+                        <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:map-pin'"></mat-icon>
+                        Ubicación
+                    </button>
+                </mat-tab>
+
+                <mat-tab label="Amenidades">
                     <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-2">
                         <li *ngFor="let punto of descripcionLista"
                             class="flex items-center justify-center gap-2 text-center">
-                            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:check-badge'"></mat-icon>
+                            <mat-icon class="icon-size-5 text-green-600"
+                                [svgIcon]="'heroicons_outline:check-badge'"></mat-icon>
                             <span>{{ punto }}</span>
                         </li>
                     </ul>
+                </mat-tab>
 
-                </div>
+            </mat-tab-group>
+            <div>
             </div>
             <div class="mt-10">
                 <div class="text-2xl my-4 font-semibold italic leading-tight text-center">
@@ -63,7 +69,14 @@
         </fuse-card>
     </div>
     <div class="sticky bottom-4 w-full z-50">
-        <div class="flex justify-end pr-4">
+        <div class="relative flex justify-end pr-4">
+            <!-- Tooltip fijo arriba del botón -->
+            <div
+                class="absolute bottom-16 right-0 whitespace-pre-line bg-gray-200 text-black font-semibold text-md px-3 py-1 rounded shadow animate-bounce text-center z-10">
+                Solicita una<br>cotización
+            </div>
+
+            <!-- Botón de WhatsApp -->
             <button (click)="abrirModal()" aria-label="Enviar WhatsApp">
                 <svg viewBox="0 0 256 259" width="60" height="60" xmlns="http://www.w3.org/2000/svg"
                     preserveAspectRatio="xMidYMid">

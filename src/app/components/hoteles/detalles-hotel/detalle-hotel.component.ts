@@ -77,13 +77,10 @@ export class DetalleHotelComponent {
                 this.isScreenSmall = !matchingAliases.includes('md');
             });
         this.hotel = JSON.parse(sessionStorage.getItem('hotel'))
-        //const partes = this.hotel.descripcion.split('\n');
-        console.log(this.hotel.descripcion);
-        
+
         this.descripcionParrafo = this.hotel.descripcion.descripcion;
         this.descripcionLista = this.hotel.descripcion.resultadoActividades;
-        console.log(this.descripcionLista);
-        
+
         this.cargarImagenesConDelay();
 
     }
@@ -134,8 +131,8 @@ export class DetalleHotelComponent {
 
         let edadesTexto = '';
         if (ninos > 0 && edadesNinos?.length) {
-            const edadesFormateadas = edadesNinos.map((edad: number) => `${edad} años`).join(', ');
-            edadesTexto = `Edades de los niños: ${edadesFormateadas}\n`;
+            const edadesFormateadas = edadesNinos.map((edad: number) => `${edad}`).join(', ');
+            edadesTexto = `Edades de los niños: ${edadesFormateadas} años\n`;
         }
 
         const mensaje = `Hola, soy ${nombre} ${apellido} y me interesa una cotización en el hotel ${this.hotel.nombre} en ${ciudad}.
@@ -289,6 +286,11 @@ Fecha de salida: ${fechaFormateadaFin}`;
         } else {
             this.reservacionForm.get('noches')?.setValue('');
         }
+    }
+
+
+    abrirUbicacion() {
+        window.open(this.hotel.descripcion.ubicacion, '_blank');
     }
 
 

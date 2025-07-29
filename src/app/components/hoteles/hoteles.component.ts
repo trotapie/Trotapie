@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, ElementRef, inject, ViewChild, ViewEncapsulation } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, inject, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { Hotel, IHoteles } from './hoteles.interface';
 import { MaterialModule } from 'app/shared/material.module';
@@ -9,13 +9,14 @@ import { stringify } from 'crypto-js/enc-base64';
 import { Observable } from 'rxjs';
 import { DatosService } from './hoteles.service';
 import { FuseSplashScreenService } from '@fuse/services/splash-screen';
+import { TextTypewriterComponent } from 'app/text-typewriter.component';
 
 @Component({
     selector: 'hoteles',
-    standalone: true,
     templateUrl: './hoteles.component.html',
-    imports: [MaterialModule],
+    imports: [MaterialModule, TextTypewriterComponent],
     encapsulation: ViewEncapsulation.None,
+    standalone: true
 })
 export class HotelesComponent {
     private formBuilder = inject(FormBuilder);
