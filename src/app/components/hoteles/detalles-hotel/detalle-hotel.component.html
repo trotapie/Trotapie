@@ -15,14 +15,25 @@
         <fuse-card class="filter-article flex w-full flex-col p-8">
             <div>
                 <div class="mt-4 text-base leading-relaxed">
+                    <div class="text-2xl mb-4 font-semibold italic leading-tight text-center">
+                        Descripcion
+                    </div>
                     <p class="mb-4">{{ descripcionParrafo }}</p>
-                    <ul class="list-none space-y-2">
-                        <li *ngFor="let punto of descripcionLista">{{ punto }}</li>
+                    <div class="text-2xl mt-5 mb-3 font-semibold italic leading-tight text-center">
+                        Amenidades
+                    </div>
+                    <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-2">
+                        <li *ngFor="let punto of descripcionLista"
+                            class="flex items-center justify-center gap-2 text-center">
+                            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:check-badge'"></mat-icon>
+                            <span>{{ punto }}</span>
+                        </li>
                     </ul>
+
                 </div>
             </div>
             <div class="mt-10">
-                <div class="text-2xl font-semibold italic leading-tight">
+                <div class="text-2xl my-4 font-semibold italic leading-tight text-center">
                     Galeria
                 </div>
                 @if(isScreenSmall){
@@ -122,18 +133,18 @@
 
             <div>
                 <label class="block text-sm font-medium text-green-700 mb-1">Nombre</label>
-                <input  formControlName="nombre" min="1"
+                <input formControlName="nombre" min="1"
                     class="block w-full rounded-lg border border-gray-300 px-4 py-2 text-sm shadow-sm focus:border-green-700 focus:ring focus:ring-green-200 focus:outline-none transition" />
             </div>
             <div>
                 <label class="block text-sm font-medium text-green-700 mb-1">Apellido</label>
-                <input  formControlName="apellido" min="1"
+                <input formControlName="apellido" min="1"
                     class="block w-full rounded-lg border border-gray-300 px-4 py-2 text-sm shadow-sm focus:border-green-700 focus:ring focus:ring-green-200 focus:outline-none transition" />
             </div>
         </form>
         <div class="mt-4 flex justify-end">
-            <button mat-flat-button color="primary" [disabled]="reservacionForm.invalid" class="mr-2 flex items-center w-full text-white"
-                (click)="abrirWhatsApp()">
+            <button mat-flat-button color="primary" [disabled]="reservacionForm.invalid"
+                class="mr-2 flex items-center w-full text-white" (click)="abrirWhatsApp()">
                 Solictar cotización por WhatsApp
             </button>
         </div>

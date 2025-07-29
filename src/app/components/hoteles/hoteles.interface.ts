@@ -5,7 +5,7 @@ export interface IHoteles {
 
 export interface Hotel {
     nombre:      string;
-    descripcion: string;
+    descripcion: any;
     imagenes:    string[];
     id:          string;
 }

@@ -71,17 +71,21 @@ export class DetalleHotelComponent {
     }
 
     ngOnInit() {
-        this.hotel = JSON.parse(sessionStorage.getItem('hotel'))
-        const partes = this.hotel.descripcion.split('\n');
-        this.descripcionParrafo = partes[0];
-        this.descripcionLista = partes.slice(1);
-        this.cargarImagenesConDelay();
-
         this._fuseMediaWatcherService.onMediaChange$
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe(({ matchingAliases }) => {
                 this.isScreenSmall = !matchingAliases.includes('md');
             });
+        this.hotel = JSON.parse(sessionStorage.getItem('hotel'))
+        //const partes = this.hotel.descripcion.split('\n');
+        console.log(this.hotel.descripcion);
+        
+        this.descripcionParrafo = this.hotel.descripcion.descripcion;
+        this.descripcionLista = this.hotel.descripcion.resultadoActividades;
+        console.log(this.descripcionLista);
+        
+        this.cargarImagenesConDelay();
+
     }
 
     ngAfterViewInit(): void {

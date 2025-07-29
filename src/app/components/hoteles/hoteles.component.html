@@ -12,8 +12,6 @@
                    flex-grow-0 flex-shrink-0 
                    w-[calc(100%/2-0.5rem)] md:w-auto
                    border border-green-600 shadow-sm
-           [&:not(.mat-button-toggle-checked)]:bg-yellow-500/80
-           [&:not(.mat-button-toggle-checked)]:text-green-600
            [&.mat-button-toggle-checked]:bg-green-600
            [&.mat-button-toggle-checked]:text-white
            [&.mat-button-toggle-checked]:border-green-700/50
@@ -34,7 +32,7 @@
                 <div *ngFor="let hotel of hotelesPorCiudad">
 
                     <fuse-card
-                        class="cursor-pointer filter-listing relative flex w-full h-40 flex-col bg-cover bg-center text-white rounded-2xl overflow-hidden transition duration-200 hover:scale-105 card-animada"
+                        class="cursor-pointer filter-listing relative flex w-full h-48 flex-col bg-cover bg-center text-white rounded-2xl overflow-hidden transition duration-200 hover:scale-105 card-animada"
                         [ngStyle]="{ 'background-image': 'url(' + (hotel.fondo || fallback) + ')' }"
                         (click)="verDetalleHotel(hotel)">
 
@@ -50,22 +48,25 @@
 
                             <div class="-ml-1 mt-2 flex items-center leading-none">
                                 <div class="flex items-center">
-                                    <ng-container *ngFor="let _ of getFullStars(hotel?.ratingEstrellas)">
+                                    <ng-container *ngFor="let _ of getFullStars(hotel?.descripcion?.estrellas)">
                                         <mat-icon class="text-yellow-400 icon-size-5"
                                             [svgIcon]="'mat_outline:star'"></mat-icon>
                                     </ng-container>
-                                    <ng-container *ngIf="hasHalfStar(hotel?.ratingEstrellas)">
+                                    <ng-container *ngIf="hasHalfStar(hotel?.descripcion?.estrellas)">
                                         <mat-icon class="text-yellow-400 icon-size-5"
                                             [svgIcon]="'mat_outline:star_half'"></mat-icon>
                                     </ng-container>
-                                    <ng-container *ngFor="let _ of getEmptyStars(hotel?.ratingEstrellas)">
+                                    <ng-container *ngFor="let _ of getEmptyStars(hotel?.descripcion?.estrellas)">
                                         <mat-icon class="text-yellow-400 icon-size-5"
                                             [svgIcon]="'mat_outline:star_outline'"></mat-icon>
                                     </ng-container>
                                 </div>
-                                <div class="ml-2">{{ hotel?.ratingEstrellas }}</div>
+                                <div class="ml-2">{{ hotel?.descripcion?.estrellas }}</div>
                             </div>
-                            {{hotel.tipo}}
+                            <div class="w-3/5">
+
+                                {{hotel?.descripcion?.todoIncluido}}
+                            </div>
                         </div>
 
                         <div class="absolute bottom-4 right-2 z-20 flex items-center gap-2">

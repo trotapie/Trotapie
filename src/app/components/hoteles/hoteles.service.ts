@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class DatosService {
-  private url = 'https://script.google.com/macros/s/AKfycbyhBAdrLnNLcvH93749J9OQMEMQlhlqCSTz9qcOZJ-DV48FFCmml8GSqFZOxYGBXEH7Ag/exec'; // tu URL real
+  private url = 'https://script.google.com/macros/s/AKfycbyhBAdrLnNLcvH93749J9OQMEMQlhlqCSTz9qcOZJ-DV48FFCmml8GSqFZOxYGBXEH7Ag/exec';
 
   constructor(private http: HttpClient) {}
 

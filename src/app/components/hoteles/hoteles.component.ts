@@ -108,6 +108,9 @@ export class HotelesComponent {
     }
 
     getFullStars(rating: number): any[] {
+        console.log(rating);
+        rating = rating === undefined ? 0 : rating;
+
         return Array(Math.floor(rating));
     }
 
@@ -117,6 +120,8 @@ export class HotelesComponent {
     }
 
     getEmptyStars(rating: number): any[] {
+        rating = rating === undefined ? 0 : rating;
+
         const full = Math.floor(rating);
         const half = this.hasHalfStar(rating) ? 1 : 0;
         return Array(5 - full - half);
