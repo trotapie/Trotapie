@@ -19,3 +19,8 @@ export interface DescripcionHotel {
     ubicacion:            string;
     descuento:            number | string;
 }
+
+export interface ICoordenadas {
+    lat: number;
+    lng: number;
+}

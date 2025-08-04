@@ -8,12 +8,13 @@ import { Hotel, IHoteles } from '../hoteles.interface';
 import { FuseMediaWatcherService } from '@fuse/services/media-watcher';
 import { Subject, takeUntil } from 'rxjs';
 import moment from 'moment';
+import { MapaComponent } from '../mapa/mapa.component';
 
 @Component({
     selector: 'detalle-hotel',
     standalone: true,
     templateUrl: './detalle-hotel.component.html',
-    imports: [MaterialModule],
+    imports: [MaterialModule, MapaComponent],
     encapsulation: ViewEncapsulation.None,
 })
 export class DetalleHotelComponent {
@@ -34,7 +35,7 @@ export class DetalleHotelComponent {
     imagenSeleccionadaIndex = 0;
 
     @ViewChild('scrollContainer') scrollContainer!: ElementRef;
-
+    mostrarMapa = false;
     isDragging = false;
     startX = 0;
     scrollLeft = 0;
@@ -289,8 +290,17 @@ Fecha de salida: ${fechaFormateadaFin}`;
     }
 
 
+    // abrirUbicacion() {
+    //     window.open(this.hotel.descripcion.ubicacion, '_blank');
+    // }
+
+
     abrirUbicacion() {
-        window.open(this.hotel.descripcion.ubicacion, '_blank');
+        this.mostrarMapa = true;
+    }
+
+    cerrarMapa() {
+        this.mostrarMapa = false;
     }
 
 

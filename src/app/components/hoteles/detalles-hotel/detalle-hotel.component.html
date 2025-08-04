@@ -164,3 +164,20 @@
 
     </div>
 </div>
+
+<div *ngIf="mostrarMapa" class="fixed inset-0 z-[999] bg-black/50 backdrop-blur-sm flex items-end justify-center">
+  <div
+    class="bg-white dark:bg-gray-900 w-4/5 max-h-[75%] rounded-t-2xl shadow-xl p-4 overflow-hidden animate-slide-up relative">
+    
+    <!-- Botón cerrar -->
+    <button class="absolute top-2 right-4 text-gray-600 dark:text-gray-300" (click)="cerrarMapa()">
+      <mat-icon svgIcon="heroicons_outline:x-mark" class="w-8 h-8"></mat-icon>
+    </button>
+
+    <!-- Contenido: Mapa -->
+    <div class="text-center text-xl font-bold mb-4">Ubicación</div>
+    <div class="w-full h-[400px] rounded-xl overflow-hidden">
+      <app-mapa></app-mapa>
+    </div>
+  </div>
+</div>

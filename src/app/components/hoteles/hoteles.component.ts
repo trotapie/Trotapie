@@ -109,7 +109,6 @@ export class HotelesComponent {
     }
 
     getFullStars(rating: number): any[] {
-        console.log(rating);
         rating = rating === undefined ? 0 : rating;
 
         return Array(Math.floor(rating));
