@@ -37,6 +37,12 @@ export class HotelesComponent {
     rating: Number;
     descuentoEstilos = ['descuento-rect', 'descuento-estrella', 'descuento-circulo'];
     @ViewChild('scrollContainer') scrollContainer!: ElementRef;
+    @ViewChild('internacionalesSentinela') internacionalesSentinela!: ElementRef;
+    @ViewChild('sentinelaInternacionales') sentinelaInternacionales!: ElementRef;
+    internacionalesEnVista = false;
+    tabIndexSeleccionado = 0;
+    tabOffsets: number[] = [];
+    tabWidths: number[] = [];
     constructor() {
     }
 
@@ -44,8 +50,9 @@ export class HotelesComponent {
         this.splashScreen.show();
         this.listaHoteles = JSON.parse(sessionStorage.getItem('hoteles'));
         this.hotelesForm = this.formBuilder.group({
-            hotelSeleccionado: ['']
+            hotelSeleccionado: ['Mazatlán']
         });
+
 
         this.hotel = JSON.parse(sessionStorage.getItem('hotel'))
         if (this.hotel !== null) {
@@ -55,7 +62,7 @@ export class HotelesComponent {
             if (ciudad) {
                 const destino = this.listaHoteles.find(item => item.ciudad === ciudad);
                 if (destino) {
-                    this.hotelesForm.patchValue({ hotelSeleccionado: ciudad });
+                    this.hotelesForm.patchValue({ hotelSeleccionado: ciudad.trim() });
                     this.destinoSeleccionado(destino);
                 }
             }
@@ -68,7 +75,7 @@ export class HotelesComponent {
                     if (ciudad) {
                         const destino = this.listaHoteles.find(item => item.ciudad === ciudad);
                         if (destino) {
-                            this.hotelesForm.patchValue({ hotelSeleccionado: ciudad });
+                            this.hotelesForm.patchValue({ hotelSeleccionado: ciudad.trim() });
                             this.destinoSeleccionado(destino);
                         }
                     }
@@ -81,9 +88,27 @@ export class HotelesComponent {
                 }
             });
         }
+
+        this.hotelesForm.get('hotelSeleccionado')?.valueChanges.subscribe(valor => {
+            const destino = this.listaHoteles.find(item => item.ciudad.trim() === valor);
+            this.destinoSeleccionado(destino);
+        });
     }
 
     ngAfterViewInit(): void {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                this.internacionalesEnVista = entry.intersectionRatio > 0;
+            },
+            {
+                root: null, // viewport
+                threshold: 1.0 // solo cuando top del div está totalmente visible
+            }
+        );
+
+        if (this.sentinelaInternacionales?.nativeElement) {
+            observer.observe(this.sentinelaInternacionales.nativeElement);
+        }
         const savedScroll = sessionStorage.getItem('scrollTopHoteles');
         if (savedScroll) {
             setTimeout(() => {
@@ -91,11 +116,14 @@ export class HotelesComponent {
                 sessionStorage.removeItem('scrollTopHoteles');
             }, 100);
         }
+
+        this.updateTabPosition();
+
     }
 
     destinoSeleccionado(event) {
         this.ciudadSeleccionada = true;
-        this.hotelesPorCiudad = event.hoteles;
+        this.hotelesPorCiudad = event.hoteles === undefined? [] : event.hoteles;
         sessionStorage.setItem('ciudad', event.ciudad)
     }
 
@@ -141,5 +169,24 @@ export class HotelesComponent {
             hotel._descuentoClase = this.descuentoEstilos[randomIndex];
         }
         return hotel._descuentoClase;
+    }
+
+    seleccionarCiudad(item: any) {
+        this.ciudadSeleccionada = item.ciudad;
+        this.destinoSeleccionado(item);
+    }
+
+    seleccionarTab(item: any, index: number, tabElement: HTMLElement) {
+        this.tabIndexSeleccionado = index;
+        this.destinoSeleccionado(item);
+        this.updateTabPosition();
+    }
+
+    updateTabPosition() {
+        setTimeout(() => {
+            const tabs = document.querySelectorAll('button');
+            this.tabOffsets = Array.from(tabs).map(tab => (tab as HTMLElement).offsetLeft);
+            this.tabWidths = Array.from(tabs).map(tab => (tab as HTMLElement).offsetWidth);
+        });
     }
 }
