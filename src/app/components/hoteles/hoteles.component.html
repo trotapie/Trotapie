@@ -85,7 +85,7 @@
                                         </div>
                                         <div class="w-3/5">
 
-                                            {{hotel?.descripcion?.todoIncluido}}
+                                            {{hotel?.descripcion?.regimenPrincipal}}
                                         </div>
                                     </div>
 
@@ -109,115 +109,16 @@
             </section>
 
             <section class="relative">
-                <div class="sticky top-0 z-30 bg-blue-50 shadow py-2 transition duration-300">
-                    <h2 class="text-center text-blue-600 font-bold text-lg">Destinos Internacionales</h2>
-                </div>
-
-                <div class="flex items-center justify-center min-h-[200px]">
-                    <app-text-typewriter [text]="['Próximamentee', 'Nuevas sorpresass', 'Destinos increíbless']"
+                <div
+                    class="sticky top-0 z-30 flex items-center justify-center bg-blue-100 shadow py-2 transition duration-300 min-h-15">
+                    <!-- <h2 class="text-center text-blue-600 font-bold text-lg">Destinos Internacionales</h2> -->
+                    <app-text-typewriter [text]="['Destinos Internacionales próximamentee']"
                         [typingSpeed]="80" [pauseDuration]="1800" [deletingSpeed]="40" [loop]="true" [showCursor]="true"
                         cursorCharacter="|"></app-text-typewriter>
                 </div>
-                <!-- <div class="flex min-w-0 flex-auto flex-col">
-                    <div class="flex-auto p-3 sm:p-5">
-                        <form [formGroup]="hotelesForm">
-                            <div class="flex flex-wrap gap-2">
-                                <h1 class="text-2xl font-bold italic w-full">Seleccione un destino</h1>
 
-                                <mat-button-toggle-group formControlName="hotelSeleccionado"
-                                    class="flex flex-wrap w-full gap-2">
-                                    <mat-button-toggle *ngFor="let item of listaHoteles" [value]="item.ciudad"
-                                        (change)="destinoSeleccionado(item)" class="text-center flex items-center justify-center
-                       flex-grow-0 flex-shrink-0 
-                       w-[calc(100%/2-0.5rem)] md:w-auto
-                       border border-green-600 shadow-sm
-               [&.mat-button-toggle-checked]:bg-green-600
-               [&.mat-button-toggle-checked]:text-white
-               [&.mat-button-toggle-checked]:border-green-700/50
-              ">
-                                        <span class="text-md text-center">
-                                            {{ item.ciudad }}
-                                        </span>
-                                    </mat-button-toggle>
-                                </mat-button-toggle-group>
-                            </div>
-                        </form>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 p-6">
-                            <div *ngIf="hotelesPorCiudad.length === 0 && ciudadSeleccionada"
-                                class="text-center text-red-500/80 text-lg mt-8">
-                                No hay hoteles disponibles para esta ciudad.
-                            </div>
-                            <div *ngFor="let hotel of hotelesPorCiudad">
-
-                                <fuse-card
-                                    class="cursor-pointer filter-listing relative flex w-full h-48 flex-col bg-cover bg-center text-white rounded-2xl overflow-hidden transition duration-200 hover:scale-105 card-animada"
-                                    [ngStyle]="{ 'background-image': 'url(' + (hotel.fondo || fallback) + ')' }"
-                                    (click)="verDetalleHotel(hotel)">
-
-                                    <div class="absolute inset-0 bg-black/40 z-0"></div>
-                                    <div *ngIf="hotel?.descripcion?.descuento" class="absolute top-2 right-2 z-20">
-                                        <div [ngClass]="getDescuentoClass(hotel)" class="text-xs font-bold px-2 py-1">
-                                            {{ hotel?.descripcion?.descuento }}% descuento
-                                        </div>
-                                    </div>
-
-                                    <div class="relative z-10 m-8 mb-4">
-                                        <div class="text-2xl font-semibold leading-tight">{{ hotel.nombre }}</div>
-
-                                        <div class="-ml-1 mt-2 flex items-center leading-none">
-                                            <div class="flex items-center">
-                                                <ng-container
-                                                    *ngFor="let _ of getFullStars(hotel?.descripcion?.estrellas)">
-                                                    <mat-icon class="text-yellow-400 icon-size-5"
-                                                        [svgIcon]="'mat_outline:star'"></mat-icon>
-                                                </ng-container>
-                                                <ng-container *ngIf="hasHalfStar(hotel?.descripcion?.estrellas)">
-                                                    <mat-icon class="text-yellow-400 icon-size-5"
-                                                        [svgIcon]="'mat_outline:star_half'"></mat-icon>
-                                                </ng-container>
-                                                <ng-container
-                                                    *ngFor="let _ of getEmptyStars(hotel?.descripcion?.estrellas)">
-                                                    <mat-icon class="text-yellow-400 icon-size-5"
-                                                        [svgIcon]="'mat_outline:star_outline'"></mat-icon>
-                                                </ng-container>
-                                            </div>
-                                            <div class="ml-2">{{ hotel?.descripcion?.estrellas }}</div>
-                                        </div>
-                                        <div class="w-3/5">
-
-                                            {{hotel?.descripcion?.todoIncluido}}
-                                        </div>
-                                    </div>
-
-                                    <div class="absolute bottom-4 right-2 z-20 flex items-center gap-2">
-                                        <div class="text-sm text-right leading-tight">
-                                            <div>Ver</div>
-                                            <div>Galería</div>
-                                        </div>
-
-                                        <div
-                                            class="w-10 h-10 rounded-full text-white flex items-center justify-center shadow-md">
-                                            <mat-icon [svgIcon]="'heroicons_outline:arrow-right-circle'"
-                                                class="text-white w-6 h-6"></mat-icon>
-                                        </div>
-                                    </div>
-                                </fuse-card>
-                            </div>
-                        </div>
-                    </div> 
-                </div>-->
             </section>
         </div>
     </div>
 </div>
-<!-- </mat-tab> -->
-
-<!-- <mat-tab label="Destinos Internacionales">
-        <div class="flex items-center justify-center min-h-[200px]">
-            <app-text-typewriter [text]="['Próximamentee', 'Nuevas sorpresass', 'Destinos increíbless']"
-                [typingSpeed]="80" [pauseDuration]="1800" [deletingSpeed]="40" [loop]="true"
-                [showCursor]="true" cursorCharacter="|"></app-text-typewriter>
-        </div>
-    </mat-tab>
-</mat-tab-group> -->

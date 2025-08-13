@@ -70,8 +70,9 @@ export class HotelesComponent {
             this.datosService.obtenerJson().subscribe({
                 next: (data) => {
                     sessionStorage.setItem('hoteles', JSON.stringify(data))
-                    const ciudad = sessionStorage.getItem('ciudad');
+                    let ciudad = sessionStorage.getItem('ciudad');
                     this.listaHoteles = data;
+                    ciudad = ciudad === null ? 'Mazatlán' : ciudad;
                     if (ciudad) {
                         const destino = this.listaHoteles.find(item => item.ciudad === ciudad);
                         if (destino) {
@@ -123,7 +124,7 @@ export class HotelesComponent {
 
     destinoSeleccionado(event) {
         this.ciudadSeleccionada = true;
-        this.hotelesPorCiudad = event.hoteles === undefined? [] : event.hoteles;
+        this.hotelesPorCiudad = event.hoteles === undefined ? [] : event.hoteles;
         sessionStorage.setItem('ciudad', event.ciudad)
     }
 
