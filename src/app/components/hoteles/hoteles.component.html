@@ -1,4 +1,4 @@
-<div #scrollContainer class="absolute inset-0 flex flex-col min-w-0 overflow-y-auto" cdkScrollable>
+<div #scrollContainer class="flex min-w-0  inset-0 flex-auto flex-col">
     <div class="-mt-px flex-auto border-t ">
         <div class="mx-auto w-full max-w-screen-xl">
             <section class="relative">
@@ -112,13 +112,17 @@
                 <div
                     class="sticky top-0 z-30 flex items-center justify-center bg-blue-100 shadow py-2 transition duration-300 min-h-15">
                     <!-- <h2 class="text-center text-blue-600 font-bold text-lg">Destinos Internacionales</h2> -->
-                    <app-text-typewriter [text]="['Destinos Internacionales próximamentee']"
-                        [typingSpeed]="80" [pauseDuration]="1800" [deletingSpeed]="40" [loop]="true" [showCursor]="true"
+                    <app-text-typewriter [text]="['Destinos Internacionales próximamentee']" [typingSpeed]="80"
+                        [pauseDuration]="1800" [deletingSpeed]="40" [loop]="true" [showCursor]="true"
                         cursorCharacter="|"></app-text-typewriter>
                 </div>
 
 
             </section>
         </div>
+
     </div>
 </div>
+
+<app-floating-search [data]="listaHoteles" [debounceMs]="150" (filtered)="onHotelesFiltrados($event)">
+</app-floating-search>

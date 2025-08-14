@@ -10,11 +10,12 @@ import { Observable } from 'rxjs';
 import { DatosService } from './hoteles.service';
 import { FuseSplashScreenService } from '@fuse/services/splash-screen';
 import { TextTypewriterComponent } from 'app/text-typewriter.component';
+import { FloatingSearchComponent } from './search-component/floating-search.component';
 
 @Component({
     selector: 'hoteles',
     templateUrl: './hoteles.component.html',
-    imports: [MaterialModule, TextTypewriterComponent],
+    imports: [MaterialModule, TextTypewriterComponent, FloatingSearchComponent],
     encapsulation: ViewEncapsulation.None,
     standalone: true
 })
@@ -30,6 +31,7 @@ export class HotelesComponent {
 
     hotelesForm: FormGroup;
     listaHoteles: IHoteles[];
+    listaHotelesFiltrada: IHoteles[] = [];
     hotelesPorCiudad: Hotel[] = [];
     ciudadSeleccionada: boolean;
     cargando = false;
@@ -58,12 +60,14 @@ export class HotelesComponent {
         if (this.hotel !== null) {
             this.splashScreen.hide();
             sessionStorage.removeItem('hotel')
-            const ciudad = sessionStorage.getItem('ciudad');
+            const ciudad = sessionStorage.getItem('ciudad');        
             if (ciudad) {
-                const destino = this.listaHoteles.find(item => item.ciudad === ciudad);
-                if (destino) {
+                const destino = this.listaHoteles.find(item => item.ciudad.trim() === ciudad.trim());
+                if (destino) {                  
                     this.hotelesForm.patchValue({ hotelSeleccionado: ciudad.trim() });
-                    this.destinoSeleccionado(destino);
+                    setTimeout(() => {
+                        this.destinoSeleccionado(destino);
+                    }, 400);
                 }
             }
         } else {
@@ -72,9 +76,10 @@ export class HotelesComponent {
                     sessionStorage.setItem('hoteles', JSON.stringify(data))
                     let ciudad = sessionStorage.getItem('ciudad');
                     this.listaHoteles = data;
+                    this.listaHotelesFiltrada = data;
                     ciudad = ciudad === null ? 'Mazatlán' : ciudad;
                     if (ciudad) {
-                        const destino = this.listaHoteles.find(item => item.ciudad === ciudad);
+                        const destino = this.listaHotelesFiltrada.find(item => item.ciudad.trim() === ciudad.trim());
                         if (destino) {
                             this.hotelesForm.patchValue({ hotelSeleccionado: ciudad.trim() });
                             this.destinoSeleccionado(destino);
@@ -89,11 +94,12 @@ export class HotelesComponent {
                 }
             });
         }
-
         this.hotelesForm.get('hotelSeleccionado')?.valueChanges.subscribe(valor => {
-            const destino = this.listaHoteles.find(item => item.ciudad.trim() === valor);
+            sessionStorage.setItem('ciudad', valor)
+            const destino = this.listaHotelesFiltrada.find(item => item.ciudad.trim() === valor);
             this.destinoSeleccionado(destino);
         });
+
     }
 
     ngAfterViewInit(): void {
@@ -102,8 +108,8 @@ export class HotelesComponent {
                 this.internacionalesEnVista = entry.intersectionRatio > 0;
             },
             {
-                root: null, // viewport
-                threshold: 1.0 // solo cuando top del div está totalmente visible
+                root: null, 
+                threshold: 1.0
             }
         );
 
@@ -124,8 +130,13 @@ export class HotelesComponent {
 
     destinoSeleccionado(event) {
         this.ciudadSeleccionada = true;
-        this.hotelesPorCiudad = event.hoteles === undefined ? [] : event.hoteles;
-        sessionStorage.setItem('ciudad', event.ciudad)
+        if (event !== undefined) {
+            this.hotelesPorCiudad = event.hoteles === undefined ? [] : event.hoteles;
+            sessionStorage.setItem('ciudad', event.ciudad)
+        } else {
+            this.hotelesPorCiudad = []
+        }
+
     }
 
     verDetalleHotel(hotel: any): void {
@@ -189,5 +200,24 @@ export class HotelesComponent {
             this.tabOffsets = Array.from(tabs).map(tab => (tab as HTMLElement).offsetLeft);
             this.tabWidths = Array.from(tabs).map(tab => (tab as HTMLElement).offsetWidth);
         });
+    }
+
+    onHotelesFiltrados(dataFiltrada: IHoteles[]) {
+        this.listaHotelesFiltrada = dataFiltrada;
+        let ciudad = sessionStorage.getItem('ciudad');
+        ciudad = ciudad === null ? 'Mazatlán' : ciudad;
+        
+        if (ciudad) {
+            const destino = this.listaHotelesFiltrada.find(item => item.ciudad.trim() === ciudad.trim());
+
+            if (destino) {
+                this.hotelesForm.patchValue({ hotelSeleccionado: ciudad.trim() });
+                this.destinoSeleccionado(destino);
+            } else {
+                this.destinoSeleccionado(destino);
+
+            }
+        }
+
     }
 }
