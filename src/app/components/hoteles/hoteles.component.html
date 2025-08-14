@@ -1,4 +1,4 @@
-<div #scrollContainer class="flex min-w-0  inset-0 flex-auto flex-col">
+<div #scrollContainer class="absolute inset-0 flex flex-col min-w-0 overflow-y-auto" cdkScrollable>
     <div class="-mt-px flex-auto border-t ">
         <div class="mx-auto w-full max-w-screen-xl">
             <section class="relative">
@@ -36,10 +36,13 @@
                         </form>
 
                     </div>
+                    <app-floating-search [data]="listaHoteles" [debounceMs]="150"
+                        (filtered)="onHotelesFiltrados($event)">
+                    </app-floating-search>
 
                 </div>
 
-                <div class="flex min-w-0 flex-auto flex-col">
+                <div class="flex min-w-0 flex-auto flex-col mt-6">
                     <div class="flex-auto p-3 sm:p-5">
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 p-6">
@@ -123,6 +126,3 @@
 
     </div>
 </div>
-
-<app-floating-search [data]="listaHoteles" [debounceMs]="150" (filtered)="onHotelesFiltrados($event)">
-</app-floating-search>

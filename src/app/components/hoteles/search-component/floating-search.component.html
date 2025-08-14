@@ -1,44 +1,4 @@
-
-<!-- <div class="fixed bottom-6 right-6 z-50" (click)="stop($event)">
-    <div class="flex items-center gap-2" [ngClass]="{
-      'backdrop-blur-sm': isOpen()
-    }">
-
-        <div class="overflow-hidden transition-all duration-300 ease-out" [ngClass]="{
-        'w-0 opacity-0 translate-x-2 pointer-events-none': !isOpen(),
-        'w-64 sm:w-80 opacity-100 translate-x-0': isOpen()
-      }">
-
-            <form class="w-full" (submit)="$event.preventDefault(); submit()">
-                <input #inputEl type="text" [value]="query()" (input)="onInput($event)" placeholder="Buscar hotel…" class="w-full rounded-xl border border-gray-300/60 dark:border-white/10 bg-white/90 dark:bg-gray-900/80 shadow-sm px-4 h-11 outline-none
-         focus:ring-2 focus:ring-indigo-500/60 focus:border-transparent
-         transition-[box-shadow,ring] duration-200" />
-
-            </form>
-        </div>
-        <button type="button" (click)="toggle()" aria-label="Abrir búsqueda" [attr.aria-expanded]="isOpen()" class="grid place-items-center rounded-full h-14 w-14 shadow-lg
-             bg-white text-white hover:opacity-90 active:scale-95
-             transition-all duration-200">
-            <svg *ngIf="!isOpen()" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                class="h-6 w-6 transition-transform duration-300 text-black" fill="none" stroke="currentColor" stroke-width="1.8"
-                stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="7"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <svg *ngIf="isOpen()" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                class="h-6 w-6 rotate-90 transition-transform duration-300 text-black" fill="none" stroke="currentColor"
-                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-        </button>
-    </div>
-</div> -->
-
-
-<!-- ------------------------------------------------------------------------------------ -->
-
-<div class="fixed bottom-6 right-6 z-50" (click)="stop($event)">
+<div class="absolute top-28 right-6" (click)="stop($event)">
   <div class="flex items-center gap-2" [ngClass]="{ 'backdrop-blur-sm': isOpen() }">
     <!-- Input desplegable -->
     <div class="overflow-hidden transition-all duration-300 ease-out"

@@ -48,6 +48,7 @@ export class FloatingSearchComponent {
             this.term.set('');
             this.search.emit('');
             this.emitFiltered();
+            sessionStorage.removeItem('filtros')
         }
     }
 

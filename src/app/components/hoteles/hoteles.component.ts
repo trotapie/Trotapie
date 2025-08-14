@@ -121,10 +121,10 @@ export class HotelesComponent {
             setTimeout(() => {
                 this.scrollContainer.nativeElement.scrollTop = +savedScroll;
                 sessionStorage.removeItem('scrollTopHoteles');
-            }, 100);
+                this.updateTabPosition();
+            }, 500);
         }
 
-        this.updateTabPosition();
 
     }
 
