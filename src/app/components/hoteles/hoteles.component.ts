@@ -220,4 +220,8 @@ export class HotelesComponent {
         }
 
     }
+
+    get currentYear(): number {
+        return new Date().getFullYear();
+    }
 }

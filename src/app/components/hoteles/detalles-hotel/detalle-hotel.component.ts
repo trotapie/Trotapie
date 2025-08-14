@@ -303,5 +303,9 @@ Fecha de salida: ${fechaFormateadaFin}`;
         this.mostrarMapa = false;
     }
 
+    get currentYear(): number {
+        return new Date().getFullYear();
+    }
+
 
 }
