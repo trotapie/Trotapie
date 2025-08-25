@@ -9,12 +9,16 @@ import { FuseMediaWatcherService } from '@fuse/services/media-watcher';
 import { Subject, takeUntil } from 'rxjs';
 import moment from 'moment';
 import { MapaComponent } from '../mapa/mapa.component';
+import { QRCodeComponent } from 'angularx-qrcode';
+import { TextTypewriterComponent } from 'app/text-typewriter.component';
 
 @Component({
     selector: 'detalle-hotel',
     standalone: true,
     templateUrl: './detalle-hotel.component.html',
-    imports: [MaterialModule, MapaComponent],
+    imports: [MaterialModule, MapaComponent,
+        //  QRCodeComponent, 
+         TextTypewriterComponent],
     encapsulation: ViewEncapsulation.None,
 })
 export class DetalleHotelComponent {
@@ -22,7 +26,7 @@ export class DetalleHotelComponent {
     private router = inject(Router);
     private _fuseMediaWatcherService = inject(FuseMediaWatcherService)
 
-
+//  urlQR = 'https://trotapie.github.io/Trotapie/hoteles';
     hotel: Hotel;
     descripcionParrafo: string = '';
     descripcionLista: string[] = [];

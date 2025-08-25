@@ -2,16 +2,20 @@
     <div class="flex min-w-0 flex-auto flex-col m-6">
         <div class="sticky top-0 z-50 flex items-center justify-between w-full py-2 px-2 md:px-4 transition-all duration-300 backdrop-blur-md"
             [ngClass]="{'bg-transparent': !scrolled, 'bg-white dark:bg-gray-900 shadow-md': scrolled }">
-            <div class="text-3xl font-semibold italic leading-tight">
-                {{hotel.nombre}}
-            </div>
-            <div class="flex justify-end mt-4 mb-2">
+            <app-text-typewriter [text]="[hotel.nombre]" [typingSpeed]="80"
+                        [pauseDuration]="1800" [deletingSpeed]="40" [loop]="false" [showCursor]="true"
+                        cursorCharacter="|"></app-text-typewriter>
+            <div class="flex justify-end mt-4 mb-2 ml-2">
                 <button mat-flat-button color="warn" class="mr-2" (click)="regresar()">
                     <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
-                    Regresar
                 </button>
             </div>
         </div>
+        <!-- <qrcode
+[qrdata]="urlQR"
+[width]="3000"
+[errorCorrectionLevel]="'M'">
+</qrcode> -->
         <fuse-card class="filter-article flex w-full flex-col p-1">
             <mat-tab-group class="sm:px-2" mat-stretch-tabs="false" [animationDuration]="'0'">
                 <mat-tab label="Descripcion">
@@ -27,7 +31,7 @@
                 <mat-tab label="Amenidades">
                     <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-2">
                         <li *ngFor="let punto of descripcionLista"
-                            class="flex items-center justify-center gap-2 text-center">
+                            class="flex gap-2">
                             <mat-icon class="icon-size-5 text-green-600"
                                 [svgIcon]="'heroicons_outline:check-badge'"></mat-icon>
                             <span>{{ punto }}</span>
@@ -43,8 +47,8 @@
                     Galeria
                 </div>
                 @if(isScreenSmall){
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-2">
-                    <div *ngFor="let imagen of imagenes" class="w-full h-40 bg-cover bg-center rounded-xl shadow-md"
+                <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4 p-2">
+                    <div *ngFor="let imagen of imagenes" class="w-full h-30 bg-cover bg-center rounded-xl shadow-md"
                         [ngStyle]="{ 'background-image': 'url(' + imagen + ')' }"></div>
                 </div>
                 }

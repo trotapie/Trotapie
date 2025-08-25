@@ -10,7 +10,7 @@ export class TextTypewriterComponent implements OnInit {
   @Input() typingSpeed = 75;
   @Input() pauseDuration = 1500;
   @Input() deletingSpeed = 50;
-  @Input() loop = true;
+  @Input() loop;
   @Input() showCursor = true;
   @Input() cursorCharacter = '|';
 
@@ -29,7 +29,7 @@ export class TextTypewriterComponent implements OnInit {
     if (this.isDeleting) {
       this.displayedText = fullText.substring(0, this.currentCharIndex--);
     } else {
-      this.displayedText = fullText.substring(0, this.currentCharIndex++);
+      this.displayedText = fullText.substring(0, ++this.currentCharIndex);
     }
 
     let delay = this.isDeleting ? this.deletingSpeed : this.typingSpeed;
