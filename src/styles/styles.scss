@@ -2,6 +2,9 @@
 /*  @ Import/write your custom styles here.
 /*  @ Styles from this file will override 'vendors.scss' and Fuse's base styles.
 /* ----------------------------------------------------------------------------------------------------- */
+// @import 'photoswipe/style.css';
+@import 'lightgallery/scss/lightgallery';
+
 @keyframes fadeInUp {
     0% {
         opacity: 0;
@@ -220,3 +223,6 @@
         0 0 18px rgba(192, 192, 192, 0.5),
         0 0 10px rgba(255, 255, 255, 0.4) inset;
 }
+
+.no-scrollbar::-webkit-scrollbar{display:none}
+.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}

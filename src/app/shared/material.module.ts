@@ -41,6 +41,7 @@ import { MatBottomSheetModule } from '@angular/material/bottom-sheet';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { HttpClientJsonpModule } from '@angular/common/http';
 import { NgxDaterangepickerMd } from 'ngx-daterangepicker-material';
+import { LightgalleryModule } from 'lightgallery/angular';
 @NgModule({
   imports: [
     MatButtonModule,
@@ -102,7 +103,8 @@ import { NgxDaterangepickerMd } from 'ngx-daterangepicker-material';
     NgApexchartsModule,
     NgSwitch, 
     HttpClientJsonpModule,
-    NgxDaterangepickerMd.forRoot()
+    NgxDaterangepickerMd.forRoot(),
+    LightgalleryModule
   ],
   exports: [
     MatButtonModule,
@@ -163,7 +165,8 @@ import { NgxDaterangepickerMd } from 'ngx-daterangepicker-material';
     NgApexchartsModule,
     NgSwitch,
     HttpClientJsonpModule,
-    NgxDaterangepickerMd
+    NgxDaterangepickerMd,
+    LightgalleryModule
   ]
 })
 export class MaterialModule {}

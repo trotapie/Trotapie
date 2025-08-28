@@ -2,9 +2,8 @@
     <div class="flex min-w-0 flex-auto flex-col m-6">
         <div class="sticky top-0 z-50 flex items-center justify-between w-full py-2 px-2 md:px-4 transition-all duration-300 backdrop-blur-md"
             [ngClass]="{'bg-transparent': !scrolled, 'bg-white dark:bg-gray-900 shadow-md': scrolled }">
-            <app-text-typewriter [text]="[hotel.nombre]" [typingSpeed]="80"
-                        [pauseDuration]="1800" [deletingSpeed]="40" [loop]="false" [showCursor]="true"
-                        cursorCharacter="|"></app-text-typewriter>
+            <app-text-typewriter [text]="[hotel.nombre]" [typingSpeed]="80" [pauseDuration]="1800" [deletingSpeed]="40"
+                [loop]="false" [showCursor]="true" cursorCharacter="|"></app-text-typewriter>
             <div class="flex justify-end mt-4 mb-2 ml-2">
                 <button mat-flat-button color="warn" class="mr-2" (click)="regresar()">
                     <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
@@ -30,8 +29,7 @@
 
                 <mat-tab label="Amenidades">
                     <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-2">
-                        <li *ngFor="let punto of descripcionLista"
-                            class="flex gap-2">
+                        <li *ngFor="let punto of descripcionLista" class="flex gap-2">
                             <mat-icon class="icon-size-5 text-green-600"
                                 [svgIcon]="'heroicons_outline:check-badge'"></mat-icon>
                             <span>{{ punto }}</span>
@@ -46,15 +44,82 @@
                 <div class="text-2xl my-4 font-semibold italic leading-tight text-center">
                     Galeria
                 </div>
-                @if(isScreenSmall){
+                <!-- @if(isScreenSmall){
                 <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4 p-2">
                     <div *ngFor="let imagen of imagenes" class="w-full h-30 bg-cover bg-center rounded-xl shadow-md"
                         [ngStyle]="{ 'background-image': 'url(' + imagen + ')' }"></div>
                 </div>
                 }
-                @if(!isScreenSmall){
+                @if(!isScreenSmall){ -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <button *ngFor="let img of imagenes; let i = index" class="p-0 bg-transparent border-0 group"
+                        (click)="open(i, $event)">
+                        <img [src]="img" class="w-full h-30 object-cover rounded-xl shadow-md" />
+                    </button>
+                </div>
 
-                <div #scrollContainer
+                <div *ngIf="isOpen" #overlay class="fixed inset-0 z-50" (click)="onBackdrop($event)">
+
+                    <div class="absolute inset-0 bg-black/90 opacity-100"></div>
+                    <div class="absolute top-3 left-12 md:top-6 md:left-16
+                     text-white/90 text-lg px-2.5 py-1 rounded bg-black/40">
+                        {{ currentIndex + 1 }}/{{ imagenes.length }}
+                    </div>
+
+                    <div class="absolute inset-0 flex items-center justify-center select-none">
+
+                        <img #modalImg [src]="current.src" [alt]="current.alt || ''" [style.transformOrigin]="origin"
+                            [class]="
+                        'max-w-[90vw] max-h-[85vh] rounded-xl shadow-2xl transition ' +
+                        'duration-300 ease-out will-change-transform ' +
+                        (show ? 'scale-100 opacity-100' : 'scale-50 opacity-0')
+                      " (pointerdown)="onDragStart($event)" />
+
+                        <button mat-flat-button class="absolute left-3 md:left-6 top-1/2 -translate-y-1/2
+                       rounded-full  bg-white/20 hover:bg-white/30 text-white backdrop-blur
+                       focus:outline-none" (click)="prev($event)">
+                            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
+                        </button>
+
+                        <button mat-flat-button class="absolute right-3 md:right-6 top-1/2 -translate-y-1/2
+                       rounded-full  bg-white/20 hover:bg-white/30 text-white backdrop-blur
+                       focus:outline-none" (click)="next($event)">
+                            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:arrow-right'"></mat-icon>
+                        </button>
+                        <button mat-flat-button class="absolute top-3 right-3 md:top-6 md:right-6
+                       rounded-full bg-white/20 hover:bg-white/30 text-white backdrop-blur
+                       focus:outline-none" (click)="close()">
+                            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
+                        </button>
+
+                    </div>
+                    <div class="absolute bottom-3 md:bottom-6 left-1/2 -translate-x-1/2
+         max-w-[92vw] md:max-w-[80vw] w-full px-3">
+                        <div class="flex gap-2 overflow-x-auto no-scrollbar
+           bg-black/30 rounded-xl p-2 backdrop-blur"
+                            (wheel)="onThumbsWheel($event)">
+
+                            <button *ngFor="let thumb of imagenes; let i = index" #thumbBtn
+                                class="relative shrink-0 rounded-lg overflow-hidden focus:outline-none"
+                                (click)="goTo(i, $event)">
+                                <img [src]="thumb" class="h-16 w-24 md:h-20 md:w-28 object-cover"
+                                    [class]="(i === currentIndex) ? 'ring-2 ring-white/90' : 'ring-1 ring-white/30'" />
+                                <span *ngIf="i === currentIndex"
+                                    class="absolute inset-0 ring-2 ring-white/90 rounded-lg pointer-events-none"></span>
+                            </button>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div #gallery class="pswp-gallery grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4 p-2">
+                    <a *ngFor="let item of items" class="block w-full rounded-xl shadow-md bg-cover bg-center"
+                        [ngStyle]="{ 'background-image': 'url(' + item.src + ')' }" [href]="item.src"
+                        [attr.data-pswp-width]="item.w" [attr.data-pswp-height]="item.h" data-cropped="true">
+                        <span class="sr-only">Abrir imagen</span>
+                    </a>
+                </div>
+                <!-- <div #scrollContainer
                     class="scroll-container flex overflow-x-auto gap-4 p-4 pr-20 snap-x snap-mandatory cursor-grab active:cursor-grabbing select-none"
                     (scroll)="onScroll()" (mousedown)="startDrag($event)">
 
@@ -67,12 +132,31 @@
     }" [attr.id]="'img-' + i">
                     </div>
                     <div style="flex: 0 0 400px;"></div>
-                </div>
-                }
+                </div> -->
+
+                <!-- <lightgallery [settings]="settings" [onInit]="onInit" class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <img *ngFor="let imagen of imagenes" [src]="imagen"
+                        class="w-full h-30 object-cover rounded-xl shadow-md" />
+
+                </lightgallery> -->
+                <!-- <lightgallery [settings]="settings" class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <a *ngFor="let imagen of imagenes" [href]="imagen.replace('sz=w1000', 'sz=w1600')">
+                        <img [src]="imagen.replace('sz=w1000', 'sz=w300')"
+                            class="w-full h-40 object-cover rounded-xl shadow-md" />
+                    </a>
+                </lightgallery> -->
+                <!-- <lightgallery [settings]="settings" class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <a *ngFor="let img of imagenes" [href]="big(img)"
+                        class="block rounded-xl shadow-md overflow-hidden">
+                        <img [src]="small(img)" alt="imagen" class="w-full h-40 object-cover" />
+                    </a>
+                </lightgallery> -->
+
+                <!-- } -->
             </div>
         </fuse-card>
     </div>
-    <div class="sticky bottom-4 w-full z-50">
+    <div *ngIf="!isOpen" class="sticky bottom-4 w-full z-50">
         <div class="relative flex justify-end pr-4">
             <!-- Tooltip fijo arriba del botón -->
             <div

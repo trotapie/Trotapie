@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, ElementRef, inject, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Component, ElementRef, inject, QueryList, ViewChild, ViewChildren, ViewEncapsulation } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MaterialModule } from 'app/shared/material.module';
 import { JsonpClientBackend, HttpClientJsonpModule } from '@angular/common/http';
@@ -11,6 +11,9 @@ import moment from 'moment';
 import { MapaComponent } from '../mapa/mapa.component';
 import { QRCodeComponent } from 'angularx-qrcode';
 import { TextTypewriterComponent } from 'app/text-typewriter.component';
+import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
+import lgZoom from 'lightgallery/plugins/zoom';
+import lgThumbnail from 'lightgallery/plugins/thumbnail';
 
 @Component({
     selector: 'detalle-hotel',
@@ -18,7 +21,7 @@ import { TextTypewriterComponent } from 'app/text-typewriter.component';
     templateUrl: './detalle-hotel.component.html',
     imports: [MaterialModule, MapaComponent,
         //  QRCodeComponent, 
-         TextTypewriterComponent],
+        TextTypewriterComponent],
     encapsulation: ViewEncapsulation.None,
 })
 export class DetalleHotelComponent {
@@ -26,7 +29,7 @@ export class DetalleHotelComponent {
     private router = inject(Router);
     private _fuseMediaWatcherService = inject(FuseMediaWatcherService)
 
-//  urlQR = 'https://trotapie.github.io/Trotapie/hoteles';
+    //  urlQR = 'https://trotapie.github.io/Trotapie/hoteles';
     hotel: Hotel;
     descripcionParrafo: string = '';
     descripcionLista: string[] = [];
@@ -70,7 +73,30 @@ export class DetalleHotelComponent {
     onDragBound!: (e: MouseEvent) => void;
     endDragBound!: () => void;
 
-    constructor() {
+    settings = {
+        speed: 500,
+        licenseKey: '0000-0000-000-0000',
+        plugins: [lgZoom, lgThumbnail],
+        selector: 'a',
+    };
+
+    items = this.imagenes.map(src => ({
+        src,
+        w: 1200,
+        h: 800
+    }));
+
+    isOpen = false;
+    currentIndex = 0;
+    current: { src: string; alt?: string } = { src: '' };
+    show = false;
+    origin = 'center center';
+
+    @ViewChild('overlay') overlay?: ElementRef<HTMLDivElement>;
+    @ViewChild('modalImg') modalImg?: ElementRef<HTMLImageElement>;
+    // @ViewChild('overlay') overlay?: ElementRef<HTMLDivElement>;
+    @ViewChildren('thumbBtn') thumbBtns?: QueryList<ElementRef<HTMLButtonElement>>;
+    constructor(private sanitizer: DomSanitizer) {
         const nav = this.router.getCurrentNavigation();
         this.hotel = nav?.extras.state?.hotel;
     }
@@ -310,6 +336,102 @@ Fecha de salida: ${fechaFormateadaFin}`;
     get currentYear(): number {
         return new Date().getFullYear();
     }
+
+    sanitizeImage(url: string): SafeStyle {
+        return this.sanitizer.bypassSecurityTrustStyle(`url(${url})`);
+    }
+
+    private getIdFromDriveUrl(url: string): string | null {
+        // Extrae el id=... de la URL thumbnail
+        const m = url.match(/[?&]id=([^&]+)/i);
+        return m ? m[1] : null;
+    }
+
+    big(url: string): string {
+        const id = this.getIdFromDriveUrl(url);
+        if (!id) return url;
+        return `https://drive.google.com/uc?export=view&id=${id}`;
+        // Alternativa (a veces más rápida):
+        // return `https://lh3.googleusercontent.com/d/${id}=w1600`;
+    }
+
+    small(url: string): string {
+        return url.replace(/sz=w\d+/i, 'sz=w400');
+    }
+
+     private updateCurrent() {
+    this.current = {
+      src: this.imagenes[this.currentIndex],
+      alt: `Imagen ${this.currentIndex + 1}/${this.imagenes.length}`
+    };
+    // (Opcional) asegurar miniatura activa a la vista
+    setTimeout(() => {
+      const btn = this.thumbBtns?.get(this.currentIndex)?.nativeElement;
+      btn?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    });
+  }
+
+  open(i: number, event: MouseEvent) {
+    this.currentIndex = i;
+    this.updateCurrent();
+
+    const target = event.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    const originX = ((event.clientX - rect.left) / rect.width) * 100;
+    const originY = ((event.clientY - rect.top) / rect.height) * 100;
+    this.origin = `${originX}% ${originY}%`;
+
+    this.isOpen = true;
+    setTimeout(() => (this.show = true), 10);
+  }
+
+  close() {
+    this.show = false;
+    setTimeout(() => (this.isOpen = false), 300);
+  }
+
+  next(event: Event) {
+    event.stopPropagation();
+    this.currentIndex = (this.currentIndex + 1) % this.imagenes.length;
+    this.updateCurrent();
+  }
+
+  prev(event: Event) {
+    event.stopPropagation();
+    this.currentIndex = (this.currentIndex - 1 + this.imagenes.length) % this.imagenes.length;
+    this.updateCurrent();
+  }
+
+  goTo(i: number, event: Event) {
+    event.stopPropagation();
+    this.currentIndex = i;
+    this.updateCurrent();
+  }
+
+  onBackdrop(event: MouseEvent) {
+    if (event.target === this.overlay?.nativeElement) this.close();
+  }
+
+  onDragStart(event: PointerEvent) {
+    event.preventDefault();
+  }
+
+  onThumbsWheel(event: WheelEvent) {
+  const el = event.currentTarget as HTMLElement | null;
+  if (!el) return;
+
+  // Si el usuario está scrolleando verticalmente, lo traducimos a horizontal en la tira
+  const delta = Math.abs(event.deltaY) >= Math.abs(event.deltaX)
+    ? event.deltaY
+    : event.deltaX;
+
+  // Desplaza la tira
+  el.scrollLeft += delta;
+
+  // Nota: evitar preventDefault() aquí porque los listeners de 'wheel'
+  // suelen ser pasivos y el navegador lo ignoraría.
+}
+
 
 
 }

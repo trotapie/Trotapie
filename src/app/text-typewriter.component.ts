@@ -1,9 +1,11 @@
+import { CommonModule } from '@angular/common';
 import { Component, Input, OnInit } from '@angular/core';
 
 @Component({
   selector: 'app-text-typewriter',
   templateUrl: './text-typewriter.component.html',
-  styleUrls: ['./text-typewriter.component.css']
+  styleUrls: ['./text-typewriter.component.css'],
+  imports: [CommonModule]
 })
 export class TextTypewriterComponent implements OnInit {
   @Input() text: string[] = ['Próximamente', 'Nuevos destinos', '¡Espéralo!'];
