@@ -12,8 +12,6 @@ import { MapaComponent } from '../mapa/mapa.component';
 import { QRCodeComponent } from 'angularx-qrcode';
 import { TextTypewriterComponent } from 'app/text-typewriter.component';
 import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
-import lgZoom from 'lightgallery/plugins/zoom';
-import lgThumbnail from 'lightgallery/plugins/thumbnail';
 
 @Component({
     selector: 'detalle-hotel',
@@ -72,13 +70,6 @@ export class DetalleHotelComponent {
 
     onDragBound!: (e: MouseEvent) => void;
     endDragBound!: () => void;
-
-    settings = {
-        speed: 500,
-        licenseKey: '0000-0000-000-0000',
-        plugins: [lgZoom, lgThumbnail],
-        selector: 'a',
-    };
 
     items = this.imagenes.map(src => ({
         src,

@@ -11,6 +11,7 @@ import { DatosService } from './hoteles.service';
 import { FuseSplashScreenService } from '@fuse/services/splash-screen';
 import { TextTypewriterComponent } from 'app/text-typewriter.component';
 import { FloatingSearchComponent } from './search-component/floating-search.component';
+import { SupabaseService } from 'app/core/supabase.service';
 
 @Component({
     selector: 'hoteles',
@@ -24,6 +25,7 @@ export class HotelesComponent {
     private router = inject(Router);
     private datosService = inject(DatosService);
     private splashScreen = inject(FuseSplashScreenService)
+    private supabase = inject(SupabaseService);
 
     /**
      * Constructor
@@ -38,17 +40,21 @@ export class HotelesComponent {
     hotel: Hotel;
     rating: Number;
     descuentoEstilos = ['descuento-rect', 'descuento-estrella', 'descuento-circulo'];
-    @ViewChild('scrollContainer') scrollContainer!: ElementRef;
+    // @ViewChild('scrollContainer') scrollContainer!: ElementRef;
     @ViewChild('internacionalesSentinela') internacionalesSentinela!: ElementRef;
     @ViewChild('sentinelaInternacionales') sentinelaInternacionales!: ElementRef;
     internacionalesEnVista = false;
     tabIndexSeleccionado = 0;
     tabOffsets: number[] = [];
     tabWidths: number[] = [];
+    error = '';
+     @ViewChild('scrollContainer', { static: true }) scrollContainer!: ElementRef<HTMLElement>;
+  @ViewChild('ancla', { static: false }) ancla!: ElementRef<HTMLElement>;
+  @ViewChild('anclaNacionales', { static: false }) anclaNacionales!: ElementRef<HTMLElement>;
     constructor() {
     }
 
-    ngOnInit() {
+    async ngOnInit() {
         this.splashScreen.show();
         this.listaHoteles = JSON.parse(sessionStorage.getItem('hoteles'));
         this.hotelesForm = this.formBuilder.group({
@@ -60,10 +66,10 @@ export class HotelesComponent {
         if (this.hotel !== null) {
             this.splashScreen.hide();
             sessionStorage.removeItem('hotel')
-            const ciudad = sessionStorage.getItem('ciudad');        
+            const ciudad = sessionStorage.getItem('ciudad');
             if (ciudad) {
                 const destino = this.listaHoteles.find(item => item.ciudad.trim() === ciudad.trim());
-                if (destino) {                  
+                if (destino) {
                     this.hotelesForm.patchValue({ hotelSeleccionado: ciudad.trim() });
                     setTimeout(() => {
                         this.destinoSeleccionado(destino);
@@ -100,6 +106,11 @@ export class HotelesComponent {
             this.destinoSeleccionado(destino);
         });
 
+        // const { data, error } = await this.supabase.listHotelesAll();
+        // if (error) { this.error = error.message; return; }
+        // console.log(data);
+
+
     }
 
     ngAfterViewInit(): void {
@@ -108,7 +119,7 @@ export class HotelesComponent {
                 this.internacionalesEnVista = entry.intersectionRatio > 0;
             },
             {
-                root: null, 
+                root: null,
                 threshold: 1.0
             }
         );
@@ -206,7 +217,7 @@ export class HotelesComponent {
         this.listaHotelesFiltrada = dataFiltrada;
         let ciudad = sessionStorage.getItem('ciudad');
         ciudad = ciudad === null ? 'Mazatlán' : ciudad;
-        
+
         if (ciudad) {
             const destino = this.listaHotelesFiltrada.find(item => item.ciudad.trim() === ciudad.trim());
 
@@ -224,4 +235,52 @@ export class HotelesComponent {
     get currentYear(): number {
         return new Date().getFullYear();
     }
+
+    irA(): void {
+    const container = this.scrollContainer?.nativeElement;
+    const target = this.ancla?.nativeElement;
+    if (!container || !target) return;
+
+    const targetY = this.getOffsetWithinContainer(target, container);
+    const offset = this.getStickyOffset(container);
+
+    container.scrollTo({
+      top: Math.max(0, targetY - offset),
+      behavior: 'smooth'
+    });
+  }
+
+    irANacionales(): void {
+    const container = this.scrollContainer?.nativeElement;
+    const target = this.anclaNacionales?.nativeElement;
+    if (!container || !target) return;
+
+    const targetY = this.getOffsetWithinContainer(target, container);
+    const offset = this.getStickyOffset(container);
+
+    container.scrollTo({
+      top: Math.max(0, targetY - offset),
+      behavior: 'smooth'
+    });
+  }
+
+  /** Offset absoluto del target dentro del container (sin usar window). */
+  private getOffsetWithinContainer(target: HTMLElement, container: HTMLElement): number {
+    let y = 0;
+    let node: HTMLElement | null = target;
+    while (node && node !== container) {
+      y += node.offsetTop;
+      node = node.offsetParent as HTMLElement | null;
+    }
+    return y;
+  }
+
+  /** Altura del header sticky visible (para que no tape el título) + un respiro. */
+  private getStickyOffset(container: HTMLElement): number {
+    let offset = 0;
+    const stickies = container.querySelectorAll<HTMLElement>('.sticky.top-0');
+    stickies.forEach(el => offset = Math.max(offset, el.offsetHeight || 0));
+    return offset + 8; // 8px de respiro
+  }
+
 }
