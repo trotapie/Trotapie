@@ -15,7 +15,7 @@ export interface DescripcionHotel {
     descripcion:          string;
     resultadoActividades: string[];
     estrellas:            number;
-    todoIncluido:         string;
+    resultadoRegimen:         string[];
     ubicacion:            string;
     descuento:            number | string;
 }

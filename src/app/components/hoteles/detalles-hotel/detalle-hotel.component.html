@@ -2,8 +2,8 @@
     <div class="flex min-w-0 flex-auto flex-col m-6">
         <div class="sticky top-0 z-50 flex items-center justify-between w-full py-2 px-2 md:px-4 transition-all duration-300 backdrop-blur-md"
             [ngClass]="{'bg-transparent': !scrolled, 'bg-white dark:bg-gray-900 shadow-md': scrolled }">
-            <app-text-typewriter [text]="[hotel.nombre]" [typingSpeed]="80" [pauseDuration]="1800" [deletingSpeed]="40"
-                [loop]="false" [showCursor]="true" cursorCharacter="|"></app-text-typewriter>
+            <app-text-typewriter *ngIf="hotel.nombre" [text]="[hotel.nombre]" [typingSpeed]="80" [pauseDuration]="1800"
+                [deletingSpeed]="40" [loop]="false" [showCursor]="true" cursorCharacter="|"></app-text-typewriter>
             <div class="flex justify-end mt-4 mb-2 ml-2">
                 <button mat-flat-button color="warn" class="mr-2" (click)="regresar()">
                     <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
@@ -96,8 +96,7 @@
                     <div class="absolute bottom-3 md:bottom-6 left-1/2 -translate-x-1/2
          max-w-[92vw] md:max-w-[80vw] w-full px-3">
                         <div class="flex gap-2 overflow-x-auto no-scrollbar
-           bg-black/30 rounded-xl p-2 backdrop-blur"
-                            (wheel)="onThumbsWheel($event)">
+           bg-black/30 rounded-xl p-2 backdrop-blur" (wheel)="onThumbsWheel($event)">
 
                             <button *ngFor="let thumb of imagenes; let i = index" #thumbBtn
                                 class="relative shrink-0 rounded-lg overflow-hidden focus:outline-none"
@@ -314,6 +313,7 @@
         <h2 class="text-2xl font-bold mb-4 text-green-800">Solicitar cotización</h2>
 
         <form [formGroup]="reservacionForm" class="space-y-4">
+
             <div>
                 <label class="block text-sm font-medium text-green-700 mb-1">Adultos</label>
                 <input type="number" formControlName="adultos" min="1"
@@ -392,4 +392,191 @@
             <app-mapa></app-mapa>
         </div>
     </div>
+</div>
+
+<div *ngIf="mostrarBot" class="fixed inset-0 z-[999] bg-black/50 backdrop-blur-sm flex items-end justify-center">
+    <!-- <div
+        class="bg-white dark:bg-gray-900 w-full sm:w-4/5 md:w-[640px] h-[90svh] max-h-[90svh] rounded-t-2xl shadow-xl animate-slide-up relative overflow-hidden">
+
+        <div class="grid grid-rows-[auto,1fr,auto] h-full overscroll-contain touch-pan-y">
+
+            <div class="overflow-y-auto">
+                <div class="p-4  bg-white dark:bg-gray-900/90 backdrop-blur sticky top-0">
+                    <h2 class="text-2xl font-bold text-green-800">Hola, soy trotapie</h2>
+                    <button class="absolute top-2 right-4 text-gray-600 dark:text-gray-300" (click)="cerrarModal()">
+                        <mat-icon svgIcon="heroicons_outline:x-mark" class="w-8 h-8"></mat-icon>
+                    </button>
+                </div>
+                <div class="px-4 py-4">
+
+                    <form [formGroup]="reservacionForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-green-700 mb-1">Adultos</label>
+                            <input type="number" formControlName="adultos" min="1"
+                                class="block w-full rounded-lg border border-gray-300 px-4 py-2 text-sm shadow-sm focus:border-green-700 focus:ring focus:ring-green-200 focus:outline-none transition" />
+                        </div>
+    
+                        <div>
+                            <label class="block text-sm font-medium text-green-700 mb-1">Niños</label>
+                            <input type="number" formControlName="ninos" min="0"
+                                class="block w-full rounded-lg border border-gray-300 px-4 py-2 text-sm shadow-sm focus:border-green-700 focus:ring focus:ring-green-200 focus:outline-none transition" />
+                        </div>
+    
+                        <div *ngFor="let edadControl of edadesNinos?.controls; let i = index" class="mb-4">
+                            <label class="block text-sm font-semibold text-green-700 mb-1">Edad del niño {{ i + 1
+                                }}:</label>
+                            <select [formControl]="edadControl"
+                                class="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-green-700 transition">
+                                <option *ngFor="let edad of [].constructor(18); let j = index" [value]="j">{{ j }}</option>
+                            </select>
+                        </div>
+    
+                        <div class="space-y-0">
+                            <mat-form-field class="w-full" [formGroupName]="'rangoFechas'">
+                                <mat-label class="block text-sm font-semibold text-green-700 mb-1">Rango de
+                                    fechas</mat-label>
+                                <mat-date-range-input [rangePicker]="picker" [dateFilter]="dateFilter">
+                                    <input matStartDate placeholder="Fecha inicio" formControlName="start" />
+                                    <input matEndDate placeholder="Fecha fin" formControlName="end" />
+                                </mat-date-range-input>
+                                <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+                                <mat-date-range-picker #picker></mat-date-range-picker>
+                            </mat-form-field>
+    
+                            <div>
+                                <label class="block text-sm font-medium text-green-700 mb-1">Noches</label>
+                                <input type="number" formControlName="noches" min="1"
+                                    class="block w-full rounded-lg border border-gray-300 px-4 py-2 text-sm shadow-sm focus:border-green-700 focus:ring focus:ring-green-200 focus:outline-none transition" />
+                            </div>
+                        </div>
+    
+                        <div>
+                            <label class="block text-sm font-medium text-green-700 mb-1">Nombre</label>
+                            <input formControlName="nombre" min="1"
+                                class="block w-full rounded-lg border border-gray-300 px-4 py-2 text-sm shadow-sm focus:border-green-700 focus:ring focus:ring-green-200 focus:outline-none transition" />
+                        </div>
+    
+                        <div>
+                            <label class="block text-sm font-medium text-green-700 mb-1">Apellido</label>
+                            <input formControlName="apellido" min="1"
+                                class="block w-full rounded-lg border border-gray-300 px-4 py-2 text-sm shadow-sm focus:border-green-700 focus:ring focus:ring-green-200 focus:outline-none transition" />
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="p-4 border-t bg-white/90 dark:bg-gray-900/90 backdrop-blur">
+        <button mat-flat-button color="primary" [disabled]="reservacionForm.invalid"
+          class="w-full flex items-center justify-center text-white"
+          (click)="abrirWhatsApp()">
+          Solicitar cotización por WhatsApp
+        </button>
+      </div>
+
+        </div>
+    </div> -->
+    <div *ngIf="mostrarBot" class="fixed inset-0 z-[999] bg-black/50 backdrop-blur-sm flex items-end justify-center">
+        <div
+            class="bg-white dark:bg-gray-900 w-full sm:w-4/5 md:w-[640px] h-[80svh] max-h-[90svh] rounded-t-2xl shadow-xl animate-slide-up relative overflow-hidden">
+
+            <button class="absolute top-3 right-4 text-gray-600 dark:text-gray-300" (click)="cerrarModal()">
+                <mat-icon svgIcon="heroicons_outline:x-mark" class="w-8 h-8"></mat-icon>
+            </button>
+
+            <div>
+
+            </div>
+            <div class="grid grid-rows-[auto,1fr,auto] h-full overscroll-contain touch-pan-y">
+
+                <div class="px-4 pt-6 pb-3 border-b bg-white/90 dark:bg-gray-900/90 backdrop-blur sticky top-0">
+                    <h2 class="text-2xl font-bold text-green-800">Solicitar cotización</h2>
+                    <button class="absolute top-7 right-4 text-gray-600 dark:text-gray-300" (click)="cerrarModal()">
+                        <mat-icon svgIcon="heroicons_outline:x-mark" class="w-8 h-8"></mat-icon>
+                    </button>
+                </div>
+
+                <div class="px-4 py-4 overflow-y-auto">
+                    <form [formGroup]="reservacionForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-green-700 mb-1">
+                                Regimen
+                            </label>
+
+                            <select formControlName="regimen" class="block w-full rounded-lg border border-gray-300 px-4 py-2 text-sm shadow-sm
+                 focus:border-green-700 focus:ring focus:ring-green-200 focus:outline-none transition">
+                                <option [ngValue]="null" disabled>Selecciona una opción</option>
+                                <option *ngFor="let op of opcionesRegimen" [ngValue]="op">{{ op }}</option>
+                            </select>
+
+                            <p *ngIf="reservacionForm.get('regimen')?.invalid && (reservacionForm.get('regimen')?.touched || reservacionForm.get('regimen')?.dirty)"
+                                class="mt-1 text-xs text-red-600">
+                                Selecciona una opción.
+                            </p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-green-700 mb-1">Adultos</label>
+                            <input type="number" formControlName="adultos" min="1"
+                                class="block w-full rounded-lg border border-gray-300 px-4 py-2 text-sm shadow-sm focus:border-green-700 focus:ring focus:ring-green-200 focus:outline-none transition" />
+                        </div>
+
+                        <div *ngIf="hotel.descripcion.concepto !== 'Solo Adultos'">
+                            <label class="block text-sm font-medium text-green-700 mb-1">Niños</label>
+                            <input type="number" formControlName="ninos" min="0"
+                                class="block w-full rounded-lg border border-gray-300 px-4 py-2 text-sm shadow-sm focus:border-green-700 focus:ring focus:ring-green-200 focus:outline-none transition" />
+                        </div>
+
+                        <div *ngFor="let edadControl of edadesNinos?.controls; let i = index" class="mb-4">
+                            <label class="block text-sm font-semibold text-green-700 mb-1">Edad del niño {{ i + 1
+                                }}:</label>
+                            <select [formControl]="edadControl"
+                                class="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-green-700 transition">
+                                <option *ngFor="let edad of [].constructor(18); let j = index" [value]="j">{{ j }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-0">
+                            <mat-form-field class="w-full" [formGroupName]="'rangoFechas'">
+                                <mat-label class="block text-sm font-semibold text-green-700 mb-1">Rango de
+                                    fechas</mat-label>
+                                <mat-date-range-input [rangePicker]="picker" [dateFilter]="dateFilter">
+                                    <input matStartDate placeholder="Fecha inicio" formControlName="start" />
+                                    <input matEndDate placeholder="Fecha fin" formControlName="end" />
+                                </mat-date-range-input>
+                                <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+                                <mat-date-range-picker #picker></mat-date-range-picker>
+                            </mat-form-field>
+
+                            <div>
+                                <label class="block text-sm font-medium text-green-700 mb-1">Noches</label>
+                                <input type="number" formControlName="noches" min="1"
+                                    class="block w-full rounded-lg border border-gray-300 px-4 py-2 text-sm shadow-sm focus:border-green-700 focus:ring focus:ring-green-200 focus:outline-none transition" />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-green-700 mb-1">Nombre</label>
+                            <input formControlName="nombre" min="1"
+                                class="block w-full rounded-lg border border-gray-300 px-4 py-2 text-sm shadow-sm focus:border-green-700 focus:ring focus:ring-green-200 focus:outline-none transition" />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-green-700 mb-1">Apellido</label>
+                            <input formControlName="apellido" min="1"
+                                class="block w-full rounded-lg border border-gray-300 px-4 py-2 text-sm shadow-sm focus:border-green-700 focus:ring focus:ring-green-200 focus:outline-none transition" />
+                        </div>
+                    </form>
+                </div>
+
+                <div class="p-4 border-t bg-white/90 dark:bg-gray-900/90 backdrop-blur">
+                    <button mat-flat-button color="primary" [disabled]="reservacionForm.invalid"
+                        class="w-full flex items-center justify-center text-white" (click)="abrirWhatsApp()">
+                        Solicitar cotización por WhatsApp
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
 </div>

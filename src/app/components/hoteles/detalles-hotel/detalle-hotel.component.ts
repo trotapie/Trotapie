@@ -41,6 +41,7 @@ export class DetalleHotelComponent {
 
     @ViewChild('scrollContainer') scrollContainer!: ElementRef;
     mostrarMapa = false;
+    mostrarBot = false;
     isDragging = false;
     startX = 0;
     scrollLeft = 0;
@@ -82,7 +83,7 @@ export class DetalleHotelComponent {
     current: { src: string; alt?: string } = { src: '' };
     show = false;
     origin = 'center center';
-
+    opcionesRegimen: string[]
     @ViewChild('overlay') overlay?: ElementRef<HTMLDivElement>;
     @ViewChild('modalImg') modalImg?: ElementRef<HTMLImageElement>;
     // @ViewChild('overlay') overlay?: ElementRef<HTMLDivElement>;
@@ -100,6 +101,7 @@ export class DetalleHotelComponent {
             });
         this.hotel = JSON.parse(sessionStorage.getItem('hotel'))
 
+        this.opcionesRegimen =this.hotel.descripcion.resultadoRegimen
         this.descripcionParrafo = this.hotel.descripcion.descripcion;
         this.descripcionLista = this.hotel.descripcion.resultadoActividades;
 
@@ -169,14 +171,16 @@ Fecha de salida: ${fechaFormateadaFin}`;
 
 
     abrirModal() {
+        this.mostrarBot = true;
         const hoyDate = new Date();
         this.hoy = hoyDate.toISOString().split('T')[0];
-        this.modalAbierto = true;
+        // this.modalAbierto = true;
         this.reservacionForm = this.formBuilder.group({
+            regimen: [''],
             nombre: ['', [Validators.required]],
             apellido: ['', [Validators.required]],
             adultos: ['', [Validators.required, Validators.min(1)]],
-            ninos: ['', [Validators.required, Validators.min(0)]],
+            ninos: ['', [Validators.min(0)]],
             noches: [{ value: '', disabled: true }, [Validators.required, Validators.min(1)]],
             rangoFechas: this.formBuilder.group({
                 start: [null],
@@ -208,6 +212,7 @@ Fecha de salida: ${fechaFormateadaFin}`;
 
     cerrarModal() {
         this.modalAbierto = false;
+        this.mostrarBot = false;
     }
 
     startDrag(event: MouseEvent): void {
@@ -350,78 +355,78 @@ Fecha de salida: ${fechaFormateadaFin}`;
         return url.replace(/sz=w\d+/i, 'sz=w400');
     }
 
-     private updateCurrent() {
-    this.current = {
-      src: this.imagenes[this.currentIndex],
-      alt: `Imagen ${this.currentIndex + 1}/${this.imagenes.length}`
-    };
-    // (Opcional) asegurar miniatura activa a la vista
-    setTimeout(() => {
-      const btn = this.thumbBtns?.get(this.currentIndex)?.nativeElement;
-      btn?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-    });
-  }
+    private updateCurrent() {
+        this.current = {
+            src: this.imagenes[this.currentIndex],
+            alt: `Imagen ${this.currentIndex + 1}/${this.imagenes.length}`
+        };
+        // (Opcional) asegurar miniatura activa a la vista
+        setTimeout(() => {
+            const btn = this.thumbBtns?.get(this.currentIndex)?.nativeElement;
+            btn?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        });
+    }
 
-  open(i: number, event: MouseEvent) {
-    this.currentIndex = i;
-    this.updateCurrent();
+    open(i: number, event: MouseEvent) {
+        this.currentIndex = i;
+        this.updateCurrent();
 
-    const target = event.currentTarget as HTMLElement;
-    const rect = target.getBoundingClientRect();
-    const originX = ((event.clientX - rect.left) / rect.width) * 100;
-    const originY = ((event.clientY - rect.top) / rect.height) * 100;
-    this.origin = `${originX}% ${originY}%`;
+        const target = event.currentTarget as HTMLElement;
+        const rect = target.getBoundingClientRect();
+        const originX = ((event.clientX - rect.left) / rect.width) * 100;
+        const originY = ((event.clientY - rect.top) / rect.height) * 100;
+        this.origin = `${originX}% ${originY}%`;
 
-    this.isOpen = true;
-    setTimeout(() => (this.show = true), 10);
-  }
+        this.isOpen = true;
+        setTimeout(() => (this.show = true), 10);
+    }
 
-  close() {
-    this.show = false;
-    setTimeout(() => (this.isOpen = false), 300);
-  }
+    close() {
+        this.show = false;
+        setTimeout(() => (this.isOpen = false), 300);
+    }
 
-  next(event: Event) {
-    event.stopPropagation();
-    this.currentIndex = (this.currentIndex + 1) % this.imagenes.length;
-    this.updateCurrent();
-  }
+    next(event: Event) {
+        event.stopPropagation();
+        this.currentIndex = (this.currentIndex + 1) % this.imagenes.length;
+        this.updateCurrent();
+    }
 
-  prev(event: Event) {
-    event.stopPropagation();
-    this.currentIndex = (this.currentIndex - 1 + this.imagenes.length) % this.imagenes.length;
-    this.updateCurrent();
-  }
+    prev(event: Event) {
+        event.stopPropagation();
+        this.currentIndex = (this.currentIndex - 1 + this.imagenes.length) % this.imagenes.length;
+        this.updateCurrent();
+    }
 
-  goTo(i: number, event: Event) {
-    event.stopPropagation();
-    this.currentIndex = i;
-    this.updateCurrent();
-  }
+    goTo(i: number, event: Event) {
+        event.stopPropagation();
+        this.currentIndex = i;
+        this.updateCurrent();
+    }
 
-  onBackdrop(event: MouseEvent) {
-    if (event.target === this.overlay?.nativeElement) this.close();
-  }
+    onBackdrop(event: MouseEvent) {
+        if (event.target === this.overlay?.nativeElement) this.close();
+    }
 
-  onDragStart(event: PointerEvent) {
-    event.preventDefault();
-  }
+    onDragStart(event: PointerEvent) {
+        event.preventDefault();
+    }
 
-  onThumbsWheel(event: WheelEvent) {
-  const el = event.currentTarget as HTMLElement | null;
-  if (!el) return;
+    onThumbsWheel(event: WheelEvent) {
+        const el = event.currentTarget as HTMLElement | null;
+        if (!el) return;
 
-  // Si el usuario está scrolleando verticalmente, lo traducimos a horizontal en la tira
-  const delta = Math.abs(event.deltaY) >= Math.abs(event.deltaX)
-    ? event.deltaY
-    : event.deltaX;
+        // Si el usuario está scrolleando verticalmente, lo traducimos a horizontal en la tira
+        const delta = Math.abs(event.deltaY) >= Math.abs(event.deltaX)
+            ? event.deltaY
+            : event.deltaX;
 
-  // Desplaza la tira
-  el.scrollLeft += delta;
+        // Desplaza la tira
+        el.scrollLeft += delta;
 
-  // Nota: evitar preventDefault() aquí porque los listeners de 'wheel'
-  // suelen ser pasivos y el navegador lo ignoraría.
-}
+        // Nota: evitar preventDefault() aquí porque los listeners de 'wheel'
+        // suelen ser pasivos y el navegador lo ignoraría.
+    }
 
 
 
