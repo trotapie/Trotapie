@@ -16,7 +16,7 @@ import { SupabaseService } from 'app/core/supabase.service';
 @Component({
     selector: 'hoteles',
     templateUrl: './hoteles.component.html',
-    imports: [MaterialModule, TextTypewriterComponent, FloatingSearchComponent],
+    imports: [MaterialModule, FloatingSearchComponent],
     encapsulation: ViewEncapsulation.None,
     standalone: true
 })

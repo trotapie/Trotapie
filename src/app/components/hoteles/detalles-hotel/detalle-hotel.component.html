@@ -2,8 +2,9 @@
     <div class="flex min-w-0 flex-auto flex-col m-6">
         <div class="sticky top-0 z-50 flex items-center justify-between w-full py-2 px-2 md:px-4 transition-all duration-300 backdrop-blur-md"
             [ngClass]="{'bg-transparent': !scrolled, 'bg-white dark:bg-gray-900 shadow-md': scrolled }">
-            <app-text-typewriter *ngIf="hotel.nombre" [text]="[hotel.nombre]" [typingSpeed]="80" [pauseDuration]="1800"
-                [deletingSpeed]="40" [loop]="false" [showCursor]="true" cursorCharacter="|"></app-text-typewriter>
+            <div class="text-3xl font-semibold leading-tight">
+                {{hotel.nombre}}
+            </div>
             <div class="flex justify-end mt-4 mb-2 ml-2">
                 <button mat-flat-button color="warn" class="mr-2" (click)="regresar()">
                     <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>

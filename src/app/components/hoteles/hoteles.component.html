@@ -34,8 +34,10 @@
                                 </div>
                                 <div class="flex justify-center mt-4 mb-2 ml-2">
                                     <button mat-flat-button type="button" color="accent" class="mr-2" (click)="irA()">
-                                        <mat-icon class="mr-2" svgIcon="mat_outline:airplanemode_active"></mat-icon>
-                                        Destinos internacionales
+                                        <div class="flex items-center">
+                                            <img class="w-6 h-6 mr-2" src="assets/icons/destinos-internacionales.svg" />
+                                            Destinos internacionales
+                                        </div>
                                     </button>
                                 </div>
                             </div>
@@ -66,7 +68,25 @@
                                     <div class="absolute inset-0 bg-black/40 z-0"></div>
                                     <div *ngIf="hotel?.descripcion?.descuento" class="absolute top-2 right-2 z-20">
                                         <div [ngClass]="getDescuentoClass(hotel)" class="text-xs font-bold px-2 py-1">
-                                            {{ hotel?.descripcion?.descuento }}% descuento
+                                            <div class="flex items-center">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                    stroke-width="1.5" stroke="currentColor" class="size-4 mr-1">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        d="M6 6h.008v.008H6V6Z" />
+                                                </svg>
+
+                                                {{ hotel?.descripcion?.descuento }}% descuento
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div *ngIf="hotel?.descripcion?.concepto" class="absolute top-2 left-2 z-20">
+                                        <div class="text-xs font-bold px-2 py-1">
+                                            <div class="flex items-center">
+                                                <img class="w-6 h-6 mr-2" *ngIf="hotel?.descripcion?.concepto === 'Luxury'" src="assets/icons/luxury.svg" />
+                                                <img class="w-6 h-6 mr-2" *ngIf="hotel?.descripcion?.concepto === 'Solo Adultos'" src="assets/icons/luxury.svg" />
+                                            </div>
                                         </div>
                                     </div>
 
@@ -120,17 +140,19 @@
             <section #ancla class="relative">
                 <div class="sticky top-0 z-30 bg-blue-100 shadow py-2 transition duration-300">
                     <div class="flex items-center justify-center">
-                        <app-text-typewriter class="text-blue-700 text-center dark:text-blue-400"
-                            [text]="['Destinos Internacionales próximamente']" [typingSpeed]="80" [pauseDuration]="1800"
-                            [deletingSpeed]="40" [loop]="true" [showCursor]="true"
-                            cursorCharacter="|"></app-text-typewriter>
+                        <h2 class="text-center text-blue-800 font-bold text-2xl">Destinos Internacionales próximamente
+                        </h2>
                     </div>
 
-                    <div class="flex justify-center mt-4 mb-2 ml-2">
+                    <div class="flex  text-blue-700 text-center dark:text-blue-400 justify-center mt-4 mb-2 ml-2">
                         <button mat-flat-button type="button" color="accent" class="mr-2" (click)="irANacionales()">
-                            <mat-icon class="mr-2" svgIcon="mat_outline:airplanemode_active"></mat-icon>
-                            Destinos Nacionales
+                            <div class="flex items-center">
+                                <img class="w-6 h-6 mr-2" src="assets/icons/destinos-nacionales.svg" />
+                                Destinos Nacionales
+                            </div>
+
                         </button>
+
                     </div>
                 </div>
             </section>

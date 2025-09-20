@@ -19,7 +19,7 @@ import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
     templateUrl: './detalle-hotel.component.html',
     imports: [MaterialModule, MapaComponent,
         //  QRCodeComponent, 
-        TextTypewriterComponent],
+],
     encapsulation: ViewEncapsulation.None,
 })
 export class DetalleHotelComponent {
