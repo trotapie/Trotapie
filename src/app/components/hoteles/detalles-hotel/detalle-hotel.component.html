@@ -384,16 +384,23 @@
                                 class="w-8 h-8 mr-2 text-black"></mat-icon>
                             <span><b>Meses sin intereses</b></span>
                         </div>
-                        <div class="flex items-center">
+                        <div class="flex items-center mb-4">
                             <img class="w-8 h-8 mr-2" src="assets/icons/support.svg" />
                             <span><b>Atención</b></span>
+                        </div>
+                        <div class="flex items-center">
+                            <img class="w-8 h-8 mr-2" src="assets/icons/tips.svg" />
+                            <span>Anticipo <b>mínimo</b>, confirmación <b>segura</b></span>
                         </div>
                     </div>
                 </div>
 
                 <div class="absolute left-0 right-0 bottom-4 px-6">
                     <button mat-flat-button color="primary" class="w-full text-white" (click)="abrirForm()">
-                        ¡Quiero viajar!
+                        <div class="flex items-center">
+                            <img class="w-6 h-6 mr-2" src="assets/icons/concerge.svg" />
+                            ¡Quiero viajar!
+                        </div>
                     </button>
                 </div>
             </div>
