@@ -22,10 +22,6 @@
                     <div class="mt-4 text-base leading-relaxed">
                         <p class="mb-4">{{ descripcionParrafo }}</p>
                     </div>
-                    <button mat-flat-button color="primary" class="mr-2 text-white" (click)="abrirUbicacion()">
-                        <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:map-pin'"></mat-icon>
-                        Ubicación
-                    </button>
                 </mat-tab>
 
                 <mat-tab label="Amenidades">
@@ -40,6 +36,10 @@
 
             </mat-tab-group>
             <div>
+                <button mat-flat-button color="primary" class="ml-8 w-30 text-white" (click)="abrirUbicacion()">
+                    <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:map-pin'"></mat-icon>
+                    Ubicación
+                </button>
             </div>
             <div class="mt-10">
                 <div class="text-2xl my-4 font-semibold italic leading-tight text-center">
@@ -119,54 +119,18 @@
                         <span class="sr-only">Abrir imagen</span>
                     </a>
                 </div>
-                <!-- <div #scrollContainer
-                    class="scroll-container flex overflow-x-auto gap-4 p-4 pr-20 snap-x snap-mandatory cursor-grab active:cursor-grabbing select-none"
-                    (scroll)="onScroll()" (mousedown)="startDrag($event)">
-
-                    <div *ngFor="let imagen of hotel.imagenes; let i = index" (click)="seleccionarImagen(i, true)"
-                        class="shrink-0 h-100 bg-cover bg-center shadow-md snap-center transition-all duration-300"
-                        [ngStyle]="{
-      'background-image': 'url(' + imagen + ')',
-      'width.px': i === imagenSeleccionadaIndex ? 700 : 60,
-      'border-radius': i === imagenSeleccionadaIndex ?'20px' : '50% / 10%'
-    }" [attr.id]="'img-' + i">
-                    </div>
-                    <div style="flex: 0 0 400px;"></div>
-                </div> -->
-
-                <!-- <lightgallery [settings]="settings" [onInit]="onInit" class="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    <img *ngFor="let imagen of imagenes" [src]="imagen"
-                        class="w-full h-30 object-cover rounded-xl shadow-md" />
-
-                </lightgallery> -->
-                <!-- <lightgallery [settings]="settings" class="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    <a *ngFor="let imagen of imagenes" [href]="imagen.replace('sz=w1000', 'sz=w1600')">
-                        <img [src]="imagen.replace('sz=w1000', 'sz=w300')"
-                            class="w-full h-40 object-cover rounded-xl shadow-md" />
-                    </a>
-                </lightgallery> -->
-                <!-- <lightgallery [settings]="settings" class="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    <a *ngFor="let img of imagenes" [href]="big(img)"
-                        class="block rounded-xl shadow-md overflow-hidden">
-                        <img [src]="small(img)" alt="imagen" class="w-full h-40 object-cover" />
-                    </a>
-                </lightgallery> -->
-
-                <!-- } -->
             </div>
         </fuse-card>
     </div>
     <div *ngIf="!isOpen" class="sticky bottom-4 w-full z-50">
         <div class="relative flex justify-end pr-4">
-            <!-- Tooltip fijo arriba del botón -->
             <div
                 class="absolute bottom-16 right-0 whitespace-pre-line bg-gray-200 text-black font-semibold text-md px-3 py-1 rounded shadow animate-bounce text-center z-10">
                 ¡Arma tu <br>viaje ahora!
             </div>
 
-            <!-- Botón de WhatsApp -->
             <button (click)="abrirModal()" aria-label="Enviar WhatsApp">
-                <img class="w-15 h-15 mb-1 bg-white rounded-2xl" src="assets/images/logos/trotapie.png" />
+                <img class="w-15 h-15 mb-1 bg-white rounded-2xl" src="assets/images/logos/trotapie-iso.png" />
             </button>
         </div>
     </div>
@@ -388,86 +352,7 @@
 </div>
 
 <div *ngIf="mostrarBot" class="fixed inset-0 z-[999] bg-black/50 backdrop-blur-sm flex items-end justify-center">
-    <!-- <div
-        class="bg-white dark:bg-gray-900 w-full sm:w-4/5 md:w-[640px] h-[90svh] max-h-[90svh] rounded-t-2xl shadow-xl animate-slide-up relative overflow-hidden">
 
-        <div class="grid grid-rows-[auto,1fr,auto] h-full overscroll-contain touch-pan-y">
-
-            <div class="overflow-y-auto">
-                <div class="p-4  bg-white dark:bg-gray-900/90 backdrop-blur sticky top-0">
-                    <h2 class="text-2xl font-bold text-green-800">Hola, soy trotapie</h2>
-                    <button class="absolute top-2 right-4 text-gray-600 dark:text-gray-300" (click)="cerrarModal()">
-                        <mat-icon svgIcon="heroicons_outline:x-mark" class="w-8 h-8"></mat-icon>
-                    </button>
-                </div>
-                <div class="px-4 py-4">
-
-                    <form [formGroup]="reservacionForm" class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-green-700 mb-1">Adultos</label>
-                            <input type="number" formControlName="adultos" min="1"
-                                class="block w-full rounded-lg border border-gray-300 px-4 py-2 text-sm shadow-sm focus:border-green-700 focus:ring focus:ring-green-200 focus:outline-none transition" />
-                        </div>
-    
-                        <div>
-                            <label class="block text-sm font-medium text-green-700 mb-1">Niños</label>
-                            <input type="number" formControlName="ninos" min="0"
-                                class="block w-full rounded-lg border border-gray-300 px-4 py-2 text-sm shadow-sm focus:border-green-700 focus:ring focus:ring-green-200 focus:outline-none transition" />
-                        </div>
-    
-                        <div *ngFor="let edadControl of edadesNinos?.controls; let i = index" class="mb-4">
-                            <label class="block text-sm font-semibold text-green-700 mb-1">Edad del niño {{ i + 1
-                                }}:</label>
-                            <select [formControl]="edadControl"
-                                class="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-green-700 transition">
-                                <option *ngFor="let edad of [].constructor(18); let j = index" [value]="j">{{ j }}</option>
-                            </select>
-                        </div>
-    
-                        <div class="space-y-0">
-                            <mat-form-field class="w-full" [formGroupName]="'rangoFechas'">
-                                <mat-label class="block text-sm font-semibold text-green-700 mb-1">Rango de
-                                    fechas</mat-label>
-                                <mat-date-range-input [rangePicker]="picker" [dateFilter]="dateFilter">
-                                    <input matStartDate placeholder="Fecha inicio" formControlName="start" />
-                                    <input matEndDate placeholder="Fecha fin" formControlName="end" />
-                                </mat-date-range-input>
-                                <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-                                <mat-date-range-picker #picker></mat-date-range-picker>
-                            </mat-form-field>
-    
-                            <div>
-                                <label class="block text-sm font-medium text-green-700 mb-1">Noches</label>
-                                <input type="number" formControlName="noches" min="1"
-                                    class="block w-full rounded-lg border border-gray-300 px-4 py-2 text-sm shadow-sm focus:border-green-700 focus:ring focus:ring-green-200 focus:outline-none transition" />
-                            </div>
-                        </div>
-    
-                        <div>
-                            <label class="block text-sm font-medium text-green-700 mb-1">Nombre</label>
-                            <input formControlName="nombre" min="1"
-                                class="block w-full rounded-lg border border-gray-300 px-4 py-2 text-sm shadow-sm focus:border-green-700 focus:ring focus:ring-green-200 focus:outline-none transition" />
-                        </div>
-    
-                        <div>
-                            <label class="block text-sm font-medium text-green-700 mb-1">Apellido</label>
-                            <input formControlName="apellido" min="1"
-                                class="block w-full rounded-lg border border-gray-300 px-4 py-2 text-sm shadow-sm focus:border-green-700 focus:ring focus:ring-green-200 focus:outline-none transition" />
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div class="p-4 border-t bg-white/90 dark:bg-gray-900/90 backdrop-blur">
-        <button mat-flat-button color="primary" [disabled]="reservacionForm.invalid"
-          class="w-full flex items-center justify-center text-white"
-          (click)="abrirWhatsApp()">
-          Solicitar cotización por WhatsApp
-        </button>
-      </div>
-
-        </div>
-    </div> -->
     <div *ngIf="mostrarBot" class="fixed inset-0 z-[999] bg-black/50 backdrop-blur-sm flex items-end justify-center">
         <div
             class="bg-white dark:bg-gray-900 w-full sm:w-4/5 md:w-[640px] h-[80svh] max-h-[90svh] rounded-t-2xl shadow-xl animate-slide-up relative overflow-hidden">
@@ -476,10 +361,35 @@
                 <mat-icon svgIcon="heroicons_outline:x-mark" class="w-8 h-8"></mat-icon>
             </button>
 
-            <div>
+            <div *ngIf="!form">
+                <div>
+                    <div class="flex justify-center mt-18 mb-8">
+                        <img class="w-56 h-15 " src="assets/images/logos/trotapie.png" alt="Logo Trotapie" />
+                    </div>
+                    <div class="ml-13">
+                        <div class="flex items-center mb-4">
+                            <img class="w-8 h-8 mr-2" src="assets/icons/cama-hotel.svg" />
+                            <span><b>+100 mil</b> hoteles</span>
+                        </div>
+                        <div class="flex items-center mb-4">
+                            <mat-icon svgIcon="heroicons_outline:banknotes" class="w-8 h-8 mr-2 text-black"></mat-icon>
+                            <span><b>Todas</b> las formas de pago</span>
+                        </div>
+                        <div class="flex items-center">
+                            <mat-icon svgIcon="heroicons_outline:credit-card"
+                                class="w-8 h-8 mr-2 text-black"></mat-icon>
+                            <span><b>Meses sin intereses</b></span>
+                        </div>
+                    </div>
+                </div>
 
+                <div class="absolute left-0 right-0 bottom-4 px-6">
+                    <button mat-flat-button color="primary" class="w-full text-white" (click)="abrirForm()">
+                        ¡Quiero viajar!
+                    </button>
+                </div>
             </div>
-            <div class="grid grid-rows-[auto,1fr,auto] h-full overscroll-contain touch-pan-y">
+            <div *ngIf="form" class="grid grid-rows-[auto,1fr,auto] h-full overscroll-contain touch-pan-y">
 
                 <div class="px-4 pt-6 pb-3 border-b bg-white/90 dark:bg-gray-900/90 backdrop-blur sticky top-0">
                     <h2 class="text-2xl font-bold text-green-800">Solicitar cotización</h2>

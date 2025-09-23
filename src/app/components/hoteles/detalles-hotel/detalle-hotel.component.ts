@@ -88,6 +88,8 @@ export class DetalleHotelComponent {
     @ViewChild('modalImg') modalImg?: ElementRef<HTMLImageElement>;
     // @ViewChild('overlay') overlay?: ElementRef<HTMLDivElement>;
     @ViewChildren('thumbBtn') thumbBtns?: QueryList<ElementRef<HTMLButtonElement>>;
+
+    form: boolean = false;
     constructor(private sanitizer: DomSanitizer) {
         const nav = this.router.getCurrentNavigation();
         this.hotel = nav?.extras.state?.hotel;
@@ -213,6 +215,7 @@ Fecha de salida: ${fechaFormateadaFin}`;
     cerrarModal() {
         this.modalAbierto = false;
         this.mostrarBot = false;
+        this.form=false;
     }
 
     startDrag(event: MouseEvent): void {
@@ -428,6 +431,8 @@ Fecha de salida: ${fechaFormateadaFin}`;
         // suelen ser pasivos y el navegador lo ignoraría.
     }
 
-
+    abrirForm(){
+        this.form =true;
+    }
 
 }
