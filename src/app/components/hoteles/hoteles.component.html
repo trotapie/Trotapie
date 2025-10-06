@@ -32,7 +32,7 @@
 
                                     <div class="glass-glider"></div>
                                 </div>
-                                <div class="flex justify-center mt-4 mb-2 ml-2">
+                                <div class="flex justify-center mt-4 mb-2 ml-2 z-0">
                                     <button mat-flat-button type="button" color="accent" class="mr-2" (click)="irA()">
                                         <div class="flex items-center">
                                             <img class="w-6 h-6 mr-2" src="assets/icons/destinos-internacionales.svg" />
@@ -44,7 +44,7 @@
                         </form>
 
                     </div>
-                    <app-floating-search [data]="listaHoteles" [debounceMs]="150"
+                    <app-floating-search class=" z-[70]" [data]="listaHoteles" [debounceMs]="150"
                         (filtered)="onHotelesFiltrados($event)">
                     </app-floating-search>
 

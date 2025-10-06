@@ -1,4 +1,4 @@
-<div class="absolute top-28 right-6" (click)="stop($event)">
+<div class="absolute top-28 right-3" (click)="stop($event)">
   <div class="flex items-center gap-2" [ngClass]="{ 'backdrop-blur-sm': isOpen() }">
     <!-- Input desplegable -->
     <div class="overflow-hidden transition-all duration-300 ease-out"
@@ -13,7 +13,7 @@
           [value]="term()"
           (input)="onInput($event)"
           placeholder="Buscar hotel…"
-          class="w-full rounded-xl border border-gray-300/60 dark:border-white/10 bg-white/90 dark:bg-gray-900/80 shadow-sm px-4 h-11 outline-none
+          class="w-full rounded-xl border border-gray-300/60 dark:border-white/10 bg-white dark:bg-gray-900/80 shadow-sm px-4 h-11 outline-none
                  transition-[box-shadow,ring] duration-200"
         />
       </form>
