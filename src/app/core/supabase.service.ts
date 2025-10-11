@@ -33,6 +33,30 @@ export class SupabaseService {
       .order('created_at', { ascending: false }); // opcional
   }
 
+  clientsRegister() {
+    return this.client
+      .from('clientes')
+      .select('*')
+  }
+  
+  async upsertCliente(cliente: {
+    nombre: string;
+    email: string;
+    telefono: string;
+    recibir_ofertas: boolean;
+  }) {
+    const { data, error } = await this.client
+      .from('clientes')
+      .upsert(cliente, { onConflict: 'telefono' }) // usa telefono como clave única
+      .select();
+
+    if (error) {
+      console.error('Error al hacer upsert:', error);
+      throw error;
+    }
+    return data;
+  }
+
   addHotel(payload: { nombre: string; ciudad: string; descripcion?: string }) {
     return this.client.from('hoteles').insert(payload).single();
   }

@@ -40,6 +40,9 @@
                     <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:map-pin'"></mat-icon>
                     Ubicación
                 </button>
+
+
+
             </div>
             <div class="mt-10">
                 <div class="text-2xl my-4 font-semibold leading-tight text-center">
@@ -427,87 +430,194 @@
                 </div>
 
                 <div class="px-4 py-4 overflow-y-auto">
-                    <form [formGroup]="reservacionForm" class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-green-700 mb-1">
-                                Regimen
-                            </label>
+                    <form [formGroup]="reservacionForm" class="space-y-3">
 
-                            <select formControlName="regimen" class="block w-full rounded-lg border border-gray-300 px-4 py-2 text-sm shadow-sm
-                 focus:border-green-700 focus:ring focus:ring-green-200 focus:outline-none transition">
-                                <option [ngValue]="null" disabled>Selecciona una opción</option>
-                                <option *ngFor="let op of opcionesRegimen" [ngValue]="op">{{ op }}</option>
-                            </select>
+                        <div class="flex items-center justify-center gap-x-3 -mb-4">
+                            <mat-form-field class="w-8/12 ff-underline" appearance="fill"
+                                [formGroupName]="'rangoFechas'">
+                                <mat-label class="block text-md font-semibold text-green-700">Rango de
+                                    fechas ({{noches}} noches )</mat-label>
 
-                            <p *ngIf="reservacionForm.get('regimen')?.invalid && (reservacionForm.get('regimen')?.touched || reservacionForm.get('regimen')?.dirty)"
-                                class="mt-1 text-xs text-red-600">
-                                Selecciona una opción.
-                            </p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-green-700 mb-1">Adultos</label>
-                            <input type="number" formControlName="adultos" min="1"
-                                class="block w-full rounded-lg border border-gray-300 px-4 py-2 text-sm shadow-sm focus:border-green-700 focus:ring focus:ring-green-200 focus:outline-none transition" />
-                        </div>
-
-                        <div *ngIf="hotel.descripcion.concepto !== 'Solo Adultos'">
-                            <label class="block text-sm font-medium text-green-700 mb-1">Niños</label>
-                            <input type="number" formControlName="ninos" min="0"
-                                class="block w-full rounded-lg border border-gray-300 px-4 py-2 text-sm shadow-sm focus:border-green-700 focus:ring focus:ring-green-200 focus:outline-none transition" />
-                        </div>
-
-                        <div *ngFor="let edadControl of edadesNinos?.controls; let i = index" class="mb-4">
-                            <label class="block text-sm font-semibold text-green-700 mb-1">Edad del niño {{ i + 1
-                                }}:</label>
-                            <select [formControl]="edadControl"
-                                class="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-green-700 transition">
-                                <option *ngFor="let edad of [].constructor(18); let j = index" [value]="j">{{ j }}
-                                </option>
-                            </select>
-                        </div>
-
-                        <div class="space-y-0">
-                            <mat-form-field class="w-full" [formGroupName]="'rangoFechas'">
-                                <mat-label class="block text-sm font-semibold text-green-700 mb-1">Rango de
-                                    fechas</mat-label>
                                 <mat-date-range-input [rangePicker]="picker" [dateFilter]="dateFilter">
                                     <input matStartDate placeholder="Fecha inicio" formControlName="start" />
                                     <input matEndDate placeholder="Fecha fin" formControlName="end" />
                                 </mat-date-range-input>
+
                                 <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
                                 <mat-date-range-picker #picker></mat-date-range-picker>
                             </mat-form-field>
 
-                            <div>
-                                <label class="block text-sm font-medium text-green-700 mb-1">Noches</label>
-                                <input type="number" formControlName="noches" min="1"
-                                    class="block w-full rounded-lg border border-gray-300 px-4 py-2 text-sm shadow-sm focus:border-green-700 focus:ring focus:ring-green-200 focus:outline-none transition" />
+                            <button mat-raised-button [matMenuTriggerFor]="roomsMenu" #menuTrigger="matMenuTrigger" color="primary"
+                                class="!rounded-lg !w-4/12 !h-40 flex px-2 flex-col items-center justify-center
+         text-white shadow-md hover:shadow-lg
+         transition ">
+
+                                <div class="text-md font-medium mt-2">Habitaciones</div>
+
+                                <div class="flex items-center justify-center gap-5 mb-1">
+                                    <div class="flex items-center gap-1 text-lg font-semibold">
+                                        <mat-icon class="text-white">bed</mat-icon>
+                                        <span>{{ totalRooms() }}</span>
+                                    </div>
+
+                                    <div class="flex items-center gap-1 text-lg font-semibold">
+                                        <mat-icon class="text-white">person</mat-icon>
+                                        <span>{{ totalPeople() }}</span>
+                                    </div>
+                                </div>
+                            </button>
+
+
+
+                            <mat-menu #roomsMenu="matMenu" hasBackdrop="true" [overlapTrigger]="false"
+                                class="!p-2 min-w-[340px] flex items-center">
+                                <div class="flex flex-col gap-3 p-2" (click)="$event.stopPropagation()">
+                                    <ng-container *ngFor="let r of rooms(); let i = index">
+                                        <div class="rounded-xl border p-3 flex flex-col gap-3">
+                                            <div class="flex items-center justify-between">
+                                                <div class="font-medium">Habitación {{ i + 1 }}</div>
+                                                <button mat-icon-button (click)="removeRoom(i)"
+                                                    [disabled]="rooms().length === 1">
+                                                    <mat-icon>close</mat-icon>
+                                                </button>
+                                            </div>
+
+                                            <div class="flex items-center justify-between">
+                                                <div>
+                                                    <div class="font-medium">Adultos</div>
+                                                    <div class="text-xs text-gray-500">Desde 18 años</div>
+                                                </div>
+                                                <div class="flex items-center gap-2">
+                                                    <button mat-mini-fab (click)="decAdults(i)"
+                                                        [disabled]="r.adults <= MIN_ADULTS"><mat-icon>remove</mat-icon></button>
+                                                    <div class="w-6 text-center">{{ r.adults }}</div>
+                                                    <button mat-mini-fab (click)="incAdults(i)"
+                                                        [disabled]="(r.adults + r.children) >= MAX_PER_ROOM"><mat-icon>add</mat-icon></button>
+                                                </div>
+                                            </div>
+
+                                            <div class="flex items-center justify-between">
+                                                <div>
+                                                    <div class="font-medium">Menores</div>
+                                                    <div class="text-xs text-gray-500">Hasta 17 años</div>
+                                                </div>
+                                                <div class="flex items-center gap-2">
+                                                    <button mat-mini-fab (click)="decChildren(i)"
+                                                        [disabled]="r.children <= 0"><mat-icon>remove</mat-icon></button>
+                                                    <div class="w-6 text-center">{{ r.children }}</div>
+                                                    <button mat-mini-fab (click)="incChildren(i)"
+                                                        [disabled]="(r.adults + r.children) >= MAX_PER_ROOM"><mat-icon>add</mat-icon></button>
+                                                </div>
+                                            </div>
+
+                                            <div *ngIf="r.children > 0" class="grid grid-cols-2 gap-x-2">
+                                                <ng-container *ngFor="let age of r.childAges; let j = index">
+                                                    <div class="flex items-center justify-between">
+                                                        <div>
+                                                            <div class="font-medium text-center">Edad del menor {{ j
+                                                                + 1 }}</div>
+                                                        </div>
+                                                    </div>
+
+                                                    <mat-form-field appearance="outline">
+                                                        <mat-select [value]="r.childAges[j]"
+                                                            (selectionChange)="setChildAge(i, j, $event.value)">
+                                                            <mat-option [value]="null" disabled>Edad</mat-option>
+                                                            <mat-option *ngFor="let a of ageOptions" [value]="a">{{
+                                                                a
+                                                                }}</mat-option>
+                                                        </mat-select>
+                                                    </mat-form-field>
+                                                </ng-container>
+                                            </div>
+
+
+                                            <div *ngIf="roomNeedsAges(r)" class="text-xs text-red-600">
+                                                Selecciona la edad de todos los menores.
+                                            </div>
+
+                                            <div class="text-right text-xs text-gray-500">
+                                                Máx {{ MAX_PER_ROOM }} por habitación
+                                            </div>
+                                        </div>
+                                    </ng-container>
+
+                                    <div class="flex items-center justify-between">
+                                        <button mat-stroked-button (click)="addRoom()"
+                                            [disabled]="rooms().length >= MAX_ROOMS">Añadir habitación</button>
+                                        <button mat-flat-button color="primary" (click)="menuTrigger.closeMenu()"
+                                            class="text-white" [disabled]="hasMissingAges()">Aplicar</button>
+                                    </div>
+                                </div>
+                            </mat-menu>
+                        </div>
+
+                        <!-- NOCHES + RÉGIMEN -->
+                        <div class="flex items-center gap-x-3 -mt-2">
+                            <div class="w-6/12">
+                                <label class="block text-sm font-medium text-green-700 mb-1">Asesor</label>
+                                <select formControlName="asesor" class="select-underline">
+                                    <option [ngValue]="null" disabled>Selecciona una opción</option>
+                                    <option *ngFor="let op of opcionesRegimen" [ngValue]="op">{{ op }}</option>
+                                </select>
+                            </div>
+
+                            <div class="w-6/12">
+                                <label class="block text-sm font-medium text-green-700 mb-1">Régimen</label>
+                                <select formControlName="regimen" class="select-underline">
+                                    <option [ngValue]="null" disabled>Selecciona una opción</option>
+                                    <option *ngFor="let op of opcionesRegimen" [ngValue]="op">{{ op }}</option>
+                                </select>
+
+                                <p *ngIf="reservacionForm.get('regimen')?.invalid && (reservacionForm.get('regimen')?.touched || reservacionForm.get('regimen')?.dirty)"
+                                    class="mt-1 text-xs text-red-600">
+                                    Selecciona una opción.
+                                </p>
                             </div>
                         </div>
 
+                        <!-- NOMBRE -->
                         <div>
-                            <label class="block text-sm font-medium text-green-700 mb-1">Nombre</label>
-                            <input formControlName="nombre" min="1"
-                                class="block w-full rounded-lg border border-gray-300 px-4 py-2 text-sm shadow-sm focus:border-green-700 focus:ring focus:ring-green-200 focus:outline-none transition" />
+                            <label class="block text-sm font-medium text-green-700 mb-1">Nombre completo</label>
+                            <input formControlName="nombre" class="input-underline" />
                         </div>
 
+                        <!-- EMAIL -->
                         <div>
-                            <label class="block text-sm font-medium text-green-700 mb-1">Apellido</label>
-                            <input formControlName="apellido" min="1"
-                                class="block w-full rounded-lg border border-gray-300 px-4 py-2 text-sm shadow-sm focus:border-green-700 focus:ring focus:ring-green-200 focus:outline-none transition" />
+                            <label class="block text-sm font-medium text-green-700 mb-1">Email</label>
+                            <input formControlName="correo" class="input-underline" />
                         </div>
+
+                        <!-- TELÉFONO -->
+                        <div>
+                            <label class="block text-sm font-medium text-green-700 mb-1">Teléfono</label>
+                            <input formControlName="telefono" class="input-underline" />
+                        </div>
+
+                        <!-- CHECKBOX ofertas  [disabled]="reservacionForm.invalid"-->
+                        <div class="pt-1">
+                            <label class="inline-flex items-center gap-3 cursor-pointer select-none">
+                                <input type="checkbox" formControlName="ofertas"
+                                    class="h-4 w-4 rounded border-gray-300 text-green-700 focus:ring-green-600" />
+                                <span class="text-sm font-medium text-green-700">Quiero recibir ofertas y descuentos
+                                    exclusivos</span>
+                            </label>
+                        </div>
+
                     </form>
+
                 </div>
 
                 <div class="p-4 border-t bg-white/90 dark:bg-gray-900/90 backdrop-blur">
-                    <button mat-flat-button color="primary" [disabled]="reservacionForm.invalid"
-                        class="w-full flex items-center justify-center text-white" (click)="abrirWhatsApp()">
-                        Solicitar cotización por WhatsApp
+                    <button mat-flat-button color="primary" class="w-full flex items-center justify-center text-white"
+                        (click)="abrirWhatsApp()">
+                        Enviar a WhatsApp
                     </button>
                 </div>
 
             </div>
         </div>
     </div>
+
 
 </div>

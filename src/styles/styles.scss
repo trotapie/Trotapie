@@ -132,17 +132,18 @@
     z-index: 2;
     transition: all 0.3s ease-in-out;
     text-align: center;
-    
+
 }
 
 .glass-radio-group label:not(:last-of-type)::after {
-  content: "";
-  position: absolute;
-  top: 20%;
-  right: 0;
-  height: 60%;
-  width: 1px;
-  background-color: rgba(0, 0, 0, 0.80); /* línea sutil tipo glass */
+    content: "";
+    position: absolute;
+    top: 20%;
+    right: 0;
+    height: 60%;
+    width: 1px;
+    background-color: rgba(0, 0, 0, 0.80);
+    /* línea sutil tipo glass */
 }
 
 @media (min-width: 500px) {
@@ -222,20 +223,100 @@
         0 0 10px rgba(255, 255, 255, 0.4) inset;
 }
 
-.no-scrollbar::-webkit-scrollbar{display:none}
-.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
+.no-scrollbar::-webkit-scrollbar {
+    display: none
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none
+}
 
 @keyframes pulse-slow {
-  0%, 100% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(59,130,246, 0.5); /* azul primario */
-  }
-  50% {
-    transform: scale(1.05);
-    box-shadow: 0 0 0 10px rgba(59,130,246, 0);
-  }
+
+    0%,
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5);
+        /* azul primario */
+    }
+
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+    }
 }
 
 .animate-pulse-slow {
-  animation: pulse-slow 2s infinite;
+    animation: pulse-slow 2s infinite;
 }
+
+::ng-deep .select-compact .mat-mdc-form-field-flex {
+    min-height: 32px !important;
+    /* reduce alto total */
+}
+
+::ng-deep .select-compact .mat-mdc-select-trigger {
+    padding: 0 8px !important;
+    /* reduce relleno interno */
+    height: 28px !important;
+    display: flex;
+    align-items: center;
+}
+
+/* Inputs subrayados */
+.input-underline {
+  @apply w-full bg-transparent border-0 border-b border-gray-300 px-0 py-2 text-sm
+          focus:ring-0 focus:border-green-700 outline-none transition
+          placeholder:text-gray-400;   /* 👈 aquí el fix */
+}
+
+/* Select “subrayado” (no tiene placeholder, lo dejamos igual) */
+.select-underline {
+  @apply w-full bg-transparent border-0 border-b border-gray-300 px-0 py-2 text-sm
+          focus:ring-0 focus:border-green-700 outline-none transition;
+}
+
+/* Material date range “sin marco” */
+::ng-deep .ff-underline .mdc-notched-outline { display: none !important; }
+::ng-deep .ff-underline .mat-mdc-form-field-focus-overlay { background: transparent !important; }
+::ng-deep .ff-underline .mat-mdc-text-field-wrapper { padding: 0 !important; }
+::ng-deep .ff-underline .mat-mdc-form-field-infix { padding: 0.25rem 0 !important; border-bottom: 1px solid #d1d5db; }
+::ng-deep .ff-underline.mat-mdc-form-field.mat-focused .mat-mdc-form-field-infix { border-bottom-color: #047857; }
+
+/* Placeholder gris también dentro del mat-date-range-input */
+::ng-deep .ff-underline input::placeholder { @apply text-gray-400; }
+
+/* --- Quita el marco y deja solo la línea inferior --- */
+::ng-deep .ff-underline .mdc-notched-outline {
+  display: none !important;
+}
+
+::ng-deep .ff-underline .mat-mdc-form-field-focus-overlay {
+  background: transparent !important;
+}
+
+::ng-deep .ff-underline .mat-mdc-form-field-subscript-wrapper {
+  display: none !important;
+}
+
+::ng-deep .ff-underline .mat-mdc-text-field-wrapper {
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+::ng-deep .ff-underline .mat-mdc-form-field-infix {
+  padding: 0.25rem 0 !important;
+  border-bottom: 1px solid #d1d5db; /* gris-300 */
+  transition: border-color 0.2s ease;
+}
+
+::ng-deep .ff-underline.mat-mdc-form-field.mat-focused .mat-mdc-form-field-infix {
+  border-bottom-color: #047857; /* verde-700 */
+}
+
+::ng-deep .ff-underline input::placeholder {
+  color: #9ca3af; /* gris-400 */
+}
+
