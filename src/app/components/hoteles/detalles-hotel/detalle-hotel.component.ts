@@ -178,7 +178,6 @@ export class DetalleHotelComponent {
             };
 
             const data = await this.supabase.upsertCliente(nuevoCliente);
-            console.log('Respuesta Supabase:', data);
         } catch (err) {
             console.error('Error guardando cliente:', err);
         }
@@ -191,7 +190,7 @@ export class DetalleHotelComponent {
         const ciudad = sessionStorage.getItem('ciudad') ?? '';
 
         const {
-            noches, rangoFechas, nombre, correo, telefono, asesor
+            regimen, rangoFechas, nombre, correo, telefono, asesor
         } = this.reservacionForm.getRawValue();
 
         const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
@@ -208,6 +207,7 @@ export class DetalleHotelComponent {
 
         const mensaje = `Hola, soy ${nombre} y me interesa una cotización en el hotel ${this.hotel.nombre} en ${ciudad}.
 Noches: ${this.noches}
+Regimen: ${regimen}
 Fecha de entrada: ${fechaFormateadaInicio}
 Fecha de salida: ${fechaFormateadaFin}
 Habitaciones: ${totalRooms}

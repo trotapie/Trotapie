@@ -594,7 +594,7 @@
                             <input formControlName="telefono" class="input-underline" />
                         </div>
 
-                        <!-- CHECKBOX ofertas  [disabled]="reservacionForm.invalid"-->
+                        <!-- CHECKBOX ofertas  -->
                         <div class="pt-1">
                             <label class="inline-flex items-center gap-3 cursor-pointer select-none">
                                 <input type="checkbox" formControlName="ofertas"
@@ -609,7 +609,7 @@
                 </div>
 
                 <div class="p-4 border-t bg-white/90 dark:bg-gray-900/90 backdrop-blur">
-                    <button mat-flat-button color="primary" class="w-full flex items-center justify-center text-white"
+                    <button mat-flat-button color="primary" [disabled]="reservacionForm.invalid" class="w-full flex items-center justify-center text-white"
                         (click)="abrirWhatsApp()">
                         Enviar a WhatsApp
                     </button>
