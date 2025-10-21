@@ -135,7 +135,7 @@ export class DetalleHotelComponent {
         const { data, error } = await this.supabase.infoHotel(id);
         if (error) { this.error = error.message; return; }
         console.log(data);
-        
+
         this.hotel = data;
         const actividades: string[] =
             (data?.actividades ?? []).flatMap((row: any) => {
@@ -160,7 +160,7 @@ export class DetalleHotelComponent {
     async obtenerEmpleados() {
         const { data, error } = await this.supabase.empleados();
         if (error) { this.error = error.message; return; }
-        this.asesores = data   
+        this.asesores = data
     }
 
     //async registrar() {
@@ -201,7 +201,7 @@ export class DetalleHotelComponent {
     }
 
     regresar() {
-         this.router.navigate(['/hoteles']);
+        this.router.navigate(['/hoteles']);
     }
 
     async guardarCliente() {
@@ -619,5 +619,23 @@ export class DetalleHotelComponent {
         r.childAges[j] = age;
         list[i] = r;
         this.rooms.set(list);
+    }
+
+    compartirHotel() {
+        const shareBtn = document.getElementById('shareBtn');
+        shareBtn.addEventListener('click', async () => {
+            const shareData = {
+                title: document.title,
+                text: '¡Mira esto!',
+                url: location.href
+            };
+            if (navigator.share) {
+                try { await navigator.share(shareData); }
+                catch (e) { }
+            } else {
+                await navigator.clipboard?.writeText(shareData.url);
+                alert('Enlace copiado 😄');
+            }
+        });
     }
 }

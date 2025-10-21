@@ -91,7 +91,6 @@ export class HotelesComponent {
         const { data, error } = await this.supabase.obtenerDestinos(1);
         if (error) { this.error = error.message; return; }
         this.destinos = data;
-        console.log(data);
 
         this.listaHoteles = JSON.parse(sessionStorage.getItem('hoteles'));
         this.hotelesForm = this.formBuilder.group({
@@ -103,10 +102,8 @@ export class HotelesComponent {
             this.consulaHoteles();
 
             sessionStorage.setItem('ciudad', valor)
-            console.log(valor);
 
             const destino = this.listaHotelesFiltrada.find(item => item.ciudad.trim() === valor);
-            console.log(destino);
 
             // this.destinoSeleccionado(destino);
         });
@@ -121,12 +118,10 @@ export class HotelesComponent {
         this.destinoSeleccionado(data);
         this.listaHoteles = data
 
-        console.log(data);
     }
 
     destinoSeleccionado(event) {
-        console.log(event);
-
+ 
         this.ciudadSeleccionada = true;
         if (event !== undefined) {
             this.hotelesPorCiudad = event === undefined ? [] : event;
@@ -201,12 +196,10 @@ export class HotelesComponent {
     }
 
     onHotelesFiltrados(dataFiltrada: IHoteles[]) {
-        console.log(dataFiltrada);
 
         this.listaHotelesFiltrada = dataFiltrada;
         let ciudad = sessionStorage.getItem('ciudad');
         ciudad = ciudad === null ? 'Mazatlán' : ciudad;
-        console.log(ciudad);
 
 
         // if (ciudad) {

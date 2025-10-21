@@ -31,8 +31,6 @@ export class FloatingSearchComponent {
 
     ngOnInit() {
         const valor = sessionStorage.getItem('filtros');
-        console.log(valor);
-        console.log(this.data);
         
         if (valor) {
             this.toggle()
