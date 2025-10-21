@@ -26,19 +26,64 @@ export class SupabaseService {
   signOut() { return this.client.auth.signOut(); }
 
   // ===== DB (PostgREST) =====
-  listHotelesAll() {
+  listHotelesAll(nombreDestino: string) {
     return this.client
       .from('hoteles')
-      .select('*')
-      .order('created_at', { ascending: false }); // opcional
+      .select(`
+      id, created_at, nombre_hotel, descripcion, estrellas, fondo, orden, ubicacion,
+      descuento:descuento_id ( id, tipo_descuento ),
+      destinos:destino_id!inner ( id, nombre ),
+      concepto:concepto_id ( id, descripcion ),
+      regimen:regimen_id ( id, descripcion )
+    `)
+      .ilike('destinos.nombre', `%${nombreDestino}%`)
+      .order('orden', { ascending: true });
   }
+
+  infoHotel(idHotel: number) {
+    return this.client
+      .from('hoteles')
+      .select(`
+      id,
+      nombre_hotel,
+      descripcion,
+      ubicacion,
+      imagenes:imagenes_hoteles!imagenes_hoteles_hotel_id_fkey ( url_imagen ),
+      actividades:actividades_hotel!actividades_hotel_hotel_id_fkey (
+        actividad:actividades!actividades_hotel_actividad_id_fkey ( id, descripcion )
+      ),
+      regimenes:regimen_hotel!regimen_hotel_hotel_id_fkey (
+        regimen:regimen!regimen_hotel_regimen_id_fkey ( id, descripcion )
+      )
+    `)
+      .eq('id', idHotel)
+      .maybeSingle();
+  }
+
+
+
+  empleados() {
+    return this.client
+      .from('empleados')
+      .select('*')
+      .order('id', { ascending: true });
+  }
+
+  obtenerDestinos(id: number) {
+    return this.client
+      .from('destinos')
+      .select('id, nombre, orden')
+      .eq('tipo_desino_id', id)
+      .order('orden', { ascending: true });
+  }
+
 
   clientsRegister() {
     return this.client
       .from('clientes')
       .select('*')
   }
-  
+
   async upsertCliente(cliente: {
     nombre: string;
     email: string;
@@ -47,7 +92,7 @@ export class SupabaseService {
   }) {
     const { data, error } = await this.client
       .from('clientes')
-      .upsert(cliente, { onConflict: 'telefono' }) // usa telefono como clave única
+      .upsert(cliente, { onConflict: 'telefono' })
       .select();
 
     if (error) {
@@ -75,6 +120,7 @@ export class SupabaseService {
     const path = `${hotelId}/${Date.now()}_${file.name}`;
     return this.client.storage.from('hoteles').upload(path, file);
   }
+
   getPublicUrl(path: string) {
     return this.client.storage.from('hoteles').getPublicUrl(path);
   }

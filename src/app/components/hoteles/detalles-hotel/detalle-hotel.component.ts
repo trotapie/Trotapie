@@ -3,8 +3,8 @@ import { Component, computed, ElementRef, inject, QueryList, signal, ViewChild, 
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MaterialModule } from 'app/shared/material.module';
 import { JsonpClientBackend, HttpClientJsonpModule } from '@angular/common/http';
-import { Router } from '@angular/router';
-import { Hotel, IHoteles } from '../hoteles.interface';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Hotel, IAsesores, IDetalleHotel, IHoteles } from '../hoteles.interface';
 import { FuseMediaWatcherService } from '@fuse/services/media-watcher';
 import { Subject, takeUntil } from 'rxjs';
 import moment from 'moment';
@@ -13,6 +13,7 @@ import { QRCodeComponent } from 'angularx-qrcode';
 import { TextTypewriterComponent } from 'app/text-typewriter.component';
 import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
 import { SupabaseService } from 'app/core/supabase.service';
+import { FuseSplashScreenService } from '@fuse/services/splash-screen';
 
 type Room = { adults: number; children: number; childAges: (number | null)[] };
 @Component({
@@ -29,10 +30,13 @@ export class DetalleHotelComponent {
     private router = inject(Router);
     private _fuseMediaWatcherService = inject(FuseMediaWatcherService)
     private supabase = inject(SupabaseService);
+    private route = inject(ActivatedRoute)
+    private splashScreen = inject(FuseSplashScreenService)
+
 
 
     //  urlQR = 'https://trotapie.github.io/Trotapie/hoteles';
-    hotel: Hotel;
+    hotel: IDetalleHotel;
     descripcionParrafo: string = '';
     descripcionLista: string[] = [];
     imagenes: string[] = [];
@@ -110,24 +114,53 @@ export class DetalleHotelComponent {
 
     error = '';
 
+    ubicacion: string;
+    asesores: IAsesores[] = [];
+
     constructor(private sanitizer: DomSanitizer) {
         const nav = this.router.getCurrentNavigation();
         this.hotel = nav?.extras.state?.hotel;
     }
 
-    ngOnInit() {
+    async ngOnInit() {
+        this.splashScreen.show();
         this._fuseMediaWatcherService.onMediaChange$
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe(({ matchingAliases }) => {
                 this.isScreenSmall = !matchingAliases.includes('md');
             });
-        this.hotel = JSON.parse(sessionStorage.getItem('hotel'))
 
-        this.opcionesRegimen = this.hotel.descripcion.resultadoRegimen
-        this.descripcionParrafo = this.hotel.descripcion.descripcion;
-        this.descripcionLista = this.hotel.descripcion.resultadoActividades;
+        const id = Number(this.route.snapshot.paramMap.get('id'));
+        // this.hotel = JSON.parse(sessionStorage.getItem('hotel'))
+        const { data, error } = await this.supabase.infoHotel(id);
+        if (error) { this.error = error.message; return; }
+        console.log(data);
+        
+        this.hotel = data;
+        const actividades: string[] =
+            (data?.actividades ?? []).flatMap((row: any) => {
+                const a = row?.actividad;
+                if (Array.isArray(a)) {
+                    return a.map(z => z?.descripcion).filter(Boolean);
+                }
+                return a?.descripcion ? [a.descripcion] : [];
+            });
+        this.opcionesRegimen = this.hotel.regimenes;
+        this.descripcionParrafo = this.hotel.descripcion;
+        this.descripcionLista = actividades;
+        this.ubicacion = this.hotel.ubicacion;
 
         this.cargarImagenesConDelay();
+        this.splashScreen.hide();
+
+        this.obtenerEmpleados();
+
+    }
+
+    async obtenerEmpleados() {
+        const { data, error } = await this.supabase.empleados();
+        if (error) { this.error = error.message; return; }
+        this.asesores = data   
     }
 
     //async registrar() {
@@ -152,10 +185,14 @@ export class DetalleHotelComponent {
     }
 
     async cargarImagenesConDelay() {
+        const urls: string[] = (this.hotel?.imagenes ?? [])
+            .map((x: any) => typeof x === 'string' ? x : x?.url_imagen)
+            .filter((x: string | undefined): x is string => !!x);
+
         this.imagenes = [];
-        for (const img of this.hotel.imagenes) {
+        for (const url of urls) {
             await this.delay(300);
-            this.imagenes.push(img);
+            this.imagenes.push(url);
         }
     }
 
@@ -164,8 +201,9 @@ export class DetalleHotelComponent {
     }
 
     regresar() {
-        window.history.back();
+         this.router.navigate(['/hoteles']);
     }
+
     async guardarCliente() {
         const { telefono, ofertas, nombre, correo } = this.reservacionForm.getRawValue();
 
@@ -205,16 +243,16 @@ export class DetalleHotelComponent {
         const detalleHabitaciones = this.formatHabitaciones(rooms);
         const totalRooms = rooms.length;
 
-        const mensaje = `Hola, soy ${nombre} y me interesa una cotización en el hotel ${this.hotel.nombre} en ${ciudad}.
-Noches: ${this.noches}
-Regimen: ${regimen}
-Fecha de entrada: ${fechaFormateadaInicio}
-Fecha de salida: ${fechaFormateadaFin}
-Habitaciones: ${totalRooms}
-${detalleHabitaciones}
-Telefono: ${telefono}
-Correo: ${correo}
-Asesor: ${asesor}`;
+        const mensaje = `Hola, soy ${nombre} y me interesa una cotización en el hotel ${this.hotel.nombre_hotel} en ${ciudad}.
+        Noches: ${this.noches}
+        Regimen: ${regimen}
+        Fecha de entrada: ${fechaFormateadaInicio}
+        Fecha de salida: ${fechaFormateadaFin}
+        Habitaciones: ${totalRooms}
+        ${detalleHabitaciones}
+        Telefono: ${telefono}
+        Correo: ${correo}
+        Asesor: ${asesor.nombre}`;
 
 
 
@@ -252,16 +290,16 @@ Asesor: ${asesor}`;
         this.hoy = hoyDate.toISOString().split('T')[0];
         // this.modalAbierto = true;
         this.reservacionForm = this.formBuilder.group({
-            regimen: [''],
+            regimen: ['', [Validators.required]],
             nombre: ['', [Validators.required]],
-            correo: ['', [Validators.required, Validators.email]],
+            correo: ['', [Validators.email]],
             rangoFechas: this.formBuilder.group({
                 start: [null],
                 end: [null],
             }),
             ofertas: [false],
-            telefono: ['', Validators.required],
-            asesor:['', Validators.required]
+            telefono: ['', [Validators.required, Validators.minLength(10)]],
+            asesor: ['', Validators.required]
         });
 
         this.reservacionForm.get('rangoFechas')!.valueChanges.subscribe(range => {

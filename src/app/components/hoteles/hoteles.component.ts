@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, ElementRef, inject, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
-import { Hotel, IHoteles } from './hoteles.interface';
+import { Destinos, Hotel, IHoteles } from './hoteles.interface';
 import { MaterialModule } from 'app/shared/material.module';
 import { JsonpClientBackend, HttpClientJsonpModule } from '@angular/common/http';
 import { Router } from '@angular/router';
@@ -32,7 +32,7 @@ export class HotelesComponent {
      */
 
     hotelesForm: FormGroup;
-    listaHoteles: IHoteles[];
+    listaHoteles: any[];
     listaHotelesFiltrada: IHoteles[] = [];
     hotelesPorCiudad: Hotel[] = [];
     ciudadSeleccionada: boolean;
@@ -48,69 +48,17 @@ export class HotelesComponent {
     tabOffsets: number[] = [];
     tabWidths: number[] = [];
     error = '';
-     @ViewChild('scrollContainer', { static: true }) scrollContainer!: ElementRef<HTMLElement>;
-  @ViewChild('ancla', { static: false }) ancla!: ElementRef<HTMLElement>;
-  @ViewChild('anclaNacionales', { static: false }) anclaNacionales!: ElementRef<HTMLElement>;
+    @ViewChild('scrollContainer', { static: true }) scrollContainer!: ElementRef<HTMLElement>;
+    @ViewChild('ancla', { static: false }) ancla!: ElementRef<HTMLElement>;
+    @ViewChild('anclaNacionales', { static: false }) anclaNacionales!: ElementRef<HTMLElement>;
+    destinos: Destinos[] = [];
+
     constructor() {
     }
 
     async ngOnInit() {
         this.splashScreen.show();
-        this.listaHoteles = JSON.parse(sessionStorage.getItem('hoteles'));
-        this.hotelesForm = this.formBuilder.group({
-            hotelSeleccionado: ['Mazatlán']
-        });
-
-
-        this.hotel = JSON.parse(sessionStorage.getItem('hotel'))
-        if (this.hotel !== null) {
-            this.splashScreen.hide();
-            sessionStorage.removeItem('hotel')
-            const ciudad = sessionStorage.getItem('ciudad');
-            if (ciudad) {
-                const destino = this.listaHoteles.find(item => item.ciudad.trim() === ciudad.trim());
-                if (destino) {
-                    this.hotelesForm.patchValue({ hotelSeleccionado: ciudad.trim() });
-                    setTimeout(() => {
-                        this.destinoSeleccionado(destino);
-                    }, 400);
-                }
-            }
-        } else {
-            this.datosService.obtenerJson().subscribe({
-                next: (data) => {
-                    sessionStorage.setItem('hoteles', JSON.stringify(data))
-                    let ciudad = sessionStorage.getItem('ciudad');
-                    this.listaHoteles = data;
-                    this.listaHotelesFiltrada = data;
-                    ciudad = ciudad === null ? 'Mazatlán' : ciudad;
-                    if (ciudad) {
-                        const destino = this.listaHotelesFiltrada.find(item => item.ciudad.trim() === ciudad.trim());
-                        if (destino) {
-                            this.hotelesForm.patchValue({ hotelSeleccionado: ciudad.trim() });
-                            this.destinoSeleccionado(destino);
-                        }
-                    }
-                },
-                error: (error) => {
-                    console.error('Error al cargar JSON:', error);
-                },
-                complete: () => {
-                    this.splashScreen.hide();
-                }
-            });
-        }
-        this.hotelesForm.get('hotelSeleccionado')?.valueChanges.subscribe(valor => {
-            sessionStorage.setItem('ciudad', valor)
-            const destino = this.listaHotelesFiltrada.find(item => item.ciudad.trim() === valor);
-            this.destinoSeleccionado(destino);
-        });
-
-        // const { data, error } = await this.supabase.listHotelesAll();
-        // if (error) { this.error = error.message; return; }
-        // console.log(data);
-
-
+        this.obtenerDestinos()
     }
 
     ngAfterViewInit(): void {
@@ -139,11 +87,50 @@ export class HotelesComponent {
 
     }
 
+    async obtenerDestinos() {
+        const { data, error } = await this.supabase.obtenerDestinos(1);
+        if (error) { this.error = error.message; return; }
+        this.destinos = data;
+        console.log(data);
+
+        this.listaHoteles = JSON.parse(sessionStorage.getItem('hoteles'));
+        this.hotelesForm = this.formBuilder.group({
+            hotelSeleccionado: [this.destinos[0].nombre]
+        });
+
+        this.hotelesForm.get('hotelSeleccionado')?.valueChanges.subscribe(valor => {
+            // this.splashScreen.show();
+            this.consulaHoteles();
+
+            sessionStorage.setItem('ciudad', valor)
+            console.log(valor);
+
+            const destino = this.listaHotelesFiltrada.find(item => item.ciudad.trim() === valor);
+            console.log(destino);
+
+            // this.destinoSeleccionado(destino);
+        });
+
+        this.consulaHoteles();
+    }
+
+    async consulaHoteles() {
+        const { data, error } = await this.supabase.listHotelesAll(this.hotelesForm.get('hotelSeleccionado')?.value);
+        if (error) { this.error = error.message; return; }
+        this.splashScreen.hide();
+        this.destinoSeleccionado(data);
+        this.listaHoteles = data
+
+        console.log(data);
+    }
+
     destinoSeleccionado(event) {
+        console.log(event);
+
         this.ciudadSeleccionada = true;
         if (event !== undefined) {
-            this.hotelesPorCiudad = event.hoteles === undefined ? [] : event.hoteles;
-            sessionStorage.setItem('ciudad', event.ciudad)
+            this.hotelesPorCiudad = event === undefined ? [] : event;
+            // sessionStorage.setItem('ciudad', event.destinos.nombre)
         } else {
             this.hotelesPorCiudad = []
         }
@@ -214,21 +201,25 @@ export class HotelesComponent {
     }
 
     onHotelesFiltrados(dataFiltrada: IHoteles[]) {
+        console.log(dataFiltrada);
+
         this.listaHotelesFiltrada = dataFiltrada;
         let ciudad = sessionStorage.getItem('ciudad');
         ciudad = ciudad === null ? 'Mazatlán' : ciudad;
+        console.log(ciudad);
 
-        if (ciudad) {
-            const destino = this.listaHotelesFiltrada.find(item => item.ciudad.trim() === ciudad.trim());
 
-            if (destino) {
-                this.hotelesForm.patchValue({ hotelSeleccionado: ciudad.trim() });
-                this.destinoSeleccionado(destino);
-            } else {
-                this.destinoSeleccionado(destino);
+        // if (ciudad) {
+        //     const destino = this.listaHotelesFiltrada.find(item => item.ciudad.trim() === ciudad.trim());
 
-            }
-        }
+        //     if (destino) {
+        //         this.hotelesForm.patchValue({ hotelSeleccionado: ciudad.trim() });
+        //         this.destinoSeleccionado(destino);
+        //     } else {
+        //         this.destinoSeleccionado(destino);
+
+        //     }
+        // }
 
     }
 
@@ -237,50 +228,50 @@ export class HotelesComponent {
     }
 
     irA(): void {
-    const container = this.scrollContainer?.nativeElement;
-    const target = this.ancla?.nativeElement;
-    if (!container || !target) return;
+        const container = this.scrollContainer?.nativeElement;
+        const target = this.ancla?.nativeElement;
+        if (!container || !target) return;
 
-    const targetY = this.getOffsetWithinContainer(target, container);
-    const offset = this.getStickyOffset(container);
+        const targetY = this.getOffsetWithinContainer(target, container);
+        const offset = this.getStickyOffset(container);
 
-    container.scrollTo({
-      top: Math.max(0, targetY - offset),
-      behavior: 'smooth'
-    });
-  }
+        container.scrollTo({
+            top: Math.max(0, targetY - offset),
+            behavior: 'smooth'
+        });
+    }
 
     irANacionales(): void {
-    const container = this.scrollContainer?.nativeElement;
-    const target = this.anclaNacionales?.nativeElement;
-    if (!container || !target) return;
+        const container = this.scrollContainer?.nativeElement;
+        const target = this.anclaNacionales?.nativeElement;
+        if (!container || !target) return;
 
-    const targetY = this.getOffsetWithinContainer(target, container);
-    const offset = this.getStickyOffset(container);
+        const targetY = this.getOffsetWithinContainer(target, container);
+        const offset = this.getStickyOffset(container);
 
-    container.scrollTo({
-      top: Math.max(0, targetY - offset),
-      behavior: 'smooth'
-    });
-  }
-
-  /** Offset absoluto del target dentro del container (sin usar window). */
-  private getOffsetWithinContainer(target: HTMLElement, container: HTMLElement): number {
-    let y = 0;
-    let node: HTMLElement | null = target;
-    while (node && node !== container) {
-      y += node.offsetTop;
-      node = node.offsetParent as HTMLElement | null;
+        container.scrollTo({
+            top: Math.max(0, targetY - offset),
+            behavior: 'smooth'
+        });
     }
-    return y;
-  }
 
-  /** Altura del header sticky visible (para que no tape el título) + un respiro. */
-  private getStickyOffset(container: HTMLElement): number {
-    let offset = 0;
-    const stickies = container.querySelectorAll<HTMLElement>('.sticky.top-0');
-    stickies.forEach(el => offset = Math.max(offset, el.offsetHeight || 0));
-    return offset + 8; // 8px de respiro
-  }
+    /** Offset absoluto del target dentro del container (sin usar window). */
+    private getOffsetWithinContainer(target: HTMLElement, container: HTMLElement): number {
+        let y = 0;
+        let node: HTMLElement | null = target;
+        while (node && node !== container) {
+            y += node.offsetTop;
+            node = node.offsetParent as HTMLElement | null;
+        }
+        return y;
+    }
+
+    /** Altura del header sticky visible (para que no tape el título) + un respiro. */
+    private getStickyOffset(container: HTMLElement): number {
+        let offset = 0;
+        const stickies = container.querySelectorAll<HTMLElement>('.sticky.top-0');
+        stickies.forEach(el => offset = Math.max(offset, el.offsetHeight || 0));
+        return offset + 8; // 8px de respiro
+    }
 
 }

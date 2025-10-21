@@ -13,7 +13,7 @@ export class MapaComponent implements OnInit, AfterViewInit {
     ngOnInit() {
 
         this.hotel = JSON.parse(sessionStorage.getItem('hotel'))
-        const url = this.hotel.descripcion.ubicacion;
+        const url = this.hotel.ubicacion;
 
         this.coordenadas = this.extraerCoordenadasDesdeUrl(url);
     }
@@ -34,7 +34,7 @@ export class MapaComponent implements OnInit, AfterViewInit {
 
         L.marker([this.coordenadas.lat, this.coordenadas.lng], { icon })
             .addTo(this.map)
-            .bindTooltip(this.hotel.nombre, { permanent: true, direction: 'top', offset: [0, -40] });
+            .bindTooltip(this.hotel.nombre_hotel, { permanent: true, direction: 'top', offset: [0, -40] });
     }
 
     extraerCoordenadasDesdeUrl(url: string): { lat: number, lng: number } | null {

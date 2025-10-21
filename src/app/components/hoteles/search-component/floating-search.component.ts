@@ -31,6 +31,9 @@ export class FloatingSearchComponent {
 
     ngOnInit() {
         const valor = sessionStorage.getItem('filtros');
+        console.log(valor);
+        console.log(this.data);
+        
         if (valor) {
             this.toggle()
             setTimeout(() => {
@@ -80,7 +83,7 @@ export class FloatingSearchComponent {
         return src
             .map(c => ({
                 ...c,
-                hoteles: c.hoteles.filter(h => h.nombre?.toLowerCase().includes(t))
+                hoteles: c.hoteles.filter(h => h.nombre_hotel?.toLowerCase().includes(t))
             }))
             .filter(c => c.hoteles.length > 0);
     });
