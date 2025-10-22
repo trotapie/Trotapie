@@ -621,21 +621,19 @@ export class DetalleHotelComponent {
         this.rooms.set(list);
     }
 
-    compartirHotel() {
-        const shareBtn = document.getElementById('shareBtn');
-        shareBtn.addEventListener('click', async () => {
-            const shareData = {
-                title: document.title,
-                text: '¡Mira esto!',
-                url: location.href
-            };
-            if (navigator.share) {
-                try { await navigator.share(shareData); }
-                catch (e) { }
-            } else {
-                await navigator.clipboard?.writeText(shareData.url);
-                alert('Enlace copiado 😄');
-            }
-        });
+    async compartirHotel() {
+        const shareData = {
+            title: document.title,
+            text: '¡Mira esto!',
+            url: location.href
+        };
+        if (navigator.share) {
+            try { await navigator.share(shareData); }
+            catch (e) { }
+        } else {
+            await navigator.clipboard?.writeText(shareData.url);
+            alert('Enlace copiado 😄');
+        }
+
     }
 }
