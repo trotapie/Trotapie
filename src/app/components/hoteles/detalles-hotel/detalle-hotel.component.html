@@ -1,5 +1,5 @@
 <div *ngIf="hotel" #scrollContainer class="absolute inset-0 flex flex-col min-w-0 overflow-y-auto" cdkScrollable>
-    <div class="flex min-w-0 flex-auto flex-col m-6">
+    <div *ngIf="mostrarInfo" class="flex min-w-0 flex-auto flex-col m-6">
         <div class="sticky top-0 z-50 flex items-center justify-between w-full py-2 px-2 md:px-4 transition-all duration-300 backdrop-blur-md"
             [ngClass]="{'bg-transparent': !scrolled, 'bg-white dark:bg-gray-900 shadow-md': scrolled }">
             <div class="text-3xl font-semibold leading-tight">

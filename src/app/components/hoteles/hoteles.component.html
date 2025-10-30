@@ -1,50 +1,9 @@
 <div #scrollContainer class="absolute inset-0 flex flex-col min-w-0 overflow-y-auto" cdkScrollable>
-    <div class="-mt-px flex-auto border-t ">
+    <div *ngIf="mostrarInfo" class="-mt-px flex-auto border-t ">
         <div class="mx-auto w-full max-w-screen-xl">
             <section #anclaNacionales class="relative">
                 <div class="sticky top-0 z-30 bg-green-50 shadow py-2 transition duration-300">
                     <h2 class="text-center text-green-800 font-bold text-2xl">Destinos Nacionales</h2>
-                    <!-- <div class="flex flex-col gap-2">
-
-                        <form [formGroup]="hotelesForm">
-                            <div class="flex flex-col gap-2">
-
-                                <div class="glass-radio-group">
-                                    <input type="radio" id="glass-mazatlan" value="Mazatlán"
-                                        formControlName="hotelSeleccionado" />
-                                    <label for="glass-mazatlan">Mazatlán</label>
-
-                                    <input type="radio" id="glass-cancun" value="Cancún"
-                                        formControlName="hotelSeleccionado" />
-                                    <label for="glass-cancun">Cancún</label>
-
-                                    <input type="radio" id="glass-cabos" value="Los Cabos"
-                                        formControlName="hotelSeleccionado" />
-                                    <label for="glass-cabos">Los Cabos</label>
-
-                                    <input type="radio" id="glass-vallarta" value="Vallarta"
-                                        formControlName="hotelSeleccionado" />
-                                    <label for="glass-vallarta">Vallarta</label>
-
-                                    <input type="radio" id="glass-rivera" value="Rivera Maya"
-                                        formControlName="hotelSeleccionado" />
-                                    <label for="glass-rivera">Rivera Maya</label>
-
-                                    <div class="glass-glider"></div>
-                                </div>
-                                <div class="flex justify-center mt-4 mb-2 ml-2 z-0">
-                                    <button mat-flat-button type="button" color="accent" class="mr-2" (click)="irA()">
-                                        <div class="flex items-center">
-                                            <img class="w-6 h-6 mr-2" src="assets/icons/destinos-internacionales.svg" />
-                                            Destinos internacionales
-                                        </div>
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-
-                    </div> -->
-
                     <div class="flex flex-col gap-4 items-center w-full">
                         <form [formGroup]="hotelesForm" class="w-full max-w-4xl">
 
@@ -107,7 +66,7 @@
                                                         d="M6 6h.008v.008H6V6Z" />
                                                 </svg>
 
-                                                {{ hotel?.descuento.tipo_descuento }}% descuento
+                                                {{ hotel?.descuento.tipo_descuento }}
                                             </div>
                                         </div>
                                     </div>

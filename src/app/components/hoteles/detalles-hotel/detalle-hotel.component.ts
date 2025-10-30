@@ -116,6 +116,7 @@ export class DetalleHotelComponent {
 
     ubicacion: string;
     asesores: IAsesores[] = [];
+    mostrarInfo: boolean= false; 
 
     constructor(private sanitizer: DomSanitizer) {
         const nav = this.router.getCurrentNavigation();
@@ -131,10 +132,8 @@ export class DetalleHotelComponent {
             });
 
         const id = Number(this.route.snapshot.paramMap.get('id'));
-        // this.hotel = JSON.parse(sessionStorage.getItem('hotel'))
         const { data, error } = await this.supabase.infoHotel(id);
         if (error) { this.error = error.message; return; }
-        console.log(data);
 
         this.hotel = data;
         const actividades: string[] =
@@ -151,6 +150,7 @@ export class DetalleHotelComponent {
         this.ubicacion = this.hotel.ubicacion;
 
         this.cargarImagenesConDelay();
+        this.mostrarInfo = true;
         this.splashScreen.hide();
 
         this.obtenerEmpleados();

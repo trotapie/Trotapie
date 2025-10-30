@@ -52,12 +52,16 @@ export class HotelesComponent {
     @ViewChild('ancla', { static: false }) ancla!: ElementRef<HTMLElement>;
     @ViewChild('anclaNacionales', { static: false }) anclaNacionales!: ElementRef<HTMLElement>;
     destinos: Destinos[] = [];
+    mostrarInfo: boolean= false; 
 
     constructor() {
     }
 
     async ngOnInit() {
         this.splashScreen.show();
+         this.hotelesForm = this.formBuilder.group({
+            hotelSeleccionado: ['']
+        });
         this.obtenerDestinos()
     }
 
@@ -92,10 +96,10 @@ export class HotelesComponent {
         if (error) { this.error = error.message; return; }
         this.destinos = data;
 
+        const ciudad = sessionStorage.getItem('ciudad') !== null ? sessionStorage.getItem('ciudad') : this.destinos[0].nombre  ;        
+
         this.listaHoteles = JSON.parse(sessionStorage.getItem('hoteles'));
-        this.hotelesForm = this.formBuilder.group({
-            hotelSeleccionado: [this.destinos[0].nombre]
-        });
+        this.hotelesForm.patchValue({ hotelSeleccionado: ciudad });
 
         this.hotelesForm.get('hotelSeleccionado')?.valueChanges.subscribe(valor => {
             // this.splashScreen.show();
@@ -115,6 +119,7 @@ export class HotelesComponent {
         const { data, error } = await this.supabase.listHotelesAll(this.hotelesForm.get('hotelSeleccionado')?.value);
         if (error) { this.error = error.message; return; }
         this.splashScreen.hide();
+        this.mostrarInfo= true;
         this.destinoSeleccionado(data);
         this.listaHoteles = data
 
@@ -135,7 +140,6 @@ export class HotelesComponent {
     verDetalleHotel(hotel: any): void {
         const scrollTop = this.scrollContainer.nativeElement.scrollTop;
         sessionStorage.setItem('scrollTopHoteles', scrollTop.toString());
-        sessionStorage.setItem('hotel', JSON.stringify(hotel))
         this.router.navigate(['/hoteles/detalle-hotel', hotel.id], {
             state: { hotel }
         });
