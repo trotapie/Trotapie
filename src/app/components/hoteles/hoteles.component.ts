@@ -99,6 +99,7 @@ export class HotelesComponent {
         const ciudad = sessionStorage.getItem('ciudad') !== null ? sessionStorage.getItem('ciudad') : this.destinos[0].nombre  ;        
 
         this.listaHoteles = JSON.parse(sessionStorage.getItem('hoteles'));
+        
         this.hotelesForm.patchValue({ hotelSeleccionado: ciudad });
 
         this.hotelesForm.get('hotelSeleccionado')?.valueChanges.subscribe(valor => {
@@ -140,6 +141,7 @@ export class HotelesComponent {
     verDetalleHotel(hotel: any): void {
         const scrollTop = this.scrollContainer.nativeElement.scrollTop;
         sessionStorage.setItem('scrollTopHoteles', scrollTop.toString());
+        sessionStorage.setItem('hotel', JSON.stringify(hotel))
         this.router.navigate(['/hoteles/detalle-hotel', hotel.id], {
             state: { hotel }
         });

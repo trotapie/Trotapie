@@ -36,7 +36,7 @@ export class SupabaseService {
       concepto:concepto_id ( id, descripcion ),
       regimen:regimen_id ( id, descripcion )
     `)
-      .ilike('destinos.nombre', `%${nombreDestino}%`)
+      .eq('destinos.nombre', `${nombreDestino}`)
       .order('orden', { ascending: true });
   }
 
