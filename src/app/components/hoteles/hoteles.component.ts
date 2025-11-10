@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, ElementRef, inject, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
-import { Destinos, Hotel, IHoteles } from './hoteles.interface';
+import { Destinos, GrupoDestino, Hotel, HotelConDestino, IHoteles } from './hoteles.interface';
 import { MaterialModule } from 'app/shared/material.module';
 import { JsonpClientBackend, HttpClientJsonpModule } from '@angular/common/http';
 import { Router } from '@angular/router';
@@ -52,17 +52,71 @@ export class HotelesComponent {
     @ViewChild('ancla', { static: false }) ancla!: ElementRef<HTMLElement>;
     @ViewChild('anclaNacionales', { static: false }) anclaNacionales!: ElementRef<HTMLElement>;
     destinos: Destinos[] = [];
-    mostrarInfo: boolean= false; 
+    mostrarInfo: boolean = false;
+    tipoDestino: number = 1;
+    gruposDestinos: GrupoDestino[] = [];
+
+    imagenesFondo: string[] = [
+        "https://drive.google.com/thumbnail?id=1Q6E32Aa9rNXCDaL47Zcg5cUfvZBASoeG&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1DR14XXgmvxAf3vcz5HutWqiG9PiNTZTF&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1mTCXsQkjZvuJPfcOFhr_jKyAe_gVXbZB&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1UOu1C_fHtFIH5bvjLxoV6e0AV7Vb1q5a&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1uj8AXBKudr6XSbhQ5zt3oL8jLOOZl8tb&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1kYc-T_98hX3OajRkIC60NL1eIa-KS30G&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1q9h_2-lSbN-DviEwmegh4xYELwHQ7P5Q&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1I0GldQOhTkBECpgnFz5kqOKngakOs8Kx&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1YhrutZIWTC-gN2zFeffTK8jf_fEfRO77&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1EegP__rdUuEXll5jCcE2MQW_8lcpEhuq&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1B7bJTtDz3APLntNMNlDDnz3oGIrsMC_y&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1m1JbVRhlJ5_i5b9JSJvs6ypHGXYUh11S&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1Z5168bwD12P3-SuDZiCrlGMv_Lrz5VCl&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1cHzOSB-V2f8SfukL2O9CjS5FCU1UpMfT&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1gcqmiVNiqMEuhUEcHqTuMlQvw7H2dli_&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1ft0gXlfbyvJqyHGcBRsavLdFr2fEBq1U&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1uiCSrjJDbnelZr0MJ180Q1oUZ4mHVLkO&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1qrDfwAQh2zOObo8hhREfVDNqtUPWOYbt&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1VxW2JmXdSJy9C4DmT_0XzYRbBMjMn3q1&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1D9_5Tu1JfnmjSrztYJ8blDAFKzier0k7&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1mRCJUiL3eA6NzensOapN979n_OUQVvRI&sz=w1000",
+        "https://drive.google.com/thumbnail?id=18ThG9EodNlDDaMbbieCXKaEYIk8FnO2k&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1sNuG16LoSht6-GnPzBoKx7RSOgOuoz8D&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1qHNRx3X9Vt-P_sNuljzbpiVtaf0GvYcn&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1z6yyTFfjZw1SNVt9hX29M55hLh460Po6&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1rOH_ew4Agvue5xUM3P13dG_3tUKVedSB&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1eHodrousb_xsMqSRkzYIoQCuzOEeQKkG&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1AOoWvLTh-OLAQxtX3gn-OMraBVP6EcA2&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1TSRdTrsVLfIxbCqVvX1lvUYD5OR-fwAb&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1sdWK0nAX5z8qIP6Lr4bOA8eGFY2pWAao&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1h1ule8mVMHPCGzsoa15KZyEu1S3_PTB0&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1udMVdovNXtEArX34u1CH_PaF9ItLPeo3&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1ozJbVtR0Z4l77kCZSXJ8r6qHjVcuqinG&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1mgh0-0w14yq1cWoIYboriuxy7-b135Rp&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1YRC8tBd3s46TWoAaScqf9liI_gUVpKQ-&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1jX8TZ8zcM0pXO5VBbxKe38VXk5PNBvr6&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1x7kXdUFITBtY5vwcyXQ_MKdLUgZNYDKU&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1YSgzo_EBx8gt8G-T5SiKeJw5UieDPYvK&sz=w1000",
+        "https://drive.google.com/thumbnail?id=1GIdKR2O8JVAMbN0_U_nUuNMDr15HWX3v&sz=w1000",
+        "https://drive.google.com/thumbnail?id=10iWgNkT0zjF7STL98swzmXAXPssacaaf&sz=w1000"
+    ];
+
+    currentIndex = 0;
+    currentImage = this.imagenesFondo[0];
+    previousIndex = 0;
+    intervalId: any;
 
     constructor() {
     }
 
     async ngOnInit() {
-        this.splashScreen.show();
-         this.hotelesForm = this.formBuilder.group({
+        this.hotelesForm = this.formBuilder.group({
             hotelSeleccionado: ['']
         });
-        this.obtenerDestinos()
+        if (sessionStorage.getItem('tipoDestino') !== null) {
+            this.obtenerDestinos()
+            this.splashScreen.show();
+        }
+
+        this.startRandomCarousel();
     }
 
     ngAfterViewInit(): void {
@@ -91,43 +145,57 @@ export class HotelesComponent {
 
     }
 
+    ngOnDestroy(): void {
+        if (this.intervalId) clearInterval(this.intervalId);
+    }
+
     async obtenerDestinos() {
-        const { data, error } = await this.supabase.obtenerDestinos(1);
+        this.tipoDestino = sessionStorage.getItem('tipoDestino') !== null ? +sessionStorage.getItem('tipoDestino') : this.tipoDestino
+        const { data, error } = await this.supabase.obtenerDestinos(this.tipoDestino);
         if (error) { this.error = error.message; return; }
         this.destinos = data;
-
-        const ciudad = sessionStorage.getItem('ciudad') !== null ? sessionStorage.getItem('ciudad') : this.destinos[0].nombre  ;        
+        const ciudad = sessionStorage.getItem('ciudad') !== null ? sessionStorage.getItem('ciudad') : this.destinos[0].id;
 
         this.listaHoteles = JSON.parse(sessionStorage.getItem('hoteles'));
-        
-        this.hotelesForm.patchValue({ hotelSeleccionado: ciudad });
+
+        this.hotelesForm.patchValue({ hotelSeleccionado: +ciudad });
 
         this.hotelesForm.get('hotelSeleccionado')?.valueChanges.subscribe(valor => {
-            // this.splashScreen.show();
             this.consulaHoteles();
 
-            sessionStorage.setItem('ciudad', valor)
+            sessionStorage.setItem('ciudad', valor.toString())
 
             const destino = this.listaHotelesFiltrada.find(item => item.ciudad.trim() === valor);
 
-            // this.destinoSeleccionado(destino);
         });
 
         this.consulaHoteles();
     }
 
     async consulaHoteles() {
-        const { data, error } = await this.supabase.listHotelesAll(this.hotelesForm.get('hotelSeleccionado')?.value);
+        const hotelId = +this.hotelesForm.get('hotelSeleccionado')?.value
+        const busqueda = this.tipoDestino === 1 ? this.supabase.listHotelesAll(hotelId) : this.supabase.listHotelesAllPorDestinoPadre(hotelId);
+        const { data, error } = await busqueda;
+        console.log(data);
+
+        if (this.tipoDestino === 2) {
+            this.gruposDestinos = this.agruparHotelesPorDestino(data)
+        }
         if (error) { this.error = error.message; return; }
         this.splashScreen.hide();
-        this.mostrarInfo= true;
+        this.mostrarInfo = true;
         this.destinoSeleccionado(data);
         this.listaHoteles = data
 
     }
 
     destinoSeleccionado(event) {
- 
+        console.log(event);
+        if (event.length > 0) {
+            sessionStorage.setItem('tipoDestino', event[0].destinos.tipo_desino_id)
+        }
+
+
         this.ciudadSeleccionada = true;
         if (event !== undefined) {
             this.hotelesPorCiudad = event === undefined ? [] : event;
@@ -227,20 +295,7 @@ export class HotelesComponent {
     }
 
     irA(): void {
-        const container = this.scrollContainer?.nativeElement;
-        const target = this.ancla?.nativeElement;
-        if (!container || !target) return;
-
-        const targetY = this.getOffsetWithinContainer(target, container);
-        const offset = this.getStickyOffset(container);
-
-        container.scrollTo({
-            top: Math.max(0, targetY - offset),
-            behavior: 'smooth'
-        });
-    }
-
-    irANacionales(): void {
+        this.tipoDestino = 2;
         const container = this.scrollContainer?.nativeElement;
         const target = this.anclaNacionales?.nativeElement;
         if (!container || !target) return;
@@ -252,6 +307,77 @@ export class HotelesComponent {
             top: Math.max(0, targetY - offset),
             behavior: 'smooth'
         });
+        this.actualizacionDestinos();
+    }
+
+    irANacionales(): void {
+        this.tipoDestino = 1;
+
+        const container = this.scrollContainer?.nativeElement;
+        const target = this.anclaNacionales?.nativeElement;
+        if (!container || !target) return;
+
+        const targetY = this.getOffsetWithinContainer(target, container);
+        const offset = this.getStickyOffset(container);
+
+        container.scrollTo({
+            top: Math.max(0, targetY - offset),
+            behavior: 'smooth'
+        });
+        this.actualizacionDestinos();
+
+    }
+
+    async actualizacionDestinos() {
+        this.splashScreen.show();
+        const { data, error } = await this.supabase.obtenerDestinos(this.tipoDestino);
+        if (error) { this.error = error.message; return; }
+        this.destinos = data;
+        let ciudad = this.destinos[0].id
+        this.hotelesForm.patchValue({ hotelSeleccionado: +ciudad });
+    }
+
+    agruparHotelesPorDestino(
+        hoteles: any[]
+    ): GrupoDestino[] {
+        const mapa = new Map<string, HotelConDestino[]>();
+
+        hoteles.forEach(hotel => {
+            const ciudad = hotel.destinos?.nombre ?? 'Sin destino';
+            const pais = hotel.destinos?.destino_padre?.nombre ?? '';
+            const key = pais ? `${ciudad}, ${pais}` : ciudad;
+
+            if (!mapa.has(key)) {
+                mapa.set(key, []);
+            }
+
+            mapa.get(key)!.push(hotel);
+        });
+
+        return Array.from(mapa.entries()).map(([destino, hoteles]) => ({
+            destino,
+            hoteles
+        }));
+    }
+
+    cargarDestinos(id: number) {
+        this.tipoDestino = id;
+        this.splashScreen.show();
+
+        this.obtenerDestinos();
+    }
+
+    startRandomCarousel(): void {
+        this.intervalId = setInterval(() => {
+            let newIndex: number;
+
+            do {
+                newIndex = Math.floor(Math.random() * this.imagenesFondo.length);
+            } while (newIndex === this.previousIndex && this.imagenesFondo.length > 1);
+
+            this.previousIndex = newIndex;
+            this.currentImage = this.imagenesFondo[newIndex];
+        }, 5000); 
     }
 
     /** Offset absoluto del target dentro del container (sin usar window). */

@@ -1,35 +1,35 @@
 export interface IHoteles {
-    ciudad:  string;
+    ciudad: string;
     hoteles: Hotel[];
 }
 
 export interface IHoteles {
-  ciudad:  string;
-  hoteles: Hotel[];
+    ciudad: string;
+    hoteles: Hotel[];
 }
 export interface Destinos { id: number; nombre: string }
 export interface Descuento { id: number; tipo_descuento: string }
 
 export interface Hotel {
-  id:           number;
-  created_at:   Date;              // <- lo convertimos abajo
-  nombre_hotel: string;
-  descripcion:  string | null;
-  estrellas:    number | null;
-  fondo:        string | null;
-  orden:        number | null;
-  ubicacion:    string | null;
-  destinos:     Destinos | null;   // <- objeto
-  descuento:    Descuento | null;  // <- objeto (siempre puedes dejarlo null)
+    id: number;
+    created_at: Date;              
+    nombre_hotel: string;
+    descripcion: string | null;
+    estrellas: number | null;
+    fondo: string | null;
+    orden: number | null;
+    ubicacion: string | null;
+    destinos: Destinos | null;   
+    descuento: Descuento | null; 
 }
 
 export interface DescripcionHotel {
-    descripcion:          string;
+    descripcion: string;
     resultadoActividades: string[];
-    estrellas:            number;
-    resultadoRegimen:         string[];
-    ubicacion:            string;
-    descuento:            number | string;
+    estrellas: number;
+    resultadoRegimen: string[];
+    ubicacion: string;
+    descuento: number | string;
 }
 
 export interface ICoordenadas {
@@ -37,18 +37,18 @@ export interface ICoordenadas {
     lng: number;
 }
 export interface Destinos {
-    id:     number;
+    id: number;
     nombre: string;
     orden: number
 }
 
 export interface IDetalleHotel {
-    id:           number;
+    id: number;
     nombre_hotel: string;
-    descripcion:  string;
-    ubicacion:    null;
-    imagenes:     Imagenes[];
-    regimenes:    any[]
+    descripcion: string;
+    ubicacion: null;
+    imagenes: Imagenes[];
+    regimenes: any[]
 }
 
 export interface Imagenes {
@@ -57,8 +57,45 @@ export interface Imagenes {
 
 
 export interface IAsesores {
-    id:     number;
+    id: number;
     nombre: string;
 }
 
+export interface HotelConDestino {
+    id: number;
+    created_at: string;
+    nombre_hotel: string;
+    descripcion: string;
+    estrellas: number;
+    fondo: string;
+    orden: number;
+    ubicacion: string;
+    destinos: {
+        id: number;
+        nombre: string;             
+        destino_padre_id: number;
+        destino_padre?: {
+            id: number;
+            nombre: string;          
+        };
+    };
+    descuento: {
+        id: number;
+        tipo_descuento: string;
+    } | null;
+    concepto: {
+        id: number;
+        descripcion: string;
+    } | null;
+    regimen: {
+        id: number;
+        descripcion: string;
+    } | null;
+    _descuentoClase?: string;
+}
 
+
+export interface GrupoDestino {
+  destino: string;
+  hoteles: HotelConDestino[];
+}

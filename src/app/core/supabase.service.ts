@@ -26,17 +26,39 @@ export class SupabaseService {
   signOut() { return this.client.auth.signOut(); }
 
   // ===== DB (PostgREST) =====
-  listHotelesAll(nombreDestino: string) {
+  listHotelesAll(nombreDestino: number) {
     return this.client
       .from('hoteles')
       .select(`
       id, created_at, nombre_hotel, descripcion, estrellas, fondo, orden, ubicacion,
       descuento:descuento_id ( id, tipo_descuento ),
-      destinos:destino_id!inner ( id, nombre ),
+      destinos:destino_id!inner ( id, nombre, tipo_desino_id),
       concepto:concepto_id ( id, descripcion ),
       regimen:regimen_id ( id, descripcion )
     `)
-      .eq('destinos.nombre', `${nombreDestino}`)
+      .eq('destinos.id', `${nombreDestino}`)
+      .order('orden', { ascending: true });
+  }
+
+  listHotelesAllPorDestinoPadre(idDestinoPadre: number) {
+    return this.client
+      .from('hoteles')
+      .select(`
+      id, created_at, nombre_hotel, descripcion, estrellas, fondo, orden, ubicacion,
+      descuento:descuento_id ( id, tipo_descuento ),
+      destinos:destino_id!inner (
+        id,
+        nombre,
+        tipo_desino_id,
+        destino_padre_id,
+        destino_padre:destino_padre_id (
+          nombre
+        )
+      ),
+      concepto:concepto_id ( id, descripcion ),
+      regimen:regimen_id ( id, descripcion )
+    `)
+      .eq('destinos.destino_padre_id', idDestinoPadre)
       .order('orden', { ascending: true });
   }
 
@@ -74,6 +96,7 @@ export class SupabaseService {
       .from('destinos')
       .select('id, nombre, orden')
       .eq('tipo_desino_id', id)
+      .is('destino_padre_id', null)
       .order('orden', { ascending: true });
   }
 
