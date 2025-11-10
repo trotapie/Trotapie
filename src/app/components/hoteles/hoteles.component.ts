@@ -100,9 +100,13 @@ export class HotelesComponent {
     ];
 
     currentIndex = 0;
-    currentImage = this.imagenesFondo[0];
-    previousIndex = 0;
+    currentImage = this.imagenesFondo[Math.floor(Math.random() * this.imagenesFondo.length)];
+    overlayImage: string | null = null;
+    isTransitioning = false;
+
+    previousIndex = -1;
     intervalId: any;
+
 
     constructor() {
     }
@@ -176,7 +180,6 @@ export class HotelesComponent {
         const hotelId = +this.hotelesForm.get('hotelSeleccionado')?.value
         const busqueda = this.tipoDestino === 1 ? this.supabase.listHotelesAll(hotelId) : this.supabase.listHotelesAllPorDestinoPadre(hotelId);
         const { data, error } = await busqueda;
-        console.log(data);
 
         if (this.tipoDestino === 2) {
             this.gruposDestinos = this.agruparHotelesPorDestino(data)
@@ -190,7 +193,6 @@ export class HotelesComponent {
     }
 
     destinoSeleccionado(event) {
-        console.log(event);
         if (event.length > 0) {
             sessionStorage.setItem('tipoDestino', event[0].destinos.tipo_desino_id)
         }
@@ -369,15 +371,51 @@ export class HotelesComponent {
 
     startRandomCarousel(): void {
         this.intervalId = setInterval(() => {
+            if (!this.imagenesFondo || this.imagenesFondo.length === 0) {
+                return;
+            }
+
             let newIndex: number;
 
+            // Elegir índice aleatorio distinto al anterior (si hay más de 1 imagen)
             do {
                 newIndex = Math.floor(Math.random() * this.imagenesFondo.length);
             } while (newIndex === this.previousIndex && this.imagenesFondo.length > 1);
 
             this.previousIndex = newIndex;
-            this.currentImage = this.imagenesFondo[newIndex];
-        }, 5000); 
+            const nuevaUrl = this.imagenesFondo[newIndex];
+
+            // Usar transición en lugar de asignar directo
+            this.cambiarFondoConTransicion(nuevaUrl);
+
+        }, 5000); // 5 segundos
+    }
+
+    cambiarFondoConTransicion(url: string): void {
+        // Si ya estamos en transición, opcional: ignorar para no encimar
+        if (this.isTransitioning) {
+            return;
+        }
+
+        const img = new Image();
+        img.onload = () => {
+            // Nueva imagen lista en memoria
+            this.overlayImage = url;
+            this.isTransitioning = true;
+
+            // Duración debe coincidir con la del CSS (500ms)
+            setTimeout(() => {
+                this.currentImage = url;      // Actualizamos el fondo base
+                this.isTransitioning = false; // Fin de transición
+                this.overlayImage = null;     // Quitamos la capa extra
+            }, 500);
+        };
+
+        img.onerror = () => {
+            console.warn('Error cargando imagen de fondo', url);
+        };
+
+        img.src = url;
     }
 
     /** Offset absoluto del target dentro del container (sin usar window). */

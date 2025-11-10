@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
@@ -29,6 +29,8 @@ import { Subject, takeUntil } from 'rxjs';
     ],
 })
 export class MaterialLayoutComponent implements OnInit, OnDestroy {
+    private router = inject(Router);
+
     isScreenSmall: boolean;
     navigation: Navigation;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
@@ -38,11 +40,10 @@ export class MaterialLayoutComponent implements OnInit, OnDestroy {
      */
     constructor(
         private _activatedRoute: ActivatedRoute,
-        private _router: Router,
         private _navigationService: NavigationService,
         private _fuseMediaWatcherService: FuseMediaWatcherService,
         private _fuseNavigationService: FuseNavigationService
-    ) {}
+    ) { }
 
     // -----------------------------------------------------------------------------------------------------
     // @ Accessors
@@ -107,6 +108,13 @@ export class MaterialLayoutComponent implements OnInit, OnDestroy {
         if (navigation) {
             // Toggle the opened status
             navigation.toggle();
+        }
+    }
+
+    regresarInicio() {
+        if (sessionStorage.length !== 0) {
+            sessionStorage.clear();
+            window.location.reload();
         }
     }
 }

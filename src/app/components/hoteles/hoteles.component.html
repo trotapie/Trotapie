@@ -146,104 +146,104 @@
                 <div *ngIf="tipoDestino === 2" class="flex min-w-0 flex-auto flex-col ">
                     <div class="flex-auto px-3 sm:p-5">
 
-                            <div *ngIf="gruposDestinos.length === 0 && ciudadSeleccionada"
-                                class="text-center text-red-500/80 text-lg mt-8 justify-center">
-                                No hay hoteles disponibles para esta ciudad.
-                            </div>
+                        <div *ngIf="gruposDestinos.length === 0 && ciudadSeleccionada"
+                            class="text-center text-red-500/80 text-lg mt-8 justify-center">
+                            No hay hoteles disponibles para esta ciudad.
+                        </div>
 
-                            <div *ngFor="let grupo of gruposDestinos" class="mb-2">
-                                <h2 class="text-2xl font-bold  mb-2">
-                                    {{ grupo.destino }}
-                                </h2>
+                        <div *ngFor="let grupo of gruposDestinos" class="mb-2">
+                            <h2 class="text-2xl font-bold  mb-2">
+                                {{ grupo.destino }}
+                            </h2>
 
-                                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 px-6">
-                                    <div *ngFor="let hotel of grupo.hoteles">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 px-6">
+                                <div *ngFor="let hotel of grupo.hoteles">
 
-                                        <fuse-card
-                                            class="cursor-pointer filter-listing relative flex w-full h-48 flex-col bg-cover bg-center text-white rounded-2xl overflow-hidden transition duration-200 hover:scale-105 card-animada"
-                                            [ngStyle]="{ 'background-image': 'url(' + (hotel.fondo || fallback) + ')' }"
-                                            (click)="verDetalleHotel(hotel)">
+                                    <fuse-card
+                                        class="cursor-pointer filter-listing relative flex w-full h-48 flex-col bg-cover bg-center text-white rounded-2xl overflow-hidden transition duration-200 hover:scale-105 card-animada"
+                                        [ngStyle]="{ 'background-image': 'url(' + (hotel.fondo || fallback) + ')' }"
+                                        (click)="verDetalleHotel(hotel)">
 
-                                            <div class="absolute inset-0 bg-black/40 z-0"></div>
+                                        <div class="absolute inset-0 bg-black/40 z-0"></div>
 
-                                            <div *ngIf="hotel?.descuento" class="absolute top-2 right-2 z-20">
-                                                <div [ngClass]="getDescuentoClass(hotel)"
-                                                    class="text-xs font-bold px-2 py-1">
-                                                    <div class="flex items-center">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                            viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-                                                            class="size-4 mr-1">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                d="M6 6h.008v.008H6V6Z" />
-                                                        </svg>
+                                        <div *ngIf="hotel?.descuento" class="absolute top-2 right-2 z-20">
+                                            <div [ngClass]="getDescuentoClass(hotel)"
+                                                class="text-xs font-bold px-2 py-1">
+                                                <div class="flex items-center">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                                                        class="size-4 mr-1">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            d="M6 6h.008v.008H6V6Z" />
+                                                    </svg>
 
-                                                        {{ hotel?.descuento.tipo_descuento }}
-                                                    </div>
+                                                    {{ hotel?.descuento.tipo_descuento }}
                                                 </div>
                                             </div>
+                                        </div>
 
-                                            <div *ngIf="hotel?.concepto" class="absolute top-2 left-2 z-20">
-                                                <div class="text-xs font-bold px-2 py-1">
-                                                    <div class="flex items-center">
-                                                        <img class="w-6 h-6 mr-2"
-                                                            *ngIf="hotel?.concepto?.descripcion === 'Luxury'"
-                                                            src="assets/icons/luxury.svg" />
-                                                        <img class="w-6 h-6 mr-2"
-                                                            *ngIf="hotel?.concepto?.descripcion === 'Solo Adultos'"
-                                                            src="assets/icons/solo adultos.png" />
-                                                        <img class="w-6 h-6 mr-2"
-                                                            *ngIf="hotel?.concepto?.descripcion === 'Petfriendly'"
-                                                            src="assets/icons/petfriendly.svg" />
-                                                    </div>
+                                        <div *ngIf="hotel?.concepto" class="absolute top-2 left-2 z-20">
+                                            <div class="text-xs font-bold px-2 py-1">
+                                                <div class="flex items-center">
+                                                    <img class="w-6 h-6 mr-2"
+                                                        *ngIf="hotel?.concepto?.descripcion === 'Luxury'"
+                                                        src="assets/icons/luxury.svg" />
+                                                    <img class="w-6 h-6 mr-2"
+                                                        *ngIf="hotel?.concepto?.descripcion === 'Solo Adultos'"
+                                                        src="assets/icons/solo adultos.png" />
+                                                    <img class="w-6 h-6 mr-2"
+                                                        *ngIf="hotel?.concepto?.descripcion === 'Petfriendly'"
+                                                        src="assets/icons/petfriendly.svg" />
                                                 </div>
                                             </div>
+                                        </div>
 
-                                            <div class="relative z-10 m-8 mb-4">
-                                                <div class="text-2xl font-semibold leading-tight">
-                                                    {{ hotel.nombre_hotel }}
-                                                </div>
-
-                                                <div class="-ml-1 mt-2 flex items-center leading-none">
-                                                    <div class="flex items-center">
-                                                        <ng-container *ngFor="let _ of getFullStars(hotel?.estrellas)">
-                                                            <mat-icon class="text-yellow-400 icon-size-5"
-                                                                [svgIcon]="'mat_outline:star'"></mat-icon>
-                                                        </ng-container>
-                                                        <ng-container *ngIf="hasHalfStar(hotel?.estrellas)">
-                                                            <mat-icon class="text-yellow-400 icon-size-5"
-                                                                [svgIcon]="'mat_outline:star_half'"></mat-icon>
-                                                        </ng-container>
-                                                        <ng-container *ngFor="let _ of getEmptyStars(hotel?.estrellas)">
-                                                            <mat-icon class="text-yellow-400 icon-size-5"
-                                                                [svgIcon]="'mat_outline:star_outline'"></mat-icon>
-                                                        </ng-container>
-                                                    </div>
-                                                    <div class="ml-2">{{ hotel?.estrellas }}</div>
-                                                </div>
-
-                                                <div class="w-3/5">
-                                                    {{ hotel?.regimen?.descripcion }}
-                                                </div>
+                                        <div class="relative z-10 m-8 mb-4">
+                                            <div class="text-2xl font-semibold leading-tight">
+                                                {{ hotel.nombre_hotel }}
                                             </div>
 
-                                            <div class="absolute bottom-4 right-2 z-20 flex items-center gap-2">
-                                                <div class="text-sm text-right leading-tight">
-                                                    <div>Ver</div>
-                                                    <div>Galería</div>
+                                            <div class="-ml-1 mt-2 flex items-center leading-none">
+                                                <div class="flex items-center">
+                                                    <ng-container *ngFor="let _ of getFullStars(hotel?.estrellas)">
+                                                        <mat-icon class="text-yellow-400 icon-size-5"
+                                                            [svgIcon]="'mat_outline:star'"></mat-icon>
+                                                    </ng-container>
+                                                    <ng-container *ngIf="hasHalfStar(hotel?.estrellas)">
+                                                        <mat-icon class="text-yellow-400 icon-size-5"
+                                                            [svgIcon]="'mat_outline:star_half'"></mat-icon>
+                                                    </ng-container>
+                                                    <ng-container *ngFor="let _ of getEmptyStars(hotel?.estrellas)">
+                                                        <mat-icon class="text-yellow-400 icon-size-5"
+                                                            [svgIcon]="'mat_outline:star_outline'"></mat-icon>
+                                                    </ng-container>
                                                 </div>
-
-                                                <div
-                                                    class="w-10 h-10 rounded-full text-white flex items-center justify-center shadow-md">
-                                                    <mat-icon [svgIcon]="'heroicons_outline:arrow-right-circle'"
-                                                        class="text-white w-6 h-6"></mat-icon>
-                                                </div>
+                                                <div class="ml-2">{{ hotel?.estrellas }}</div>
                                             </div>
-                                        </fuse-card>
-                                    </div>
+
+                                            <div class="w-3/5">
+                                                {{ hotel?.regimen?.descripcion }}
+                                            </div>
+                                        </div>
+
+                                        <div class="absolute bottom-4 right-2 z-20 flex items-center gap-2">
+                                            <div class="text-sm text-right leading-tight">
+                                                <div>Ver</div>
+                                                <div>Galería</div>
+                                            </div>
+
+                                            <div
+                                                class="w-10 h-10 rounded-full text-white flex items-center justify-center shadow-md">
+                                                <mat-icon [svgIcon]="'heroicons_outline:arrow-right-circle'"
+                                                    class="text-white w-6 h-6"></mat-icon>
+                                            </div>
+                                        </div>
+                                    </fuse-card>
                                 </div>
                             </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -255,21 +255,27 @@
         <div class="flex min-w-0 flex-auto flex-col mt-2">
             <div class="flex-auto p-3 sm:p-5">
                 <div class="flex items-center justify-center h-[70vh] w-full relative overflow-hidden">
+
                     <fuse-card
                         class="relative flex flex-col items-center justify-center w-full max-w-5xl h-[70vh] text-white bg-cover bg-center rounded-3xl overflow-hidden shadow-lg transition duration-500 ease-in-out card-animada"
-                        [ngStyle]="{ 'background-image': 'url(' + currentImage + ')' }">
- 
+                        [ngStyle]="{ 'background-image': currentImage ? 'url(' + currentImage + ')' : 'none' }">
+
+                        <div *ngIf="overlayImage"
+                            class="absolute inset-0 bg-cover bg-center transition-opacity duration-500"
+                            [ngStyle]="{ 'background-image': 'url(' + overlayImage + ')' }"
+                            [class.opacity-0]="!isTransitioning" [class.opacity-100]="isTransitioning">
+                        </div>
+
                         <div class="absolute inset-0 bg-black/50 z-0"></div>
 
                         <div class="relative z-10 flex flex-col items-center justify-center text-center px-6 space-y-2">
-                            <span class="text-3xl sm:text-4xl  font-bold">¡Encuentra el viaje</span>
-                            <span class="text-3xl sm:text-4xl  font-bold">perfecto para ti!</span>
+                            <span class="text-3xl sm:text-4xl font-bold">¡Encuentra el viaje</span>
+                            <span class="text-3xl sm:text-4xl font-bold">perfecto para ti!</span>
                         </div>
 
-                        <div
-                            class="absolute bottom-10 transform  flex flex-col sm:flex-row gap-4 z-20">
+                        <div class="absolute bottom-10 transform flex flex-col sm:flex-row gap-4 z-20">
                             <button
-                                class="px-8 py-3 bg-green-700  text-white text-lg font-semibold rounded-full shadow-md hover:bg-green-800 transition"
+                                class="px-8 py-3 bg-green-700 text-white text-lg font-semibold rounded-full shadow-md hover:bg-green-800 transition"
                                 (click)="cargarDestinos(1)">
                                 Destinos Nacionales
                             </button>
@@ -280,12 +286,14 @@
                                 Destinos Internacionales
                             </button>
                         </div>
+
                     </fuse-card>
+
                 </div>
             </div>
         </div>
-
     </div>
+
     <footer>
         <div class="relative z-49 flex w-full justify-center print:hidden">
             <div
