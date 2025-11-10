@@ -31,9 +31,9 @@ export class SupabaseService {
       .from('hoteles')
       .select(`
       id, created_at, nombre_hotel, descripcion, estrellas, fondo, orden, ubicacion,
-      descuento:descuento_id ( id, tipo_descuento ),
+      descuento:descuento_id ( id, tipo_descuento,icono ),
       destinos:destino_id!inner ( id, nombre, tipo_desino_id),
-      concepto:concepto_id ( id, descripcion ),
+      concepto:concepto_id ( id, descripcion, icono ),
       regimen:regimen_id ( id, descripcion )
     `)
       .eq('destinos.id', `${nombreDestino}`)
@@ -45,7 +45,7 @@ export class SupabaseService {
       .from('hoteles')
       .select(`
       id, created_at, nombre_hotel, descripcion, estrellas, fondo, orden, ubicacion,
-      descuento:descuento_id ( id, tipo_descuento ),
+      descuento:descuento_id ( id, tipo_descuento, icono ),
       destinos:destino_id!inner (
         id,
         nombre,
@@ -55,7 +55,7 @@ export class SupabaseService {
           nombre
         )
       ),
-      concepto:concepto_id ( id, descripcion ),
+      concepto:concepto_id ( id, descripcion, icono ),
       regimen:regimen_id ( id, descripcion )
     `)
       .eq('destinos.destino_padre_id', idDestinoPadre)

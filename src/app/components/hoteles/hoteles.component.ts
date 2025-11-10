@@ -12,6 +12,7 @@ import { FuseSplashScreenService } from '@fuse/services/splash-screen';
 import { TextTypewriterComponent } from 'app/text-typewriter.component';
 import { FloatingSearchComponent } from './search-component/floating-search.component';
 import { SupabaseService } from 'app/core/supabase.service';
+import { DomSanitizer } from '@angular/platform-browser';
 
 @Component({
     selector: 'hoteles',
@@ -26,6 +27,7 @@ export class HotelesComponent {
     private datosService = inject(DatosService);
     private splashScreen = inject(FuseSplashScreenService)
     private supabase = inject(SupabaseService);
+    private sanitizer = inject(DomSanitizer)
 
     /**
      * Constructor
@@ -157,7 +159,9 @@ export class HotelesComponent {
         this.tipoDestino = sessionStorage.getItem('tipoDestino') !== null ? +sessionStorage.getItem('tipoDestino') : this.tipoDestino
         const { data, error } = await this.supabase.obtenerDestinos(this.tipoDestino);
         if (error) { this.error = error.message; return; }
+
         this.destinos = data;
+
         const ciudad = sessionStorage.getItem('ciudad') !== null ? sessionStorage.getItem('ciudad') : this.destinos[0].id;
 
         this.listaHoteles = JSON.parse(sessionStorage.getItem('hoteles'));
@@ -181,14 +185,24 @@ export class HotelesComponent {
         const busqueda = this.tipoDestino === 1 ? this.supabase.listHotelesAll(hotelId) : this.supabase.listHotelesAllPorDestinoPadre(hotelId);
         const { data, error } = await busqueda;
 
-        if (this.tipoDestino === 2) {
-            this.gruposDestinos = this.agruparHotelesPorDestino(data)
-        }
         if (error) { this.error = error.message; return; }
+        const info = (data ?? []).map((hotel: any) => ({
+            ...hotel,
+            conceptoIconoSeguro: hotel.concepto?.icono
+                ? this.sanitizer.bypassSecurityTrustHtml(hotel.concepto.icono)
+                : null,
+            descuentoSeguro: hotel.descuento?.icono
+                ? this.sanitizer.bypassSecurityTrustHtml(hotel.descuento.icono)
+                : null
+        }));
+
+        if (this.tipoDestino === 2) {
+            this.gruposDestinos = this.agruparHotelesPorDestino(info)
+        }
         this.splashScreen.hide();
         this.mostrarInfo = true;
-        this.destinoSeleccionado(data);
-        this.listaHoteles = data
+        this.destinoSeleccionado(info);
+        this.listaHoteles = info
 
     }
 

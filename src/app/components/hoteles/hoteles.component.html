@@ -72,13 +72,10 @@
                                     <div *ngIf="hotel?.descuento" class="absolute top-2 right-2 z-20">
                                         <div [ngClass]="getDescuentoClass(hotel)" class="text-xs font-bold px-2 py-1">
                                             <div class="flex items-center">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                                    stroke-width="1.5" stroke="currentColor" class="size-4 mr-1">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        d="M6 6h.008v.008H6V6Z" />
-                                                </svg>
+                                                <span *ngIf="hotel.descuentoSeguro" class="mr-2 inline-flex items-center justify-center
+             w-4 h-4
+             [&>svg]:w-4 [&>svg]:h-4 [&>svg]:align-middle" [innerHTML]="hotel.descuentoSeguro">
+                                                </span>
 
                                                 {{ hotel?.descuento.tipo_descuento }}
                                             </div>
@@ -87,15 +84,11 @@
                                     <div *ngIf="hotel?.concepto" class="absolute top-2 left-2 z-20">
                                         <div class="text-xs font-bold px-2 py-1">
                                             <div class="flex items-center">
-                                                <img class="w-6 h-6 mr-2"
-                                                    *ngIf="hotel?.concepto?.descripcion === 'Luxury'"
-                                                    src="assets/icons/luxury.svg" />
+                                                <span *ngIf="hotel?.concepto?.descripcion !== 'Solo Adultos'"
+                                                    [innerHTML]="hotel.conceptoIconoSeguro"></span>
                                                 <img class="w-6 h-6 mr-2"
                                                     *ngIf="hotel?.concepto?.descripcion === 'Solo Adultos'"
                                                     src="assets/icons/solo adultos.png" />
-                                                <img class="w-6 h-6 mr-2"
-                                                    *ngIf="hotel?.concepto?.descripcion === 'Petfriendly'"
-                                                    src="assets/icons/petfriendly.svg" />
                                             </div>
                                         </div>
                                     </div>
@@ -167,37 +160,28 @@
                                         <div class="absolute inset-0 bg-black/40 z-0"></div>
 
                                         <div *ngIf="hotel?.descuento" class="absolute top-2 right-2 z-20">
-                                            <div [ngClass]="getDescuentoClass(hotel)"
-                                                class="text-xs font-bold px-2 py-1">
-                                                <div class="flex items-center">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-                                                        class="size-4 mr-1">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            d="M6 6h.008v.008H6V6Z" />
-                                                    </svg>
+                                            <div [ngClass]="getDescuentoClass(hotel)" class="text-xs font-bold px-2 py-1">
+                                            <div class="flex items-center">
+                                                <span *ngIf="hotel.descuentoSeguro" class="mr-2 inline-flex items-center justify-center
+             w-4 h-4
+             [&>svg]:w-4 [&>svg]:h-4 [&>svg]:align-middle" [innerHTML]="hotel.descuentoSeguro">
+                                                </span>
 
-                                                    {{ hotel?.descuento.tipo_descuento }}
-                                                </div>
+                                                {{ hotel?.descuento.tipo_descuento }}
                                             </div>
+                                        </div>
                                         </div>
 
                                         <div *ngIf="hotel?.concepto" class="absolute top-2 left-2 z-20">
                                             <div class="text-xs font-bold px-2 py-1">
-                                                <div class="flex items-center">
-                                                    <img class="w-6 h-6 mr-2"
-                                                        *ngIf="hotel?.concepto?.descripcion === 'Luxury'"
-                                                        src="assets/icons/luxury.svg" />
-                                                    <img class="w-6 h-6 mr-2"
-                                                        *ngIf="hotel?.concepto?.descripcion === 'Solo Adultos'"
-                                                        src="assets/icons/solo adultos.png" />
-                                                    <img class="w-6 h-6 mr-2"
-                                                        *ngIf="hotel?.concepto?.descripcion === 'Petfriendly'"
-                                                        src="assets/icons/petfriendly.svg" />
-                                                </div>
+                                            <div class="flex items-center">
+                                                <span *ngIf="hotel?.concepto?.descripcion !== 'Solo Adultos'"
+                                                    [innerHTML]="hotel.conceptoIconoSeguro"></span>
+                                                <img class="w-6 h-6 mr-2"
+                                                    *ngIf="hotel?.concepto?.descripcion === 'Solo Adultos'"
+                                                    src="assets/icons/solo adultos.png" />
                                             </div>
+                                        </div>
                                         </div>
 
                                         <div class="relative z-10 m-8 mb-4">
