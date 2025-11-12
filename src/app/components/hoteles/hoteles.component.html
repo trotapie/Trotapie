@@ -300,7 +300,7 @@
     <div *ngIf="!mostrarInfo" class="h-full flex items-center justify-center">
         <div class="flex min-w-0 flex-auto flex-col mt-2 items-center justify-center">
             <div class="flex justify-center items-center p-3 sm:p-5 w-full">
-                <fuse-card class="flex flex-col max-w-xl w-full md:w-[600px]" [flippable]="true" #heroCard>
+                <!-- <fuse-card class="flex flex-col max-w-xl w-full md:w-[600px]" [flippable]="true" #heroCard>
 
                     <ng-container fuseCardFront>
                         <div class="relative w-full h-[70vh] rounded-3xl overflow-hidden shadow-lg
@@ -376,7 +376,81 @@
                             </div>
                         </div>
                     </ng-container>
+                </fuse-card> -->
+                <fuse-card class="flex flex-col max-w-xl w-full md:w-[600px]" [flippable]="true" #heroCard>
+
+                    <ng-container fuseCardFront>
+                        <div class="relative w-full h-[70vh] rounded-3xl overflow-hidden shadow-lg
+                flex items-center justify-center text-white bg-cover bg-center"
+                            [ngStyle]="{ 'background-image': currentImage ? 'url(' + currentImage + ')' : 'none' }">
+
+                            <div *ngIf="overlayImage"
+                                class="absolute inset-0 bg-cover bg-center transition-opacity duration-500 pointer-events-none"
+                                [ngStyle]="{ 'background-image': 'url(' + overlayImage + ')' }"
+                                [class.opacity-0]="!isTransitioning" [class.opacity-100]="isTransitioning">
+                            </div>
+
+                            <div class="absolute inset-0 bg-black/50 z-0 pointer-events-none"></div>
+
+                            <div class="relative z-10 flex flex-col items-center text-center px-6 space-y-2">
+                                <span class="text-3xl md:text-4xl font-bold">¡Encuentra el viaje</span>
+                                <span class="text-3xl md:text-4xl font-bold">perfecto para ti!</span>
+                            </div>
+
+                            <div class="absolute bottom-10 transform flex flex-col sm:flex-row gap-4 z-20">
+                                <button
+                                    class="px-8 py-3 bg-green-700 text-white text-lg font-semibold rounded-full shadow-md hover:bg-green-800 transition"
+                                    (click)="heroCard.face = 'back'; cargarDestinos(1)">
+                                    Destinos Nacionales
+                                </button>
+
+                                <button
+                                    class="px-8 py-3 bg-[#F9B44B] text-white text-lg font-semibold rounded-full shadow-md hover:bg-[#e0a13a] transition"
+                                    (click)="heroCard.face = 'back'; cargarDestinos(2)">
+                                    Destinos Internacionales
+                                </button>
+                            </div>
+                        </div>
+                    </ng-container>
+
+                    <ng-container fuseCardBack>
+                        <div class="relative w-full h-[70vh] rounded-3xl overflow-hidden shadow-lg
+                bg-[#0B0B2B] flex flex-col justify-center items-center px-8 py-10 text-white">
+
+                            <button type="button" mat-icon-button
+                                class="absolute top-4 left-4 z-50 pointer-events-auto bg-white/10 hover:bg-white/20 rounded-full transition"
+                                (click)="heroCard.face = 'front'" (touchstart)="heroCard.face = 'front'">
+                                <mat-icon class="text-white">arrow_back</mat-icon>
+                            </button>
+
+                            <div class="w-full text-center">
+                                <h2 class="text-3xl font-bold mb-4 tracking-tight">
+                                    {{ tipoDestino === 1 ? 'Explora por Ciudad' : 'Explora por Continente' }}
+                                </h2>
+
+                                <p class="text-md text-gray-300 mb-6">
+                                    {{
+                                    tipoDestino === 1
+                                    ? 'Elige una ciudad de México y descubre experiencias únicas dentro del país.'
+                                    : 'Selecciona un continente para explorar los mejores destinos internacionales.'
+                                    }}
+                                </p>
+
+                                <div class="flex flex-col gap-4 max-h-[300px] overflow-y-auto px-1 custom-scrollbar">
+                                    <button *ngFor="let item of (tipoDestino === 1 ? destinos : this.agrupadosDestinos)"
+                                        class="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl shadow-md 
+                         text-lg font-semibold tracking-wide backdrop-blur-sm transition 
+                         flex items-center justify-between px-5 group" (click)="cargaInfo(item)">
+                                        <span class="italic group-hover:not-italic">
+                                            {{ tipoDestino === 1 ? item.nombre : item.nombrePadre }}
+                                        </span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </ng-container>
                 </fuse-card>
+
             </div>
         </div>
     </div>

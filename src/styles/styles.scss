@@ -454,3 +454,21 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: rgba(255, 255, 255, 0.4);
 }
+
+:host ::ng-deep fuse-card[flippable] {
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+}
+
+/* Las dos caras no deben recibir eventos por la “espalda” */
+:host ::ng-deep [fuseCardFront],
+:host ::ng-deep [fuseCardBack] {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+/* Si tienes algún overlay adicional en la cara back, que no capture taps */
+.pointer-events-none {
+  pointer-events: none;
+}
