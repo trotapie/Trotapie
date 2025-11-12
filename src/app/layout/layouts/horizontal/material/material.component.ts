@@ -115,6 +115,8 @@ export class MaterialLayoutComponent implements OnInit, OnDestroy {
         if (sessionStorage.length !== 0) {
             sessionStorage.clear();
             window.location.reload();
+        }else{
+            this.router.navigate(['/hoteles']);
         }
     }
 }

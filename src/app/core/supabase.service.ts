@@ -82,8 +82,6 @@ export class SupabaseService {
       .maybeSingle();
   }
 
-
-
   empleados() {
     return this.client
       .from('empleados')
@@ -91,10 +89,17 @@ export class SupabaseService {
       .order('id', { ascending: true });
   }
 
+  continentes() {
+    return this.client
+      .from('continentes')
+      .select('*')
+      .order('id', { ascending: true });
+  }
+
   obtenerDestinos(id: number) {
     return this.client
       .from('destinos')
-      .select('id, nombre, orden')
+      .select('id, nombre, orden, continente:continente_id ( id, nombre )')
       .eq('tipo_desino_id', id)
       .is('destino_padre_id', null)
       .order('orden', { ascending: true });

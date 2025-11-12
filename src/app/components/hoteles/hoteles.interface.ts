@@ -39,7 +39,8 @@ export interface ICoordenadas {
 export interface Destinos {
     id: number;
     nombre: string;
-    orden: number
+    orden: number;
+    continente?: any;
 }
 
 export interface IDetalleHotel {
@@ -57,6 +58,11 @@ export interface Imagenes {
 
 
 export interface IAsesores {
+    id: number;
+    nombre: string;
+}
+
+export interface IContinente {
     id: number;
     nombre: string;
 }

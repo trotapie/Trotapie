@@ -40,7 +40,8 @@
                     <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:map-pin'"></mat-icon>
                     Ubicación
                 </button>
-                <button id="shareBtn" mat-flat-button color="accent" class="ml-2 w-40 text-white" (click)="compartirHotel()">
+                <button id="shareBtn" mat-flat-button color="accent" class="ml-2 w-40 text-white"
+                    (click)="compartirHotel()">
                     <mat-icon class="icon-size-5 pr-1" [svgIcon]="'heroicons_outline:share'"></mat-icon>
                     Compartir hotel
                 </button>
@@ -344,7 +345,8 @@
     </div>
 </div>
 
-<div *ngIf="mostrarMapa" [ubicacion]="hotel.ubicacion" class="fixed inset-0 z-[999] bg-black/50 backdrop-blur-sm flex items-end justify-center">
+<div *ngIf="mostrarMapa" [ubicacion]="hotel.ubicacion"
+    class="fixed inset-0 z-[999] bg-black/50 backdrop-blur-sm flex items-end justify-center">
     <div
         class="bg-white dark:bg-gray-900 w-4/5 max-h-[75%] rounded-t-2xl shadow-xl p-4 overflow-hidden animate-slide-up relative">
 
@@ -424,7 +426,7 @@
 
                         <div class="flex flex-col leading-tight">
                             <span class="text-2xl font-semibold">Asistente virtual</span>
-                            <span class="text-md text-white">{{ hotel.nombre }}</span>
+                            <span class="text-md text-white">{{ hotel.nombre_hotel }}</span>
                         </div>
                     </div>
                     <button class="absolute top-7 right-4 text-gray-300 hover:text-white transition"
@@ -451,8 +453,8 @@
                                 <mat-date-range-picker #picker></mat-date-range-picker>
                             </mat-form-field>
 
-                            <button mat-raised-button [matMenuTriggerFor]="roomsMenu" #menuTrigger="matMenuTrigger" color="primary"
-                                class="!rounded-lg !w-4/12 !h-40 flex px-2 flex-col items-center justify-center
+                            <button mat-raised-button [matMenuTriggerFor]="roomsMenu" #menuTrigger="matMenuTrigger"
+                                color="primary" class="!rounded-lg !w-4/12 !h-40 flex px-2 flex-col items-center justify-center
          text-white shadow-md hover:shadow-lg
          transition ">
 
@@ -475,7 +477,8 @@
 
                             <mat-menu #roomsMenu="matMenu" hasBackdrop="true" [overlapTrigger]="false"
                                 class="!p-2 min-w-[340px] flex items-center">
-                                <div class="flex flex-col gap-3 p-2 max-h-96 overflow-y-auto" (click)="$event.stopPropagation()">
+                                <div class="flex flex-col gap-3 p-2 max-h-96 overflow-y-auto"
+                                    (click)="$event.stopPropagation()">
                                     <ng-container *ngFor="let r of rooms(); let i = index">
                                         <div class="rounded-xl border p-3 flex flex-col gap-3">
                                             <div class="flex items-center justify-between">
@@ -570,7 +573,8 @@
                                 <label class="block text-sm font-medium text-green-700 mb-1">Régimen</label>
                                 <select formControlName="regimen" class="select-underline">
                                     <option [ngValue]="null" disabled>Selecciona una opción</option>
-                                    <option *ngFor="let op of opcionesRegimen" [ngValue]="op.regimen.descripcion">{{ op.regimen.descripcion }}</option>
+                                    <option *ngFor="let op of opcionesRegimen" [ngValue]="op.regimen.descripcion">{{
+                                        op.regimen.descripcion }}</option>
                                 </select>
 
                                 <p *ngIf="reservacionForm.get('regimen')?.invalid && (reservacionForm.get('regimen')?.touched || reservacionForm.get('regimen')?.dirty)"
@@ -614,8 +618,8 @@
                 </div>
 
                 <div class="p-4 border-t bg-white/90 dark:bg-gray-900/90 backdrop-blur">
-                    <button mat-flat-button color="primary" [disabled]="reservacionForm.invalid" class="w-full flex items-center justify-center text-white"
-                        (click)="abrirWhatsApp()">
+                    <button mat-flat-button color="primary" [disabled]="reservacionForm.invalid"
+                        class="w-full flex items-center justify-center text-white" (click)="abrirWhatsApp()">
                         Enviar a WhatsApp
                     </button>
                 </div>

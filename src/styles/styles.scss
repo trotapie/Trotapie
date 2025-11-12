@@ -320,3 +320,137 @@
   color: #9ca3af; /* gris-400 */
 }
 
+// .pill-native-select {
+//   -webkit-appearance: none;
+//   -moz-appearance: none;
+//   appearance: none;
+//   background-image: none;
+// }
+// .pill-native-select::-ms-expand {
+//   display: none;
+// }
+
+// /* 🔹 Estilo general del select */
+// .pill-native-select {
+//   border-radius: 9999px;
+//   font-weight: 600;
+//   transition: all 0.25s ease-in-out;
+//   color: inherit;
+// }
+
+// /* 🔹 Opciones (dropdown) */
+// .pill-native-select option {
+//   background-color: #ffffff;      /* fondo del dropdown */
+//   color: #1a1a1a;                 /* texto base */
+//   font-weight: 500;
+//   padding: 10px;
+//   border-bottom: 1px solid #f0f0f0;
+//   transition: background-color 0.2s, color 0.2s;
+// }
+
+// /* hover visual (en navegadores modernos) */
+// .pill-native-select option:hover,
+// .pill-native-select option:checked,
+// .pill-native-select option:focus {
+//   background-color: #eaf5ee;      /* verde claro suave */
+//   color: #1B6F56;                 /* verde del tema */
+// }
+
+// /* 🔹 Versión para tipoDestino = 2 (dorado) */
+// .pill-native-select.border-\[\#F9B44B\] option:hover,
+// .pill-native-select.border-\[\#F9B44B\] option:checked {
+//   background-color: #fff4e0;
+//   color: #F9B44B;
+// }
+
+// /* 🔹 Oscurece el borde al hover */
+// .pill-native-select:hover {
+//   filter: brightness(0.97);
+// }
+
+::ng-deep .pill-mat-select .mat-mdc-select-trigger {
+  padding: 0;
+  min-height: 0;
+  height: auto;
+  display: flex;
+  align-items: center;
+}
+
+/* Quitar padding interno raro */
+::ng-deep .pill-mat-select .mat-mdc-select-value {
+  padding: 0;
+}
+
+/* Heredar la tipografía del pill */
+::ng-deep .pill-mat-select .mat-mdc-select-value-text {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+/* Ocultar la flecha default (usamos tu SVG) */
+::ng-deep .pill-mat-select .mat-mdc-select-arrow {
+  display: none;
+}
+
+::ng-deep .mat-mdc-select-arrow {
+  display: none !important;
+}
+
+/* Alinear bien el texto */
+::ng-deep .mat-mdc-select-trigger {
+  display: flex;
+  align-items: center;
+}
+
+/* Opcional: quitar ese espacio que deja la flecha interna */
+::ng-deep .mat-mdc-select-value {
+  padding-right: 0 !important;
+}
+
+::ng-deep .pill-mat-select .mat-mdc-select-trigger {
+  padding: 0;
+  min-height: 0;
+  height: auto;
+  display: flex;
+  align-items: center;
+}
+
+/* Quitar padding del texto */
+::ng-deep .pill-mat-select .mat-mdc-select-value {
+  padding: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* Heredar tipografía */
+::ng-deep .pill-mat-select .mat-mdc-select-value-text {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+/* 🔥 Aquí matamos la flecha que ves (la de Fuse) */
+::ng-deep .pill-mat-select .mat-mdc-select-trigger::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* Por si acaso existiera la flecha original de Material */
+::ng-deep .pill-mat-select .mat-mdc-select-arrow,
+::ng-deep .pill-mat-select .mat-mdc-select-arrow-wrapper,
+::ng-deep .pill-mat-select .mat-mdc-select-arrow-wrapper svg {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  opacity: 0 !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.4);
+}

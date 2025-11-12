@@ -53,8 +53,9 @@ export class HotelesComponent {
     @ViewChild('scrollContainer', { static: true }) scrollContainer!: ElementRef<HTMLElement>;
     @ViewChild('ancla', { static: false }) ancla!: ElementRef<HTMLElement>;
     @ViewChild('anclaNacionales', { static: false }) anclaNacionales!: ElementRef<HTMLElement>;
-    destinos: Destinos[] = [];
     mostrarInfo: boolean = false;
+    destinos: Destinos[] = [];
+    destinosNacionales: Destinos[] = [];
     tipoDestino: number = 1;
     gruposDestinos: GrupoDestino[] = [];
 
@@ -109,11 +110,18 @@ export class HotelesComponent {
     previousIndex = -1;
     intervalId: any;
 
+    continentes: any[] = [];
+    destinoSelected: Destinos;
+    openDropdown = false;
+    agrupadosDestinos: { nombrePadre: string; destinos: any[] }[] = [];
+    destinoId: number;
 
     constructor() {
     }
 
     async ngOnInit() {
+        // this.obtenerContinentes();
+        this.obtenerSoloDestinos();
         this.hotelesForm = this.formBuilder.group({
             hotelSeleccionado: ['']
         });
@@ -155,6 +163,17 @@ export class HotelesComponent {
         if (this.intervalId) clearInterval(this.intervalId);
     }
 
+    get selectedDestinoNombre(): string | null {
+        const id = this.hotelesForm.get('hotelSeleccionado')?.value;
+        const found = this.destinos?.find(d => d.id === id);
+        return found ? found.nombre : null;
+    }
+
+    selectDestino(destino: any): void {
+        this.hotelesForm.get('hotelSeleccionado')?.setValue(destino.id);
+        this.openDropdown = false;
+    }
+
     async obtenerDestinos() {
         this.tipoDestino = sessionStorage.getItem('tipoDestino') !== null ? +sessionStorage.getItem('tipoDestino') : this.tipoDestino
         const { data, error } = await this.supabase.obtenerDestinos(this.tipoDestino);
@@ -162,7 +181,7 @@ export class HotelesComponent {
 
         this.destinos = data;
 
-        const ciudad = sessionStorage.getItem('ciudad') !== null ? sessionStorage.getItem('ciudad') : this.destinos[0].id;
+        const ciudad = sessionStorage.getItem('ciudad') !== null ? sessionStorage.getItem('ciudad') : +this.destinoId;
 
         this.listaHoteles = JSON.parse(sessionStorage.getItem('hoteles'));
 
@@ -181,7 +200,23 @@ export class HotelesComponent {
     }
 
     async consulaHoteles() {
+        if (this.tipoDestino === 2) {
+            const mapa = new Map<string, any[]>();
+            this.destinos.forEach(dest => {
+                const padre = dest.continente.nombre;
+                if (!mapa.has(padre)) mapa.set(padre, []);
+                mapa.get(padre)!.push(dest);
+            });
+
+            this.agrupadosDestinos = Array.from(mapa, ([nombrePadre, destinos]) => ({
+                nombrePadre,
+                destinos
+            }));
+
+        }
+
         const hotelId = +this.hotelesForm.get('hotelSeleccionado')?.value
+        this.destinoSelected = this.destinos.find(item => item.id === +hotelId);
         const busqueda = this.tipoDestino === 1 ? this.supabase.listHotelesAll(hotelId) : this.supabase.listHotelesAllPorDestinoPadre(hotelId);
         const { data, error } = await busqueda;
 
@@ -202,7 +237,7 @@ export class HotelesComponent {
         this.splashScreen.hide();
         this.mostrarInfo = true;
         this.destinoSeleccionado(info);
-        this.listaHoteles = info
+        this.listaHoteles = info;
 
     }
 
@@ -378,9 +413,8 @@ export class HotelesComponent {
 
     cargarDestinos(id: number) {
         this.tipoDestino = id;
-        this.splashScreen.show();
+        this.obtenerSoloDestinos();
 
-        this.obtenerDestinos();
     }
 
     startRandomCarousel(): void {
@@ -430,6 +464,41 @@ export class HotelesComponent {
         };
 
         img.src = url;
+    }
+
+    // async obtenerContinentes() {
+    //     // const { data, error } = await this.supabase.continentes();
+    //     const { data, error } = await this.supabase.obtenerDestinos(2);
+    //     this.destinos = data;
+    // }
+
+    async obtenerSoloDestinos() {
+        this.tipoDestino = sessionStorage.getItem('tipoDestino') !== null ? +sessionStorage.getItem('tipoDestino') : this.tipoDestino
+        const { data, error } = await this.supabase.obtenerDestinos(this.tipoDestino);
+        if (error) { this.error = error.message; return; }
+
+        this.destinos = data;
+
+        if (this.tipoDestino === 2) {
+            const mapa = new Map<string, any[]>();
+            this.destinos.forEach(dest => {
+                const padre = dest.continente.nombre;
+                if (!mapa.has(padre)) mapa.set(padre, []);
+                mapa.get(padre)!.push(dest);
+            });
+
+            this.agrupadosDestinos = Array.from(mapa, ([nombrePadre, destinos]) => ({
+                nombrePadre,
+                destinos
+            }));
+        }
+    }
+
+    cargaInfo(item) {
+        this.destinoId = this.tipoDestino === 1 ? +item.id : +item.destinos[0].id
+        sessionStorage.setItem('ciudad', this.destinoId.toString())
+
+        this.obtenerDestinos();
     }
 
     /** Offset absoluto del target dentro del container (sin usar window). */
