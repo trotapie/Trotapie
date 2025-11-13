@@ -436,7 +436,7 @@ export class HotelesComponent {
             // Usar transición en lugar de asignar directo
             this.cambiarFondoConTransicion(nuevaUrl);
 
-        }, 5000); // 5 segundos
+        }, 3000); // 5 segundos
     }
 
     cambiarFondoConTransicion(url: string): void {
