@@ -320,53 +320,6 @@
   color: #9ca3af; /* gris-400 */
 }
 
-// .pill-native-select {
-//   -webkit-appearance: none;
-//   -moz-appearance: none;
-//   appearance: none;
-//   background-image: none;
-// }
-// .pill-native-select::-ms-expand {
-//   display: none;
-// }
-
-// /* 🔹 Estilo general del select */
-// .pill-native-select {
-//   border-radius: 9999px;
-//   font-weight: 600;
-//   transition: all 0.25s ease-in-out;
-//   color: inherit;
-// }
-
-// /* 🔹 Opciones (dropdown) */
-// .pill-native-select option {
-//   background-color: #ffffff;      /* fondo del dropdown */
-//   color: #1a1a1a;                 /* texto base */
-//   font-weight: 500;
-//   padding: 10px;
-//   border-bottom: 1px solid #f0f0f0;
-//   transition: background-color 0.2s, color 0.2s;
-// }
-
-// /* hover visual (en navegadores modernos) */
-// .pill-native-select option:hover,
-// .pill-native-select option:checked,
-// .pill-native-select option:focus {
-//   background-color: #eaf5ee;      /* verde claro suave */
-//   color: #1B6F56;                 /* verde del tema */
-// }
-
-// /* 🔹 Versión para tipoDestino = 2 (dorado) */
-// .pill-native-select.border-\[\#F9B44B\] option:hover,
-// .pill-native-select.border-\[\#F9B44B\] option:checked {
-//   background-color: #fff4e0;
-//   color: #F9B44B;
-// }
-
-// /* 🔹 Oscurece el borde al hover */
-// .pill-native-select:hover {
-//   filter: brightness(0.97);
-// }
 
 ::ng-deep .pill-mat-select .mat-mdc-select-trigger {
   padding: 0;
@@ -470,5 +423,52 @@
 
 /* Si tienes algún overlay adicional en la cara back, que no capture taps */
 .pointer-events-none {
+  pointer-events: none;
+}
+
+.mat-mdc-optgroup .mat-mdc-optgroup-label {
+  @apply font-bold text-gray-900; /* con Tailwind */
+}
+::ng-deep mat-accordion {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+::ng-deep mat-expansion-panel {
+  border-radius: 0 !important;
+  box-shadow: none;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+::ng-deep mat-expansion-panel:last-child {
+  margin-bottom: 0 !important; /* Sin espacio al final */
+}
+
+/* Opcional: unificar borde o color */
+::ng-deep .mat-expansion-panel-header {
+  padding: 0.75rem 1rem !important;
+  min-height: 2.5rem !important;
+}
+
+/* Compacta el contenido interno */
+::ng-deep .mat-expansion-panel-body {
+  padding: 0.75rem 1rem !important;
+}
+
+/* Ajustes para flip en móviles */
+::ng-deep fuse-card[flippable] .fuse-card-front,
+::ng-deep fuse-card[flippable] .fuse-card-back {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+/* Cuando está volteada, la cara frontal no recibe eventos */
+::ng-deep fuse-card[flippable].fuse-card-flipped .fuse-card-front {
+  pointer-events: none;
+}
+
+/* Cuando NO está volteada, la cara trasera no recibe eventos */
+::ng-deep fuse-card[flippable]:not(.fuse-card-flipped) .fuse-card-back {
   pointer-events: none;
 }

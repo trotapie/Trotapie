@@ -117,6 +117,7 @@ export class DetalleHotelComponent {
     ubicacion: string;
     asesores: IAsesores[] = [];
     mostrarInfo: boolean= false; 
+    readonly panelOpenState = signal(false);
 
     constructor(private sanitizer: DomSanitizer) {
         const nav = this.router.getCurrentNavigation();

@@ -17,6 +17,7 @@
 [errorCorrectionLevel]="'M'">
 </qrcode> -->
         <fuse-card class="filter-article flex w-full flex-col p-1">
+            @if(!isScreenSmall){
             <mat-tab-group class="sm:px-2" mat-stretch-tabs="false" [animationDuration]="'0'">
                 <mat-tab label="Descripcion">
                     <div class="mt-4 text-base leading-relaxed">
@@ -35,6 +36,39 @@
                 </mat-tab>
 
             </mat-tab-group>
+            }
+
+            @if (isScreenSmall) {
+            <mat-accordion class="mb-5 p-3">
+                <mat-expansion-panel #panel1="matExpansionPanel" [hideToggle]="true">
+                    <mat-expansion-panel-header>
+                        <mat-panel-title [ngClass]="{ 'text-primary': panel1.expanded, 'text-gray-700': !panel1.expanded }"
+                            class="font-medium transition-colors duration-200" > Descripción </mat-panel-title>
+                        <mat-icon class="ml-auto transition-transform duration-200"
+                            [svgIcon]="panel1.expanded ? 'heroicons_outline:x-mark' : 'heroicons_outline:chevron-down'">
+                        </mat-icon>
+                    </mat-expansion-panel-header>
+                    <p class="mb-4">{{ descripcionParrafo }}</p>
+                </mat-expansion-panel>
+
+                <mat-expansion-panel #panel2="matExpansionPanel" [hideToggle]="true">
+                    <mat-expansion-panel-header>
+                        <mat-panel-title [ngClass]="{ 'text-primary': panel2.expanded, 'text-gray-700': !panel2.expanded }"
+        class="font-medium transition-colors duration-200"> Amenidades </mat-panel-title>
+                        <mat-icon class="transition-transform duration-200"
+                            [svgIcon]="panel2.expanded ? 'heroicons_outline:x-mark' : 'heroicons_outline:chevron-down'">
+                        </mat-icon>
+                    </mat-expansion-panel-header>
+                    <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-2">
+                        <li *ngFor="let punto of descripcionLista" class="flex gap-2">
+                            <mat-icon class="icon-size-5 text-green-600"
+                                [svgIcon]="'heroicons_outline:check-badge'"></mat-icon>
+                            <span>{{ punto }}</span>
+                        </li>
+                    </ul>
+                </mat-expansion-panel>
+            </mat-accordion>
+            }
             <div>
                 <button mat-flat-button color="primary" class="ml-8 w-30 text-white" (click)="abrirUbicacion()">
                     <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:map-pin'"></mat-icon>
@@ -43,11 +77,8 @@
                 <button id="shareBtn" mat-flat-button color="accent" class="ml-2 w-40 text-white"
                     (click)="compartirHotel()">
                     <mat-icon class="icon-size-5 pr-1" [svgIcon]="'heroicons_outline:share'"></mat-icon>
-                    Compartir hotel
+                    Compartir Hotel
                 </button>
-
-
-
             </div>
             <div class="mt-10">
                 <div class="text-2xl my-4 font-semibold leading-tight text-center">
@@ -367,7 +398,7 @@
 
     <div *ngIf="mostrarBot" class="fixed inset-0 z-[999] bg-black/50 backdrop-blur-sm flex items-end justify-center">
         <div
-            class="bg-white dark:bg-gray-900 w-full sm:w-4/5 md:w-[640px] h-[80svh] max-h-[90svh] rounded-t-2xl shadow-xl animate-slide-up relative overflow-hidden">
+            class="bg-white dark:bg-gray-900 w-full sm:w-4/5 md:w-[640px] h-[90svh] max-h-[90svh] rounded-t-2xl shadow-xl animate-slide-up relative overflow-hidden">
 
             <button class="absolute top-3 right-4 text-gray-600 dark:text-gray-300" (click)="cerrarModal()">
                 <mat-icon svgIcon="heroicons_outline:x-mark" class="w-8 h-8"></mat-icon>
@@ -411,8 +442,8 @@
                     <button mat-flat-button color="primary" class="w-full text-white animate-pulse-slow shadow-lg"
                         (click)="abrirForm()">
                         <div class="flex items-center justify-center">
-                            <img class="w-6 h-6 mr-2" src="assets/icons/concerge.svg" />
-                            ¡Quiero viajar!
+                            <img class="w-6 h-6 mr-3" src="assets/icons/concerge.svg" />
+                            <b>¡Quiero viajar!</b>
                         </div>
                     </button>
                 </div>

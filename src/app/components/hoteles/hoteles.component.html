@@ -306,7 +306,8 @@
                     <ng-container fuseCardFront>
                         <div class="relative w-full h-[70vh] rounded-3xl overflow-hidden shadow-lg
                 flex items-center justify-center text-white bg-cover bg-center"
-                            [ngStyle]="{ 'background-image': currentImage ? 'url(' + currentImage + ')' : 'none' }">
+                            [ngStyle]="{ 'background-image': currentImage ? 'url(' + currentImage + ')' : 'none' }"
+                            [class.pointer-events-none]="heroCard?.face === 'back'">
 
                             <div *ngIf="overlayImage"
                                 class="absolute inset-0 bg-cover bg-center transition-opacity duration-500 pointer-events-none"
@@ -316,9 +317,9 @@
 
                             <div class="absolute inset-0 bg-black/40 z-0 pointer-events-none"></div>
 
-                            <div class="relative z-10 flex flex-col items-center text-center px-6 space-y-2">
-                                <span class="text-3xl md:text-4xl font-bold">¡Encuentra el viaje</span>
-                                <span class="text-3xl md:text-4xl font-bold">perfecto para ti!</span>
+                            <div class="absolute top-10 z-10 flex flex-col items-center text-center px-6 space-y-2">
+                                <!-- <span class="text-3xl md:text-4xl font-bold">¡Encuentra el viaje</span> -->
+                                <span class="text-3xl md:text-4xl font-bold">¡Perfecto para ti!</span>
                             </div>
 
                             <div class="absolute bottom-10 transform flex flex-col sm:flex-row gap-4 z-20">
@@ -342,20 +343,20 @@
                 bg-[#0B0B2B] flex flex-col justify-center items-center px-8 py-10 text-white">
 
                             <button type="button" mat-icon-button
-                                class="absolute top-4 left-4 z-99999 bg-white/10 hover:bg-white/20 rounded-full transition"
+                                class="absolute top-4 right-4 z-[9999] bg-white/10 hover:bg-white/20 rounded-full transition"
                                 (click)="heroCard.face = 'front'" (touchstart)="heroCard.face = 'front'">
                                 <mat-icon class="text-white">arrow_back</mat-icon>
                             </button>
 
                             <div class="w-full text-center">
                                 <h2 class="text-3xl font-bold mb-4 tracking-tight">
-                                    {{ tipoDestino === 1 ? 'Explora por Ciudad' : 'Explora por Continente' }}
+                                    {{ tipoDestino === 1 ? 'Elige tu destino' : 'Explora por Continente' }}
                                 </h2>
 
                                 <p class="text-md text-gray-300 mb-6">
                                     {{
                                     tipoDestino === 1
-                                    ? 'Elige una ciudad de México y descubre experiencias únicas dentro del país.'
+                                    ? '¡Explora las ciudades y playas de México y vive experiencias únicas!'
                                     : 'Selecciona un continente para explorar los mejores destinos internacionales.'
                                     }}
                                 </p>
@@ -365,7 +366,7 @@
                                         class="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl shadow-md 
                          text-lg font-semibold tracking-wide backdrop-blur-sm transition 
                          flex items-center justify-between px-5 group" (click)="cargaInfo(item)">
-                                        <span class="italic group-hover:not-italic">
+                                        <span class=" group-hover:not-italic">
                                             {{ tipoDestino === 1 ? item.nombre : item.nombrePadre }}
                                         </span>
                                     </button>
