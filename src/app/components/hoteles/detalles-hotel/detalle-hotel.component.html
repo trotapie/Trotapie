@@ -167,9 +167,9 @@
 
             <button (click)="abrirModal()" aria-label="Enviar WhatsApp">
                 <div class="absolute bottom-16 right-0 whitespace-pre-line flex justify-center items-center 
-         bg-white text-black font-semibold text-md px-3 py-1 
-         rounded-t-2xl shadow animate-bounce text-center z-10">
-                    <mat-icon svgIcon="mat_outline:headphones" class="mr-1"></mat-icon>
+         bg-[#e7f0ed] text-green-800 font-semibold text-md px-3 py-1 
+         rounded-t-2xl shadow animate-bounce text-center z-10 border-2 border-green-800">
+                    <mat-icon svgIcon="mat_outline:headphones" class="mr-1 text-green-800"></mat-icon>
                     Contacto
                 </div>
                 <img class="w-16 h-16 p-2 bg-white rounded-full" src="assets/images/logos/trotapie-iso.png" />
@@ -398,7 +398,7 @@
 
     <div *ngIf="mostrarBot" class="fixed inset-0 z-[999] bg-black/50 backdrop-blur-sm flex items-end justify-center">
         <div
-            class="bg-white dark:bg-gray-900 w-full sm:w-4/5 md:w-[640px] h-[90svh] max-h-[90svh] rounded-t-2xl shadow-xl animate-slide-up relative overflow-hidden">
+            class="bg-white dark:bg-gray-900 w-full sm:w-4/5 md:w-[640px] h-[100svh] max-h-[100svh] sm:h-[80svh] sm:max-h-[80svh] rounded-t-2xl shadow-xl animate-slide-up relative overflow-hidden">
 
             <button class="absolute top-3 right-4 text-gray-600 dark:text-gray-300" (click)="cerrarModal()">
                 <mat-icon svgIcon="heroicons_outline:x-mark" class="w-8 h-8"></mat-icon>
@@ -629,7 +629,7 @@
 
                         <!-- EMAIL -->
                         <div>
-                            <label class="block text-sm font-medium text-green-700 mb-1">Email</label>
+                            <label class="block text-sm font-medium text-green-700 mb-1">Email (Opcional)</label>
                             <input formControlName="correo" class="input-underline" />
                         </div>
 

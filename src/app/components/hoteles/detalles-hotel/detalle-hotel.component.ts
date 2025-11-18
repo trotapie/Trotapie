@@ -240,7 +240,7 @@ export class DetalleHotelComponent {
         const fechaFin = new Date(rangoFechas.end);
         const fechaFormateadaFin = `${String(fechaFin.getDate()).padStart(2, '0')}/${meses[fechaFin.getMonth()]}/${fechaFin.getFullYear()}`;
 
-        const rooms = this.rooms(); // signal -> valor actual
+        const rooms = this.rooms();
         const detalleHabitaciones = this.formatHabitaciones(rooms);
         const totalRooms = rooms.length;
 

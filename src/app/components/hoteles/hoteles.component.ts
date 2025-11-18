@@ -1,23 +1,24 @@
 import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, ElementRef, inject, ViewChild, ViewEncapsulation } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, FormsModule } from '@angular/forms';
 import { Destinos, GrupoDestino, Hotel, HotelConDestino, IHoteles } from './hoteles.interface';
 import { MaterialModule } from 'app/shared/material.module';
 import { JsonpClientBackend, HttpClientJsonpModule } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { stringify } from 'crypto-js/enc-base64';
-import { Observable } from 'rxjs';
+import { Observable, startWith } from 'rxjs';
 import { DatosService } from './hoteles.service';
 import { FuseSplashScreenService } from '@fuse/services/splash-screen';
 import { TextTypewriterComponent } from 'app/text-typewriter.component';
 import { FloatingSearchComponent } from './search-component/floating-search.component';
 import { SupabaseService } from 'app/core/supabase.service';
 import { DomSanitizer } from '@angular/platform-browser';
+import { MatSelect, MatSelectChange } from '@angular/material/select';
 
 @Component({
     selector: 'hoteles',
     templateUrl: './hoteles.component.html',
-    imports: [MaterialModule, FloatingSearchComponent],
+    imports: [MaterialModule, FormsModule, FloatingSearchComponent],
     encapsulation: ViewEncapsulation.None,
     standalone: true
 })
@@ -114,8 +115,16 @@ export class HotelesComponent {
     destinoSelected: Destinos;
     openDropdown = false;
     agrupadosDestinos: { nombrePadre: string; destinos: any[] }[] = [];
+    destinoCtrl = new FormControl<string>('');
+    filteredAgrupadosDestinos: { nombrePadre: string; destinos: any[] }[] = [];
     destinoId: number;
+    selectedDestinoLabel: string | null = null;
+    modoDestino: 'padres' | 'hijos' = 'padres';
+    grupoSeleccionado: any | null = null;
+    destinoFiltroCtrl = new FormControl(''); // solo para el texto del autocomplete
+    @ViewChild('selectDestino') selectDestinoInternacionales!: MatSelect;
 
+    filtroDestino: string = '';
     constructor() {
     }
 
@@ -172,6 +181,8 @@ export class HotelesComponent {
     selectDestino(destino: any): void {
         this.hotelesForm.get('hotelSeleccionado')?.setValue(destino.id);
         this.openDropdown = false;
+        this.selectedDestinoLabel = destino.nombre;
+
     }
 
     async obtenerDestinos() {
@@ -212,6 +223,22 @@ export class HotelesComponent {
                 nombrePadre,
                 destinos
             }));
+            this.filteredAgrupadosDestinos = this.agrupadosDestinos;
+
+            this.destinoCtrl.valueChanges
+                .pipe(startWith(''))
+                .subscribe(value => {
+                    const filtro = (value || '').toLowerCase();
+
+                    this.filteredAgrupadosDestinos = this.agrupadosDestinos
+                        .map(grupo => ({
+                            nombrePadre: grupo.nombrePadre,
+                            destinos: grupo.destinos.filter((d: any) =>
+                                d.nombre.toLowerCase().includes(filtro)
+                            )
+                        }))
+                        .filter(grupo => grupo.destinos.length > 0);
+                });
 
         }
 
@@ -501,6 +528,61 @@ export class HotelesComponent {
         this.obtenerDestinos();
     }
 
+
+    onDestinoChange(event: MatSelectChange): void {
+        if (this.modoDestino === 'padres') {
+            // 1) Eligió un padre (usamos nombrePadre)
+            const nombrePadre = event.value as string;
+
+            this.grupoSeleccionado = this.agrupadosDestinos.find(
+                g => g.nombrePadre === nombrePadre
+            ) ?? null;
+
+            this.modoDestino = 'hijos';
+
+            // limpiamos el control porque todavía NO hay destino final
+            this.hotelesForm.get('hotelSeleccionado')?.setValue(null, { emitEvent: false });
+
+            // reabrimos para que vea los hijos
+            setTimeout(() => this.selectDestinoInternacionales.open());
+        } else {
+            // 2) Ya eligió un hijo → guardamos el id del destino
+            const destino = this.grupoSeleccionado?.destinos.find(d => d.id === event.value);
+            this.selectedDestinoLabel = destino ? destino.nombre : null;
+
+            this.hotelesForm.get('hotelSeleccionado')?.setValue(event.value);
+        }
+    }
+
+    volverAPadres(): void {
+        this.modoDestino = 'padres';
+        this.grupoSeleccionado = null;
+        this.selectedDestinoLabel = null;
+        this.hotelesForm.get('hotelSeleccionado')?.setValue(null, { emitEvent: false });
+
+        setTimeout(() => this.selectDestinoInternacionales.open());
+    }
+
+    onDestinoSelected(destino: any): void {
+        this.hotelesForm.get('hotelSeleccionado')?.setValue(destino.id);
+        this.destinoFiltroCtrl.setValue(destino.nombre, { emitEvent: false });
+    }
+
+    get destinosFiltrados() {
+        if (!this.filtroDestino.trim()) return this.agrupadosDestinos;
+        const term = this.filtroDestino.toLowerCase();
+
+        return this.agrupadosDestinos
+            .map(g => ({
+                nombrePadre: g.nombrePadre,
+                destinos: g.destinos.filter(d => d.nombre.toLowerCase().includes(term))
+            }))
+            .filter(g => g.destinos.length > 0);
+    }
+
+    displayDestino = (destino: any) => {
+        return destino?.nombre || '';
+    };
     /** Offset absoluto del target dentro del container (sin usar window). */
     private getOffsetWithinContainer(target: HTMLElement, container: HTMLElement): number {
         let y = 0;

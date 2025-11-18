@@ -20,7 +20,7 @@
              text-sm md:text-base font-semibold text-left
              cursor-pointer transition duration-200 flex items-center" [ngClass]="{
         'border-[#1B6F56] text-[#1B6F56]': tipoDestino === 1,
-        'border-[#F9B44B] text-[#F9B44B]': tipoDestino === 2
+        'border-none': tipoDestino === 2
       }">
                                             <mat-select *ngIf="tipoDestino === 1" formControlName="hotelSeleccionado"
                                                 class="pill-mat-select w-full" [panelClass]="'panel-nacionales'"
@@ -31,7 +31,7 @@
                                                 </mat-option>
                                             </mat-select>
 
-                                            <mat-select *ngIf="tipoDestino === 2" formControlName="hotelSeleccionado"
+                                            <!-- <mat-select *ngIf="tipoDestino === 2" formControlName="hotelSeleccionado"
                                                 class="pill-mat-select w-full" [panelClass]="'panel-internacionales'"
                                                 disableRipple>
                                                 <mat-option [value]="null" disabled>Selecciona un destino</mat-option>
@@ -43,7 +43,130 @@
                                                         {{ destino.nombre }}
                                                     </mat-option>
                                                 </mat-optgroup>
-                                            </mat-select>
+                                            </mat-select> -->
+
+                                            <!-- <mat-select *ngIf="tipoDestino === 2" formControlName="hotelSeleccionado"
+                                                class="pill-mat-select w-full" [panelClass]="'panel-internacionales'"
+                                                disableRipple>
+
+                                                <mat-option >
+                                                    <input type="text" placeholder="Buscar destino..."
+                                                        class="w-full p-2 border rounded" [(ngModel)]="filtroDestino"
+                                                        [ngModelOptions]="{ standalone: true }"
+                                                        (click)="$event.stopPropagation()"
+                                                        (keydown)="$event.stopPropagation()" />
+                                                </mat-option>
+
+                                                <mat-option [value]="null" disabled>
+                                                    Selecciona un destino
+                                                </mat-option>
+
+                                                <mat-optgroup *ngFor="let grupo of destinosFiltrados"
+                                                    [label]="grupo.nombrePadre">
+                                                    <mat-option *ngFor="let destino of grupo.destinos"
+                                                        [value]="destino.id">
+                                                        {{ destino.nombre }}
+                                                    </mat-option>
+                                                </mat-optgroup>
+                                            </mat-select> -->
+
+                                            <div *ngIf="tipoDestino === 2" class="w-full px-5 py-2.5 rounded-full border-2
+            text-sm md:text-base font-semibold text-left
+            cursor-pointer transition duration-200 flex items-center" [ngClass]="{
+       'border-[#F9B44B] text-[#F9B44B]': tipoDestino === 2
+     }">
+
+                                                <input matInput class="w-full bg-transparent outline-none border-none"
+                                                    [placeholder]="'Selecciona un destino'" [formControl]="destinoCtrl"
+                                                    [matAutocomplete]="autoDestinos" />
+
+                                                <mat-icon class="ml-2 text-inherit">expand_more</mat-icon>
+                                            </div>
+
+                                            <mat-autocomplete #autoDestinos="matAutocomplete"
+                                                [displayWith]="displayDestino"
+                                                (optionSelected)="onDestinoSelected($event.option.value)">
+
+                                                <ng-container *ngFor="let grupo of filteredAgrupadosDestinos">
+                                                    <mat-optgroup [label]="grupo.nombrePadre">
+                                                        <mat-option *ngFor="let destino of grupo.destinos"
+                                                            [value]="destino">
+                                                            {{ destino.nombre }}
+                                                        </mat-option>
+                                                    </mat-optgroup>
+                                                </ng-container>
+
+                                            </mat-autocomplete>
+
+                                            <!-- <div class="w-full px-5 py-2.5 rounded-full border-2
+         text-sm md:text-base font-semibold text-left
+         cursor-pointer transition duration-200 flex items-center" [ngClass]="{
+    'border-[#F9B44B] text-[#F9B44B]': tipoDestino === 2
+  }">
+                                                <mat-select #selectDestino class="pill-mat-select w-full"
+                                                    [panelClass]="'panel-internacionales'" disableRipple
+                                                    (selectionChange)="onDestinoChange($event)">
+                                                    <mat-select-trigger>
+                                                        {{ selectedDestinoLabel || 'Selecciona un destino' }}
+                                                    </mat-select-trigger>
+
+                                                    <ng-container *ngIf="modoDestino === 'padres'; else modoHijos">
+                                                        <mat-option [value]="null" disabled>Selecciona un
+                                                            continente</mat-option>
+                                                        <mat-option *ngFor="let grupo of agrupadosDestinos"
+                                                            [value]="grupo.nombrePadre" class="font-semibold">
+                                                            {{ grupo.nombrePadre }}
+                                                        </mat-option>
+                                                    </ng-container>
+
+                                                    <ng-template #modoHijos>
+                                                        <mat-option [value]="null" (click)="volverAPadres()">
+                                                            ← Cambiar de continente
+                                                        </mat-option>
+                                                        <mat-option *ngFor="let destino of grupoSeleccionado?.destinos"
+                                                            [value]="destino.id">
+                                                            {{ destino.nombre }}
+                                                        </mat-option>
+                                                    </ng-template>
+                                                </mat-select>
+                                            </div> -->
+
+
+                                            <!-- <div *ngIf="tipoDestino === 2" class="w-full px-5 py-2.5 rounded-full border-2
+                                                text-sm md:text-base font-semibold text-left
+                                                     cursor-pointer transition duration-200 flex items-center"
+                                                [ngClass]="{
+                                                'border-[#F9B44B] text-[#F9B44B]': tipoDestino === 2
+                                              }" [matMenuTriggerFor]="menuDestinos">
+                                                <span class="flex-1 truncate">
+                                                    {{ selectedDestinoLabel || 'Selecciona un destino' }}
+                                                </span>
+                                                <mat-icon class="ml-2 text-inherit">expand_more</mat-icon>
+                                            </div>
+
+                                            <mat-menu #menuDestinos="matMenu" class="min-w-[260px]">
+                                                <ng-container *ngFor="let grupo of agrupadosDestinos">
+                                                    <button mat-menu-item *ngIf="grupo.destinos?.length; else soloGrupo"
+                                                        [matMenuTriggerFor]="menuGrupo">
+                                                        <span>{{ grupo.nombrePadre }}</span>
+                                                        <span class="flex-1"></span>
+                                                        <mat-icon>chevron_right</mat-icon>
+                                                    </button>
+
+                                                    <mat-menu #menuGrupo="matMenu">
+                                                        <button mat-menu-item *ngFor="let destino of grupo.destinos"
+                                                            (click)="selectDestino(destino)">
+                                                            {{ destino.nombre }}
+                                                        </button>
+                                                    </mat-menu>
+
+                                                    <ng-template #soloGrupo>
+                                                        <button mat-menu-item (click)="selectDestino(grupo)">
+                                                            {{ grupo.nombrePadre }}
+                                                        </button>
+                                                    </ng-template>
+                                                </ng-container>
+                                            </mat-menu> -->
                                         </div>
                                     </div>
                                 </div>
