@@ -20,7 +20,7 @@
              text-sm md:text-base font-semibold text-left
              cursor-pointer transition duration-200 flex items-center" [ngClass]="{
         'border-[#1B6F56] text-[#1B6F56]': tipoDestino === 1,
-        'border-none': tipoDestino === 2
+        'border-[#F9B44B] text-[#F9B44B]': tipoDestino === 2
       }">
                                             <mat-select *ngIf="tipoDestino === 1" formControlName="hotelSeleccionado"
                                                 class="pill-mat-select w-full" [panelClass]="'panel-nacionales'"
@@ -31,7 +31,7 @@
                                                 </mat-option>
                                             </mat-select>
 
-                                            <!-- <mat-select *ngIf="tipoDestino === 2" formControlName="hotelSeleccionado"
+                                            <mat-select *ngIf="tipoDestino === 2" formControlName="hotelSeleccionado"
                                                 class="pill-mat-select w-full" [panelClass]="'panel-internacionales'"
                                                 disableRipple>
                                                 <mat-option [value]="null" disabled>Selecciona un destino</mat-option>
@@ -43,7 +43,7 @@
                                                         {{ destino.nombre }}
                                                     </mat-option>
                                                 </mat-optgroup>
-                                            </mat-select> -->
+                                            </mat-select>
 
                                             <!-- <mat-select *ngIf="tipoDestino === 2" formControlName="hotelSeleccionado"
                                                 class="pill-mat-select w-full" [panelClass]="'panel-internacionales'"
@@ -84,7 +84,6 @@
                                             </div>
 
                                             <mat-autocomplete #autoDestinos="matAutocomplete"
-                                                [displayWith]="displayDestino"
                                                 (optionSelected)="onDestinoSelected($event.option.value)">
 
                                                 <ng-container *ngFor="let grupo of filteredAgrupadosDestinos">
