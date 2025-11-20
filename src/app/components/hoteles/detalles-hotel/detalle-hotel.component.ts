@@ -91,7 +91,7 @@ export class DetalleHotelComponent {
     current: { src: string; alt?: string } = { src: '' };
     show = false;
     origin = 'center center';
-    opcionesRegimen: string[]
+    opcionesRegimen: any[]
     @ViewChild('overlay') overlay?: ElementRef<HTMLDivElement>;
     @ViewChild('modalImg') modalImg?: ElementRef<HTMLImageElement>;
     // @ViewChild('overlay') overlay?: ElementRef<HTMLDivElement>;
@@ -116,7 +116,7 @@ export class DetalleHotelComponent {
 
     ubicacion: string;
     asesores: IAsesores[] = [];
-    mostrarInfo: boolean= false; 
+    mostrarInfo: boolean = false;
     readonly panelOpenState = signal(false);
 
     constructor(private sanitizer: DomSanitizer) {
@@ -146,6 +146,9 @@ export class DetalleHotelComponent {
                 return a?.descripcion ? [a.descripcion] : [];
             });
         this.opcionesRegimen = this.hotel.regimenes;
+        console.log(this.opcionesRegimen);
+
+
         this.descripcionParrafo = this.hotel.descripcion;
         this.descripcionLista = actividades;
         this.ubicacion = this.hotel.ubicacion;
@@ -229,7 +232,7 @@ export class DetalleHotelComponent {
         const ciudad = sessionStorage.getItem('ciudad') ?? '';
 
         const {
-            regimen, rangoFechas, nombre, correo, telefono, asesor
+            regimen, rangoFechas, nombre, correo, telefono, asesor, especiales
         } = this.reservacionForm.getRawValue();
 
         const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
@@ -251,8 +254,9 @@ export class DetalleHotelComponent {
         Fecha de salida: ${fechaFormateadaFin}
         Habitaciones: ${totalRooms}
         ${detalleHabitaciones}
+        Peticiones especiales: ${especiales}
         Telefono: ${telefono}
-        Correo: ${correo}
+        Correo: ${correo == '' ? 'Sin correo' : correo}
         Asesor: ${asesor.nombre}`;
 
 
@@ -300,8 +304,15 @@ export class DetalleHotelComponent {
             }),
             ofertas: [false],
             telefono: ['', [Validators.required, Validators.minLength(10)]],
-            asesor: ['', Validators.required]
+            asesor: ['', Validators.required],
+            especiales: ['']
         });
+
+        if (this.opcionesRegimen?.length === 1) {
+            this.reservacionForm.get('regimen')?.patchValue(
+                this.opcionesRegimen[0].regimen.descripcion
+            );
+        }
 
         this.reservacionForm.get('rangoFechas')!.valueChanges.subscribe(range => {
             this.calcularNoches(range?.start, range?.end);

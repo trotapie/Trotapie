@@ -41,6 +41,7 @@ import { MatBottomSheetModule } from '@angular/material/bottom-sheet';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { HttpClientJsonpModule } from '@angular/common/http';
 import { NgxDaterangepickerMd } from 'ngx-daterangepicker-material';
+import { CustomScrollbarThumbDirective } from './directives/scroll.directive';
 @NgModule({
   imports: [
     MatButtonModule,
@@ -103,6 +104,7 @@ import { NgxDaterangepickerMd } from 'ngx-daterangepicker-material';
     NgSwitch, 
     HttpClientJsonpModule,
     NgxDaterangepickerMd.forRoot(),
+    CustomScrollbarThumbDirective
   ],
   exports: [
     MatButtonModule,
@@ -164,6 +166,7 @@ import { NgxDaterangepickerMd } from 'ngx-daterangepicker-material';
     NgSwitch,
     HttpClientJsonpModule,
     NgxDaterangepickerMd,
+    CustomScrollbarThumbDirective
   ]
 })
 export class MaterialModule {}
