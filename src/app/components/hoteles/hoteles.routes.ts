@@ -8,7 +8,7 @@ export default [
         component: HotelesComponent,
     },
     {
-        path: 'detalle-hotel/:id',
+        path: 'detalle-hotel/:id/:nombre',
         component: DetalleHotelComponent,
     }
 ] as Routes;

@@ -285,10 +285,18 @@ export class HotelesComponent {
     }
 
     verDetalleHotel(hotel: any): void {
+        const slug = hotel.nombre_hotel
+            .trim()
+            .normalize("NFD").replace(/[\u0300-\u036f]/g, "") 
+            .replace(/[^a-zA-Z0-9& ]+/g, "")                    
+            .replace(/\s+/g, '-')                               
+            .replace(/-+/g, '-');
+
+        console.log(slug);
         const scrollTop = this.scrollContainer.nativeElement.scrollTop;
         sessionStorage.setItem('scrollTopHoteles', scrollTop.toString());
         sessionStorage.setItem('hotel', JSON.stringify(hotel))
-        this.router.navigate(['/hoteles/detalle-hotel', hotel.id], {
+        this.router.navigate(['/hoteles/detalle-hotel', hotel.id, slug], {
             state: { hotel }
         });
     }

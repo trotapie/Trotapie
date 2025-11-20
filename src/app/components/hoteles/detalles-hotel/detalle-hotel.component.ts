@@ -146,9 +146,6 @@ export class DetalleHotelComponent {
                 return a?.descripcion ? [a.descripcion] : [];
             });
         this.opcionesRegimen = this.hotel.regimenes;
-        console.log(this.opcionesRegimen);
-
-
         this.descripcionParrafo = this.hotel.descripcion;
         this.descripcionLista = actividades;
         this.ubicacion = this.hotel.ubicacion;
