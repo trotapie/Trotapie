@@ -124,6 +124,8 @@ export class HotelesComponent {
     destinoFiltroCtrl = new FormControl(''); // solo para el texto del autocomplete
     @ViewChild('selectDestino') selectDestinoInternacionales!: MatSelect;
 
+    avisoUrl = '';
+
     filtroDestino: string = '';
     constructor() {
     }
@@ -287,9 +289,9 @@ export class HotelesComponent {
     verDetalleHotel(hotel: any): void {
         const slug = hotel.nombre_hotel
             .trim()
-            .normalize("NFD").replace(/[\u0300-\u036f]/g, "") 
-            .replace(/[^a-zA-Z0-9& ]+/g, "")                    
-            .replace(/\s+/g, '-')                               
+            .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            .replace(/[^a-zA-Z0-9& ]+/g, "")
+            .replace(/\s+/g, '-')
             .replace(/-+/g, '-');
 
         console.log(slug);
@@ -454,9 +456,15 @@ export class HotelesComponent {
 
     startRandomCarousel(): void {
         this.intervalId = setInterval(() => {
+            if (this.mostrarInfo) {
+                clearInterval(this.intervalId);
+                return;
+            }
+
             if (!this.imagenesFondo || this.imagenesFondo.length === 0) {
                 return;
             }
+
 
             let newIndex: number;
 
@@ -588,9 +596,18 @@ export class HotelesComponent {
             .filter(g => g.destinos.length > 0);
     }
 
-    displayDestino = (destino: any) => {
-        return destino?.nombre || '';
-    };
+    displayDestino(destino: any): string {
+        return destino ? destino.nombre : '';
+    }
+
+    abrirAviso() {
+        this.avisoUrl = this.supabase.getPublicUrl(
+            'Public-docs',
+            'aviso-privacidad.pdf'
+        );
+
+        window.open(this.avisoUrl, '_blank');
+    }
     /** Offset absoluto del target dentro del container (sin usar window). */
     private getOffsetWithinContainer(target: HTMLElement, container: HTMLElement): number {
         let y = 0;

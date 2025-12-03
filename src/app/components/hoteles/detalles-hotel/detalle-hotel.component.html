@@ -34,7 +34,7 @@
                         </li>
                     </ul>
                     <div class="mt-5">
-                        <span ><b> Nota:</b> Algunas amenidades pueden tener un costo adicional. </span>
+                        <span><b> Nota:</b> Algunas amenidades pueden tener un costo adicional. </span>
                     </div>
                 </mat-tab>
 
@@ -45,8 +45,9 @@
             <mat-accordion class="mb-5 p-3">
                 <mat-expansion-panel #panel1="matExpansionPanel" [hideToggle]="true">
                     <mat-expansion-panel-header>
-                        <mat-panel-title [ngClass]="{ 'text-primary': panel1.expanded, 'text-gray-700': !panel1.expanded }"
-                            class="font-medium transition-colors duration-200" > Descripción </mat-panel-title>
+                        <mat-panel-title
+                            [ngClass]="{ 'text-primary': panel1.expanded, 'text-gray-700': !panel1.expanded }"
+                            class="font-medium transition-colors duration-200"> Descripción </mat-panel-title>
                         <mat-icon class="ml-auto transition-transform duration-200"
                             [svgIcon]="panel1.expanded ? 'heroicons_outline:x-mark' : 'heroicons_outline:chevron-down'">
                         </mat-icon>
@@ -56,8 +57,9 @@
 
                 <mat-expansion-panel #panel2="matExpansionPanel" [hideToggle]="true">
                     <mat-expansion-panel-header>
-                        <mat-panel-title [ngClass]="{ 'text-primary': panel2.expanded, 'text-gray-700': !panel2.expanded }"
-        class="font-medium transition-colors duration-200"> Amenidades </mat-panel-title>
+                        <mat-panel-title
+                            [ngClass]="{ 'text-primary': panel2.expanded, 'text-gray-700': !panel2.expanded }"
+                            class="font-medium transition-colors duration-200"> Amenidades </mat-panel-title>
                         <mat-icon class="transition-transform duration-200"
                             [svgIcon]="panel2.expanded ? 'heroicons_outline:x-mark' : 'heroicons_outline:chevron-down'">
                         </mat-icon>
@@ -70,7 +72,7 @@
                         </li>
                     </ul>
                     <div class="mt-5">
-                        <span ><b> Nota:</b> Algunas amenidades pueden tener un costo adicional. </span>
+                        <span><b> Nota:</b> Algunas amenidades pueden tener un costo adicional. </span>
                     </div>
                 </mat-expansion-panel>
             </mat-accordion>
@@ -116,7 +118,7 @@
 
                         <img #modalImg [src]="current.src" [alt]="current.alt || ''" [style.transformOrigin]="origin"
                             [class]="
-                        'max-w-[90vw] max-h-[85vh] rounded-xl shadow-2xl transition ' +
+                        'max-w-[90vw] max-h-[85vh] w-auto h-auto object-contain rounded-xl shadow-2xl transition ' +
                         'duration-300 ease-out will-change-transform ' +
                         (show ? 'scale-100 opacity-100' : 'scale-50 opacity-0')
                       " (pointerdown)="onDragStart($event)" />
@@ -170,16 +172,24 @@
     </div>
     <div *ngIf="!isOpen" class="sticky bottom-4 w-full z-50">
         <div class="relative flex justify-end pr-4">
-
             <button (click)="abrirModal()" aria-label="Enviar WhatsApp">
                 <div class="absolute bottom-16 right-0 whitespace-pre-line flex justify-center items-center 
          bg-[#e7f0ed] text-green-800 font-semibold text-md px-3 py-1 
          rounded-t-2xl shadow animate-bounce text-center z-10 border-2 border-green-800">
-                    <mat-icon svgIcon="mat_outline:headphones" class="mr-1 text-green-800"></mat-icon>
-                    Contacto
+                    <mat-icon svgIcon="mat_outline:request_quote" class="mr-1 text-green-800"></mat-icon>
+                    Cotizar
                 </div>
                 <img class="w-16 h-16 p-2 bg-white rounded-full" src="assets/images/logos/trotapie-iso.png" />
             </button>
+            <!-- <button (click)="abrirModal()" aria-label="Enviar WhatsApp">
+                <div class="absolute bottom-16 right-0 whitespace-pre-line flex justify-center items-center 
+         bg-[#fef8e6] text-[#f7c525] font-semibold text-md px-3 py-1 
+         rounded-t-2xl shadow animate-bounce text-center z-10 border-2 border-yellow-400">
+                    <mat-icon svgIcon="mat_outline:request_quote" class="mr-1 text-[#f7c525]"></mat-icon>
+                    Cotizar
+                </div>
+                <img class="w-16 h-16 p-2 bg-white rounded-full" src="assets/images/logos/trotapie-iso.png" />
+            </button> -->
         </div>
     </div>
     <footer>
@@ -308,7 +318,7 @@
     </footer>
 </div>
 
-<div *ngIf="modalAbierto" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-6">
+<!-- <div *ngIf="modalAbierto" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-6">
     <div class="bg-black p-6 rounded-lg shadow-lg max-w-md w-full relative max-h-[80vh] overflow-y-auto"
         style="box-sizing: border-box;">
         <button (click)="cerrarModal()" class="absolute top-2 right-3 text-black-500 hover:text-red-600 text-3xl">
@@ -380,7 +390,7 @@
         </div>
 
     </div>
-</div>
+</div> -->
 
 <div *ngIf="mostrarMapa" [ubicacion]="hotel.ubicacion"
     class="fixed inset-0 z-[999] bg-black/50 backdrop-blur-sm flex items-end justify-center">
@@ -404,7 +414,7 @@
 
     <div *ngIf="mostrarBot" class="fixed inset-0 z-[999] bg-black/50 backdrop-blur-sm flex items-end justify-center">
         <div
-            class="bg-white dark:bg-gray-900 w-full sm:w-4/5 md:w-[640px] h-[100svh] max-h-[100svh] sm:h-[80svh] sm:max-h-[80svh] rounded-t-2xl shadow-xl animate-slide-up relative overflow-hidden">
+            class="bg-white dark:bg-gray-900 w-full sm:w-4/5 md:w-[640px] h-[100svh] max-h-[100svh] rounded-t-2xl shadow-xl animate-slide-up relative overflow-hidden">
 
             <button class="absolute top-3 right-4 text-gray-600 dark:text-gray-300" (click)="cerrarModal()">
                 <mat-icon svgIcon="heroicons_outline:x-mark" class="w-8 h-8"></mat-icon>
@@ -412,7 +422,7 @@
 
             <div *ngIf="!form">
                 <div>
-                    <div class="flex justify-center mt-[15%] mb-8">
+                    <div class="flex justify-center mt-[5%] mb-8">
                         <img class="w-56 h-15 " src="assets/images/logos/trotapie.png" alt="Logo Trotapie" />
                     </div>
                     <div class="mx-8">
@@ -444,14 +454,20 @@
                     </div>
                 </div>
 
-                <div class="absolute left-0 right-0 bottom-4 px-6">
+                <div class="absolute left-0 right-0 bottom-4 px-6 space-y-2">
+                    <article class="text-center ">
+                        <strong> Operamos con proveedores verificados.</strong>
+                    </article>
                     <button mat-flat-button color="primary" class="w-full text-white animate-pulse-slow shadow-lg"
                         (click)="abrirForm()">
                         <div class="flex items-center justify-center">
                             <img class="w-6 h-6 mr-3" src="assets/icons/concerge.svg" />
-                            <b>¡Quiero viajar!</b>
+                            <b>Cotizar Ahora.</b>
                         </div>
                     </button>
+                    <article class="text-center ">
+                        <strong> Cotización sin compromiso, confirmación segura.</strong>
+                    </article>
                 </div>
             </div>
             <div *ngIf="form" class="grid grid-rows-[auto,1fr,auto] h-full overscroll-contain touch-pan-y">
@@ -651,7 +667,8 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-green-700 mb-1">Peticiones especiales (Opcional)</label>
+                            <label class="block text-sm font-medium text-green-700 mb-1">Peticiones especiales
+                                (Opcional)</label>
                             <textarea formControlName="especiales" class="input-underline"></textarea>
                         </div>
 

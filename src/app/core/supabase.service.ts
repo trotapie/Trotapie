@@ -149,7 +149,12 @@ export class SupabaseService {
     return this.client.storage.from('hoteles').upload(path, file);
   }
 
-  getPublicUrl(path: string) {
-    return this.client.storage.from('hoteles').getPublicUrl(path);
+  getPublicUrl(bucket: string, path: string): string {
+    const { data } = this.client
+      .storage
+      .from(bucket)
+      .getPublicUrl(path);
+
+    return data.publicUrl;
   }
 }

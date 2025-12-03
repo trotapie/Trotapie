@@ -20,7 +20,7 @@
              text-sm md:text-base font-semibold text-left
              cursor-pointer transition duration-200 flex items-center" [ngClass]="{
         'border-[#1B6F56] text-[#1B6F56]': tipoDestino === 1,
-        'border-[#F9B44B] text-[#F9B44B]': tipoDestino === 2
+        'border-none': tipoDestino === 2
       }">
                                             <mat-select *ngIf="tipoDestino === 1" formControlName="hotelSeleccionado"
                                                 class="pill-mat-select w-full" [panelClass]="'panel-nacionales'"
@@ -31,7 +31,7 @@
                                                 </mat-option>
                                             </mat-select>
 
-                                            <mat-select *ngIf="tipoDestino === 2" formControlName="hotelSeleccionado"
+                                            <!-- <mat-select *ngIf="tipoDestino === 2" formControlName="hotelSeleccionado"
                                                 class="pill-mat-select w-full" [panelClass]="'panel-internacionales'"
                                                 disableRipple>
                                                 <mat-option [value]="null" disabled>Selecciona un destino</mat-option>
@@ -43,34 +43,9 @@
                                                         {{ destino.nombre }}
                                                     </mat-option>
                                                 </mat-optgroup>
-                                            </mat-select>
-
-                                            <!-- <mat-select *ngIf="tipoDestino === 2" formControlName="hotelSeleccionado"
-                                                class="pill-mat-select w-full" [panelClass]="'panel-internacionales'"
-                                                disableRipple>
-
-                                                <mat-option >
-                                                    <input type="text" placeholder="Buscar destino..."
-                                                        class="w-full p-2 border rounded" [(ngModel)]="filtroDestino"
-                                                        [ngModelOptions]="{ standalone: true }"
-                                                        (click)="$event.stopPropagation()"
-                                                        (keydown)="$event.stopPropagation()" />
-                                                </mat-option>
-
-                                                <mat-option [value]="null" disabled>
-                                                    Selecciona un destino
-                                                </mat-option>
-
-                                                <mat-optgroup *ngFor="let grupo of destinosFiltrados"
-                                                    [label]="grupo.nombrePadre">
-                                                    <mat-option *ngFor="let destino of grupo.destinos"
-                                                        [value]="destino.id">
-                                                        {{ destino.nombre }}
-                                                    </mat-option>
-                                                </mat-optgroup>
                                             </mat-select> -->
 
-                                            <!-- <div *ngIf="tipoDestino === 2" class="w-full px-5 py-2.5 rounded-full border-2
+                                            <div *ngIf="tipoDestino === 2" class="w-full px-5 py-2.5 rounded-full border-2
             text-sm md:text-base font-semibold text-left
             cursor-pointer transition duration-200 flex items-center" [ngClass]="{
        'border-[#F9B44B] text-[#F9B44B]': tipoDestino === 2
@@ -84,6 +59,7 @@
                                             </div>
 
                                             <mat-autocomplete #autoDestinos="matAutocomplete"
+                                                [displayWith]="displayDestino"
                                                 (optionSelected)="onDestinoSelected($event.option.value)">
 
                                                 <ng-container *ngFor="let grupo of filteredAgrupadosDestinos">
@@ -95,7 +71,7 @@
                                                     </mat-optgroup>
                                                 </ng-container>
 
-                                            </mat-autocomplete> -->
+                                            </mat-autocomplete>
 
                                             <!-- <div class="w-full px-5 py-2.5 rounded-full border-2
          text-sm md:text-base font-semibold text-left
@@ -426,7 +402,7 @@
                 <fuse-card class="flex flex-col max-w-xl w-full md:w-[600px]" [flippable]="true" #heroCard>
 
                     <ng-container fuseCardFront>
-                        <div class="relative w-full h-[70vh] rounded-3xl overflow-hidden shadow-lg
+                        <div class="relative w-full h-[65dvh] rounded-3xl overflow-hidden shadow-lg
                 flex items-center justify-center text-white bg-cover bg-center"
                             [ngStyle]="{ 'background-image': currentImage ? 'url(' + currentImage + ')' : 'none' }"
                             [class.pointer-events-none]="heroCard?.face === 'back'">
@@ -478,12 +454,12 @@
                                 <p class="text-md text-gray-300 mb-6">
                                     {{
                                     tipoDestino === 1
-                                    ? '¡Explora las ciudades y playas de México y vive experiencias únicas!'
+                                    ? 'México te sorprende: playas, ciudades y momentos únicos.'
                                     : 'Selecciona un continente para explorar los mejores destinos internacionales.'
                                     }}
                                 </p>
 
-                                <div class="flex flex-col gap-4 max-h-[280px] overflow-y-auto px-1 custom-scrollbar" >
+                                <div class="flex flex-col gap-4 max-h-[280px] overflow-y-auto px-1 custom-scrollbar">
                                     <button *ngFor="let item of (tipoDestino === 1 ? destinos : this.agrupadosDestinos)"
                                         class="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl shadow-md 
                          text-lg font-semibold tracking-wide backdrop-blur-sm transition 
@@ -506,7 +482,16 @@
         <div class="relative z-49 flex w-full justify-center print:hidden">
             <div
                 class="bg-card flex h-14 w-full max-w-360 items-center border-t px-6 dark:bg-default sm:h-20 sm:shadow-xl md:px-8 justify-between">
-                <span class="text-secondary font-medium">Trotapie &copy; {{ currentYear }}</span>
+                <section>
+                    <article>
+                        <span class="text-secondary font-medium">Trotapie &copy; {{ currentYear }}</span>
+                    </article>
+                    <article>
+                        <span class="text-secondary font-medium cursor-pointer" (click)="abrirAviso()">
+                            Aviso de Privacidad
+                        </span>
+                    </article>
+                </section>
                 <div class="flex gap-3 items-center text-secondary">
                     <a href="https://x.com/trotapie" target="_blank" aria-label="X">
                         <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="none"
