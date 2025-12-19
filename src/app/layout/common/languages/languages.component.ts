@@ -36,7 +36,7 @@ export class LanguagesComponent implements OnInit, OnDestroy {
         private _changeDetectorRef: ChangeDetectorRef,
         private _fuseNavigationService: FuseNavigationService,
         private _translocoService: TranslocoService
-    ) {}
+    ) { }
 
     // -----------------------------------------------------------------------------------------------------
     // @ Lifecycle hooks
@@ -60,15 +60,17 @@ export class LanguagesComponent implements OnInit, OnDestroy {
 
         // Set the country iso codes for languages for flags
         this.flagCodes = {
+            es: 'mx',
             en: 'us',
-            tr: 'tr',
+            fr: 'fr',
+            pt: 'br',
         };
     }
 
     /**
      * On destroy
      */
-    ngOnDestroy(): void {}
+    ngOnDestroy(): void { }
 
     // -----------------------------------------------------------------------------------------------------
     // @ Public methods
@@ -80,6 +82,8 @@ export class LanguagesComponent implements OnInit, OnDestroy {
      * @param lang
      */
     setActiveLang(lang: string): void {
+        console.log('clickkk', lang);
+
         // Set the active lang
         this._translocoService.setActiveLang(lang);
     }

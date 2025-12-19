@@ -14,13 +14,15 @@ import { TextTypewriterComponent } from 'app/text-typewriter.component';
 import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
 import { SupabaseService } from 'app/core/supabase.service';
 import { FuseSplashScreenService } from '@fuse/services/splash-screen';
+import { TranslocoModule } from '@jsverse/transloco';
+
 
 type Room = { adults: number; children: number; childAges: (number | null)[] };
 @Component({
     selector: 'detalle-hotel',
     standalone: true,
     templateUrl: './detalle-hotel.component.html',
-    imports: [MaterialModule, MapaComponent,
+    imports: [MaterialModule, MapaComponent,TranslocoModule
         //  QRCodeComponent, 
     ],
     encapsulation: ViewEncapsulation.None,

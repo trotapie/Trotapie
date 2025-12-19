@@ -75,6 +75,13 @@ export const appRoutes: Route[] = [
             {
                 path: 'hoteles',
                 loadChildren: () => import('app/components/hoteles/hoteles.routes').then(m => m.default)
+            },
+            {
+                path: 'admin',
+                canActivate: [AuthGuard],
+                canActivateChild: [AuthGuard],
+                loadChildren: () =>
+                    import('app/components/admin/admin.routes').then(m => m.default)
             }
         ]
     }

@@ -14,11 +14,12 @@ import { FloatingSearchComponent } from './search-component/floating-search.comp
 import { SupabaseService } from 'app/core/supabase.service';
 import { DomSanitizer } from '@angular/platform-browser';
 import { MatSelect, MatSelectChange } from '@angular/material/select';
+import { TranslocoModule } from '@jsverse/transloco';
 
 @Component({
     selector: 'hoteles',
     templateUrl: './hoteles.component.html',
-    imports: [MaterialModule, FormsModule, FloatingSearchComponent],
+    imports: [MaterialModule, FormsModule, FloatingSearchComponent, TranslocoModule],
     encapsulation: ViewEncapsulation.None,
     standalone: true
 })
