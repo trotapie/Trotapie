@@ -18,6 +18,7 @@ import { MockApiService } from 'app/mock-api';
 import { firstValueFrom } from 'rxjs';
 import { TranslocoHttpLoader } from './core/transloco/transloco.http-loader';
 import { mockApiInterceptor } from '@fuse/lib/mock-api';
+import { getDefaultLang } from './lang.utils';
 
 export const appConfig: ApplicationConfig = {
     providers: [
@@ -61,8 +62,9 @@ export const appConfig: ApplicationConfig = {
                 availableLangs: [
                     { id: 'es', label: 'Español' },
                     { id: 'en', label: 'English' },
-                    // { id: 'fr', label: 'Français' },
-                    // { id: 'pt', label: 'Português' },
+                    { id: 'fr', label: 'Français' },
+                    { id: 'pt', label: 'Português' },
+                    { id: 'de', label: 'Deutsch' }
                 ],
                 defaultLang: 'es',
                 fallbackLang: 'es',
@@ -73,10 +75,12 @@ export const appConfig: ApplicationConfig = {
         }),
         provideAppInitializer(() => {
             const translocoService = inject(TranslocoService);
-            const defaultLang = translocoService.getDefaultLang();
-            translocoService.setActiveLang(defaultLang);
 
-            return firstValueFrom(translocoService.load(defaultLang));
+            const lang = getDefaultLang();
+
+            translocoService.setActiveLang(lang);
+
+            return firstValueFrom(translocoService.load(lang));
         }),
 
         // Fuse

@@ -15,6 +15,7 @@ import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
 import { SupabaseService } from 'app/core/supabase.service';
 import { FuseSplashScreenService } from '@fuse/services/splash-screen';
 import { TranslocoModule } from '@jsverse/transloco';
+import { FooterComponent } from 'app/footer/footer.component';
 
 
 type Room = { adults: number; children: number; childAges: (number | null)[] };
@@ -22,7 +23,7 @@ type Room = { adults: number; children: number; childAges: (number | null)[] };
     selector: 'detalle-hotel',
     standalone: true,
     templateUrl: './detalle-hotel.component.html',
-    imports: [MaterialModule, MapaComponent,TranslocoModule
+    imports: [MaterialModule, MapaComponent,TranslocoModule, FooterComponent
         //  QRCodeComponent, 
     ],
     encapsulation: ViewEncapsulation.None,

@@ -14,6 +14,7 @@ import { NavigationService } from 'app/core/navigation/navigation.service';
 import { Navigation } from 'app/core/navigation/navigation.types';
 import { LanguagesComponent } from 'app/layout/common/languages/languages.component';
 import { Subject, takeUntil } from 'rxjs';
+import { TranslocoModule } from '@jsverse/transloco';
 
 @Component({
     selector: 'material-layout',
@@ -28,6 +29,7 @@ import { Subject, takeUntil } from 'rxjs';
         // FuseFullscreenComponent,
         //FuseHorizontalNavigationComponent,
         RouterOutlet,
+        TranslocoModule,
     ],
 })
 export class MaterialLayoutComponent implements OnInit, OnDestroy {
@@ -116,9 +118,13 @@ export class MaterialLayoutComponent implements OnInit, OnDestroy {
     regresarInicio() {
         if (sessionStorage.length !== 0) {
             sessionStorage.clear();
+        }
+
+        if (this.router.url === '/hoteles') {
             window.location.reload();
-        }else{
+        } else {
             this.router.navigate(['/hoteles']);
         }
     }
+
 }

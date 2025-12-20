@@ -81,12 +81,12 @@
                     </mat-expansion-panel>
                 </mat-accordion>
                 }
-                <div>
-                    <button mat-flat-button color="primary" class="ml-8 w-30 text-white" (click)="abrirUbicacion()">
+                <div class="flex ml-2 gap-2">
+                    <button mat-flat-button color="primary" class=" w-30 text-white" (click)="abrirUbicacion()">
                         <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:map-pin'"></mat-icon>
                         {{t('ubicacion')}}
                     </button>
-                    <button id="shareBtn" mat-flat-button color="accent" class="ml-2 w-40 text-white"
+                    <button id="shareBtn" mat-flat-button color="accent" class=" w-40 text-white"
                         (click)="compartirHotel()">
                         <mat-icon class="icon-size-5 pr-1" [svgIcon]="'heroicons_outline:share'"></mat-icon>
                         {{t('compartir-hotel')}}
@@ -103,12 +103,59 @@
                 </div>
                 }
                 @if(!isScreenSmall){ -->
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <!-- <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                         <button *ngFor="let img of imagenes; let i = index" class="p-0 bg-transparent border-0 group"
                             (click)="open(i, $event)">
                             <img [src]="img" class="w-full h-30 object-cover rounded-xl shadow-md" />
                         </button>
+                    </div> -->
+                    <!-- <div class="grid grid-cols-2 md:grid-cols-3 auto-rows-[180px] gap-3">
+                        <ng-container *ngFor="let img of imagenes; let i = index">
+                    
+                            <button *ngIf="i < 5" class="relative overflow-hidden rounded-xl group p-0 bg-transparent border-0
+                                 {{
+                                   i === 0 || i === 3
+                                     ? 'md:col-span-2 md:row-span-2'
+                                     : 'md:col-span-1 md:row-span-1'
+                                 }}" (click)="open(i, $event)">
+                                <img [src]="img"
+                                    class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                            </button>
+                    
+                            <button *ngIf="i === 5" class="relative rounded-xl bg-gray-200 flex items-center justify-center
+                                 text-xl font-medium hover:bg-gray-300 transition
+                                 md:col-span-1 md:row-span-1" (click)="open(0, $event)">
+                                Ver más
+                            </button>
+                    
+                        </ng-container>
+                    </div> -->
+                    <div class="grid grid-cols-3 gap-3
+            auto-rows-[80px] sm:auto-rows-[110px] md:auto-rows-[180px]">
+
+                        <ng-container *ngFor="let img of imagenes; let i = index">
+
+                            <!-- IMÁGENES -->
+                            <button *ngIf="i < 5"
+                                class="relative overflow-hidden rounded-xl group p-0 bg-transparent border-0" [ngClass]="{
+        'col-span-2 row-span-2': i === 0 || i === 3,
+        'col-span-1 row-span-1': i === 1 || i === 2
+      }" (click)="open(i, $event)">
+                                <img [src]="img"
+                                    class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                            </button>
+
+                            <!-- VER MÁS -->
+                            <button *ngIf="i === 5" class="rounded-xl bg-gray-200 flex items-center justify-center
+             text-xl font-medium hover:bg-gray-300 transition
+             col-span-1 row-span-1" (click)="open(0, $event)">
+                                Ver más
+                            </button>
+
+                        </ng-container>
+
                     </div>
+
 
                     <div *ngIf="isOpen" #overlay class="fixed inset-0 z-50" (click)="onBackdrop($event)">
 
@@ -196,7 +243,7 @@
             </button> -->
             </div>
         </div>
-        <footer>
+        <!-- <footer>
             <div class="relative z-49 flex w-full justify-center print:hidden">
                 <div
                     class="bg-card flex h-14 w-full max-w-360 items-center border-t px-6 dark:bg-default sm:h-20 sm:shadow-xl md:px-8 justify-between">
@@ -319,7 +366,8 @@
                 </div>
 
             </div>
-        </footer>
+        </footer> -->
+        <app-footer />
     </div>
 
     <!-- <div *ngIf="modalAbierto" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-6">
@@ -433,29 +481,34 @@
                         <div class="mx-8">
                             <div class="flex items-center mb-4">
                                 <img class="w-8 h-8 mr-2" src="assets/icons/cama-hotel.svg" />
-                                <span><b>+100 mil</b> hoteles en todo el mundo</span>
+                                <span [innerHTML]="t('beneficio-hoteles')"></span>
                             </div>
+
                             <div class="flex items-center mb-4">
                                 <img class="w-8 h-8 mr-2" src="assets/icons/avion3.svg" />
-                                <span><b>Vuelos</b> nacionales e internacionales</span>
+                                <span [innerHTML]="t('beneficio-vuelos')"></span>
                             </div>
+ 
                             <div class="flex items-center mb-4">
-                                <mat-icon svgIcon="heroicons_outline:banknotes"
-                                    class="w-8 h-8 mr-2 text-black"></mat-icon>
-                                <span><b>Todas</b> las formas de pago</span>
+                                <mat-icon svgIcon="heroicons_outline:banknotes" class="w-8 h-8 mr-2 text-black">
+                                </mat-icon>
+                                <span [innerHTML]="t('beneficio-pagos')"></span>
                             </div>
+
                             <div class="flex items-center mb-4">
-                                <mat-icon svgIcon="heroicons_outline:credit-card"
-                                    class="w-8 h-8 mr-2 text-black"></mat-icon>
-                                <span><b>Hasta 18 meses sin intereses</b></span>
+                                <mat-icon svgIcon="heroicons_outline:credit-card" class="w-8 h-8 mr-2 text-black">
+                                </mat-icon>
+                                <span [innerHTML]="t('beneficio-meses')"></span>
                             </div>
+
                             <div class="flex items-center mb-4">
                                 <img class="w-8 h-8 mr-2" src="assets/icons/support.svg" />
-                                <span><b>Atención</b> 10:00 a 21:00 hrs</span>
+                                <span [innerHTML]="t('beneficio-atencion')"></span>
                             </div>
+
                             <div class="flex items-center">
                                 <img class="w-8 h-8 mr-2" src="assets/icons/tips.svg" />
-                                <span>Anticipo <b>mínimo</b> para reservar, confirmación <b>segura</b></span>
+                                <span [innerHTML]="t('beneficio-anticipo')"></span>
                             </div>
                         </div>
                     </div>
@@ -500,7 +553,9 @@
                             <div class="flex items-center justify-center gap-x-3 -mb-4">
                                 <mat-form-field class="w-8/12 ff-underline" appearance="fill"
                                     [formGroupName]="'rangoFechas'">
-                                    <mat-label class="block text-md font-semibold text-green-700">{{t('rango-fecha')}}({{noches}} {{t('noches')}} )</mat-label>
+                                    <mat-label
+                                        class="block text-md font-semibold text-green-700">{{t('rango-fecha')}}({{noches}}
+                                        {{t('noches')}} )</mat-label>
 
                                     <mat-date-range-input [rangePicker]="picker" [dateFilter]="dateFilter">
                                         <input matStartDate placeholder="Fecha inicio" formControlName="start" />

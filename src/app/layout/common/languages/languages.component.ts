@@ -64,6 +64,7 @@ export class LanguagesComponent implements OnInit, OnDestroy {
             en: 'us',
             fr: 'fr',
             pt: 'br',
+            de: 'de',
         };
     }
 
@@ -86,6 +87,7 @@ export class LanguagesComponent implements OnInit, OnDestroy {
 
         // Set the active lang
         this._translocoService.setActiveLang(lang);
+        localStorage.setItem('lang', lang);
     }
 
     /**

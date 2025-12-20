@@ -15,14 +15,16 @@ import { SupabaseService } from 'app/core/supabase.service';
 import { DomSanitizer } from '@angular/platform-browser';
 import { MatSelect, MatSelectChange } from '@angular/material/select';
 import { TranslocoModule } from '@jsverse/transloco';
+import { FooterComponent } from 'app/footer/footer.component';
 
 @Component({
     selector: 'hoteles',
     templateUrl: './hoteles.component.html',
-    imports: [MaterialModule, FormsModule, FloatingSearchComponent, TranslocoModule],
+    imports: [MaterialModule, FormsModule, FloatingSearchComponent, TranslocoModule, FooterComponent],
     encapsulation: ViewEncapsulation.None,
     standalone: true
 })
+
 export class HotelesComponent {
     private formBuilder = inject(FormBuilder);
     private router = inject(Router);
@@ -377,10 +379,6 @@ export class HotelesComponent {
         //     }
         // }
 
-    }
-
-    get currentYear(): number {
-        return new Date().getFullYear();
     }
 
     irA(): void {
