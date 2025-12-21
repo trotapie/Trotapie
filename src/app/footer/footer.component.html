@@ -141,8 +141,11 @@
 
             <div class="text-center sm:text-left">
                 <p class="font-medium">Trotapie © 2025</p>
+                <!-- <span class="text-secondary font-medium cursor-pointer" (click)="abrirAviso()">
+                                Aviso de Privacidad
+                            </span> -->
                 <button class="underline hover:text-green-600 transition"
-                    onclick="abrirAviso()">{{t('aviso-privacidad')}}</button>
+                    (click)="abrirAviso()">{{t('aviso-privacidad')}}</button>
             </div>
 
             <!-- Derecha: Redes sociales -->
