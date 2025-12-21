@@ -54,5 +54,7 @@
   "beneficio-pagos": "<strong>Todas</strong> as formas de pagamento",
   "beneficio-meses": "Até <strong>18 meses</strong> sem juros",
   "beneficio-atencion": "<strong>Atendimento ao cliente</strong> das 10:00 às 21:00",
-  "beneficio-anticipo": "Entrada <strong>mínima</strong> para reservar, confirmação <strong>segura</strong>"
+  "beneficio-anticipo": "Entrada <strong>mínima</strong> para reservar, confirmação <strong>segura</strong>",
+  "sin-descripcion": "A descrição deste hotel ainda não está disponível neste idioma.",
+  "sin-amenidades": "As comodidades ainda não estão disponíveis neste idioma."
 }

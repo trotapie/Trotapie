@@ -54,5 +54,7 @@
   "beneficio-pagos": "<strong>Alle</strong> Zahlungsmethoden",  
   "beneficio-meses": "Bis zu <strong>18 Monate</strong> zinsfrei",
   "beneficio-atencion": "<strong>Kundenservice</strong> von 10:00 bis 21:00 Uhr",
-  "beneficio-anticipo": "Mindestanzahlung zur Buchung, <strong>sichere</strong> Bestätigung"
+  "beneficio-anticipo": "Mindestanzahlung zur Buchung, <strong>sichere</strong> Bestätigung",
+  "sin-descripcion": "Die Beschreibung dieses Hotels ist in dieser Sprache noch nicht verfügbar.",
+  "sin-amenidades": "Ausstattungen sind in dieser Sprache noch nicht verfügbar."
 }

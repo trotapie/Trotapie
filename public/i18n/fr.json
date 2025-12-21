@@ -54,5 +54,7 @@
   "beneficio-pagos": "<strong>Toutes</strong> les méthodes de paiement",
   "beneficio-meses": "Jusqu’à <strong>18 mois</strong> sans intérêts",
   "beneficio-atencion": "<strong>Service client</strong> de 10h00 à 21h00",
-  "beneficio-anticipo": "Acompte <strong>minimum</strong> pour réserver, confirmation <strong>sécurisée</strong>"
+  "beneficio-anticipo": "Acompte <strong>minimum</strong> pour réserver, confirmation <strong>sécurisée</strong>",
+  "sin-descripcion": "La description de cet hôtel n’est pas encore disponible dans cette langue.",
+  "sin-amenidades": "Les équipements ne sont pas encore disponibles dans cette langue."
 }

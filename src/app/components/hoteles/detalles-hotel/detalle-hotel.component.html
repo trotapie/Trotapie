@@ -28,16 +28,29 @@
                     </mat-tab>
 
                     <mat-tab [label]="t('amenidades')">
-                        <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-2">
-                            <li *ngFor="let punto of descripcionLista" class="flex gap-2">
-                                <mat-icon class="icon-size-5 text-green-600"
-                                    [svgIcon]="'heroicons_outline:check-badge'"></mat-icon>
-                                <span>{{ punto }}</span>
-                            </li>
-                        </ul>
-                        <div class="mt-5">
-                            <span><b> {{t('nota')}}:</b> {{t('descripcion-nota')}}</span>
-                        </div>
+                        <ng-container *ngIf="descripcionLista?.length; else sinAmenidades">
+
+                            <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-2">
+                                <li *ngFor="let punto of descripcionLista" class="flex gap-2">
+                                    <mat-icon class="icon-size-5 text-green-600"
+                                        [svgIcon]="'heroicons_outline:check-badge'">
+                                    </mat-icon>
+                                    <span>{{ punto.descripcion }}</span>
+                                </li>
+                            </ul>
+
+                            <div class="mt-5 text-sm text-gray-600">
+                                <span><b>{{ t('nota') }}:</b> {{ t('descripcion-nota') }}</span>
+                            </div>
+
+                        </ng-container>
+
+                        <ng-template #sinAmenidades>
+                            <p class="text-md text-gray-500 italic  py-4">
+                                {{ t('sin-amenidades') }}
+                            </p>
+                        </ng-template>
+
                     </mat-tab>
 
                 </mat-tab-group>
@@ -488,7 +501,7 @@
                                 <img class="w-8 h-8 mr-2" src="assets/icons/avion3.svg" />
                                 <span [innerHTML]="t('beneficio-vuelos')"></span>
                             </div>
- 
+
                             <div class="flex items-center mb-4">
                                 <mat-icon svgIcon="heroicons_outline:banknotes" class="w-8 h-8 mr-2 text-black">
                                 </mat-icon>
