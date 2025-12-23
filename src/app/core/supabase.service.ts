@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
+import { getDefaultLang } from 'app/lang.utils';
 
 @Injectable({ providedIn: 'root' })
 export class SupabaseService {
@@ -62,24 +63,89 @@ export class SupabaseService {
       .order('orden', { ascending: true });
   }
 
-  infoHotel(idHotel: number) {
-    return this.client
+  // infoHotel(idHotel: number) {
+  //   return this.client
+  //     .from('hoteles')
+  //     .select(`
+  //     id,
+  //     nombre_hotel,
+  //     descripcion,
+  //     ubicacion,
+  //     imagenes:imagenes_hoteles!imagenes_hoteles_hotel_id_fkey ( url_imagen ),
+  //     actividades:actividades_hotel!actividades_hotel_hotel_id_fkey (
+  //       actividad:actividades!actividades_hotel_actividad_id_fkey ( id, descripcion )
+  //     ),
+  //     regimenes:regimen_hotel!regimen_hotel_hotel_id_fkey (
+  //       regimen:regimen!regimen_hotel_regimen_id_fkey ( id, descripcion )
+  //     )
+  //   `)
+  //     .eq('id', idHotel)
+  //     .maybeSingle();
+  // }
+
+  async infoHotel(idHotel: number, lang?: string) {
+    const idiomaId = await this.getIdiomaId(lang);
+    console.log(idiomaId);
+
+
+    const { data, error } = await this.client
       .from('hoteles')
       .select(`
       id,
-      nombre_hotel,
-      descripcion,
       ubicacion,
+      fondo,
+      estrellas,
+      orden,
+      destino_id,
+      descuento_id,
+      concepto_id,
+      regimen_id,
+
+      traducciones:hotel_traducciones!hotel_traducciones_hotel_id_fkey (
+        idioma_id,
+        nombre_hotel,
+        descripcion
+      ),
+
       imagenes:imagenes_hoteles!imagenes_hoteles_hotel_id_fkey ( url_imagen ),
+
       actividades:actividades_hotel!actividades_hotel_hotel_id_fkey (
         actividad:actividades!actividades_hotel_actividad_id_fkey ( id, descripcion )
       ),
+
       regimenes:regimen_hotel!regimen_hotel_hotel_id_fkey (
         regimen:regimen!regimen_hotel_regimen_id_fkey ( id, descripcion )
       )
     `)
       .eq('id', idHotel)
       .maybeSingle();
+    console.log(data);
+
+
+    if (error) throw error;
+    if (!data) return null;
+
+    // elegir traducción (lang) con fallback a es (1)
+    console.log(idiomaId);
+    
+    const tLang = data.traducciones?.find((t: any) => t.idioma_id === idiomaId);
+    console.log(tLang);
+
+    const tEs = data.traducciones?.find((t: any) => t.idioma_id === 5);
+
+    const traducida = tLang ?? tEs ?? null;
+    console.log(traducida);
+    
+
+    const datos = {
+      ...data,
+      nombre_hotel: traducida?.nombre_hotel ?? null,
+      descripcion: traducida?.descripcion ?? null,
+    };
+
+    console.log(datos);
+    
+    return datos;
   }
 
   empleados() {
@@ -157,4 +223,20 @@ export class SupabaseService {
 
     return data.publicUrl;
   }
+
+  async getIdiomaId(codigo: string) {
+    console.log(codigo);
+    
+    const { data, error } = await this.client
+      .from('idiomas')
+      .select('id')
+      .eq('codigo', codigo)
+      .maybeSingle();
+      console.log(data); 
+      
+
+    if (error) throw error;
+    return data?.id ?? 1; // fallback a es=1 si no existe
+  }
+
 }

@@ -14,7 +14,7 @@ import { TextTypewriterComponent } from 'app/text-typewriter.component';
 import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
 import { SupabaseService } from 'app/core/supabase.service';
 import { FuseSplashScreenService } from '@fuse/services/splash-screen';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { FooterComponent } from 'app/footer/footer.component';
 
 
@@ -23,7 +23,7 @@ type Room = { adults: number; children: number; childAges: (number | null)[] };
     selector: 'detalle-hotel',
     standalone: true,
     templateUrl: './detalle-hotel.component.html',
-    imports: [MaterialModule, MapaComponent,TranslocoModule, FooterComponent
+    imports: [MaterialModule, MapaComponent, TranslocoModule, FooterComponent
         //  QRCodeComponent, 
     ],
     encapsulation: ViewEncapsulation.None,
@@ -35,7 +35,7 @@ export class DetalleHotelComponent {
     private supabase = inject(SupabaseService);
     private route = inject(ActivatedRoute)
     private splashScreen = inject(FuseSplashScreenService)
-
+    private _translocoService = inject(TranslocoService);
 
 
     //  urlQR = 'https://trotapie.github.io/Trotapie/hoteles';
@@ -128,6 +128,28 @@ export class DetalleHotelComponent {
     }
 
     async ngOnInit() {
+        this._translocoService.langChanges$.subscribe(async (activeLang) => {
+            console.log("lenguaje activo", activeLang);
+            
+            console.log('enntra aquiiiii');
+            
+            const data = await this.supabase.infoHotel(id, activeLang);
+            // if (error) { this.error = error.message; return; }
+
+            this.hotel = data;
+            const actividades: string[] =
+                (data?.actividades ?? []).flatMap((row: any) => {
+                    const a = row?.actividad;
+                    if (Array.isArray(a)) {
+                        return a.map(z => z?.descripcion).filter(Boolean);
+                    }
+                    return a?.descripcion ? [a.descripcion] : [];
+                });
+            this.opcionesRegimen = this.hotel.regimenes;
+            this.descripcionParrafo = this.hotel.descripcion;
+            this.descripcionLista = actividades;
+            this.ubicacion = this.hotel.ubicacion;
+        });
         this.splashScreen.show();
         this._fuseMediaWatcherService.onMediaChange$
             .pipe(takeUntil(this._unsubscribeAll))
@@ -136,8 +158,8 @@ export class DetalleHotelComponent {
             });
 
         const id = Number(this.route.snapshot.paramMap.get('id'));
-        const { data, error } = await this.supabase.infoHotel(id);
-        if (error) { this.error = error.message; return; }
+        const data = await this.supabase.infoHotel(id);
+        // if (error) { this.error = error.message; return; }
 
         this.hotel = data;
         const actividades: string[] =
