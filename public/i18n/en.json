@@ -54,5 +54,7 @@
   "beneficio-pagos": "<strong>All</strong> payment methods",
   "beneficio-meses": "Up to <strong>18 months</strong> interest-free",
   "beneficio-atencion": "<strong>Customer Service</strong> from 10:00 AM to 9:00 PM",
-  "beneficio-anticipo": "Minimum down payment to book, <strong>secure</strong> confirmation"
+  "beneficio-anticipo": "Minimum down payment to book, <strong>secure</strong> confirmation",
+  "sin-descripcion": "The description of this hotel is not yet available in this language.",
+  "sin-amenidades": "Amenities are not yet available in this language."
 }

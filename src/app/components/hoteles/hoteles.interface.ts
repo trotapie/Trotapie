@@ -49,7 +49,8 @@ export interface IDetalleHotel {
     descripcion: string;
     ubicacion: null;
     imagenes: Imagenes[];
-    regimenes: any[]
+    regimenes: any[],
+    actividades: IActividades[];
 }
 
 export interface Imagenes {
@@ -105,3 +106,10 @@ export interface GrupoDestino {
   destino: string;
   hoteles: HotelConDestino[];
 }
+
+export interface IActividades {
+    id:          number;
+    descripcion: string;
+}
+
+
