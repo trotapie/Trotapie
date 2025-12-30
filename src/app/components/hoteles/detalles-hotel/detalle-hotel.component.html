@@ -267,17 +267,35 @@
             </fuse-card>
         </div>
         <div *ngIf="!isOpen" class="sticky bottom-4 w-full z-50">
-            <div class="relative flex justify-end pr-4">
+            <!-- <div class="relative flex justify-end pr-4">
                 <button (click)="abrirModal()" aria-label="Enviar WhatsApp">
                     <div class="absolute bottom-16 right-0 whitespace-pre-line flex justify-center items-center 
-         bg-[#e7f0ed] text-green-800 font-semibold text-md px-3 py-1 
-         rounded-t-2xl shadow animate-bounce text-center z-10 border-2 border-green-800">
-                        <mat-icon svgIcon="mat_outline:request_quote" class="mr-1 text-green-800"></mat-icon>
+         bg-[#F9B44B]  hover:bg-[#e0a13a] font-semibold text-md px-3 py-1 
+         rounded-t-2xl shadow animate-bounce text-center z-10 backdrop-blur text-white">
+                        <mat-icon svgIcon="mat_outline:request_quote" class="mr-1 text-white"></mat-icon>
                         {{t('cotizar')}}
                     </div>
                     <img class="w-16 h-16 p-2 bg-white rounded-full" src="assets/images/logos/trotapie-iso.png" />
                 </button>
+            </div> -->
+            <div class="relative flex justify-end pr-4">
+                <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
+
+                    <button type="button" (click)="abrirModal()" class="flex items-center gap-2
+             rounded-full px-4 py-2
+             bg-[#F9B44B] hover:bg-[#e0a13a]
+             text-white font-semibold shadow-lg
+             transition active:scale-[0.98]
+             focus:outline-none focus:ring-2 focus:ring-offset-2 animate-bounce focus:ring-[#F9B44B]" aria-label="Cotizar">
+                        <mat-icon svgIcon="mat_outline:request_quote" class="text-white"></mat-icon>
+                        {{ t('cotizar') }}
+                    </button>
+
+                    <img class="w-16 h-16 p-2 bg-white rounded-full shadow cursor-pointer" (click)="abrirModal()" src="assets/images/logos/trotapie-iso.png"
+                        alt="Trotapie" draggable="false" />
+                </div>
             </div>
+
         </div>
         <app-footer />
     </div>
