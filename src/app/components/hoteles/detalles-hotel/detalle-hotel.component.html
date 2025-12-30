@@ -162,11 +162,22 @@
                             </button>
 
                             <!-- VER MÁS -->
-                            <button *ngIf="i === 5" class="rounded-xl bg-gray-200 flex items-center justify-center
-             text-xl font-medium hover:bg-gray-300 transition
-             col-span-1 row-span-1" (click)="open(0, $event)">
-                                Ver más
+                            <button *ngIf="i === 5" (click)="open(0, $event)" class="relative overflow-hidden rounded-xl group
+           col-span-1 row-span-1
+           flex items-center justify-center">
+
+                                <div class="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-105"
+                                    [ngStyle]="{
+            'background-image': 'url(' + img + ')'
+        }">
+                                </div>
+
+                                <div class="absolute inset-0 bg-black/50"></div>
+                                <span class="relative z-10 text-white text-lg font-semibold">
+                                    Ver más
+                                </span>
                             </button>
+
 
                         </ng-container>
 
