@@ -6,7 +6,7 @@ import { JsonpClientBackend, HttpClientJsonpModule } from '@angular/common/http'
 import { ActivatedRoute, Router } from '@angular/router';
 import { Hotel, IActividades, IAsesores, IDetalleHotel, IHoteles } from '../hoteles.interface';
 import { FuseMediaWatcherService } from '@fuse/services/media-watcher';
-import { Subject, takeUntil } from 'rxjs';
+import { firstValueFrom, Subject, takeUntil } from 'rxjs';
 import moment from 'moment';
 import { MapaComponent } from '../mapa/mapa.component';
 import { QRCodeComponent } from 'angularx-qrcode';
@@ -129,7 +129,7 @@ export class DetalleHotelComponent {
     }
 
     async ngOnInit() {
-        
+
         this.splashScreen.show();
         this._fuseMediaWatcherService.onMediaChange$
             .pipe(takeUntil(this._unsubscribeAll))
@@ -150,8 +150,7 @@ export class DetalleHotelComponent {
                 }
                 return a?.descripcion ? [a.descripcion] : [];
             });
-            console.log(this.hotel.descripcion);
-            
+
         this.opcionesRegimen = this.hotel.regimenes;
         this.descripcionParrafo = this.hotel.descripcion;
         this.descripcionLista = this.hotel.actividades;
@@ -229,7 +228,7 @@ export class DetalleHotelComponent {
         this.router.navigate(['/hoteles']);
     }
 
-    async guardarCliente() {
+    async guardarCliente(mensaje) {
         const { telefono, ofertas, nombre, correo } = this.reservacionForm.getRawValue();
 
         try {
@@ -241,14 +240,30 @@ export class DetalleHotelComponent {
             };
 
             const data = await this.supabase.upsertCliente(nuevoCliente);
+
+            const payload = {
+                cliente_id: data.id,
+                hotel_id: this.hotel.id,
+                empleado_id: mensaje.asesor, // de tabla empleados
+                idioma: this._translocoService.getActiveLang(),
+                regimen_id: mensaje.regimen?.id ?? null, // si aplica
+                fecha_entrada: mensaje.entrada,   // 'YYYY-MM-DD'
+                fecha_salida: mensaje.salida,       // 'YYYY-MM-DD'
+                noches: this.noches,
+                habitaciones: mensaje.detalleHabitaciones, // json
+                peticiones_especiales: mensaje.especiales?.trim() ? mensaje.especiales.trim() : null,
+                recibir_ofertas: mensaje.recibirOfertas,
+            };
+
+            const solicitud = await this.supabase.crearSolicitudCotizacion(payload);
+
         } catch (err) {
             console.error('Error guardando cliente:', err);
         }
     }
 
 
-    abrirWhatsApp() {
-        this.guardarCliente();
+    async abrirWhatsApp() {
 
         const ciudad = sessionStorage.getItem('ciudad') ?? '';
 
@@ -268,18 +283,37 @@ export class DetalleHotelComponent {
         const detalleHabitaciones = this.formatHabitaciones(rooms);
         const totalRooms = rooms.length;
 
-        const mensaje = `Hola, soy ${nombre} y me interesa una cotización en el hotel ${this.hotel.nombre_hotel} en ${ciudad}.
-        Noches: ${this.noches}
-        Regimen: ${regimen}
-        Fecha de entrada: ${fechaFormateadaInicio}
-        Fecha de salida: ${fechaFormateadaFin}
-        Habitaciones: ${totalRooms}
-        ${detalleHabitaciones}
-        Peticiones especiales: ${especiales}
-        Telefono: ${telefono}
-        Correo: ${correo == '' ? 'Sin correo' : correo}
-        Asesor: ${asesor.nombre}`;
+        const mensaje = await this.buildCotizacionMensaje({
+            nombre,
+            hotel: this.hotel.nombre_hotel,
+            ciudad,
+            noches: this.noches,
+            regimen,
+            entrada: fechaFormateadaInicio,
+            salida: fechaFormateadaFin,
+            habitaciones: totalRooms,
+            detalleHabitaciones,
+            especiales,
+            telefono,
+            correo,
+            asesor: asesor.nombre,
+        });
 
+        this.guardarCliente({
+            nombre,
+            hotel: this.hotel.nombre_hotel,
+            ciudad,
+            noches: this.noches,
+            regimen,
+            entrada: fechaInicio,
+            salida: fechaFin,
+            habitaciones: totalRooms,
+            detalleHabitaciones,
+            especiales,
+            telefono,
+            correo,
+            asesor: asesor.id,
+        });
 
 
         // WhatsApp México: 52 + número local sin espacios ni guiones
@@ -669,4 +703,31 @@ export class DetalleHotelComponent {
         }
 
     }
+
+    private async buildCotizacionMensaje(params: Record<string, any>) {
+        const active = this._translocoService.getActiveLang(); // idioma actual
+
+        // Asegura que el idioma activo esté cargado
+        await firstValueFrom(this._translocoService.load(active));
+
+        // Si no es español, asegura que español esté cargado
+        if (active !== 'es') {
+            await firstValueFrom(this._translocoService.load('es'));
+        }
+
+        const msgActive = this._translocoService.translate('cotizacion-mensaje', params, active);
+
+        if (active === 'es') return msgActive;
+
+        const msgEs = this._translocoService.translate('cotizacion-mensaje', params, 'es');
+
+        return [
+            msgActive,
+            '',
+            '────────────',
+            '',
+            msgEs,
+        ].join('\n');
+    }
+
 }

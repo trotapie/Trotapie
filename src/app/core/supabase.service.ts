@@ -20,12 +20,15 @@ export class SupabaseService {
   onAuth(cb: Parameters<SupabaseClient['auth']['onAuthStateChange']>[0]) {
     return this.client.auth.onAuthStateChange(cb);
   }
+  
   signUp(email: string, password: string) {
     return this.client.auth.signUp({ email, password });
   }
+
   signIn(email: string, password: string) {
     return this.client.auth.signInWithPassword({ email, password }); // v2
   }
+
   signOut() { return this.client.auth.signOut(); }
 
   // ===== DB (PostgREST) =====
@@ -118,8 +121,6 @@ export class SupabaseService {
     if (error) throw error;
     if (!data) return null;
 
-    console.log(data.actividades);
-
     const actividadesTraducidas = (data?.actividades ?? [])
       .map((x: any) => {
         const act = x.actividad;
@@ -136,12 +137,8 @@ export class SupabaseService {
       })
       .filter(Boolean);
 
-    console.log(actividadesTraducidas);
-
-
 
     const tLang = data.traducciones?.find((t: any) => t.idioma_id === idiomaId);
-    console.log(tLang);
 
     const tEs = data.traducciones?.find((t: any) => t.idioma_id === 1);
 
@@ -151,8 +148,11 @@ export class SupabaseService {
       const r = x.regimen;
       const tLang = r?.traducciones?.find((t: any) => t.idioma_id === idiomaId);
 
+      const tEs = r?.traducciones?.find(
+        (t: any) => t.idioma_id === 1
+      );
       return tLang?.descripcion
-        ? [{ id: r.id, descripcion: tLang.descripcion }]
+        ? [{ id: r.id, descripcion: tLang.descripcion, es: tEs?.descripcion }]
         : [];
     });
 
@@ -163,8 +163,6 @@ export class SupabaseService {
       actividades: actividadesTraducidas,
       regimenes: regimenesTraducidos
     };
-
-    console.log(datos);
 
     return datos;
   }
@@ -201,20 +199,42 @@ export class SupabaseService {
 
   async upsertCliente(cliente: {
     nombre: string;
-    email: string;
+    email: string | null;
     telefono: string;
     recibir_ofertas: boolean;
   }) {
     const { data, error } = await this.client
       .from('clientes')
       .upsert(cliente, { onConflict: 'telefono' })
-      .select();
+      .select('id, nombre, email, telefono, recibir_ofertas')
+      .single();
 
-    if (error) {
-      console.error('Error al hacer upsert:', error);
-      throw error;
-    }
-    return data;
+    if (error) throw error;
+    return data; // <- { id, ... }
+  }
+
+  async crearSolicitudCotizacion(payload: {
+    cliente_id: number;
+    hotel_id: number;
+    empleado_id: number;
+    idioma?: string | null;
+    regimen_id?: number | null;
+    fecha_entrada: string; // YYYY-MM-DD
+    fecha_salida: string;  // YYYY-MM-DD
+    noches: number;
+    habitaciones: any;     // json
+    peticiones_especiales?: string | null;
+    recibir_ofertas: boolean;
+    mensaje?: string | null;
+  }) {
+    const { data, error } = await this.client
+      .from('solicitudes_cotizacion')
+      .insert(payload)
+      .select('id')
+      .single();
+
+    if (error) throw error;
+    return data; // { id }
   }
 
   addHotel(payload: { nombre: string; ciudad: string; descripcion?: string }) {
@@ -246,15 +266,11 @@ export class SupabaseService {
   }
 
   async getIdiomaId(codigo: string) {
-    console.log(codigo);
-
     const { data, error } = await this.client
       .from('idiomas')
       .select('id')
       .eq('codigo', codigo)
       .maybeSingle();
-    console.log(data);
-
 
     if (error) throw error;
     return data?.id ?? 1; // fallback a es=1 si no existe

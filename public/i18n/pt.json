@@ -56,5 +56,6 @@
   "beneficio-atencion": "<strong>Atendimento ao cliente</strong> das 10:00 às 21:00",
   "beneficio-anticipo": "Entrada <strong>mínima</strong> para reservar, confirmação <strong>segura</strong>",
   "sin-descripcion": "A descrição deste hotel ainda não está disponível neste idioma.",
-  "sin-amenidades": "As comodidades ainda não estão disponíveis neste idioma."
+  "sin-amenidades": "As comodidades ainda não estão disponíveis neste idioma.",
+  "cotizacion-mensaje": "Olá, eu sou {{nombre}} e estou interessado em uma cotação para o hotel {{hotel}} em {{ciudad}}.\nNoites: {{noches}}\nRegime: {{regimen.descripcion}}\nData de entrada: {{entrada}}\nData de saída: {{salida}}\nQuartos: {{habitaciones}}\n{{detalleHabitaciones}}\nPedidos especiais: {{especiales}}\nTelefone: {{telefono}}\nEmail: {{correo}}\nConsultor: {{asesor}}"
 }
