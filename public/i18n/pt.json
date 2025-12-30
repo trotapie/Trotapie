@@ -58,5 +58,6 @@
   "sin-descripcion": "A descrição deste hotel ainda não está disponível neste idioma.",
   "sin-amenidades": "As comodidades ainda não estão disponíveis neste idioma.",
   "cotizacion-mensaje": "Olá, eu sou {{nombre}} e estou interessado em uma cotação para o hotel {{hotel}} em {{ciudad}}.\nNoites: {{noches}}\nRegime: {{regimen.descripcion}}\nData de entrada: {{entrada}}\nData de saída: {{salida}}\nQuartos: {{habitaciones}}\n{{detalleHabitaciones}}\nPedidos especiais: {{especiales}}\nTelefone: {{telefono}}\nEmail: {{correo}}\nConsultor: {{asesor}}",
-  "empleado_otro": "Outro"
+  "empleado_otro": "Outro",
+  "ver-mas": "Ver mais"
 }
