@@ -22,10 +22,11 @@
                 @if(!isScreenSmall){
                 <mat-tab-group class="sm:px-2" mat-stretch-tabs="false" [animationDuration]="'0'">
                     <mat-tab [label]="t('descripcion')">
-                        <div class="mt-4 text-base leading-relaxed">
-                            <p class="mb-4">{{ descripcionParrafo }}</p>
+                        <div class="mt-4 text-base leading-relaxed whitespace-pre-line">
+                            {{ descripcionParrafo }}
                         </div>
                     </mat-tab>
+
 
                     <mat-tab [label]="t('amenidades')">
                         <ng-container *ngIf="descripcionLista?.length; else sinAmenidades">
@@ -68,7 +69,9 @@
                                 [svgIcon]="panel1.expanded ? 'heroicons_outline:x-mark' : 'heroicons_outline:chevron-down'">
                             </mat-icon>
                         </mat-expansion-panel-header>
-                        <p class="mb-4">{{ descripcionParrafo }}</p>
+                        <div class="mt-4 text-base leading-relaxed whitespace-pre-line">
+                            {{ descripcionParrafo }}
+                        </div>
                     </mat-expansion-panel>
 
                     <mat-expansion-panel #panel2="matExpansionPanel" [hideToggle]="true">
@@ -85,7 +88,7 @@
                             <li *ngFor="let punto of descripcionLista" class="flex gap-2">
                                 <mat-icon class="icon-size-5 text-green-600"
                                     [svgIcon]="'heroicons_outline:check-badge'"></mat-icon>
-                                <span>{{  punto.descripcion }}</span>
+                                <span>{{ punto.descripcion }}</span>
                             </li>
                         </ul>
                         <div class="mt-5">
