@@ -57,5 +57,6 @@
   "beneficio-anticipo": "Mindestanzahlung zur Buchung, <strong>sichere</strong> Bestätigung",
   "sin-descripcion": "Die Beschreibung dieses Hotels ist in dieser Sprache noch nicht verfügbar.",
   "sin-amenidades": "Ausstattungen sind in dieser Sprache noch nicht verfügbar.",
-  "cotizacion-mensaje": "Hallo, ich bin {{nombre}} und interessiere mich für ein Angebot für das Hotel {{hotel}} in {{ciudad}}.\nNächte: {{noches}}\nVerpflegungsart: {{regimen.descripcion}}\nAnreisedatum: {{entrada}}\nAbreisedatum: {{salida}}\nZimmer: {{habitaciones}}\n{{detalleHabitaciones}}\nBesondere Wünsche: {{especiales}}\nTelefon: {{telefono}}\nE-Mail: {{correo}}\nBerater: {{asesor}}"
+  "cotizacion-mensaje": "Hallo, ich bin {{nombre}} und interessiere mich für ein Angebot für das Hotel {{hotel}} in {{ciudad}}.\nNächte: {{noches}}\nVerpflegungsart: {{regimen.descripcion}}\nAnreisedatum: {{entrada}}\nAbreisedatum: {{salida}}\nZimmer: {{habitaciones}}\n{{detalleHabitaciones}}\nBesondere Wünsche: {{especiales}}\nTelefon: {{telefono}}\nE-Mail: {{correo}}\nBerater: {{asesor}}",
+  "empleado_otro": "Andere"
 }

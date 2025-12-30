@@ -121,6 +121,7 @@ export class DetalleHotelComponent {
     ubicacion: string;
     asesores: IAsesores[] = [];
     mostrarInfo: boolean = false;
+    otroId: number;
     readonly panelOpenState = signal(false);
 
     constructor(private sanitizer: DomSanitizer) {
@@ -139,7 +140,6 @@ export class DetalleHotelComponent {
 
         const id = Number(this.route.snapshot.paramMap.get('id'));
         const data = await this.supabase.infoHotel(id, getDefaultLang());
-        // if (error) { this.error = error.message; return; }
 
         this.hotel = data;
         const actividades: string[] =
@@ -166,25 +166,32 @@ export class DetalleHotelComponent {
             const data = await this.supabase.infoHotel(id, activeLang);
 
             this.hotel = data;
-            // const actividades: string[] =
-            //     (data?.actividades ?? []).flatMap((row: any) => {
-            //         const a = row?.actividad;
-            //         if (Array.isArray(a)) {
-            //             return a.map(z => z?.descripcion).filter(Boolean);
-            //         }
-            //         return a?.descripcion ? [a.descripcion] : [];
-            //     });
             this.opcionesRegimen = this.hotel.regimenes;
             this.descripcionParrafo = this.hotel.descripcion;
             this.descripcionLista = this.hotel.actividades;
             this.ubicacion = this.hotel.ubicacion;
+            this.asesores = this.asesores.map(e => ({
+                ...e,
+                nombre:
+                    e.id === this.otroId
+                        ? this._translocoService.translate('empleado_otro')
+                        : e.nombre
+            }));
+            
         });
     }
 
     async obtenerEmpleados() {
         const { data, error } = await this.supabase.empleados();
         if (error) { this.error = error.message; return; }
-        this.asesores = data
+        this.otroId = data.find(e => e.nombre === 'Otro')?.id;
+        this.asesores = data.map(e => ({
+            ...e,
+            nombre:
+                e.nombre === 'Otro'
+                    ? this._translocoService.translate('empleado_otro')
+                    : e.nombre
+        }));
     }
 
     //async registrar() {
