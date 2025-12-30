@@ -270,9 +270,8 @@
                                         </div>
 
                                         <div class="absolute bottom-4 right-2 z-20 flex items-center gap-2">
-                                            <div class="text-sm text-right leading-tight">
-                                                <div>Ver</div>
-                                                <div>Galería</div>
+                                            <div class="text-sm text-right leading-tight"
+                                                [innerHTML]="t('ver-galeria')">
                                             </div>
 
                                             <div
@@ -383,9 +382,8 @@
                                             </div>
 
                                             <div class="absolute bottom-4 right-2 z-20 flex items-center gap-2">
-                                                <div class="text-sm text-right leading-tight">
-                                                    <div>Ver</div>
-                                                    <div>Galería</div>
+                                                <div class="text-sm text-right leading-tight"
+                                                    [innerHTML]="t('ver-galeria')">
                                                 </div>
 
                                                 <div
@@ -496,7 +494,7 @@
             <div class="flex min-w-0 flex-auto flex-col mt-2 items-center justify-center h-full w-full">
                 <div class="flex justify-center items-center p-3 sm:p-5 md:p-8 w-full h-full">
 
-                    <fuse-card class="flex flex-col max-w-xl w-full md:w-[600px] h-[70vh] sm:h-[80vh] md:h-[70vh]" 
+                    <fuse-card class="flex flex-col max-w-xl w-full md:w-[600px] h-[70vh] sm:h-[80vh] md:h-[70vh]"
                         [flippable]="true" #heroCard>
 
                         <ng-container fuseCardFront>
