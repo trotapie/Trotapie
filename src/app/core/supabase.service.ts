@@ -101,7 +101,13 @@ export class SupabaseService {
     ),
 
     regimenes:regimen_hotel!regimen_hotel_hotel_id_fkey (
-      regimen:regimen!regimen_hotel_regimen_id_fkey ( id, descripcion )
+      regimen:regimen!regimen_hotel_regimen_id_fkey (
+        id,
+        traducciones:regimen_traducciones (
+          idioma_id,
+          descripcion
+        )
+      )
     )
   `)
       .eq('id', idHotel)
@@ -141,11 +147,21 @@ export class SupabaseService {
 
     const traducida = tLang ?? null;
 
+    const regimenesTraducidos = (data?.regimenes ?? []).flatMap((x: any) => {
+      const r = x.regimen;
+      const tLang = r?.traducciones?.find((t: any) => t.idioma_id === idiomaId);
+
+      return tLang?.descripcion
+        ? [{ id: r.id, descripcion: tLang.descripcion }]
+        : [];
+    });
+
     const datos = {
       ...data,
       nombre_hotel: traducida?.nombre_hotel ?? tEs?.nombre_hotel,
       descripcion: traducida?.descripcion ?? this.transloco.translate('sin-descripcion'),
       actividades: actividadesTraducidas,
+      regimenes: regimenesTraducidos
     };
 
     console.log(datos);
