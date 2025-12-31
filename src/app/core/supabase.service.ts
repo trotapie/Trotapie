@@ -3,6 +3,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
 import { getDefaultLang } from 'app/lang.utils';
 import { TranslocoService } from '@jsverse/transloco';
+import { Observable } from 'rxjs';
 
 const ES_ID = 1;
 
@@ -166,11 +167,11 @@ export class SupabaseService {
 
         nombre_hotel: t?.nombre_hotel ?? '',
         regimen: h.regimen
-          ? { ...h.regimen, descripcion: regT?.descripcion ??  '' }
+          ? { ...h.regimen, descripcion: regT?.descripcion ?? '' }
           : null,
 
         descuento: h.descuento
-          ? { ...h.descuento, tipo_descuento: descT?.descripcion ??  '' }
+          ? { ...h.descuento, tipo_descuento: descT?.descripcion ?? '' }
           : null,
       };
     });
@@ -385,5 +386,30 @@ export class SupabaseService {
     if (error) throw error;
     return data?.id ?? 1; // fallback a es=1 si no existe
   }
+
+  async getImagenesFondo() {
+    const { data, error } = await this.client
+      .from('imagenes_fondo')
+      .select('url_imagen')
+      .eq('activo', true)
+      .order('id', { ascending: true });
+      const imagenes = data.map(img => img.url_imagen);
+    if (error) throw error;
+    return imagenes;
+  }
+  // getImagenesFondo(): Observable<ImagenFondo[]> {
+  // return from(
+  //   this.supabase
+  //     .from('imagenes_fondo')
+  //     .select('id, url_imagen')
+  //     .eq('activo', true)
+  //     .order('id', { ascending: true })
+  // ).pipe(
+  //   map(({ data, error }) => {
+  //     if (error) throw error;
+  //     return data as ImagenFondo[];
+  //   })
+  // );
+  // }
 
 }
