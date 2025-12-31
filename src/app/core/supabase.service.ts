@@ -4,6 +4,8 @@ import { environment } from '../../environments/environment';
 import { getDefaultLang } from 'app/lang.utils';
 import { TranslocoService } from '@jsverse/transloco';
 
+const ES_ID = 1;
+
 @Injectable({ providedIn: 'root' })
 export class SupabaseService {
   private client: SupabaseClient;
@@ -20,7 +22,7 @@ export class SupabaseService {
   onAuth(cb: Parameters<SupabaseClient['auth']['onAuthStateChange']>[0]) {
     return this.client.auth.onAuthStateChange(cb);
   }
-  
+
   signUp(email: string, password: string) {
     return this.client.auth.signUp({ email, password });
   }
@@ -32,40 +34,148 @@ export class SupabaseService {
   signOut() { return this.client.auth.signOut(); }
 
   // ===== DB (PostgREST) =====
-  listHotelesAll(nombreDestino: number) {
-    return this.client
+
+  async listHotelesAll(destinoId: number, lang?: string) {
+    const idiomaId = await this.getIdiomaId(lang);
+
+    const { data, error } = await this.client
       .from('hoteles')
       .select(`
-      id, created_at, nombre_hotel, descripcion, estrellas, fondo, orden, ubicacion,
-      descuento:descuento_id ( id, tipo_descuento,icono ),
-      destinos:destino_id!inner ( id, nombre, tipo_desino_id),
-      concepto:concepto_id ( id, descripcion, icono ),
-      regimen:regimen_id ( id, descripcion )
-    `)
-      .eq('destinos.id', `${nombreDestino}`)
+    id, created_at, estrellas, fondo, orden, ubicacion,
+
+    traducciones:hotel_traducciones (
+      idioma_id,
+      nombre_hotel,
+      descripcion
+    ),
+
+    descuento:descuento_id (
+      id,
+      icono,
+      traducciones:descuentos_traducciones (
+        idioma_id,
+        descripcion
+      )
+    ),
+
+    destinos:destino_id!inner ( id, nombre, tipo_desino_id ),
+    concepto:concepto_id ( id, descripcion, icono ),
+
+    regimen:regimen_id (
+      id,
+      traducciones:regimen_traducciones (
+        idioma_id,
+        descripcion
+      )
+    )
+  `)
+      .eq('destinos.id', destinoId)
       .order('orden', { ascending: true });
+
+
+    if (error) throw error;
+
+    const hotelesUI = (data ?? []).map((h: any) => {
+
+      const t = h.traducciones?.find((x: any) => x.idioma_id === idiomaId);
+      const tEs = h.traducciones?.find((x: any) => x.idioma_id === ES_ID);
+
+      const regT = h.regimen?.traducciones?.find((x: any) => x.idioma_id === idiomaId);
+      const regEs = h.regimen?.traducciones?.find((x: any) => x.idioma_id === ES_ID);
+
+      const descT = h.descuento?.traducciones?.find((x: any) => x.idioma_id === idiomaId);
+      const descEs = h.descuento?.traducciones?.find((x: any) => x.idioma_id === ES_ID);
+
+      return {
+        ...h,
+        nombre_hotel: t?.nombre_hotel ?? tEs?.nombre_hotel ?? '',
+        descripcion: t?.descripcion ?? tEs?.descripcion ?? '',
+
+        regimen: h.regimen
+          ? { ...h.regimen, descripcion: regT?.descripcion ?? '' }
+          : null,
+
+        descuento: h.descuento
+          ? { ...h.descuento, tipo_descuento: descT?.descripcion ?? '' }
+          : null,
+      };
+    });
+
+    return hotelesUI;
   }
 
-  listHotelesAllPorDestinoPadre(idDestinoPadre: number) {
-    return this.client
+  async listHotelesAllPorDestinoPadre(idDestinoPadre: number, lang?: string) {
+    const idiomaId = await this.getIdiomaId(lang);
+
+    const { data, error } = await this.client
       .from('hoteles')
       .select(`
-      id, created_at, nombre_hotel, descripcion, estrellas, fondo, orden, ubicacion,
-      descuento:descuento_id ( id, tipo_descuento, icono ),
+      id, created_at, estrellas, fondo, orden, ubicacion,
+
+      traducciones:hotel_traducciones (
+        idioma_id,
+        nombre_hotel,
+        descripcion
+      ),
+
+      descuento:descuento_id (
+        id,
+        icono,
+        traducciones:descuentos_traducciones (
+          idioma_id,
+          descripcion
+        )
+      ),
+
       destinos:destino_id!inner (
         id,
         nombre,
         tipo_desino_id,
         destino_padre_id,
-        destino_padre:destino_padre_id (
-          nombre
-        )
+        destino_padre:destino_padre_id ( nombre )
       ),
+
       concepto:concepto_id ( id, descripcion, icono ),
-      regimen:regimen_id ( id, descripcion )
+
+      regimen:regimen_id (
+        id,
+        traducciones:regimen_traducciones (
+          idioma_id,
+          descripcion
+        )
+      )
     `)
       .eq('destinos.destino_padre_id', idDestinoPadre)
       .order('orden', { ascending: true });
+
+    if (error) throw error;
+
+    const hotelesUI = (data ?? []).map((h: any) => {
+
+      const t = h.traducciones?.find((x: any) => x.idioma_id === idiomaId);
+      const tEs = h.traducciones?.find((x: any) => x.idioma_id === ES_ID);
+
+      const regT = h.regimen?.traducciones?.find((x: any) => x.idioma_id === idiomaId);
+      const regEs = h.regimen?.traducciones?.find((x: any) => x.idioma_id === ES_ID);
+
+      const descT = h.descuento?.traducciones?.find((x: any) => x.idioma_id === idiomaId);
+      const descEs = h.descuento?.traducciones?.find((x: any) => x.idioma_id === ES_ID);
+
+      return {
+        ...h,
+
+        nombre_hotel: t?.nombre_hotel ?? '',
+        regimen: h.regimen
+          ? { ...h.regimen, descripcion: regT?.descripcion ??  '' }
+          : null,
+
+        descuento: h.descuento
+          ? { ...h.descuento, tipo_descuento: descT?.descripcion ??  '' }
+          : null,
+      };
+    });
+
+    return hotelesUI;
   }
 
   async infoHotel(idHotel: number, lang?: string) {

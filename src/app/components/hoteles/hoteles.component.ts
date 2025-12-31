@@ -14,8 +14,9 @@ import { FloatingSearchComponent } from './search-component/floating-search.comp
 import { SupabaseService } from 'app/core/supabase.service';
 import { DomSanitizer } from '@angular/platform-browser';
 import { MatSelect, MatSelectChange } from '@angular/material/select';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { FooterComponent } from 'app/footer/footer.component';
+import { getDefaultLang } from 'app/lang.utils';
 
 @Component({
     selector: 'hoteles',
@@ -32,6 +33,7 @@ export class HotelesComponent {
     private splashScreen = inject(FuseSplashScreenService)
     private supabase = inject(SupabaseService);
     private sanitizer = inject(DomSanitizer)
+    private _translocoService = inject(TranslocoService);
 
     /**
      * Constructor
@@ -145,6 +147,28 @@ export class HotelesComponent {
         }
 
         this.startRandomCarousel();
+        this._translocoService.langChanges$.subscribe(async (activeLang) => {
+            const hotelId = +this.hotelesForm.get('hotelSeleccionado')?.value
+            this.destinoSelected = this.destinos.find(item => item.id === +hotelId);
+            const busqueda = this.tipoDestino === 1 ? this.supabase.listHotelesAll(hotelId, activeLang) : this.supabase.listHotelesAllPorDestinoPadre(hotelId, activeLang);
+            const data = await busqueda;
+            const info = (data ?? []).map((hotel: any) => ({
+                ...hotel,
+                conceptoIconoSeguro: hotel.concepto?.icono
+                    ? this.sanitizer.bypassSecurityTrustHtml(hotel.concepto.icono)
+                    : null,
+                descuentoSeguro: hotel.descuento?.icono
+                    ? this.sanitizer.bypassSecurityTrustHtml(hotel.descuento.icono)
+                    : null
+            }));
+
+            if (this.tipoDestino === 2) {
+                this.gruposDestinos = this.agruparHotelesPorDestino(info)
+            }
+            this.mostrarInfo = true;
+            this.destinoSeleccionado(info);
+            this.listaHoteles = info;
+        });
     }
 
     ngAfterViewInit(): void {
@@ -249,10 +273,9 @@ export class HotelesComponent {
 
         const hotelId = +this.hotelesForm.get('hotelSeleccionado')?.value
         this.destinoSelected = this.destinos.find(item => item.id === +hotelId);
-        const busqueda = this.tipoDestino === 1 ? this.supabase.listHotelesAll(hotelId) : this.supabase.listHotelesAllPorDestinoPadre(hotelId);
-        const { data, error } = await busqueda;
+        const busqueda = this.tipoDestino === 1 ? this.supabase.listHotelesAll(hotelId, getDefaultLang()) : this.supabase.listHotelesAllPorDestinoPadre(hotelId, getDefaultLang());
+        const data = await busqueda;
 
-        if (error) { this.error = error.message; return; }
         const info = (data ?? []).map((hotel: any) => ({
             ...hotel,
             conceptoIconoSeguro: hotel.concepto?.icono
@@ -277,7 +300,6 @@ export class HotelesComponent {
         if (event.length > 0) {
             sessionStorage.setItem('tipoDestino', event[0].destinos.tipo_desino_id)
         }
-
 
         this.ciudadSeleccionada = true;
         if (event !== undefined) {
