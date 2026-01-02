@@ -531,10 +531,11 @@
                         </ng-container>
 
                         <ng-container fuseCardBack>
-                            <div class="relative w-full h-full rounded-3xl overflow-hidden shadow-lg
-                               bg-[#0B0B2B] flex flex-col px-8 pt-10 pb-6 text-white z-[999]" 
-                               [ngClass]="{ 'hidden': heroCard?.face === 'front' }"
-                               [class.pointer-events-none]="heroCard?.face === 'front'">
+                            <div class="relative w-full h-full rounded-3xl shadow-lg
+                               bg-[#0B0B2B] flex flex-col px-8 pt-10 pb-6 text-white " [ngClass]="{ 
+        'hidden': heroCard?.face === 'front',
+        'z-[1000]': heroCard?.face === 'back' 
+     }">
 
                                 <button type="button" mat-icon-button
                                     class="absolute top-4 right-4 z-[9999] bg-white/10 hover:bg-white/20 rounded-full transition"
@@ -559,7 +560,8 @@
                                             *ngFor="let item of (tipoDestino === 1 ? destinos : this.agrupadosDestinos)"
                                             class="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl shadow-md
                                            text-lg font-semibold tracking-wide backdrop-blur-sm transition
-                                           flex items-center justify-between px-5 group z-[9999]" (click)="cargaInfo(item)">
+                                           flex items-center justify-between px-5 group z-[9999]"
+                                            (click)="cargaInfo(item)">
                                             <span class="group-hover:not-italic">
                                                 {{ tipoDestino === 1 ? item.nombre : item.nombrePadre }}
                                             </span>
