@@ -60,5 +60,6 @@
   "sin-amenidades": "Les équipements ne sont pas encore disponibles dans cette langue.",
   "cotizacion-mensaje": "Bonjour, je suis {{nombre}} et je suis intéressé par un devis pour l’hôtel {{hotel}} à {{ciudad}}.\nNuits : {{noches}}\nFormule : {{regimen.descripcion}}\nDate d’arrivée : {{entrada}}\nDate de départ : {{salida}}\nChambres : {{habitaciones}}\n{{detalleHabitaciones}}\nDemandes spéciales : {{especiales}}\nTéléphone : {{telefono}}\nEmail : {{correo}}\nConseiller : {{asesor}}",
   "empleado_otro": "Autre",
-  "ver-mas": "Voir plus"
+  "ver-mas": "Voir plus",
+  "todas-imagenes": "Toutes les images"
 }

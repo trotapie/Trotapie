@@ -50,11 +50,12 @@ export interface IDetalleHotel {
     ubicacion: null;
     imagenes: Imagenes[];
     regimenes: any[],
-    actividades: IActividades[];
+    actividades: any[];
 }
 
 export interface Imagenes {
     url_imagen: string;
+    tipo_imagen_id: number;
 }
 
 
@@ -110,6 +111,12 @@ export interface GrupoDestino {
 export interface IActividades {
     id:          number;
     descripcion: string;
+    traducciones: IActividadTraduccion[];
+}
+
+export interface IActividadTraduccion {
+    idioma_id:        number;
+    descripcion:   string;
 }
 
 

@@ -162,7 +162,7 @@
                             </button>
 
                             <!-- VER MÁS -->
-                            <button *ngIf="i === 5" (click)="open(0, $event)" class="relative overflow-hidden rounded-xl group
+                            <button *ngIf="i === 5" (click)="open(5, $event)" class="relative overflow-hidden rounded-xl group
            col-span-1 row-span-1
            flex items-center justify-center">
 
@@ -187,62 +187,90 @@
                     <div *ngIf="isOpen" #overlay class="fixed inset-0 z-50" (click)="onBackdrop($event)">
 
                         <div class="absolute inset-0 bg-black/90 opacity-100"></div>
-                        <div class="absolute top-3 left-12 md:top-6 md:left-16
-                     text-white/90 text-lg px-2.5 py-1 rounded bg-black/40">
-                            {{ currentIndex + 1 }}/{{ imagenes.length }}
-                        </div>
+                        <section class="mb-2 items-center justify-center flex">
 
-                        <div class="absolute inset-0 flex items-center justify-center select-none">
+                            <div class="absolute top-3 left-3 md:top-6 md:left-6
+         flex flex-col gap-6 md:gap-2
+         sm:flex-row sm:gap-3
+         z-30 max-w-[90vw]">
 
-                            <img #modalImg draggable="false" (contextmenu)="$event.preventDefault()" [src]="current.src"
-                                [alt]="current.alt || ''" [style.transformOrigin]="origin" [class]="
-                        'max-w-[90vw] max-h-[85vh] w-auto h-auto object-contain rounded-xl shadow-2xl transition ' +
-                        'duration-300 ease-out will-change-transform ' +
-                        (show ? 'scale-100 opacity-100' : 'scale-50 opacity-0')
-                      " (pointerdown)="onDragStart($event)" />
+                                <div class="text-white/90 w-20 text-sm md:text-lg px-2.5 py-1 rounded bg-black/40">
+                                    {{ currentIndex + 1 }}/{{ imagenesFilter.length }}
+                                </div>
 
-                            <button mat-icon-button type="button" (click)="prev($event)" class="absolute left-3 md:left-6 top-1/2 -translate-y-1/2
-         p-2 md:p-3 rounded-full bg-white text-black
-         hover:bg-gray-100 focus:outline-none shadow-md transition-colors duration-200">
-                                <mat-icon class="text-black w-5 h-5" [svgIcon]="'heroicons_outline:arrow-left'">
-                                </mat-icon>
-                            </button>
+                                <mat-form-field appearance="outline" class="w-52 pill-mat-form-field z-999 ">
+                                    <mat-select [(value)]="selectedTipoId" class="text-white rounded-2xl"
+                                        (selectionChange)="onTipoChange($event.value)">
 
-                            <button mat-icon-button class="absolute right-3 md:right-6 top-1/2 -translate-y-1/2
-                       rounded-full  bg-white text-black" (click)="next($event)">
-                                <mat-icon class="icon-size-5 text-black"
-                                    [svgIcon]="'heroicons_outline:arrow-right'"></mat-icon>
-                            </button>
-                            <!-- Controles superiores -->
-                            <div class="absolute top-3 right-3 md:top-6 md:right-6 flex items-center gap-2 z-20">
+                                        <mat-option [value]="0">
+                                            {{ t('todas-imagenes') }}
+                                        </mat-option>
 
-                                <!-- BOTÓN COTIZAR -->
-                                <button mat-flat-button class="rounded-full px-4 py-2 gap-1
-              bg-[#F9B44B]  hover:bg-[#e0a13a]
-               text-white backdrop-blur shadow-md
-               transition" (click)="abrirModal()">
-                                    <mat-icon svgIcon="mat_outline:request_quote"
-                                        class="mr-1 text-green-800"></mat-icon>
-                                    {{t('cotizar')}}
-                                </button>
+                                        <mat-option *ngFor="let tipo of tiposImagen; trackBy: trackById"
+                                            [value]="tipo.id">
+                                            {{ getTipoLabel(tipo) }}
+                                        </mat-option>
 
-                                <!-- BOTÓN CERRAR -->
-                                <button mat-flat-button class="rounded-full bg-white/20 hover:bg-white/30
-               text-white backdrop-blur
-               focus:outline-none" (click)="close()">
-                                    <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:x-mark'">
-                                    </mat-icon>
-                                </button>
+                                    </mat-select>
+                                </mat-form-field>
 
                             </div>
 
-                        </div>
+
+                            <div class="absolute inset-0 flex items-center justify-center select-none">
+
+                                <img #modalImg draggable="false" (contextmenu)="$event.preventDefault()"
+                                    [src]="current.src" [alt]="current.alt || ''" [style.transformOrigin]="origin"
+                                    [class]="
+                                                        'max-w-[90vw] max-h-[80vh] w-auto h-auto object-contain rounded-xl shadow-2xl transition ' +
+                                                        'duration-300 ease-out will-change-transform ' +
+                                                        (show ? 'scale-100 opacity-100' : 'scale-50 opacity-0')
+                                                      " (pointerdown)="onDragStart($event)" />
+
+                                <button mat-icon-button type="button" (click)="prev($event)"
+                                    class="absolute left-3 md:left-6 top-1/2 -translate-y-1/2
+                                         p-2 md:p-3 rounded-full bg-white text-black
+                                         hover:bg-gray-100 focus:outline-none shadow-md transition-colors duration-200">
+                                    <mat-icon class="text-black w-5 h-5" [svgIcon]="'heroicons_outline:arrow-left'">
+                                    </mat-icon>
+                                </button>
+
+                                <button mat-icon-button class="absolute right-3 md:right-6 top-1/2 -translate-y-1/2
+                                                       rounded-full  bg-white text-black" (click)="next($event)">
+                                    <mat-icon class="icon-size-5 text-black"
+                                        [svgIcon]="'heroicons_outline:arrow-right'"></mat-icon>
+                                </button>
+                                <!-- Controles superiores -->
+                                <div class="absolute top-3 right-3 md:top-6 md:right-6 flex items-center gap-2 z-20">
+
+                                    <!-- BOTÓN COTIZAR -->
+                                    <button mat-flat-button class="rounded-full px-4 py-2 gap-1
+                                              bg-[#F9B44B]  hover:bg-[#e0a13a]
+                                               text-white backdrop-blur shadow-md
+                                               transition" (click)="abrirModal()">
+                                        <mat-icon svgIcon="mat_outline:request_quote"
+                                            class="mr-1 text-green-800"></mat-icon>
+                                        {{t('cotizar')}}
+                                    </button>
+
+                                    <!-- BOTÓN CERRAR -->
+                                    <button mat-flat-button class="rounded-full bg-white/20 hover:bg-white/30
+                                               text-white backdrop-blur
+                                               focus:outline-none" (click)="close()">
+                                        <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:x-mark'">
+                                        </mat-icon>
+                                    </button>
+
+                                </div>
+
+                            </div>
+                        </section>
                         <div class="absolute bottom-3 md:bottom-6 left-1/2 -translate-x-1/2
-         max-w-[92vw] md:max-w-[80vw] w-full px-3">
+         max-w-[92vw] md:max-w-[80vw] w-full px-3 mt-2">
                             <div class="flex gap-2 overflow-x-auto no-scrollbar
            bg-black/30 rounded-xl p-2 backdrop-blur" (wheel)="onThumbsWheel($event)">
 
-                                <button *ngFor="let thumb of imagenes; let i = index" #thumbBtn
+                                <button *ngFor="let thumb of imagenesFilter; let i = index" #thumbBtn
                                     class="relative shrink-0 rounded-lg overflow-hidden focus:outline-none"
                                     (click)="goTo(i, $event)">
                                     <img [src]="thumb" draggable="false" (contextmenu)="$event.preventDefault()"
@@ -286,13 +314,14 @@
              bg-[#F9B44B] hover:bg-[#e0a13a]
              text-white font-semibold shadow-lg
              transition active:scale-[0.98]
-             focus:outline-none focus:ring-2 focus:ring-offset-2 animate-bounce focus:ring-[#F9B44B]" aria-label="Cotizar">
+             focus:outline-none focus:ring-2 focus:ring-offset-2 animate-bounce focus:ring-[#F9B44B]"
+                        aria-label="Cotizar">
                         <mat-icon svgIcon="mat_outline:request_quote" class="text-white"></mat-icon>
                         {{ t('cotizar') }}
                     </button>
 
-                    <img class="w-16 h-16 p-2 bg-white rounded-full shadow cursor-pointer" (click)="abrirModal()" src="assets/images/logos/trotapie-iso.png"
-                        alt="Trotapie" draggable="false" />
+                    <img class="w-16 h-16 p-2 bg-white rounded-full shadow cursor-pointer" (click)="abrirModal()"
+                        src="assets/images/logos/trotapie-iso.png" alt="Trotapie" draggable="false" />
                 </div>
             </div>
 
@@ -373,9 +402,9 @@
                         <article class="text-center ">
                             <strong> {{t('operadores-verificados')}}</strong>
                         </article>
-                        <button mat-flat-button color="primary" class="w-full text-white animate-pulse-slow shadow-lg"
+                        <button mat-flat-button color="primary" class="w-full text-white animate-pulse-slow shadow-lg bg-[#F9B44B]  hover:bg-[#e0a13a]"
                             (click)="abrirForm()">
-                            <div class="flex items-center justify-center">
+                            <div class="flex items-center justify-center ">
                                 <img class="w-6 h-6 mr-3" src="assets/icons/concerge.svg" />
                                 <b>{{t('cotiza-ahora')}}</b>
                             </div>

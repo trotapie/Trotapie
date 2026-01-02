@@ -512,6 +512,45 @@
     pointer-events: none;
 }
 
+.pill-mat-form-field {
+  .mat-mdc-text-field-wrapper {
+    border-radius: 9999px 0 0 9999px !important;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(6px);
+  }
+
+  .mat-mdc-form-field-flex {
+    padding: 0 12px;
+  }
+
+  .mat-mdc-form-field-infix {
+    padding: 6px 0 !important;
+    min-height: auto;
+  }
+
+  .mat-mdc-select-trigger {
+    color: white;
+  }
+
+  /* ✅ QUITAR la “oreja” del inicio */
+  .mdc-notched-outline__leading {
+    display: none !important;
+  }
+
+  /* ✅ Para que el borde empiece desde el inicio (sin hueco) */
+  .mdc-notched-outline__trailing {
+    border-radius: 9999px !important;
+    border-left: 1px solid currentColor; /* repone el borde que quitó el leading */
+  }
+
+  .mdc-notched-outline__notch {
+    border-top: none;
+    border-left: none; /* evita doble borde donde se une con trailing */
+  }
+}
+
+
+
 // .always-scrollbar {
 //   position: relative;
 // }

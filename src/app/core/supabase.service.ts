@@ -201,7 +201,16 @@ export class SupabaseService {
       descripcion
     ),
 
-    imagenes:imagenes_hoteles!imagenes_hoteles_hotel_id_fkey ( url_imagen ),
+    imagenes:imagenes_hoteles!imagenes_hoteles_hotel_id_fkey (
+      id,
+      url_imagen,
+      tipo_imagen_id,
+
+      tipo:tipos_imagen!imagenes_hoteles_tipo_imagen_id_fkey (
+        id,
+        clave
+      )
+    ),
 
     actividades:actividades_hotel!actividades_hotel_hotel_id_fkey (
       actividad:actividades!actividades_hotel_actividad_id_fkey (
@@ -227,19 +236,20 @@ export class SupabaseService {
       .eq('id', idHotel)
       .maybeSingle();
 
+    console.log(data);
 
 
     if (error) throw error;
     if (!data) return null;
 
-    const actividadesTraducidas = (data?.actividades ?? [])
+    const actividadesTraducidas = (data?.actividades )
       .map((x: any) => {
         const act = x.actividad;
         const tLang = act?.traducciones?.find(
           (t: any) => t.idioma_id === idiomaId
         );
 
-        if (!tLang?.descripcion) return null;
+        if (!tLang?.descripcion) return '';
 
         return {
           id: act.id,
@@ -274,6 +284,7 @@ export class SupabaseService {
       actividades: actividadesTraducidas,
       regimenes: regimenesTraducidos
     };
+console.log(datos);
 
     return datos;
   }
@@ -393,10 +404,28 @@ export class SupabaseService {
       .select('url_imagen')
       .eq('activo', true)
       .order('id', { ascending: true });
-      const imagenes = data.map(img => img.url_imagen);
+    const imagenes = data.map(img => img.url_imagen);
     if (error) throw error;
     return imagenes;
   }
+
+  async obtenerTiposImagenHotel() {
+    const { data, error } = await this.client
+      .from('tipos_imagen')
+      .select(`
+    id,
+    clave,
+    traducciones:tipos_imagen_traducciones!fk_tipo_imagen (
+      id,
+      lang,
+      descripcion
+    )
+  `)
+      .order('id');
+
+    return data;
+  }
+
   // getImagenesFondo(): Observable<ImagenFondo[]> {
   // return from(
   //   this.supabase

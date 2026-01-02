@@ -44,6 +44,7 @@ export class DetalleHotelComponent {
     descripcionParrafo: string = '';
     descripcionLista: IActividades[] = [];
     imagenes: string[] = [];
+    imagenesFilter: string[] = [];
     scrolled = false;
     modalAbierto = false;
     reservacionForm: FormGroup;
@@ -84,7 +85,7 @@ export class DetalleHotelComponent {
     onDragBound!: (e: MouseEvent) => void;
     endDragBound!: () => void;
 
-    items = this.imagenes.map(src => ({
+    items = this.imagenesFilter.map(src => ({
         src,
         w: 1200,
         h: 800
@@ -122,6 +123,9 @@ export class DetalleHotelComponent {
     asesores: IAsesores[] = [];
     mostrarInfo: boolean = false;
     otroId: number;
+    tiposImagen: any[] = [];
+    selectedTipoId: number = 0;
+    trackById = (_: number, item: any) => item.id;
     readonly panelOpenState = signal(false);
 
     constructor(private sanitizer: DomSanitizer) {
@@ -130,7 +134,6 @@ export class DetalleHotelComponent {
     }
 
     async ngOnInit() {
-
         this.splashScreen.show();
         this._fuseMediaWatcherService.onMediaChange$
             .pipe(takeUntil(this._unsubscribeAll))
@@ -161,6 +164,8 @@ export class DetalleHotelComponent {
         this.splashScreen.hide();
 
         this.obtenerEmpleados();
+        this.obtenerTipoImagen();
+
 
         this._translocoService.langChanges$.subscribe(async (activeLang) => {
             const data = await this.supabase.infoHotel(id, activeLang);
@@ -177,7 +182,7 @@ export class DetalleHotelComponent {
                         ? this._translocoService.translate('empleado_otro')
                         : e.nombre
             }));
-            
+
         });
     }
 
@@ -224,6 +229,7 @@ export class DetalleHotelComponent {
         for (const url of urls) {
             await this.delay(300);
             this.imagenes.push(url);
+            this.imagenesFilter.push(url);
         }
     }
 
@@ -539,8 +545,8 @@ export class DetalleHotelComponent {
 
     private updateCurrent() {
         this.current = {
-            src: this.imagenes[this.currentIndex],
-            alt: `Imagen ${this.currentIndex + 1}/${this.imagenes.length}`
+            src: this.imagenesFilter[this.currentIndex],
+            alt: `Imagen ${this.currentIndex + 1}/${this.imagenesFilter.length}`
         };
         // (Opcional) asegurar miniatura activa a la vista
         setTimeout(() => {
@@ -570,13 +576,13 @@ export class DetalleHotelComponent {
 
     next(event: Event) {
         event.stopPropagation();
-        this.currentIndex = (this.currentIndex + 1) % this.imagenes.length;
+        this.currentIndex = (this.currentIndex + 1) % this.imagenesFilter.length;
         this.updateCurrent();
     }
 
     prev(event: Event) {
         event.stopPropagation();
-        this.currentIndex = (this.currentIndex - 1 + this.imagenes.length) % this.imagenes.length;
+        this.currentIndex = (this.currentIndex - 1 + this.imagenesFilter.length) % this.imagenesFilter.length;
         this.updateCurrent();
     }
 
@@ -735,6 +741,46 @@ export class DetalleHotelComponent {
             '',
             msgEs,
         ].join('\n');
+    }
+
+    async obtenerTipoImagen() {
+        const data = await this.supabase.obtenerTiposImagenHotel();
+        
+        console.log(data);
+        console.log(this.hotel?.imagenes);
+        let tipoImagenId: number[] = [];
+        const imaagenesExistentes = this.hotel?.imagenes.forEach(imagen => {
+            if(tipoImagenId.length === 0){
+                tipoImagenId.push(imagen.tipo_imagen_id); 
+            }else if(!tipoImagenId.includes(imagen.tipo_imagen_id)){
+                tipoImagenId.push(imagen.tipo_imagen_id);
+            }
+        });
+        this.tiposImagen = data.filter(tipo => tipoImagenId.includes(tipo.id));
+    }
+
+    getTipoLabel(tipo: any): string {
+        const lang = this._translocoService.getActiveLang?.() ?? 'es';
+        const t = (tipo.traducciones || []).find((x: any) => x.lang === lang);
+        return t?.descripcion ?? tipo.clave ?? 'Tipo';
+    }
+
+    onTipoChange(tipoId: number | null) {
+        this.selectedTipoId = tipoId;
+        if (this.selectedTipoId === 0) {
+            this.imagenesFilter = (this.hotel?.imagenes ?? [])
+                .map((x: any) => x?.url_imagen)
+                .filter((x: string | undefined): x is string => !!x);
+        } else {
+            this.imagenesFilter = (this.hotel?.imagenes ?? [])
+                .filter((x: any) => x?.tipo_imagen_id === this.selectedTipoId)
+                .map((x: any) => x?.url_imagen)
+                .filter((x: string | undefined): x is string => !!x);
+        }
+        console.log(this.selectedTipoId);
+        this.currentIndex = 0;
+        this.updateCurrent();
+
     }
 
 }

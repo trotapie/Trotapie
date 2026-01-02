@@ -601,6 +601,8 @@ export class HotelesComponent {
 
     async obtenerImagenesFondo() {
         this.imagenesFondo = await this.supabase.getImagenesFondo();
+        console.log(this.imagenesFondo);
+        
         this.startRandomCarousel();
     }
 

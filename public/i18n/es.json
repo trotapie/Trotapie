@@ -60,5 +60,6 @@
     "sin-amenidades": "Las amenidades aún no están disponibles en este idioma.",
     "cotizacion-mensaje": "Hola, soy {{nombre}} y me interesa una cotización en el hotel {{hotel}} en {{ciudad}}.\nNoches: {{noches}}\nRégimen: {{regimen.es}}\nFecha de entrada: {{entrada}}\nFecha de salida: {{salida}}\nHabitaciones: {{habitaciones}}\n{{detalleHabitaciones}}\nPeticiones especiales: {{especiales}}\nTeléfono: {{telefono}}\nCorreo: {{correo}}\nAsesor: {{asesor}}",
     "empleado_otro": "Otro",
-    "ver-mas": "Ver más"
+    "ver-mas": "Ver más",
+    "todas-imagenes": "Todas las imágenes"
 }
