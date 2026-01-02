@@ -501,7 +501,7 @@
                             <div class="relative w-full h-full rounded-3xl overflow-hidden shadow-lg
                                flex items-center justify-center text-white bg-cover bg-center"
                                 [ngStyle]="{ 'background-image': currentImage ? 'url(' + currentImage + ')' : 'none' }"
-                                [class.pointer-events-none]="heroCard?.face === 'back'">
+                                [ngClass]="{ 'pointer-events-none': heroCard?.face === 'back', 'z-20': heroCard?.face === 'front' }">
 
                                 <div *ngIf="overlayImage"
                                     class="absolute inset-0 bg-cover bg-center transition-opacity duration-500 pointer-events-none"
@@ -532,9 +532,10 @@
 
                         <ng-container fuseCardBack>
                             <div class="relative w-full h-full rounded-3xl shadow-lg
-                               bg-[#0B0B2B] flex flex-col px-8 pt-10 pb-6 text-white " [ngClass]="{ 
-        'hidden': heroCard?.face === 'front',
-        'z-[1000]': heroCard?.face === 'back' 
+                               bg-[#0B0B2B] flex flex-col px-8 pt-10 pb-6 text-white "
+                               [ngClass]="{ 
+                                 'hidden pointer-events-none': heroCard?.face === 'front',
+                                 'z-[1000] pointer-events-auto': heroCard?.face === 'back' 
      }">
 
                                 <button type="button" mat-icon-button
