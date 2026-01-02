@@ -561,6 +561,29 @@ fuse-card, .fuse-card, .fuse-card-face {
   touch-action: pan-y;
 }
 
+/* SOLO deja clickeable la cara activa */
+fuse-card.fuse-card-face-front .fuse-card-back {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+fuse-card.fuse-card-face-back .fuse-card-front {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+/* iOS/Safari: mejora el hit-testing con transforms */
+fuse-card, fuse-card * {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+fuse-card {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+}
+
 
 
 // .always-scrollbar {
