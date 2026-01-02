@@ -549,6 +549,18 @@
   }
 }
 
+fuse-card, .fuse-card, .fuse-card-face {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+/* Si tu lista hace scroll */
+.custom-scrollbar {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+
 
 
 // .always-scrollbar {
