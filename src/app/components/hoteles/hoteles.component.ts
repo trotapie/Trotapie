@@ -17,6 +17,7 @@ import { MatSelect, MatSelectChange } from '@angular/material/select';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { FooterComponent } from 'app/footer/footer.component';
 import { getDefaultLang } from 'app/lang.utils';
+import { FuseCardComponent } from '@fuse/components/card';
 
 @Component({
     selector: 'hoteles',
@@ -87,6 +88,10 @@ export class HotelesComponent {
     grupoSeleccionado: any | null = null;
     destinoFiltroCtrl = new FormControl(''); // solo para el texto del autocomplete
     @ViewChild('selectDestino') selectDestinoInternacionales!: MatSelect;
+    overlayAnimatedOnce = false;
+    @ViewChild('heroCard', { static: false })
+    heroCard!: FuseCardComponent;
+
 
     avisoUrl = '';
 
@@ -94,7 +99,7 @@ export class HotelesComponent {
     constructor() {
     }
 
-    async ngOnInit() {        
+    async ngOnInit() {
         this.obtenerSoloDestinos();
 
         this.hotelesForm = this.formBuilder.group({
@@ -581,7 +586,7 @@ export class HotelesComponent {
 
         window.open(this.avisoUrl, '_blank');
     }
-    
+
     private getOffsetWithinContainer(target: HTMLElement, container: HTMLElement): number {
         let y = 0;
         let node: HTMLElement | null = target;
@@ -596,14 +601,30 @@ export class HotelesComponent {
         let offset = 0;
         const stickies = container.querySelectorAll<HTMLElement>('.sticky.top-0');
         stickies.forEach(el => offset = Math.max(offset, el.offsetHeight || 0));
-        return offset + 8; 
+        return offset + 8;
     }
 
     async obtenerImagenesFondo() {
         this.imagenesFondo = await this.supabase.getImagenesFondo();
         console.log(this.imagenesFondo);
-        
+
         this.startRandomCarousel();
     }
 
+
+    showOverlay(): void {
+        this.heroCard.face = 'back';
+
+        if (!this.overlayAnimatedOnce) {
+            setTimeout(() => {
+                this.overlayAnimatedOnce = true;
+            }, 350); // ajusta al tiempo del flip
+        }
+    }
+
+    hideOverlay(): void {
+        this.heroCard.face = 'front';
+        this.overlayAnimatedOnce = false;
+
+    }
 }
