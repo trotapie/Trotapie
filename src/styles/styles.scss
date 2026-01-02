@@ -549,14 +549,6 @@
   }
 }
 
-fuse-card {
-    perspective: 1000px;
-}
-
-[fuseCardFront], [fuseCardBack] {
-    backface-visibility: hidden !important;
-    -webkit-backface-visibility: hidden !important;
-}
 // .always-scrollbar {
 //   position: relative;
 // }
