@@ -549,6 +549,33 @@
   }
 }
 
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(249, 180, 75, 2),
+    transparent
+  );
+  animation: shimmer 2.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradientMove 6s ease infinite;
+}
+
+@keyframes gradientMove {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+
 // .always-scrollbar {
 //   position: relative;
 // }
