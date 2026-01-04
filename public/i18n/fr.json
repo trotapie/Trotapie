@@ -58,8 +58,15 @@
   "beneficio-anticipo": "Acompte <strong>minimum</strong> pour réserver, confirmation <strong>sécurisée</strong>",
   "sin-descripcion": "La description de cet hôtel n’est pas encore disponible dans cette langue.",
   "sin-amenidades": "Les équipements ne sont pas encore disponibles dans cette langue.",
-  "cotizacion-mensaje": "Bonjour, je suis {{nombre}} et je suis intéressé par un devis pour l’hôtel {{hotel}} à {{ciudad}}.\nNuits : {{noches}}\nFormule : {{regimen.descripcion}}\nDate d’arrivée : {{entrada}}\nDate de départ : {{salida}}\nChambres : {{habitaciones}}\n{{detalleHabitaciones}}\nDemandes spéciales : {{especiales}}\nTéléphone : {{telefono}}\nEmail : {{correo}}\nConseiller : {{asesor}}",
+  "cotizacion-mensaje": "Bonjour, je suis {{nombre}} et je suis intéressé par un devis pour l’hôtel {{hotel}} à {{ciudad}}.\nNuits : {{noches}}\nFormule : {{regimen.descripcion}}\nDate d’arrivée : {{entrada}}\nDate de départ : {{salida}}\nChambres : {{habitaciones}}\n{{detalleHabitaciones.traduccion}}\nDemandes spéciales : {{especiales}}\nTéléphone : {{telefono}}\nEmail : {{correo}}\nConseiller : {{asesor}}",
   "empleado_otro": "Autre",
   "ver-mas": "Voir plus",
-  "todas-imagenes": "Toutes les images"
+  "todas-imagenes": "Toutes les images",
+  "adulto": "adulte",
+  "adultos": "adultes",
+  "nino": "enfant",
+  "ninos": "enfants",
+  "edades": "âges",
+  "ano": "an",
+  "anos": "ans"
 }

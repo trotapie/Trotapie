@@ -336,24 +336,73 @@ export class DetalleHotelComponent {
         window.open(url, '_blank');
     }
 
-    private formatHabitaciones(rooms: Room[]): string {
-        return rooms.map((r, i) => {
-            const partes: string[] = [];
-            partes.push(`${r.adults} ${this.plural('adulto', r.adults)}`);
+    // private formatHabitaciones(rooms: Room[]): string {
+    //     return rooms.map((r, i) => {
+    //         const partes: string[] = [];
+    //         partes.push(`${r.adults} ${this.plural('adulto', r.adults)}`);
 
-            if (r.children > 0) {
-                const ninos = `${r.children} ${this.plural('niño', r.children)}`;
-                if (r.childAges?.length) {
-                    const edades = r.childAges.join(', ');
-                    const suf = r.childAges.length === 1 ? 'año' : 'años';
-                    partes.push(`${ninos} · edades: ${edades} ${suf}`);
-                } else {
-                    partes.push(ninos);
+    //         if (r.children > 0) {
+    //             const ninos = `${r.children} ${this.plural('niño', r.children)}`;
+    //             if (r.childAges?.length) {
+    //                 const edades = r.childAges.join(', ');
+    //                 const suf = r.childAges.length === 1 ? 'año' : 'años';
+    //                 partes.push(`${ninos} · edades: ${edades} ${suf}`);
+    //             } else {
+    //                 partes.push(ninos);
+    //             }
+    //         }
+
+    //         return `Habitación ${i + 1}: ${partes.join(' · ')}`;
+    //     }).join('\n');
+    // }
+    private formatHabitaciones(rooms: Room[]): { traduccion: string; es: string } {
+        const datos = {
+            traduccion: rooms.map((r, i) => {
+                const partes: string[] = [];
+
+                partes.push(
+                    `${r.adults} ${this.trPlural('adulto', 'adultos', r.adults)}`
+                );
+
+                if (r.children > 0) {
+                    const ninosTxt = `${r.children} ${this.trPlural('nino', 'ninos', r.children)}`;
+
+                    if (r.childAges?.length) {
+                        const edades = r.childAges.join(', ');
+                        const suf = this.trPlural('ano', 'anos', r.childAges.length);
+                        partes.push(
+                            `${ninosTxt} · ${this.trPlural('edad', 'edades', r.childAges.length)}: ${edades} ${suf}`
+                        );
+                    } else {
+                        partes.push(ninosTxt);
+                    }
                 }
-            }
 
-            return `Habitación ${i + 1}: ${partes.join(' · ')}`;
-        }).join('\n');
+                return `${this._translocoService.translate('habitacion')} ${i + 1}: ${partes.join(' · ')}`;
+            }).join('\n'),
+            es: rooms.map((r, i) => {
+                const partes: string[] = [];
+                partes.push(`${r.adults} ${this.plural('adulto', r.adults)}`);
+
+                if (r.children > 0) {
+                    const ninos = `${r.children} ${this.plural('niño', r.children)}`;
+                    if (r.childAges?.length) {
+                        const edades = r.childAges.join(', ');
+                        const suf = r.childAges.length === 1 ? 'año' : 'años';
+                        partes.push(`${ninos} · edades: ${edades} ${suf}`);
+                    } else {
+                        partes.push(ninos);
+                    }
+                }
+
+                return `Habitación ${i + 1}: ${partes.join(' · ')}`;
+            }).join('\n')
+        }
+        return datos;
+    }
+
+    private trPlural(singularKey: string, pluralKey: string, count: number): string {
+        return this._translocoService.translate(count === 1 ? singularKey : pluralKey);
     }
 
 
@@ -745,14 +794,14 @@ export class DetalleHotelComponent {
 
     async obtenerTipoImagen() {
         const data = await this.supabase.obtenerTiposImagenHotel();
-        
+
         console.log(data);
         console.log(this.hotel?.imagenes);
         let tipoImagenId: number[] = [];
         const imaagenesExistentes = this.hotel?.imagenes.forEach(imagen => {
-            if(tipoImagenId.length === 0){
-                tipoImagenId.push(imagen.tipo_imagen_id); 
-            }else if(!tipoImagenId.includes(imagen.tipo_imagen_id)){
+            if (tipoImagenId.length === 0) {
+                tipoImagenId.push(imagen.tipo_imagen_id);
+            } else if (!tipoImagenId.includes(imagen.tipo_imagen_id)) {
                 tipoImagenId.push(imagen.tipo_imagen_id);
             }
         });

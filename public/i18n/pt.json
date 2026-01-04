@@ -58,8 +58,15 @@
   "beneficio-anticipo": "Entrada <strong>mínima</strong> para reservar, confirmação <strong>segura</strong>",
   "sin-descripcion": "A descrição deste hotel ainda não está disponível neste idioma.",
   "sin-amenidades": "As comodidades ainda não estão disponíveis neste idioma.",
-  "cotizacion-mensaje": "Olá, eu sou {{nombre}} e estou interessado em uma cotação para o hotel {{hotel}} em {{ciudad}}.\nNoites: {{noches}}\nRegime: {{regimen.descripcion}}\nData de entrada: {{entrada}}\nData de saída: {{salida}}\nQuartos: {{habitaciones}}\n{{detalleHabitaciones}}\nPedidos especiais: {{especiales}}\nTelefone: {{telefono}}\nEmail: {{correo}}\nConsultor: {{asesor}}",
+  "cotizacion-mensaje": "Olá, eu sou {{nombre}} e estou interessado em uma cotação para o hotel {{hotel}} em {{ciudad}}.\nNoites: {{noches}}\nRegime: {{regimen.descripcion}}\nData de entrada: {{entrada}}\nData de saída: {{salida}}\nQuartos: {{habitaciones}}\n{{detalleHabitaciones.traduccion}}\nPedidos especiais: {{especiales}}\nTelefone: {{telefono}}\nEmail: {{correo}}\nConsultor: {{asesor}}",
   "empleado_otro": "Outro",
   "ver-mas": "Ver mais",
-  "todas-imagenes": "Todas as imagens"
+  "todas-imagenes": "Todas as imagens",
+  "adulto": "adulto",
+  "adultos": "adultos",
+  "nino": "criança",
+  "ninos": "crianças",
+  "edades": "idades",
+  "ano": "ano",
+  "anos": "anos"
 }
