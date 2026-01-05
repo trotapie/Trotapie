@@ -425,15 +425,16 @@ export class DetalleHotelComponent {
             especiales: ['']
         });
 
+        this.reservacionForm.get('rangoFechas')!.valueChanges.subscribe(range => {
+            this.calcularNoches(range?.start, range?.end);            
+        });
+        
         if (this.opcionesRegimen?.length === 1) {
             this.reservacionForm.get('regimen')?.patchValue(
-                this.opcionesRegimen[0].regimen.descripcion
+                this.opcionesRegimen[0].descripcion
             );
         }
 
-        this.reservacionForm.get('rangoFechas')!.valueChanges.subscribe(range => {
-            const noches = this.calcularNoches(range?.start, range?.end);            
-        });
     }
 
     actualizarEdadesNinos(cantidad: number) {
