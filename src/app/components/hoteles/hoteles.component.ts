@@ -606,9 +606,31 @@ export class HotelesComponent {
 
     async obtenerImagenesFondo() {
         this.imagenesFondo = await this.supabase.getImagenesFondo();
-        console.log(this.imagenesFondo);
 
+        if (!this.imagenesFondo?.length) return;
+
+        // ✅ 1) Mostrar la primera imagen inmediatamente (sin esperar al interval)
+        const firstIndex = Math.floor(Math.random() * this.imagenesFondo.length);
+        this.previousIndex = firstIndex;
+
+        const firstUrl = this.imagenesFondo[firstIndex];
+
+        // (opcional pero recomendado) precarga para evitar parpadeo/latencia
+        await this.preloadImage(firstUrl);
+
+        this.cambiarFondoConTransicion(firstUrl);
+
+        // ✅ 2) Ya después arrancas el carrusel
         this.startRandomCarousel();
+    }
+
+    private preloadImage(url: string): Promise<void> {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve();
+            img.onerror = () => resolve(); // no bloquea si falla
+            img.src = url;
+        });
     }
 
 

@@ -236,8 +236,6 @@ export class SupabaseService {
       .eq('id', idHotel)
       .maybeSingle();
 
-    console.log(data);
-
 
     if (error) throw error;
     if (!data) return null;
@@ -284,7 +282,6 @@ export class SupabaseService {
       actividades: actividadesTraducidas,
       regimenes: regimenesTraducidos
     };
-console.log(datos);
 
     return datos;
   }

@@ -247,9 +247,10 @@
                                     <button mat-flat-button class="rounded-full px-4 py-2 gap-1
                                               bg-[#F9B44B]  hover:bg-[#e0a13a]
                                                text-white backdrop-blur shadow-md
-                                               transition" (click)="abrirModal()">
+                                               transition [text-shadow:_0_2px_2px_rgba(0,0,0,0.50)]"
+                                        (click)="abrirModal()">
                                         <mat-icon svgIcon="mat_outline:request_quote"
-                                            class="mr-1 text-green-800"></mat-icon>
+                                            class="mr-1 [filter:drop-shadow(0_2px_2px_rgba(0,0,0,0.45))]"></mat-icon>
                                         {{t('cotizar')}}
                                     </button>
 
@@ -309,14 +310,17 @@
             <div class="relative flex justify-end pr-4">
                 <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
 
-                    <button type="button" (click)="abrirModal()" class="flex items-center gap-2
-             rounded-full px-4 py-2
-             bg-[#F9B44B] hover:bg-[#e0a13a]
-             text-white font-semibold shadow-lg
-             transition active:scale-[0.98]
-             focus:outline-none focus:ring-2 focus:ring-offset-2 animate-bounce focus:ring-[#F9B44B]"
-                        aria-label="Cotizar">
-                        <mat-icon svgIcon="mat_outline:request_quote" class="text-white"></mat-icon>
+                    <button type="button" (click)="abrirModal()" class="flex items-center gap-2 rounded-full px-4 py-2
+         bg-[#F9B44B] hover:bg-[#e0a13a]
+         text-white font-semibold shadow-lg
+         transition active:scale-[0.98]
+         focus:outline-none focus:ring-2 focus:ring-offset-2
+         focus:ring-[#F9B44B] animate-bounce
+         [text-shadow:_0_2px_2px_rgba(0,0,0,0.45)]" aria-label="Cotizar">
+                        <mat-icon svgIcon="mat_outline:request_quote" class="text-white
+           [filter:drop-shadow(0_2px_2px_rgba(0,0,0,0.45))]">
+                        </mat-icon>
+
                         {{ t('cotizar') }}
                     </button>
 
@@ -412,10 +416,10 @@
                             <strong> {{t('operadores-verificados')}}</strong>
                         </article>
                         <button mat-flat-button color="primary"
-                            class="w-full text-white animate-pulse-slow shadow-lg bg-[#F9B44B]  hover:bg-[#e0a13a]"
+                            class="w-full text-white animate-pulse-slow shadow-lg bg-[#F9B44B]  hover:bg-[#e0a13a] [text-shadow:_0_2px_2px_rgba(0,0,0,0.50)]"
                             (click)="abrirForm()">
                             <div class="flex items-center justify-center ">
-                                <img class="w-6 h-6 mr-3" src="assets/icons/concerge.svg" />
+                                <img class="w-6 h-6 mr-3 [filter:drop-shadow(0_2px_2px_rgba(0,0,0,0.45))]" src="assets/icons/concerge.svg" />
                                 <b>{{t('cotiza-ahora')}}</b>
                             </div>
                         </button>

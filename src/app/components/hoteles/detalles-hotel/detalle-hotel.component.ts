@@ -432,7 +432,7 @@ export class DetalleHotelComponent {
         }
 
         this.reservacionForm.get('rangoFechas')!.valueChanges.subscribe(range => {
-            this.calcularNoches(range?.start, range?.end);
+            const noches = this.calcularNoches(range?.start, range?.end);            
         });
     }
 
@@ -533,8 +533,8 @@ export class DetalleHotelComponent {
 
     calcularNoches(start: Date | null, end: Date | null): void {
         if (start && end) {
-            const startDate = new Date(start);
-            const endDate = new Date(end);
+            const startDate = start;
+            const endDate = end;
 
             startDate.setHours(0, 0, 0, 0);
             endDate.setHours(0, 0, 0, 0);
@@ -794,9 +794,6 @@ export class DetalleHotelComponent {
 
     async obtenerTipoImagen() {
         const data = await this.supabase.obtenerTiposImagenHotel();
-
-        console.log(data);
-        console.log(this.hotel?.imagenes);
         let tipoImagenId: number[] = [];
         const imaagenesExistentes = this.hotel?.imagenes.forEach(imagen => {
             if (tipoImagenId.length === 0) {
@@ -826,7 +823,6 @@ export class DetalleHotelComponent {
                 .map((x: any) => x?.url_imagen)
                 .filter((x: string | undefined): x is string => !!x);
         }
-        console.log(this.selectedTipoId);
         this.currentIndex = 0;
         this.updateCurrent();
 
