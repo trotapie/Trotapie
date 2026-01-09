@@ -61,6 +61,7 @@ export class DetalleHotelComponent {
     isClicking = false;
     intervalId: any;
     mesActual = new Date();
+    verMasDescripcion = false;
     dateFilter = (date: Date | null): boolean => {
         if (!date) return false;
 
@@ -829,4 +830,19 @@ export class DetalleHotelComponent {
 
     }
 
+    toggleVerMas(element: HTMLElement): void {
+    const estabaExpandido = this.verMasDescripcion;
+
+    this.verMasDescripcion = !this.verMasDescripcion;
+
+    // Si estaba expandido y ahora se colapsa
+    if (estabaExpandido) {
+        setTimeout(() => {
+            element.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center', // o 'nearest' si lo quieres más preciso
+            });
+        }, 50);
+    }
+}
 }

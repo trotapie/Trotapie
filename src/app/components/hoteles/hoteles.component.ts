@@ -662,14 +662,34 @@ export class HotelesComponent {
         return this.gruposExpandidos.has(this.keyGrupo(grupo));
     }
 
-    toggleGrupo(grupo: any): void {
+    toggleGrupo(grupo: any, anchor?: HTMLElement): void {
         const key = this.keyGrupo(grupo);
-        if (this.gruposExpandidos.has(key)) {
-            this.gruposExpandidos.delete(key);
-        } else {
-            this.gruposExpandidos.add(key);
+        const estabaExpandido = this.gruposExpandidos.has(key);
+
+        // Guardamos la posición del botón ANTES del cambio
+        const topAntes = anchor?.getBoundingClientRect().top ?? 0;
+
+        // Toggle normal
+        if (estabaExpandido) this.gruposExpandidos.delete(key);
+        else this.gruposExpandidos.add(key);
+
+        // Solo al CERRAR (colapsar) compensamos el salto
+        if (estabaExpandido && anchor) {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    const topDespues = anchor.getBoundingClientRect().top;
+                    const delta = topDespues - topAntes;
+
+                    // Si el colapso te "bajó", delta suele ser positivo -> subimos compensando
+                    window.scrollTo({
+                        top: window.scrollY + delta,
+                        behavior: 'smooth',
+                    });
+                });
+            });
         }
     }
+
 
     hotelesMostrados(grupo: any) {
         const hoteles = grupo?.hoteles ?? [];

@@ -579,6 +579,27 @@
   stroke-width: 2; /* prueba 2, 2.5, 3 */
 }
 
+.ver-mas-texto {
+    display: inline-flex;
+    align-items: baseline;   // 🔥 CLAVE: misma línea de texto
+    gap: 4px;
+
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--primary);
+    cursor: pointer;
+    text-decoration: underline;
+    user-select: none;
+}
+
+.ver-mas-texto mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+    line-height: 1;          // 🔥 elimina desnivel
+    vertical-align: baseline;
+}
+
 // .always-scrollbar {
 //   position: relative;
 // }

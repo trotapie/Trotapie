@@ -23,7 +23,19 @@
                 <mat-tab-group class="sm:px-2" mat-stretch-tabs="false" [animationDuration]="'0'">
                     <mat-tab [label]="t('descripcion')">
                         <div class="mt-4 text-base leading-relaxed whitespace-pre-line">
-                            {{ descripcionParrafo }}
+                            <div [class.line-clamp-6]="!verMasDescripcion" class="transition-all duration-300">
+                                {{ descripcionParrafo }}
+                            </div>
+
+                            <!-- VER MÁS / VER MENOS -->
+                            <span #toggleDescripcion class="inline-flex items-center gap-1 mt-2 text-lg font-medium text-primary
+                   cursor-pointer hover:underline select-none" (click)="toggleVerMas(toggleDescripcion)">
+                                <mat-icon >
+                                    {{ verMasDescripcion ? 'expand_less' : 'expand_more' }}
+                                </mat-icon>
+
+                                {{ verMasDescripcion ? t('ver-menos') : t('ver-mas') }}
+                            </span>
                         </div>
                     </mat-tab>
 

@@ -242,12 +242,12 @@
                                 </div>
                             </div>
 
-                            <div *ngFor="let grupo of gruposDestinos" class="mb-2 rounded-2xl">
-                                <mat-expansion-panel #panel1="matExpansionPanel" class="rounded-2xl"
-                                    [hideToggle]="true">
+                            <mat-accordion [multi]="false">
+                                <mat-expansion-panel *ngFor="let grupo of gruposDestinos" class="mb-2 rounded-2xl"
+                                    #panel1="matExpansionPanel" [hideToggle]="true">
                                     <mat-expansion-panel-header>
                                         <div class="flex items-center w-full">
-                                            <span class="font-medium">
+                                            <span class="text-lg">
                                                 {{ grupo.destino }}
                                             </span>
 
@@ -256,8 +256,8 @@
                                             </span>
 
                                             <mat-icon class="transition-transform duration-200" [svgIcon]="panel1.expanded
-        ? 'heroicons_outline:chevron-up'
-        : 'heroicons_outline:chevron-down'">
+            ? 'heroicons_outline:chevron-up'
+            : 'heroicons_outline:chevron-down'">
                                             </mat-icon>
                                         </div>
                                     </mat-expansion-panel-header>
@@ -278,8 +278,8 @@
                                                         class="text-xs font-bold px-2 py-1">
                                                         <div class="flex items-center">
                                                             <span *ngIf="hotel.descuentoSeguro" class="mr-2 inline-flex items-center justify-center
-                    w-4 h-4
-                    [&>svg]:w-4 [&>svg]:h-4 [&>svg]:align-middle" [innerHTML]="hotel.descuentoSeguro">
+                        w-4 h-4
+                        [&>svg]:w-4 [&>svg]:h-4 [&>svg]:align-middle" [innerHTML]="hotel.descuentoSeguro">
                                                             </span>
 
                                                             {{ hotel?.descuento.tipo_descuento }}
@@ -348,35 +348,21 @@
                                         <div *ngIf="grupo?.hoteles?.length > 3"
                                             class="md:col-span-3 sm:col-span-2 col-span-1 relative my-2">
 
-                                            <!-- blur full width -->
-                                            <div
-                                                class="h-12 w-full rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 ">
-                                            </div>
+                                            <button #toggleGrupoBtn type="button" class="absolute inset-0 flex items-center justify-center text-lg font-medium text-primary
+             cursor-pointer hover:underline select-none" (click)="toggleGrupo(grupo, toggleGrupoBtn)">
+                                                <mat-icon>
+                                                    {{ estaExpandido(grupo) ? 'expand_less' : 'expand_more' }}
+                                                </mat-icon>
 
-                                            <!-- botón centrado -->
-                                            <button type="button"
-                                                class="absolute inset-0 flex items-center justify-center"
-                                                (click)="toggleGrupo(grupo)"
-                                                [attr.aria-label]="estaExpandido(grupo) ? 'Ver menos hoteles' : 'Ver más hoteles'">
-
-                                                <div class="px-5 py-2 rounded-full bg-black/50 backdrop-blur-md border border-white/20
-             text-white font-semibold tracking-wide transition hover:bg-black/60"
-                                                    [ngClass]="!estaExpandido(grupo) ? 'animate-pulse' : ''">
-                                                    {{ estaExpandido(grupo) ? t('ver-menos') : t('ver-mas') }}
-                                                </div>
-
+                                                {{ estaExpandido(grupo) ? t('ver-menos') : t('ver-mas') }}
                                             </button>
+
                                         </div>
 
                                     </div>
 
                                 </mat-expansion-panel>
-                                <!--<h2 class="text-2xl font-bold  mb-2">
-                                    {{ grupo.destino }}
-                                </h2>
-
-                                -->
-                            </div>
+                            </mat-accordion>
                         </div>
                     </div>
                 </section>
