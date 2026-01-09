@@ -9,7 +9,7 @@
                 </div>
                 <div class="flex justify-end mt-4 mb-2 ml-2">
                     <button mat-flat-button color="warn" class="mr-2" (click)="regresar()">
-                        <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
+                        <mat-icon class="icon-size-5 icon-thick" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
                     </button>
                 </div>
             </div>
@@ -419,7 +419,8 @@
                             class="w-full text-white animate-pulse-slow shadow-lg bg-[#F9B44B]  hover:bg-[#e0a13a] [text-shadow:_0_2px_2px_rgba(0,0,0,0.50)]"
                             (click)="abrirForm()">
                             <div class="flex items-center justify-center ">
-                                <img class="w-6 h-6 mr-3 [filter:drop-shadow(0_2px_2px_rgba(0,0,0,0.45))]" src="assets/icons/concerge.svg" />
+                                <img class="w-6 h-6 mr-3 [filter:drop-shadow(0_2px_2px_rgba(0,0,0,0.45))]"
+                                    src="assets/icons/concerge.svg" />
                                 <b>{{t('cotiza-ahora')}}</b>
                             </div>
                         </button>
@@ -450,13 +451,14 @@
                         <form [formGroup]="reservacionForm" class="space-y-3">
 
                             <div class="flex items-center justify-center gap-x-3 -mb-4">
-                                <mat-form-field class="w-8/12 ff-underline" appearance="fill"
-                                    [formGroupName]="'rangoFechas'">
-                                    <mat-label
-                                        class="block text-md font-semibold text-green-700">{{t('rango-fecha')}}({{noches}}
-                                        {{t('noches')}} )</mat-label>
+                                <mat-form-field class="w-8/12 ff-underline cursor-pointer" appearance="fill"
+                                    [formGroupName]="'rangoFechas'" (click)="picker.open()">
+                                    <mat-label class="block text-md font-semibold text-green-700">
+                                        {{ t('rango-fecha') }} ({{ noches }} {{ t('noches') }})
+                                    </mat-label>
 
-                                    <mat-date-range-input [rangePicker]="picker" [dateFilter]="dateFilter">
+                                    <mat-date-range-input [rangePicker]="picker" [dateFilter]="dateFilter"
+                                        class="pointer-events-none">
                                         <input matStartDate placeholder="Fecha inicio" formControlName="start" />
                                         <input matEndDate placeholder="Fecha fin" formControlName="end" />
                                     </mat-date-range-input>
@@ -464,6 +466,7 @@
                                     <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
                                     <mat-date-range-picker #picker></mat-date-range-picker>
                                 </mat-form-field>
+
 
                                 <button mat-raised-button [matMenuTriggerFor]="roomsMenu" #menuTrigger="matMenuTrigger"
                                     color="primary" class="!rounded-lg !w-4/12 !h-40 flex px-2 flex-col items-center justify-center
