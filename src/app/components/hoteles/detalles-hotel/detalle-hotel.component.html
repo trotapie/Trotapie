@@ -8,7 +8,7 @@
                     {{hotel.nombre_hotel}}
                 </div>
                 <div class="flex justify-end mt-4 mb-2 ml-2">
-                    <button mat-flat-button color="warn" class="mr-2" (click)="regresar()">
+                    <button mat-fab color="warn" class="mr-2 rounded-full" (click)="regresar()">
                         <mat-icon class="icon-size-5 icon-thick" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
                     </button>
                 </div>
@@ -98,11 +98,11 @@
                 </mat-accordion>
                 }
                 <div class="flex ml-2 gap-2">
-                    <button mat-flat-button color="primary" class=" w-30 text-white" (click)="abrirUbicacion()">
+                    <button mat-raised-button color="primary" class=" w-30 text-white" (click)="abrirUbicacion()">
                         <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:map-pin'"></mat-icon>
                         {{t('ubicacion')}}
                     </button>
-                    <button id="shareBtn" mat-flat-button color="accent" class=" w-40 text-white"
+                    <button id="shareBtn" mat-raised-button color="accent" class=" w-40 text-white"
                         (click)="compartirHotel()">
                         <mat-icon class="icon-size-5 pr-1" [svgIcon]="'heroicons_outline:share'"></mat-icon>
                         {{t('compartir-hotel')}}
@@ -244,7 +244,7 @@
                                 <div class="absolute top-3 right-3 md:top-6 md:right-6 flex items-center gap-2 z-20">
 
                                     <!-- BOTÓN COTIZAR -->
-                                    <button mat-flat-button class="rounded-full px-4 py-2 gap-1
+                                    <button mat-raised-button class="rounded-full px-4 py-2 gap-1
                                               bg-[#F9B44B]  hover:bg-[#e0a13a]
                                                text-white backdrop-blur shadow-md
                                                transition [text-shadow:_0_2px_2px_rgba(0,0,0,0.50)]"
@@ -255,7 +255,7 @@
                                     </button>
 
                                     <!-- BOTÓN CERRAR -->
-                                    <button mat-flat-button class="rounded-full bg-white/20 hover:bg-white/30
+                                    <button mat-raised-button class="rounded-full bg-white/20 hover:bg-white/30
                                                text-white backdrop-blur
                                                focus:outline-none" (click)="close()">
                                         <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:x-mark'">
@@ -415,7 +415,7 @@
                         <article class="text-center ">
                             <strong> {{t('operadores-verificados')}}</strong>
                         </article>
-                        <button mat-flat-button color="primary"
+                        <button mat-raised-button color="primary"
                             class="w-full text-white animate-pulse-slow shadow-lg bg-[#F9B44B]  hover:bg-[#e0a13a] [text-shadow:_0_2px_2px_rgba(0,0,0,0.50)]"
                             (click)="abrirForm()">
                             <div class="flex items-center justify-center ">
@@ -569,7 +569,7 @@
                                         <div class="flex items-center justify-between">
                                             <button mat-stroked-button (click)="addRoom()"
                                                 [disabled]="rooms().length >= MAX_ROOMS">{{t('add-habitacion')}}</button>
-                                            <button mat-flat-button color="primary" (click)="menuTrigger.closeMenu()"
+                                            <button mat-raised-button color="primary" (click)="menuTrigger.closeMenu()"
                                                 class="text-white"
                                                 [disabled]="hasMissingAges()">{{t('aplicar')}}</button>
                                         </div>
@@ -641,7 +641,7 @@
                     </div>
 
                     <div class="p-4 border-t bg-white/90 dark:bg-gray-900/90 backdrop-blur">
-                        <button mat-flat-button color="primary" [disabled]="reservacionForm.invalid"
+                        <button mat-raised-button color="primary" [disabled]="reservacionForm.invalid"
                             class="w-full flex items-center justify-center text-white" (click)="abrirWhatsApp()">
                             {{t('enviar-whats')}}
                         </button>
