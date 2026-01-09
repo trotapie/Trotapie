@@ -96,6 +96,8 @@ export class HotelesComponent {
     avisoUrl = '';
 
     filtroDestino: string = '';
+    verTodos = false;
+    panelActivo = '';
     constructor() {
     }
 
@@ -649,4 +651,31 @@ export class HotelesComponent {
         this.overlayAnimatedOnce = false;
 
     }
+
+    private gruposExpandidos = new Set<number | string>();
+
+    private keyGrupo(grupo: any): number | string {
+        return grupo?.destino_id ?? grupo?.id ?? grupo?.destino;
+    }
+
+    estaExpandido(grupo: any): boolean {
+        return this.gruposExpandidos.has(this.keyGrupo(grupo));
+    }
+
+    toggleGrupo(grupo: any): void {
+        const key = this.keyGrupo(grupo);
+        if (this.gruposExpandidos.has(key)) {
+            this.gruposExpandidos.delete(key);
+        } else {
+            this.gruposExpandidos.add(key);
+        }
+    }
+
+    hotelesMostrados(grupo: any) {
+        const hoteles = grupo?.hoteles ?? [];
+        return this.estaExpandido(grupo) ? hoteles : hoteles.slice(0, 3);
+    }
+
+    trackByGrupo = (_: number, g: any) => g?.destino_id ?? g?.id ?? g?.destino ?? _;
+    trackByHotelId = (_: number, h: any) => h?.hotel_id ?? h?.id ?? _;
 }

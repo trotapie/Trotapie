@@ -61,6 +61,7 @@
   "cotizacion-mensaje": "Bonjour, je suis {{nombre}} et je suis intéressé par un devis pour l’hôtel {{hotel}} à {{ciudad}}.\nNuits : {{noches}}\nFormule : {{regimen.descripcion}}\nDate d’arrivée : {{entrada}}\nDate de départ : {{salida}}\nChambres : {{habitaciones}}\n{{detalleHabitaciones.traduccion}}\nDemandes spéciales : {{especiales}}\nTéléphone : {{telefono}}\nEmail : {{correo}}\nConseiller : {{asesor}}",
   "empleado_otro": "Autre",
   "ver-mas": "Voir plus",
+  "ver-menos": "Voir moins",
   "todas-imagenes": "Toutes les images",
   "adulto": "adulte",
   "adultos": "adultes",

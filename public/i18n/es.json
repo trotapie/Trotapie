@@ -61,6 +61,7 @@
     "cotizacion-mensaje": "Hola, soy {{nombre}} y me interesa una cotización en el hotel {{hotel}} en {{ciudad}}.\nNoches: {{noches}}\nRégimen: {{regimen.es}}\nFecha de entrada: {{entrada}}\nFecha de salida: {{salida}}\nHabitaciones: {{habitaciones}}\n{{detalleHabitaciones.es}}\nPeticiones especiales: {{especiales}}\nTeléfono: {{telefono}}\nCorreo: {{correo}}\nAsesor: {{asesor}}",
     "empleado_otro": "Otro",
     "ver-mas": "Ver más",
+    "ver-menos": "Ver menos",
     "todas-imagenes": "Todas las imágenes",
     "adulto": "adulto",
     "adultos": "adultos",
