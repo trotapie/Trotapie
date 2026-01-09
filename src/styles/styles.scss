@@ -575,6 +575,9 @@
   100% { background-position: 0% 50%; }
 }
 
+.icon-thick svg {
+  stroke-width: 2; /* prueba 2, 2.5, 3 */
+}
 
 // .always-scrollbar {
 //   position: relative;
