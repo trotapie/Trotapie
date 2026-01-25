@@ -16,7 +16,7 @@
 
 <div #scrollContainer class="absolute inset-0 flex flex-col min-w-0 overflow-y-auto" cdkScrollable>
     <ng-container *transloco="let t">
-        <div *ngIf="mostrarInfo" class="-mt-px flex-auto border-t ">
+        <div class="-mt-px flex-auto border-t ">
             <div class="mx-auto w-full max-w-screen-xl">
                 <section #anclaNacionales class="relative">
                     <div class="sticky top-0 z-30 shadow py-2 transition duration-300"
@@ -237,6 +237,30 @@
                         </div>
                     </div>
                     <div class="space-y-4 m-4">
+                        <div *ngIf="gruposDestinos.length === 0 && ciudadSeleccionada"
+                                    class="mt-12 flex flex-col items-center justify-center text-center animate-fadeIn">
+
+                                    <div class="flex flex-col items-center justify-center bg-red-100/20 border border-red-400/40 
+           rounded-2xl p-6 max-w-md shadow-lg backdrop-blur-sm">
+
+                                        <div
+                                            class="w-16 h-16 flex items-center justify-center rounded-full bg-red-500/20 mb-4">
+                                            <mat-icon class="text-red-500 text-4xl">hotel</mat-icon>
+                                        </div>
+
+                                        <h3 class="text-xl font-semibold text-red-500 mb-2">
+                                            {{ t('no-hoteles') }}
+
+                                        </h3>
+
+                                        <p class="text-base text-gray-400">
+                                            {{ t('hoteles-no-encontrados') }}
+                                            <br>
+                                            {{ t('seleccionar-nueva-ciudad') }}
+                                        </p>
+
+                                    </div>
+                                </div>
                         <div *ngFor="let grupo of gruposDestinos"
                             class="accordion-item  bg-white dark:bg-slate-800/50 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700/50 overflow-hidden">
                             <div class="accordion-header cursor-pointer group flex items-center justify-between p-4 md:p-6"
@@ -245,8 +269,8 @@
                                     <div
                                         class="w-20 h-20 md:w-24 md:h-24 rounded-xl overflow-hidden shadow-inner flex-shrink-0">
                                         <img alt="Imagen del destino"
-                                                class="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-700"
-                                                [src]="grupo.imagen || fallback" />
+                                            class="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-700"
+                                            [src]="grupo.imagen || fallback" />
                                     </div>
                                     <div>
                                         <h3 class="text-xl md:text-2xl font-bold text-slate-800 dark:text-white">{{
@@ -271,7 +295,7 @@
                                             <img alt="Resort"
                                                 class="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-700"
                                                 [src]="hotel.fondo || fallback" />
-                                                 <div class="absolute inset-0 bg-black/40"></div>
+                                            <div class="absolute inset-0 bg-black/40"></div>
                                             <div *ngIf="hotel?.descuento"
                                                 class="absolute top-4 left-4 flex flex-col gap-2">
                                                 <span
@@ -300,8 +324,7 @@
                                                             [svgIcon]="'mat_outline:star_outline'"></mat-icon>
                                                     </ng-container>
                                                 </div>
-                                                <span
-                                                    class="text-white text-md font-bold px-1.5 rounded ">{{
+                                                <span class="text-white text-md font-bold px-1.5 rounded ">{{
                                                     hotel?.estrellas }}</span>
                                             </div>
                                         </div>
@@ -327,106 +350,6 @@
                 </section>
             </div>
 
-        </div>
-
-        <div *ngIf="!mostrarInfo" class="min-h-full flex items-center justify-center">
-            <div class="flex min-w-0 flex-auto flex-col mt-2 items-center justify-center h-full w-full">
-                <div class="relative flex justify-center items-center p-3 sm:p-5 md:p-8 w-full h-full">
-
-                    <fuse-card class="flex flex-col max-w-xl w-full md:w-[600px] h-[70vh] sm:h-[80vh] md:h-[70vh]"
-                        [flippable]="true" #heroCard>
-
-                        <ng-container fuseCardFront>
-                            <div class="relative w-full h-full rounded-3xl overflow-hidden shadow-lg
-                    flex items-center justify-center text-white bg-cover bg-center"
-                                style="backface-visibility: hidden; -webkit-backface-visibility: hidden;"
-                                [ngStyle]="{ 'background-image': currentImage ? 'url(' + currentImage + ')' : 'none' }"
-                                [style.pointerEvents]="heroCard?.face === 'back' ? 'none' : 'auto'"
-                                [style.visibility]="heroCard?.face === 'back' ? 'hidden' : 'visible'"
-                                [style.zIndex]="heroCard?.face === 'front' ? 20 : 0">
-
-                                <div *ngIf="overlayImage"
-                                    class="absolute inset-0 bg-cover bg-center transition-opacity duration-500 pointer-events-none"
-                                    [ngStyle]="{ 'background-image': 'url(' + overlayImage + ')' }"
-                                    [class.opacity-0]="!isTransitioning" [class.opacity-100]="isTransitioning"></div>
-
-                                <div class="absolute inset-0 bg-black/40 z-0 pointer-events-none"></div>
-
-                                <div class="absolute top-10 z-10 flex flex-col items-center text-center px-6 space-y-2">
-                                <!-- <span class="text-3xl md:text-4xl font-bold">¡Encuentra el viaje</span> -->
-                                    <span class="text-3xl font-bold">{{ t('titulo-destinos') }}</span>
-                                </div>
-
-                                <div class="absolute bottom-10 transform flex flex-col gap-4 z-20">
-                                    <button
-                                        class="px-8 py-3 bg-green-700 text-white text-lg font-semibold rounded-full shadow-md hover:bg-green-800 transition"
-                                        (click)=" cargarDestinos(1); showOverlay();">
-                                        {{ t('destinos-nacionales') }}
-                                    </button>
-
-                                    <button class="px-8 py-3 bg-[#F9B44B] text-white text-lg font-semibold rounded-full shadow-md
-         hover:bg-[#e0a13a] transition
-         [text-shadow:_0_2px_2px_rgba(0,0,0,0.50)]" (click)="showOverlay(); cargarDestinos(2)">
-                                        {{ t('destinos-internacionales') }}
-                                    </button>
-                                </div>
-                            </div>
-                        </ng-container>
-
-                        <ng-container fuseCardBack>
-                            <div class="relative w-full h-full rounded-3xl shadow-lg
-                bg-[#0B0B2B] flex flex-col px-8 pt-10 pb-6 text-white z-[1000]">
-                            </div>
-                        </ng-container>
-
-                    </fuse-card>
-                    @if(overlayAnimatedOnce){
-
-                    <div class="absolute max-w-xl w-full md:w-[600px] h-[70vh] sm:h-[80vh] md:h-[70vh] px-1" [ngClass]="[
-        heroCard?.face === 'back'
-          ? 'opacity-100 z-[50] pointer-events-auto'
-          : 'opacity-0 z-[-1] pointer-events-none',
-    
-        overlayAnimatedOnce
-          ? 'transition-opacity duration-1000'
-          : ''
-      ]">
-
-                        <div class="relative w-full h-full rounded-3xl shadow-lg
-                  bg-[#0B0B2B] flex flex-col px-8 pt-10 pb-6 text-white">
-
-                            <button type="button" mat-icon-button
-                                class="absolute top-4 right-4 z-[9999] bg-white/10 hover:bg-white/20 rounded-full transition"
-                                (click)="hideOverlay();">
-                                <mat-icon class="text-white">arrow_back</mat-icon>
-                            </button>
-
-                            <div class="w-full h-full flex flex-col text-center min-h-0">
-                                <h2 class="text-3xl font-bold mb-4 tracking-tight">
-                                    {{ tipoDestino === 1 ? t('selecciona-destino') : t('explora-continente') }}
-                                </h2>
-
-                                <p class="text-md text-gray-300 mb-6">
-                                    {{ tipoDestino === 1 ? t('texto-nacionales') : t('texto-internacionales') }}
-                                </p>
-
-                                <div class="flex flex-col gap-4 flex-1 min-h-0 overflow-y-auto px-1 custom-scrollbar">
-                                    <button *ngFor="let item of (tipoDestino === 1 ? destinos : this.agrupadosDestinos)"
-                                        class="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl shadow-md
-                               text-lg font-semibold tracking-wide backdrop-blur-sm transition
-                               flex items-center justify-between px-5 group z-[9999]" (click)="cargaInfo(item)">
-                                        <span class="group-hover:not-italic">
-                                            {{ tipoDestino === 1 ? item.nombre : item.nombrePadre }}
-                                        </span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    }
-
-                </div>
-            </div>
         </div>
 
         <app-footer />

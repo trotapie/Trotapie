@@ -3,13 +3,10 @@ import { ChangeDetectionStrategy, Component, ElementRef, inject, ViewChild, View
 import { FormBuilder, FormControl, FormGroup, FormsModule } from '@angular/forms';
 import { Destinos, GrupoDestino, Hotel, HotelConDestino, IHoteles } from './hoteles.interface';
 import { MaterialModule } from 'app/shared/material.module';
-import { JsonpClientBackend, HttpClientJsonpModule } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { stringify } from 'crypto-js/enc-base64';
 import { Observable, startWith } from 'rxjs';
 import { DatosService } from './hoteles.service';
 import { FuseSplashScreenService } from '@fuse/services/splash-screen';
-import { TextTypewriterComponent } from 'app/text-typewriter.component';
 import { FloatingSearchComponent } from './search-component/floating-search.component';
 import { SupabaseService } from 'app/core/supabase.service';
 import { DomSanitizer } from '@angular/platform-browser';
@@ -17,7 +14,6 @@ import { MatSelect, MatSelectChange } from '@angular/material/select';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { FooterComponent } from 'app/footer/footer.component';
 import { getDefaultLang } from 'app/lang.utils';
-import { FuseCardComponent } from '@fuse/components/card';
 
 @Component({
     selector: 'hoteles',
@@ -88,9 +84,9 @@ export class HotelesComponent {
     grupoSeleccionado: any | null = null;
     destinoFiltroCtrl = new FormControl(''); // solo para el texto del autocomplete
     @ViewChild('selectDestino') selectDestinoInternacionales!: MatSelect;
-    overlayAnimatedOnce = false;
-    @ViewChild('heroCard', { static: false })
-    heroCard!: FuseCardComponent;
+    // overlayAnimatedOnce = false;
+    // @ViewChild('heroCard', { static: false })
+    // heroCard!: FuseCardComponent;
 
 
     avisoUrl = '';
@@ -108,11 +104,13 @@ export class HotelesComponent {
             hotelSeleccionado: ['']
         });
         if (sessionStorage.getItem('tipoDestino') !== null) {
+            console.log("entra");
+            
             this.obtenerDestinos()
             this.splashScreen.show();
         }
 
-        this.obtenerImagenesFondo();
+        // this.obtenerImagenesFondo();
 
         // TODO: no hacer de nuevo la petición al cambiar idioma sino solo remplar los textos
         this._translocoService.langChanges$.subscribe(async (activeLang) => {
@@ -184,6 +182,8 @@ export class HotelesComponent {
 
     async obtenerDestinos() {
         this.tipoDestino = sessionStorage.getItem('tipoDestino') !== null ? +sessionStorage.getItem('tipoDestino') : this.tipoDestino
+        console.log(this.tipoDestino);
+        
         const { data, error } = await this.supabase.obtenerDestinos(this.tipoDestino);
         if (error) { this.error = error.message; return; }
 
@@ -510,8 +510,15 @@ export class HotelesComponent {
     }
 
     async obtenerSoloDestinos() {
+        console.log('aqui');
+        
         this.tipoDestino = sessionStorage.getItem('tipoDestino') !== null ? +sessionStorage.getItem('tipoDestino') : this.tipoDestino
+        console.log(this.tipoDestino);
+        
         const { data, error } = await this.supabase.obtenerDestinos(this.tipoDestino);
+        console.log(data);
+        
+
         if (error) { this.error = error.message; return; }
 
         this.destinos = data;
@@ -650,21 +657,21 @@ export class HotelesComponent {
     }
 
 
-    showOverlay(): void {
-        this.heroCard.face = 'back';
+    // showOverlay(): void {
+    //     this.heroCard.face = 'back';
 
-        if (!this.overlayAnimatedOnce) {
-            setTimeout(() => {
-                this.overlayAnimatedOnce = true;
-            }, 350); // ajusta al tiempo del flip
-        }
-    }
+    //     if (!this.overlayAnimatedOnce) {
+    //         setTimeout(() => {
+    //             this.overlayAnimatedOnce = true;
+    //         }, 350); // ajusta al tiempo del flip
+    //     }
+    // }
 
-    hideOverlay(): void {
-        this.heroCard.face = 'front';
-        this.overlayAnimatedOnce = false;
+    // hideOverlay(): void {
+    //     this.heroCard.face = 'front';
+    //     this.overlayAnimatedOnce = false;
 
-    }
+    // }
 
     private gruposExpandidos = new Set<number | string>();
 
