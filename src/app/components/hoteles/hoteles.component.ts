@@ -98,43 +98,42 @@ export class HotelesComponent {
     }
 
     async ngOnInit() {
-        this.obtenerSoloDestinos();
-
-        this.hotelesForm = this.formBuilder.group({
-            hotelSeleccionado: ['']
-        });
-        if (sessionStorage.getItem('tipoDestino') !== null) {
-            console.log("entra");
-            
-            this.obtenerDestinos()
-            this.splashScreen.show();
-        }
-
-        // this.obtenerImagenesFondo();
-
-        // TODO: no hacer de nuevo la petición al cambiar idioma sino solo remplar los textos
-        this._translocoService.langChanges$.subscribe(async (activeLang) => {
-            const hotelId = +this.hotelesForm.get('hotelSeleccionado')?.value
-            this.destinoSelected = this.destinos.find(item => item.id === +hotelId);
-            const busqueda = this.tipoDestino === 1 ? this.supabase.listHotelesAll(hotelId, activeLang) : this.supabase.listHotelesAllPorDestinoPadre(hotelId, activeLang);
-            const data = await busqueda;
-            const info = (data ?? []).map((hotel: any) => ({
-                ...hotel,
-                conceptoIconoSeguro: hotel.concepto?.icono
-                    ? this.sanitizer.bypassSecurityTrustHtml(hotel.concepto.icono)
-                    : null,
-                descuentoSeguro: hotel.descuento?.icono
-                    ? this.sanitizer.bypassSecurityTrustHtml(hotel.descuento.icono)
-                    : null
-            }));
-
-            if (this.tipoDestino === 2) {
-                this.gruposDestinos = this.agruparHotelesPorDestino(info)
+        if (sessionStorage.getItem('tipoDestino') === null) {
+             this.router.navigate(['/inicio']);
+        }else{
+            this.obtenerSoloDestinos();
+    
+            this.hotelesForm = this.formBuilder.group({
+                hotelSeleccionado: ['']
+            });
+            if (sessionStorage.getItem('tipoDestino') !== null) {
+                this.obtenerDestinos()
+                this.splashScreen.show();
             }
-
-            this.destinoSeleccionado(info);
-            this.listaHoteles = info;
-        });
+            // TODO: no hacer de nuevo la petición al cambiar idioma sino solo remplar los textos
+            this._translocoService.langChanges$.subscribe(async (activeLang) => {
+                const hotelId = +this.hotelesForm.get('hotelSeleccionado')?.value
+                this.destinoSelected = this.destinos.find(item => item.id === +hotelId);
+                const busqueda = this.tipoDestino === 1 ? this.supabase.listHotelesAll(hotelId, activeLang) : this.supabase.listHotelesAllPorDestinoPadre(hotelId, activeLang);
+                const data = await busqueda;
+                const info = (data ?? []).map((hotel: any) => ({
+                    ...hotel,
+                    conceptoIconoSeguro: hotel.concepto?.icono
+                        ? this.sanitizer.bypassSecurityTrustHtml(hotel.concepto.icono)
+                        : null,
+                    descuentoSeguro: hotel.descuento?.icono
+                        ? this.sanitizer.bypassSecurityTrustHtml(hotel.descuento.icono)
+                        : null
+                }));
+    
+                if (this.tipoDestino === 2) {
+                    this.gruposDestinos = this.agruparHotelesPorDestino(info)
+                }
+    
+                this.destinoSeleccionado(info);
+                this.listaHoteles = info;
+            });
+        }
     }
 
     ngAfterViewInit(): void {
@@ -182,7 +181,6 @@ export class HotelesComponent {
 
     async obtenerDestinos() {
         this.tipoDestino = sessionStorage.getItem('tipoDestino') !== null ? +sessionStorage.getItem('tipoDestino') : this.tipoDestino
-        console.log(this.tipoDestino);
         
         const { data, error } = await this.supabase.obtenerDestinos(this.tipoDestino);
         if (error) { this.error = error.message; return; }
@@ -349,24 +347,9 @@ export class HotelesComponent {
     }
 
     onHotelesFiltrados(dataFiltrada: IHoteles[]) {
-
         this.listaHotelesFiltrada = dataFiltrada;
         let ciudad = sessionStorage.getItem('ciudad');
         ciudad = ciudad === null ? 'Mazatlán' : ciudad;
-
-
-        // if (ciudad) {
-        //     const destino = this.listaHotelesFiltrada.find(item => item.ciudad.trim() === ciudad.trim());
-
-        //     if (destino) {
-        //         this.hotelesForm.patchValue({ hotelSeleccionado: ciudad.trim() });
-        //         this.destinoSeleccionado(destino);
-        //     } else {
-        //         this.destinoSeleccionado(destino);
-
-        //     }
-        // }
-
     }
 
     irA(): void {
@@ -448,76 +431,9 @@ export class HotelesComponent {
         }));
     }
 
-    cargarDestinos(id: number) {
-        this.tipoDestino = id;
-        this.obtenerSoloDestinos();
-
-    }
-
-    startRandomCarousel(): void {
-        this.intervalId = setInterval(() => {
-            if (this.mostrarInfo) {
-                clearInterval(this.intervalId);
-                return;
-            }
-
-            if (!this.imagenesFondo || this.imagenesFondo.length === 0) {
-                return;
-            }
-
-
-            let newIndex: number;
-
-            // Elegir índice aleatorio distinto al anterior (si hay más de 1 imagen)
-            do {
-                newIndex = Math.floor(Math.random() * this.imagenesFondo.length);
-            } while (newIndex === this.previousIndex && this.imagenesFondo.length > 1);
-
-            this.previousIndex = newIndex;
-            const nuevaUrl = this.imagenesFondo[newIndex];
-
-            // Usar transición en lugar de asignar directo
-            this.cambiarFondoConTransicion(nuevaUrl);
-
-        }, 3000); // 5 segundos
-    }
-
-    cambiarFondoConTransicion(url: string): void {
-        // Si ya estamos en transición, opcional: ignorar para no encimar
-        if (this.isTransitioning) {
-            return;
-        }
-
-        const img = new Image();
-        img.onload = () => {
-            // Nueva imagen lista en memoria
-            this.overlayImage = url;
-            this.isTransitioning = true;
-
-            // Duración debe coincidir con la del CSS (500ms)
-            setTimeout(() => {
-                this.currentImage = url;      // Actualizamos el fondo base
-                this.isTransitioning = false; // Fin de transición
-                this.overlayImage = null;     // Quitamos la capa extra
-            }, 500);
-        };
-
-        img.onerror = () => {
-            console.warn('Error cargando imagen de fondo', url);
-        };
-
-        img.src = url;
-    }
-
     async obtenerSoloDestinos() {
-        console.log('aqui');
-        
         this.tipoDestino = sessionStorage.getItem('tipoDestino') !== null ? +sessionStorage.getItem('tipoDestino') : this.tipoDestino
-        console.log(this.tipoDestino);
-        
         const { data, error } = await this.supabase.obtenerDestinos(this.tipoDestino);
-        console.log(data);
-        
 
         if (error) { this.error = error.message; return; }
 
@@ -548,7 +464,6 @@ export class HotelesComponent {
 
     onDestinoChange(event: MatSelectChange): void {
         if (this.modoDestino === 'padres') {
-            // 1) Eligió un padre (usamos nombrePadre)
             const nombrePadre = event.value as string;
 
             this.grupoSeleccionado = this.agrupadosDestinos.find(
@@ -556,14 +471,10 @@ export class HotelesComponent {
             ) ?? null;
 
             this.modoDestino = 'hijos';
-
-            // limpiamos el control porque todavía NO hay destino final
             this.hotelesForm.get('hotelSeleccionado')?.setValue(null, { emitEvent: false });
 
-            // reabrimos para que vea los hijos
             setTimeout(() => this.selectDestinoInternacionales.open());
         } else {
-            // 2) Ya eligió un hijo → guardamos el id del destino
             const destino = this.grupoSeleccionado?.destinos.find(d => d.id === event.value);
             this.selectedDestinoLabel = destino ? destino.nombre : null;
 
@@ -601,14 +512,6 @@ export class HotelesComponent {
         return destino ? destino.nombre : '';
     }
 
-    abrirAviso() {
-        this.avisoUrl = this.supabase.getPublicUrl(
-            'Public-docs',
-            'aviso-privacidad.pdf'
-        );
-
-        window.open(this.avisoUrl, '_blank');
-    }
 
     private getOffsetWithinContainer(target: HTMLElement, container: HTMLElement): number {
         let y = 0;
@@ -626,52 +529,6 @@ export class HotelesComponent {
         stickies.forEach(el => offset = Math.max(offset, el.offsetHeight || 0));
         return offset + 8;
     }
-
-    async obtenerImagenesFondo() {
-        this.imagenesFondo = await this.supabase.getImagenesFondo();
-
-        if (!this.imagenesFondo?.length) return;
-
-        // ✅ 1) Mostrar la primera imagen inmediatamente (sin esperar al interval)
-        const firstIndex = Math.floor(Math.random() * this.imagenesFondo.length);
-        this.previousIndex = firstIndex;
-
-        const firstUrl = this.imagenesFondo[firstIndex];
-
-        // (opcional pero recomendado) precarga para evitar parpadeo/latencia
-        await this.preloadImage(firstUrl);
-
-        this.cambiarFondoConTransicion(firstUrl);
-
-        // ✅ 2) Ya después arrancas el carrusel
-        this.startRandomCarousel();
-    }
-
-    private preloadImage(url: string): Promise<void> {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.onload = () => resolve();
-            img.onerror = () => resolve(); // no bloquea si falla
-            img.src = url;
-        });
-    }
-
-
-    // showOverlay(): void {
-    //     this.heroCard.face = 'back';
-
-    //     if (!this.overlayAnimatedOnce) {
-    //         setTimeout(() => {
-    //             this.overlayAnimatedOnce = true;
-    //         }, 350); // ajusta al tiempo del flip
-    //     }
-    // }
-
-    // hideOverlay(): void {
-    //     this.heroCard.face = 'front';
-    //     this.overlayAnimatedOnce = false;
-
-    // }
 
     private gruposExpandidos = new Set<number | string>();
 
