@@ -1,3 +1,19 @@
+<style>
+    .accordion-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .accordion-item.active .accordion-content {
+        max-height: 1000px;
+    }
+
+    .accordion-item.active .chevron-icon {
+        transform: rotate(180deg);
+    }
+</style>
+
 <div #scrollContainer class="absolute inset-0 flex flex-col min-w-0 overflow-y-auto" cdkScrollable>
     <ng-container *transloco="let t">
         <div *ngIf="mostrarInfo" class="-mt-px flex-auto border-t ">
@@ -23,7 +39,7 @@
              text-sm md:text-base font-semibold text-left
              cursor-pointer transition duration-200 flex items-center" [ngClass]="{
         'border-[#1B6F56] text-[#1B6F56]': tipoDestino === 1,
-        'border-none': tipoDestino === 2
+        'border-[#F9B44B] text-[#F9B44B]': tipoDestino === 2
       }">
                                                 <mat-select *ngIf="tipoDestino === 1"
                                                     formControlName="hotelSeleccionado" class="pill-mat-select w-full"
@@ -35,32 +51,37 @@
                                                     </mat-option>
                                                 </mat-select>
 
-                                                <!-- <mat-select *ngIf="tipoDestino === 2" formControlName="hotelSeleccionado"
-                                                class="pill-mat-select w-full" [panelClass]="'panel-internacionales'"
-                                                disableRipple>
-                                                <mat-option [value]="null" disabled>Selecciona un destino</mat-option>
+                                                <mat-select *ngIf="tipoDestino === 2"
+                                                    formControlName="hotelSeleccionado" class="pill-mat-select w-full"
+                                                    [panelClass]="'panel-internacionales'" disableRipple>
+                                                    <mat-option [value]="null" disabled>Selecciona un
+                                                        destino</mat-option>
 
-                                                <mat-optgroup *ngFor="let grupo of agrupadosDestinos"
-                                                    [label]="grupo.nombrePadre">
-                                                    <mat-option *ngFor="let destino of grupo.destinos"
-                                                        [value]="destino.id">
-                                                        {{ destino.nombre }}
-                                                    </mat-option>
-                                                </mat-optgroup>
-                                            </mat-select> -->
+                                                    <mat-optgroup *ngFor="let grupo of agrupadosDestinos"
+                                                        [label]="grupo.nombrePadre">
+                                                        <mat-option *ngFor="let destino of grupo.destinos"
+                                                            [value]="destino.id">
+                                                            {{ destino.nombre }}
+                                                        </mat-option>
+                                                    </mat-optgroup>
+                                                </mat-select>
 
-                                                <div *ngIf="tipoDestino === 2" class="w-full px-5 py-2.5 rounded-full border-2
+                                                <!-- <div *ngIf="tipoDestino === 2" class="w-full px-5 py-2.5 rounded-full border-2
             text-sm md:text-base font-semibold text-left
             cursor-pointer transition duration-200 flex items-center" [ngClass]="{
        'border-[#F9B44B] text-[#F9B44B]': tipoDestino === 2
      }">
 
-                                                    <input matInput
+                                                    <input #destinoInput matInput
                                                         class="w-full bg-transparent outline-none border-none"
                                                         [placeholder]="t('seleccionar-destino')"
                                                         [formControl]="destinoCtrl" [matAutocomplete]="autoDestinos" />
 
-                                                    <mat-icon class="ml-2 text-inherit">expand_more</mat-icon>
+                                                    <mat-icon class="ml-2 text-inherit cursor-pointer"
+                                                        (click)="abrirAutocomplete(destinoInput)">
+                                                        expand_more
+                                                    </mat-icon>
+
                                                 </div>
 
                                                 <mat-autocomplete #autoDestinos="matAutocomplete"
@@ -76,7 +97,7 @@
                                                         </mat-optgroup>
                                                     </ng-container>
 
-                                                </mat-autocomplete>
+                                                </mat-autocomplete> -->
                                             </div>
                                         </div>
                                     </div>
@@ -215,247 +236,98 @@
                             </div>
                         </div>
                     </div>
-                    <div *ngIf="tipoDestino === 2" class="flex min-w-0 flex-auto flex-col mt-2">
-                        <div class="flex-auto px-3 sm:p-5">
-
-                            <div *ngIf="gruposDestinos.length === 0 && ciudadSeleccionada"
-                                class="mt-12 flex flex-col items-center justify-center text-center animate-fadeIn">
-
-                                <div class="flex flex-col items-center justify-center bg-red-100/20 border border-red-400/40 
-           rounded-2xl p-6 max-w-md shadow-lg backdrop-blur-sm">
-
+                    <div class="space-y-4 m-4">
+                        <div *ngFor="let grupo of gruposDestinos"
+                            class="accordion-item  bg-white dark:bg-slate-800/50 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700/50 overflow-hidden">
+                            <div class="accordion-header cursor-pointer group flex items-center justify-between p-4 md:p-6"
+                                onclick="this.parentElement.classList.toggle('active')">
+                                <div class="flex items-center gap-6">
                                     <div
-                                        class="w-16 h-16 flex items-center justify-center rounded-full bg-red-500/20 mb-4">
-                                        <mat-icon class="text-red-500 text-4xl">hotel</mat-icon>
+                                        class="w-20 h-20 md:w-24 md:h-24 rounded-xl overflow-hidden shadow-inner flex-shrink-0">
+                                        <img alt="Imagen del destino"
+                                                class="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-700"
+                                                [src]="grupo.imagen || fallback" />
                                     </div>
-
-                                    <h3 class="text-xl font-semibold text-red-500 mb-2">
-                                        No hay hoteles disponibles
-                                    </h3>
-
-                                    <p class="text-base text-gray-400">
-                                        Actualmente no encontramos hoteles.
-                                        <br>
-                                        Intenta seleccionar otra ciudad o vuelve más tarde.
-                                    </p>
-
+                                    <div>
+                                        <h3 class="text-xl md:text-2xl font-bold text-slate-800 dark:text-white">{{
+                                            grupo.destino }}</h3>
+                                    </div>
+                                </div>
+                                <div
+                                    class="flex items-center gap-3 text-slate-400 group-hover:text-primary transition-colors">
+                                    <span class=" font-medium text-sm">{{ t('ver-mas') }}</span>
+                                    <span
+                                        class="material-icons-round chevron-icon transition-transform duration-300"><mat-icon
+                                            class="transition-transform duration-200"
+                                            svgIcon='heroicons_outline:chevron-down'>
+                                        </mat-icon></span>
                                 </div>
                             </div>
-
-                            <mat-accordion [multi]="false">
-                                <mat-expansion-panel *ngFor="let grupo of gruposDestinos" class="mb-2 rounded-2xl"
-                                    #panel1="matExpansionPanel" [hideToggle]="true">
-                                    <mat-expansion-panel-header>
-                                        <div class="flex items-center w-full">
-                                            <span class="text-lg">
-                                                {{ grupo.destino }}
-                                            </span>
-
-                                            <span class="ml-auto mr-2 text-sm text-gray-500">
-                                                {{ t('ver-mas') }}
-                                            </span>
-
-                                            <mat-icon class="transition-transform duration-200" [svgIcon]="panel1.expanded
-            ? 'heroicons_outline:chevron-up'
-            : 'heroicons_outline:chevron-down'">
-                                            </mat-icon>
-                                        </div>
-                                    </mat-expansion-panel-header>
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 px-6">
-
-                                        <!-- CARDS (solo 3 o todas) -->
-                                        <ng-container
-                                            *ngFor="let hotel of hotelesMostrados(grupo); trackBy: trackByHotelId">
-                                            <fuse-card
-                                                class="cursor-pointer filter-listing relative flex w-full h-48 flex-col bg-cover bg-center text-white rounded-2xl overflow-hidden transition duration-200 hover:scale-105 card-animada"
-                                                [ngStyle]="{ 'background-image': 'url(' + (hotel.fondo || fallback) + ')' }"
-                                                (click)="verDetalleHotel(hotel)">
-
-                                                <div class="absolute inset-0 bg-black/40 z-0"></div>
-
-                                                <div *ngIf="hotel?.descuento" class="absolute top-2 right-2 z-20">
-                                                    <div [ngClass]="getDescuentoClass(hotel)"
-                                                        class="text-xs font-bold px-2 py-1">
-                                                        <div class="flex items-center">
-                                                            <span *ngIf="hotel.descuentoSeguro" class="mr-2 inline-flex items-center justify-center
+                            <div class="accordion-content">
+                                <div class="p-6 pt-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    <div *ngFor="let hotel of hotelesMostrados(grupo); trackBy: trackByHotelId"
+                                        class="bg-slate-50 dark:bg-slate-900 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-700 group/card relative">
+                                        <div class="relative h-48 overflow-hidden">
+                                            <img alt="Resort"
+                                                class="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-700"
+                                                [src]="hotel.fondo || fallback" />
+                                                 <div class="absolute inset-0 bg-black/40"></div>
+                                            <div *ngIf="hotel?.descuento"
+                                                class="absolute top-4 left-4 flex flex-col gap-2">
+                                                <span
+                                                    class="bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-1 uppercase tracking-wider">
+                                                    <span *ngIf="hotel.descuentoSeguro" class=" inline-flex items-center justify-center
                         w-4 h-4
                         [&>svg]:w-4 [&>svg]:h-4 [&>svg]:align-middle" [innerHTML]="hotel.descuentoSeguro">
-                                                            </span>
+                                                    </span>
+                                                    {{ hotel?.descuento.tipo_descuento }}
+                                                </span>
 
-                                                            {{ hotel?.descuento.tipo_descuento }}
-                                                        </div>
-                                                    </div>
+                                            </div>
+
+                                            <div class="absolute bottom-4 left-4 flex gap-1 items-center">
+                                                <div class="flex items-center">
+                                                    <ng-container *ngFor="let _ of getFullStars(hotel?.estrellas)">
+                                                        <mat-icon class="text-yellow-400 icon-size-5"
+                                                            [svgIcon]="'mat_outline:star'"></mat-icon>
+                                                    </ng-container>
+                                                    <ng-container *ngIf="hasHalfStar(hotel?.estrellas)">
+                                                        <mat-icon class="text-yellow-400 icon-size-5"
+                                                            [svgIcon]="'mat_outline:star_half'"></mat-icon>
+                                                    </ng-container>
+                                                    <ng-container *ngFor="let _ of getEmptyStars(hotel?.estrellas)">
+                                                        <mat-icon class="text-yellow-400 icon-size-5"
+                                                            [svgIcon]="'mat_outline:star_outline'"></mat-icon>
+                                                    </ng-container>
                                                 </div>
-
-                                                <div *ngIf="hotel?.concepto" class="absolute top-2 left-2 z-20">
-                                                    <div class="text-xs font-bold px-2 py-1">
-                                                        <div class="flex items-center">
-                                                            <span
-                                                                *ngIf="hotel?.concepto?.descripcion !== 'Solo Adultos'"
-                                                                [innerHTML]="hotel.conceptoIconoSeguro"></span>
-                                                            <img class="w-6 h-6 mr-2"
-                                                                *ngIf="hotel?.concepto?.descripcion === 'Solo Adultos'"
-                                                                src="assets/icons/adultos.svg" />
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="relative z-10 m-8 mb-4">
-                                                    <div class="text-2xl font-semibold leading-tight">
-                                                        {{ hotel.nombre_hotel }}
-                                                    </div>
-
-                                                    <div class="-ml-1 mt-2 flex items-center leading-none">
-                                                        <div class="flex items-center">
-                                                            <ng-container
-                                                                *ngFor="let _ of getFullStars(hotel?.estrellas)">
-                                                                <mat-icon class="text-yellow-400 icon-size-5"
-                                                                    [svgIcon]="'mat_outline:star'"></mat-icon>
-                                                            </ng-container>
-                                                            <ng-container *ngIf="hasHalfStar(hotel?.estrellas)">
-                                                                <mat-icon class="text-yellow-400 icon-size-5"
-                                                                    [svgIcon]="'mat_outline:star_half'"></mat-icon>
-                                                            </ng-container>
-                                                            <ng-container
-                                                                *ngFor="let _ of getEmptyStars(hotel?.estrellas)">
-                                                                <mat-icon class="text-yellow-400 icon-size-5"
-                                                                    [svgIcon]="'mat_outline:star_outline'"></mat-icon>
-                                                            </ng-container>
-                                                        </div>
-                                                        <div class="ml-2">{{ hotel?.estrellas }}</div>
-                                                    </div>
-
-                                                    <div class="w-3/5">
-                                                        {{ hotel?.regimen?.descripcion }}
-                                                    </div>
-                                                </div>
-
-                                                <div class="absolute bottom-4 right-2 z-20 flex items-center gap-2">
-                                                    <div class="text-sm text-right leading-tight"
-                                                        [innerHTML]="t('ver-galeria-salto')">
-                                                    </div>
-
-                                                    <div
-                                                        class="w-10 h-10 rounded-full text-white flex items-center justify-center shadow-md">
-                                                        <mat-icon [svgIcon]="'heroicons_outline:arrow-right-circle'"
-                                                            class="text-white w-6 h-6"></mat-icon>
-                                                    </div>
-                                                </div>
-                                            </fuse-card>
-                                        </ng-container>
-
-                                        <!-- BANDA + BOTÓN "VER MÁS" (solo si hay más de 3 y NO está expandido) -->
-                                        <div *ngIf="grupo?.hoteles?.length > 3"
-                                            class="md:col-span-3 sm:col-span-2 col-span-1 relative my-2">
-
-                                            <button #toggleGrupoBtn type="button" class="absolute inset-0 flex items-center justify-center text-lg font-medium text-primary
-             cursor-pointer hover:underline select-none" (click)="toggleGrupo(grupo, toggleGrupoBtn)">
-                                                <mat-icon>
-                                                    {{ estaExpandido(grupo) ? 'expand_less' : 'expand_more' }}
-                                                </mat-icon>
-
-                                                {{ estaExpandido(grupo) ? t('ver-menos') : t('ver-mas') }}
-                                            </button>
-
+                                                <span
+                                                    class="text-white text-md font-bold px-1.5 rounded ">{{
+                                                    hotel?.estrellas }}</span>
+                                            </div>
                                         </div>
-
+                                        <div class="p-5">
+                                            <h4 class="text-lg font-bold text-slate-800 dark:text-white leading-tight">
+                                                {{ hotel.nombre_hotel }}
+                                            </h4>
+                                            <div class="mt-2 flex items-center gap-2 text-primary font-medium text-sm">
+                                                Todo Incluido
+                                            </div>
+                                            <div class="mt-6 flex gap-2">
+                                                <button (click)="verDetalleHotel(hotel)"
+                                                    class="flex-1 bg-primary hover:bg-emerald-600 text-white font-semibold py-3 rounded-xl transition-all shadow-md active:scale-[0.98]">
+                                                    {{t('ver-galeria')}}
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
-
-                                </mat-expansion-panel>
-                            </mat-accordion>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
             </div>
 
         </div>
-
-        <!-- <div *ngIf="!mostrarInfo" class="h-full flex items-center justify-center">
-            <div class="flex min-w-0 flex-auto flex-col mt-2 items-center justify-center">
-                <div class="flex justify-center items-center p-3 sm:p-5 w-full">
-
-                    <fuse-card class="flex flex-col max-w-xl w-full md:w-[600px] h-full " [flippable]="true" #heroCard>
-
-                        <ng-container fuseCardFront>
-                            <div class="relative w-full h-full rounded-3xl overflow-hidden shadow-lg
-                flex items-center justify-center text-white bg-cover bg-center"
-                                [ngStyle]="{ 'background-image': currentImage ? 'url(' + currentImage + ')' : 'none' }"
-                                [class.pointer-events-none]="heroCard?.face === 'back'">
-
-                                <div *ngIf="overlayImage"
-                                    class="absolute inset-0 bg-cover bg-center transition-opacity duration-500 pointer-events-none"
-                                    [ngStyle]="{ 'background-image': 'url(' + overlayImage + ')' }"
-                                    [class.opacity-0]="!isTransitioning" [class.opacity-100]="isTransitioning">
-                                </div>
-
-                                <div class="absolute inset-0 bg-black/40 z-0 pointer-events-none"></div>
-
-                                <div class="absolute top-10 z-10 flex flex-col items-center text-center px-6 space-y-2">
-                                    <span class="text-3xl md:text-4xl font-bold">{{ t('titulo-destinos') }}</span>
-                                </div>
-
-                                <div class="absolute bottom-10 transform flex flex-col sm:flex-row gap-4 z-20">
-                                    <button
-                                        class="px-8 py-3 bg-green-700 text-white text-lg font-semibold rounded-full shadow-md hover:bg-green-800 transition"
-                                        (click)="heroCard.face = 'back'; cargarDestinos(1)">
-                                        {{ t('destinos-nacionales') }}
-                                    </button>
-
-                                    <button
-                                        class="px-8 py-3 bg-[#F9B44B] text-white text-lg font-semibold rounded-full shadow-md hover:bg-[#e0a13a] transition"
-                                        (click)="heroCard.face = 'back'; cargarDestinos(2)">
-                                        {{ t('destinos-internacionales') }}
-                                    </button>
-                                </div>
-                            </div>
-                        </ng-container>
-
-                        <ng-container fuseCardBack>
-                            <div class="relative w-full h-full rounded-3xl overflow-hidden shadow-lg
-                bg-[#0B0B2B] flex flex-col justify-center items-center px-8 py-10 text-white">
-
-                                <button type="button" mat-icon-button
-                                    class="absolute top-4 right-4 z-[9999] bg-white/10 hover:bg-white/20 rounded-full transition"
-                                    (click)="heroCard.face = 'front'" (touchstart)="heroCard.face = 'front'">
-                                    <mat-icon class="text-white">arrow_back</mat-icon>
-                                </button>
-
-                                <div class="w-full text-center">
-                                    <h2 class="text-3xl font-bold mb-4 tracking-tight">
-                                        {{ tipoDestino === 1
-                                        ? t('selecciona-destino')
-                                        : t('explora-continente')
-                                        }}
-                                    </h2>
-
-                                    <p class="text-md text-gray-300 mb-6">
-                                        {{
-                                        tipoDestino === 1
-                                        ? t('texto-nacionales')
-                                        : t('texto-internacionales')
-                                        }}
-                                    </p>
-
-                                    <div
-                                        class="flex flex-col gap-4 max-h-[280px] overflow-y-auto px-1 custom-scrollbar">
-                                        <button
-                                            *ngFor="let item of (tipoDestino === 1 ? destinos : this.agrupadosDestinos)"
-                                            class="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl shadow-md 
-                         text-lg font-semibold tracking-wide backdrop-blur-sm transition 
-                         flex items-center justify-between px-5 group" (click)="cargaInfo(item)">
-                                            <span class=" group-hover:not-italic">
-                                                {{ tipoDestino === 1 ? item.nombre : item.nombrePadre }}
-                                            </span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </ng-container>
-                    </fuse-card>
-
-                </div>
-            </div>
-        </div> -->
 
         <div *ngIf="!mostrarInfo" class="min-h-full flex items-center justify-center">
             <div class="flex min-w-0 flex-auto flex-col mt-2 items-center justify-center h-full w-full">
@@ -481,6 +353,7 @@
                                 <div class="absolute inset-0 bg-black/40 z-0 pointer-events-none"></div>
 
                                 <div class="absolute top-10 z-10 flex flex-col items-center text-center px-6 space-y-2">
+                                <!-- <span class="text-3xl md:text-4xl font-bold">¡Encuentra el viaje</span> -->
                                     <span class="text-3xl font-bold">{{ t('titulo-destinos') }}</span>
                                 </div>
 

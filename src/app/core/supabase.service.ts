@@ -133,7 +133,8 @@ export class SupabaseService {
         nombre,
         tipo_desino_id,
         destino_padre_id,
-        destino_padre:destino_padre_id ( nombre )
+        destino_padre:destino_padre_id ( nombre ),
+        imagen_destino
       ),
 
       concepto:concepto_id ( id, descripcion, icono ),

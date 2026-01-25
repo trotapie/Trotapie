@@ -83,8 +83,6 @@ export class LanguagesComponent implements OnInit, OnDestroy {
      * @param lang
      */
     setActiveLang(lang: string): void {
-        console.log('clickkk', lang);
-
         // Set the active lang
         this._translocoService.setActiveLang(lang);
         localStorage.setItem('lang', lang);

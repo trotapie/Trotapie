@@ -114,6 +114,7 @@ export class HotelesComponent {
 
         this.obtenerImagenesFondo();
 
+        // TODO: no hacer de nuevo la petición al cambiar idioma sino solo remplar los textos
         this._translocoService.langChanges$.subscribe(async (activeLang) => {
             const hotelId = +this.hotelesForm.get('hotelSeleccionado')?.value
             this.destinoSelected = this.destinos.find(item => item.id === +hotelId);
@@ -411,26 +412,39 @@ export class HotelesComponent {
         this.hotelesForm.patchValue({ hotelSeleccionado: +ciudad });
     }
 
-    agruparHotelesPorDestino(
-        hoteles: any[]
-    ): GrupoDestino[] {
-        const mapa = new Map<string, HotelConDestino[]>();
+    agruparHotelesPorDestino(hoteles: any[]): GrupoDestino[] {
+        const mapa = new Map<
+            string,
+            { hoteles: HotelConDestino[]; imagen: string | null }
+        >();
 
         hoteles.forEach(hotel => {
             const ciudad = hotel.destinos?.nombre ?? 'Sin destino';
             const pais = hotel.destinos?.destino_padre?.nombre ?? '';
             const key = pais ? `${ciudad}, ${pais}` : ciudad;
 
+            const imagen = hotel.destinos?.imagen_destino ?? null;
+
             if (!mapa.has(key)) {
-                mapa.set(key, []);
+                mapa.set(key, {
+                    hoteles: [],
+                    imagen
+                });
             }
 
-            mapa.get(key)!.push(hotel);
+            // Si el grupo no tenía imagen y este hotel sí trae, la asignamos
+            const grupo = mapa.get(key)!;
+            if (!grupo.imagen && imagen) {
+                grupo.imagen = imagen;
+            }
+
+            grupo.hoteles.push(hotel);
         });
 
-        return Array.from(mapa.entries()).map(([destino, hoteles]) => ({
+        return Array.from(mapa.entries()).map(([destino, data]) => ({
             destino,
-            hoteles
+            imagen: data.imagen,
+            hoteles: data.hoteles
         }));
     }
 
@@ -693,9 +707,14 @@ export class HotelesComponent {
 
     hotelesMostrados(grupo: any) {
         const hoteles = grupo?.hoteles ?? [];
-        return this.estaExpandido(grupo) ? hoteles : hoteles.slice(0, 3);
+        return this.estaExpandido(grupo) ? hoteles : hoteles;
     }
 
     trackByGrupo = (_: number, g: any) => g?.destino_id ?? g?.id ?? g?.destino ?? _;
     trackByHotelId = (_: number, h: any) => h?.hotel_id ?? h?.id ?? _;
+
+    abrirAutocomplete(input: HTMLInputElement) {
+        input.focus();
+        input.click();
+    }
 }
