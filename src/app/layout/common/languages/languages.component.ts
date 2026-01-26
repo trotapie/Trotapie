@@ -28,6 +28,8 @@ export class LanguagesComponent implements OnInit, OnDestroy {
     availableLangs: AvailableLangs;
     activeLang: string;
     flagCodes: any;
+    langMenuOpen = false;
+
 
     /**
      * Constructor

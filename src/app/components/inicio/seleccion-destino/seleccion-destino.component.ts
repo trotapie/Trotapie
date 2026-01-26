@@ -92,6 +92,7 @@ export class SeleccionDestinoComponent implements OnInit {
   filtroDestino: string = '';
   verTodos = false;
   panelActivo = '';
+  showMenu: boolean = false;
   constructor() {
   }
 
@@ -103,7 +104,7 @@ export class SeleccionDestinoComponent implements OnInit {
     if (this.intervalId) clearInterval(this.intervalId);
   }
 
-  
+
 
   cargarDestinos(id: number) {
     this.tipoDestino = id;
@@ -190,11 +191,11 @@ export class SeleccionDestinoComponent implements OnInit {
   // FIXME: USAR PARA LA REDIRECCION
   cargaInfo(item) {
     console.log(item);
-    
-      this.destinoId = this.tipoDestino === 1 ? +item.id : +item.destinos[0].id
-      sessionStorage.setItem('ciudad', this.destinoId.toString())
-      sessionStorage.setItem('tipoDestino', this.tipoDestino.toString())
-       this.router.navigate(['/hoteles']);
+
+    this.destinoId = this.tipoDestino === 1 ? +item.id : +item.destinos[0].id
+    sessionStorage.setItem('ciudad', this.destinoId.toString())
+    sessionStorage.setItem('tipoDestino', this.tipoDestino.toString())
+    this.router.navigate(['/hoteles']);
   }
 
   async obtenerImagenesFondo() {
