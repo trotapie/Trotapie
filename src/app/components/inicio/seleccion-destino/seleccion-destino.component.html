@@ -16,7 +16,7 @@
 
 <div #scrollContainer class="absolute inset-0 flex flex-col min-w-0 overflow-y-auto" cdkScrollable>
     <ng-container *transloco="let t">
-        <div *ngIf="!mostrarInfo" class="min-h-full flex items-center justify-center">
+        <div (click)="closeDropdown()" class="min-h-full flex items-center justify-center">
             <div class="flex min-w-0 flex-auto flex-col mt-2 items-center justify-center h-full w-full">
                 <div class="relative flex justify-center items-center p-3 sm:p-5 md:p-8 w-full h-full">
                     <fuse-card class="flex flex-col max-w-xl w-full md:w-[600px] h-[70vh] sm:h-[80vh] md:h-[70vh]"
@@ -43,75 +43,87 @@
                                 </div>
 
 
-                                <div class="absolute bottom-5 transform flex flex-col gap-4 z-20">
+                                <div class="absolute bottom-5 transform flex flex-col gap-4 z-20"
+                                    (click)="closeDropdown()">
                                     <h1 class="text-2xl font-bold text-white tracking-tight"></h1>
 
-                                    <div class="relative w-full mx-auto group">
-                                        <button
-                                            class="w-full bg-green-700 hover:bg-emerald-800 text-white px-8 py-5 rounded-full flex items-center justify-between shadow-2xl transition-all duration-300 transform group-hover:scale-[1.02]">
+                                    <div class="relative w-full mx-auto" (click)="$event.stopPropagation()">
+                                        <!-- BOTÓN PRINCIPAL -->
+                                        <button type="button" (click)="toggleDropdown($event)" class="w-full bg-green-700 hover:bg-emerald-800 text-white px-8 py-5 rounded-full
+             flex items-center justify-between shadow-2xl
+             transition-all duration-300 active:scale-[0.98]">
                                             <span class="flex items-center gap-3 text-lg font-semibold">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                                     stroke-width="1.5" stroke="currentColor" class="size-6">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0Z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498
+               4.875-2.437c.381-.19.622-.58.622-1.006V4.82
+               c0-.836-.88-1.38-1.628-1.006l-3.869 1.934
+               c-.317.159-.69.159-1.006 0L9.503 3.252
+               a1.125 1.125 0 0 0-1.006 0L3.622 5.689
+               C3.24 5.88 3 6.27 3 6.695V19.18
+               c0 .836.88 1.38 1.628 1.006l3.869-1.934
+               c.317-.159.69-.159 1.006 0l4.994 2.497
+               c.317.158.69.158 1.006 0Z" />
                                                 </svg>
 
                                                 {{ t('selecciona-proxima-aventura') }}
                                             </span>
                                         </button>
-                                        <div
-                                            class="absolute bottom-full w-full left-0 right-0 mb-4 bg-white dark:bg-gray-800 rounded-[2rem] overflow-hidden dropdown-shadow opacity-0 translate-y-4 pointer-events-none group-focus-within:opacity-100 group-focus-within:translate-y-0 group-focus-within:pointer-events-auto transition-all duration-300 z-20 border border-white/20">
+
+                                        <!-- DROPDOWN -->
+                                        <div class="absolute bottom-full left-0 right-0 mb-4
+             bg-white dark:bg-gray-800 rounded-[2rem]
+             overflow-hidden dropdown-shadow
+             transition-all duration-300 z-20
+             border border-white/20" [ngClass]="dropdownOpen
+        ? 'opacity-100 translate-y-0 pointer-events-auto'
+        : 'opacity-0 translate-y-4 pointer-events-none'">
                                             <div class="p-2">
-                                                <button
-                                                    class="group/item flex items-center gap-4 p-5 rounded-[1.5rem] transition-all duration-200"
-                                                    (click)=" cargarDestinos(1); showOverlay();">
+
+                                                <!-- NACIONALES -->
+                                                <button type="button" class="w-full group/item flex items-center gap-4 p-5
+                 rounded-[1.5rem] transition-all duration-200
+                 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                    (click)="cargarDestinos(1); showOverlay(); closeDropdown();">
                                                     <div class="w-12 h-12 flex items-center justify-center
-         rounded-full overflow-hidden
-         text-primary transition-colors duration-200">
+                   rounded-full overflow-hidden">
                                                         <img class="w-full h-full object-cover"
-                                                            [src]="'images/flags/MX.svg'"
-                                                            [alt]="'Flag image for ' + lang">
+                                                            src="images/flags/MX.svg" alt="México" />
                                                     </div>
+
                                                     <div class="text-left">
                                                         <span
-                                                            class="block text-lg font-bold text-gray-800 dark:text-gray-100">{{
-                                                            t('destinos-nacionales') }}</span>
-                                                        <span class="text-sm text-gray-500 dark:text-gray-400">{{
-                                                            t('descubre-la-magia-de-mexico') }}</span>
+                                                            class="block text-lg font-bold text-gray-800 dark:text-gray-100">
+                                                            {{ t('destinos-nacionales') }}
+                                                        </span>
+                                                        <span class="text-sm text-gray-500 dark:text-gray-400">
+                                                            {{ t('descubre-la-magia-de-mexico') }}
+                                                        </span>
                                                     </div>
                                                 </button>
-                                                <button
-                                                    class="group/item flex items-center gap-4 p-5 rounded-[1.5rem] transition-all duration-200"
-                                                    (click)="showOverlay(); cargarDestinos(2)">
+
+                                                <!-- INTERNACIONALES -->
+                                                <button type="button" class="w-full group/item flex items-center gap-4 p-5
+                 rounded-[1.5rem] transition-all duration-200
+                 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                    (click)="cargarDestinos(2); showOverlay(); closeDropdown();">
                                                     <div class="w-12 h-12 flex items-center justify-center
-         rounded-full overflow-hidden
-         text-primary transition-colors duration-200">
+                   rounded-full overflow-hidden">
                                                         <img class="w-full h-full object-cover"
-                                                            [src]="'images/earth-icon.svg'"
-                                                            [alt]="'Flag image for ' + lang">
+                                                            src="images/earth-icon.svg" alt="Internacional" />
                                                     </div>
+
                                                     <div class="text-left">
                                                         <span
-                                                            class="block text-lg font-bold text-gray-800 dark:text-gray-100">{{
-                                                            t('destinos-internacionales') }}</span>
-                                                        <span class="text-sm text-gray-500 dark:text-gray-400">{{
-                                                            t('explora-fronteras-lejanas') }}</span>
+                                                            class="block text-lg font-bold text-gray-800 dark:text-gray-100">
+                                                            {{ t('destinos-internacionales') }}
+                                                        </span>
+                                                        <span class="text-sm text-gray-500 dark:text-gray-400">
+                                                            {{ t('explora-fronteras-lejanas') }}
+                                                        </span>
                                                     </div>
                                                 </button>
-                                                <!-- <a class="group/item flex items-center gap-4 p-5 rounded-[1.5rem] transition-all duration-200"
-                                        href="#">
-                                        <div
-                                            class="w-12 h-12 flex items-center justify-center rounded-2xl text-primary  transition-colors duration-200">
-                                            <span class="material-symbols-outlined">route</span>
-                                        </div>
-                                        <div class="text-left">
-                                            <span
-                                                class="block text-lg font-bold text-gray-800 dark:text-gray-100">Circuito</span>
-                                            <span class="text-sm text-gray-500 dark:text-gray-400">Rutas
-                                                diseñadas para la
-                                                aventura</span>
-                                        </div>
-                                    </a> -->
+
                                             </div>
                                         </div>
                                     </div>

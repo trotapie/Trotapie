@@ -93,6 +93,8 @@ export class SeleccionDestinoComponent implements OnInit {
   verTodos = false;
   panelActivo = '';
   showMenu: boolean = false;
+
+  dropdownOpen = false;
   constructor() {
   }
 
@@ -188,10 +190,8 @@ export class SeleccionDestinoComponent implements OnInit {
       }));
     }
   }
-  // FIXME: USAR PARA LA REDIRECCION
-  cargaInfo(item) {
-    console.log(item);
 
+  cargaInfo(item) {
     this.destinoId = this.tipoDestino === 1 ? +item.id : +item.destinos[0].id
     sessionStorage.setItem('ciudad', this.destinoId.toString())
     sessionStorage.setItem('tipoDestino', this.tipoDestino.toString())
@@ -241,6 +241,15 @@ export class SeleccionDestinoComponent implements OnInit {
     this.heroCard.face = 'front';
     this.overlayAnimatedOnce = false;
 
+  }
+
+  toggleDropdown(ev: Event) {
+    ev.stopPropagation();
+    this.dropdownOpen = !this.dropdownOpen;
+  }
+
+  closeDropdown() {
+    this.dropdownOpen = false;
   }
 
 }
