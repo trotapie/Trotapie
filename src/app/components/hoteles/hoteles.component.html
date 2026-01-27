@@ -140,7 +140,7 @@
                                     class="mt-12 flex flex-col items-center justify-center text-center animate-fadeIn">
 
                                     <div class="flex flex-col items-center justify-center bg-red-100/20 border border-red-400/40 
-           rounded-2xl p-6 max-w-md shadow-lg backdrop-blur-sm">
+                            rounded-2xl p-6 max-w-md shadow-lg backdrop-blur-sm">
 
                                         <div
                                             class="w-16 h-16 flex items-center justify-center rounded-full bg-red-500/20 mb-4">
@@ -173,8 +173,8 @@
                                                 class="text-xs font-bold px-2 py-1">
                                                 <div class="flex items-center">
                                                     <span *ngIf="hotel.descuentoSeguro" class="mr-1 inline-flex items-center justify-center
-             w-4 h-4
-             [&>svg]:w-4 [&>svg]:h-4 [&>svg]:align-middle" [innerHTML]="hotel.descuentoSeguro">
+                                    w-4 h-4
+                                    [&>svg]:w-4 [&>svg]:h-4 [&>svg]:align-middle" [innerHTML]="hotel.descuentoSeguro">
                                                     </span>
 
                                                     {{ hotel?.descuento.tipo_descuento }}
@@ -236,7 +236,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="space-y-4 m-4">
+                    <div *ngIf="tipoDestino === 2" class="space-y-4 m-4">
                         <div *ngIf="gruposDestinos.length === 0 && ciudadSeleccionada"
                                     class="mt-12 flex flex-col items-center justify-center text-center animate-fadeIn">
 
