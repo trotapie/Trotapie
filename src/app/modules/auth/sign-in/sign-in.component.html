@@ -284,165 +284,157 @@
     </style>
 </head>
 
-<body class="min-h-screen bg-[#1e2124] flex flex-col md:flex-row overflow-hidden">
-    <aside
-        class="hidden md:flex md:w-5/12 lg:w-1/2 relative bg-[#1e2124] items-center justify-center p-12 overflow-hidden border-r border-white/5">
-        <div class="absolute inset-0 abstract-security-graphic"></div>
-        <div class="absolute inset-0 opacity-20 pointer-events-none">
-            <div class="data-stream h-full left-1/4"></div>
-            <div class="data-stream h-full left-1/2"></div>
-            <div class="data-stream h-full left-3/4"></div>
-            <div class="absolute top-1/4 left-1/4 -translate-x-1 w-2 h-2 rounded-full bg-[#00a67c] blur-sm"></div>
-            <div class="absolute top-2/3 left-1/2 -translate-x-1 w-2 h-2 rounded-full bg-accent blur-sm"></div>
-            <div class="absolute top-1/2 left-3/4 -translate-x-1 w-2 h-2 rounded-full bg-[#00a67c] blur-sm"></div>
-        </div>
-        <div class="relative z-10 w-full max-w-md">
-            <div class="mb-16">
-                <img src="assets/images/logos/trotapie.png" alt="Logo Trotapie"
-                    class="h-auto w-40 sm:w-48 md:w-56 lg:w-80 p-1" />
-                <div class="flex items-center gap-3">
-                    <div class="w-1.5 h-1.5 rounded-full bg-accent"></div>
-                    <span class="text-gray-400 text-xs font-bold uppercase tracking-[0.4em]">Panel de
-                        Administración</span>
-                </div>
-            </div>
-            <div class="space-y-8">
-                <div class="flex items-start gap-6">
-                    <div
-                        class="mt-1 w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-                        <span class="material-symbols-outlined text-[#00a67c] text-2xl">shield_person</span>
-                    </div>
-                    <div>
-                        <h3 class="text-white text-lg font-medium mb-1">Acceso Centralizado</h3>
-                        <p class="text-gray-400 text-sm leading-relaxed">Gestione operaciones, usuarios e inventarios
-                            desde una interfaz corporativa segura.</p>
-                    </div>
-                </div>
-                <div class="flex items-start gap-6">
-                    <div
-                        class="mt-1 w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-                        <span class="material-symbols-outlined text-[#ffc107] text-2xl">monitoring</span>
-                    </div>
-                    <div>
-                        <h3 class="text-white text-lg font-medium mb-1">Control de Datos</h3>
-                        <p class="text-gray-400 text-sm leading-relaxed">Monitoreo de actividad en tiempo real con
-                            trazabilidad completa de cada acción.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="mt-20 pt-8 border-t border-white/5">
-                <p class="text-[10px] text-gray-500 uppercase tracking-widest leading-loose">
-                    Sistema Privado • Acceso exclusivo para empleados registrados<br />
-                    Trotapie S.A. de C.V. México
-                </p>
-            </div>
-        </div>
-    </aside>
-    <main
-        class="w-full md:w-7/12 lg:w-1/2 bg-white flex flex-col justify-center items-center p-8 md:p-16 lg:p-24 relative">
-        <div class="md:hidden absolute top-8 left-8 flex flex-col">
-            <div class="flex items-center gap-2">
-                <span class="text-[#1e2124] font-bold text-2xl tracking-tighter">trotapie</span>
-            </div>
-            <div class="flex items-center gap-1.5 mt-1">
-                <div class="w-1 h-1 rounded-full bg-accent"></div>
-                <span class="text-[#1e2124] text-[10px] font-bold uppercase tracking-widest">Admin</span>
-            </div>
-        </div>
-        <div class="w-full max-w-sm">
-            <header class="mb-12">
-                <h1 class="text-4xl font-extrabold text-[#1e2124] mb-4 tracking-tight">Bienvenido</h1>
-                <p class="text-gray-500 text-lg">Inicie sesión para continuar</p>
-            </header>
-            <!-- <form action="#" class="space-y-6" method="POST">
-                <div class="space-y-2">
-                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] ml-1"
-                        for="email">Email</label>
-                    <div class="relative">
-                        <input
-                            class="block w-full px-5 py-4 bg-gray-50/50 border border-gray-100 focus:border-primary/30 focus:bg-white focus:ring-0 rounded-2xl text-[#1e2124] transition-all placeholder:text-gray-300 text-sm"
-                            id="email" name="email" placeholder="usuario@trotapie.com" required="" type="email" />
-                    </div>
-                </div>
-                <div class="space-y-2">
-                    <div class="flex justify-between items-center ml-1">
-                        <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]"
-                            for="password">Contraseña</label>
-                    </div>
-                    <div class="relative">
-                        <input
-                            class="block w-full px-5 py-4 bg-gray-50/50 border border-gray-100 focus:border-primary/30 focus:bg-white focus:ring-0 rounded-2xl text-[#1e2124] transition-all placeholder:text-gray-300 text-sm"
-                            id="password" name="password" placeholder="••••••••" required="" type="password" />
-                    </div>
-                </div>
-                <button
-                    class="w-full bg-[#00a67c] hover:bg-[#009670] text-white font-bold py-5 px-6 rounded-2xl shadow-xl shadow-primary/10 transition-all duration-300 flex items-center justify-center gap-3 group active:scale-[0.98]"
-                    type="submit">
-                    <span class="text-sm uppercase tracking-widest">Acceder al Panel</span>
-                    <span
-                        class="material-symbols-outlined text-xl group-hover:translate-x-1 transition-transform">east</span>
-                </button>
-            </form> -->
-            <form class="mt-8" [formGroup]="signInForm" #signInNgForm="ngForm">
-                <mat-form-field class="w-full">
-                    <mat-label>Email</mat-label>
-                    <input id="email" matInput [formControlName]="'email'" />
-                    @if (signInForm.get('email').hasError('required')) {
-                    <mat-error> Email address is required </mat-error>
-                    }
-                    @if (signInForm.get('email').hasError('email')) {
-                    <mat-error>
-                        Please enter a valid email address
-                    </mat-error>
-                    }
-                </mat-form-field>
+<body class="min-h-screen bg-[#1e2124] flex flex-col md:flex-row overflow-x-hidden overflow-y-auto">
+  <aside
+    class="hidden md:flex md:w-5/12 lg:w-1/2 relative bg-[#1e2124] items-center justify-center p-10 lg:p-12 overflow-hidden border-r border-white/5">
+    <div class="absolute inset-0 abstract-security-graphic"></div>
 
-                <mat-form-field class="w-full">
-                    <mat-label>Password</mat-label>
-                    <input id="password" matInput type="password" [formControlName]="'password'" #passwordField />
-                    <button mat-icon-button type="button" (click)="
-                            passwordField.type === 'password'
-                                ? (passwordField.type = 'text')
-                                : (passwordField.type = 'password')
-                        " matSuffix>
-                        @if (passwordField.type === 'password') {
-                        <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:eye'"></mat-icon>
-                        }
-                        @if (passwordField.type === 'text') {
-                        <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:eye-slash'"></mat-icon>
-                        }
-                    </button>
-                    <mat-error> Password is required </mat-error>
-                </mat-form-field>
+    <div class="absolute inset-0 opacity-20 pointer-events-none">
+      <div class="data-stream h-full left-1/4"></div>
+      <div class="data-stream h-full left-1/2"></div>
+      <div class="data-stream h-full left-3/4"></div>
+      <div class="absolute top-1/4 left-1/4 -translate-x-1 w-2 h-2 rounded-full bg-[#00a67c] blur-sm"></div>
+      <div class="absolute top-2/3 left-1/2 -translate-x-1 w-2 h-2 rounded-full bg-accent blur-sm"></div>
+      <div class="absolute top-1/2 left-3/4 -translate-x-1 w-2 h-2 rounded-full bg-[#00a67c] blur-sm"></div>
+    </div>
 
-                <div class="mt-1.5 inline-flex w-full items-center justify-between">
-                    <mat-checkbox class="-ml-2" [color]="'primary'" [formControlName]="'rememberMe'">
-                        Remember me
-                    </mat-checkbox>
-                    <a class="text-md font-medium text-[#1e2124]-500 hover:underline"
-                        [routerLink]="['/forgot-password']">Forgot password?
-                    </a>
-                </div>
-
-                <button class="fuse-mat-button-large mt-6 w-full" mat-raised-button [color]="'primary'"
-                    [disabled]="signInForm.disabled" (click)="signIn()">
-                    @if (!signInForm.disabled) {
-                    <span> Sign in </span>
-                    }
-                    @if (signInForm.disabled) {
-                    <mat-progress-spinner [diameter]="24" [mode]="'indeterminate'"></mat-progress-spinner>
-                    }
-                </button>
-
-            </form>
+    <div class="relative z-10 w-full max-w-md">
+      <div class="mb-16">
+        <img src="assets/images/logos/trotapie.png" alt="Logo Trotapie"
+          class="h-auto w-44 md:w-56 lg:w-80 p-1" />
+        <div class="flex items-center gap-3">
+          <div class="w-1.5 h-1.5 rounded-full bg-accent"></div>
+          <span class="text-gray-400 text-xs font-bold uppercase tracking-[0.4em]">
+            Panel de Administración
+          </span>
         </div>
-        <footer class="absolute bottom-10 left-0 right-0 text-center">
-            <p class="text-[9px] text-gray-300 uppercase tracking-[0.3em] font-medium">
-                © 2024 Trotapie S.A. de C.V.
+      </div>
+
+      <div class="space-y-8">
+        <div class="flex items-start gap-6">
+          <div
+            class="mt-1 w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+            <span class="material-symbols-outlined text-[#00a67c] text-2xl">shield_person</span>
+          </div>
+          <div>
+            <h3 class="text-white text-lg font-medium mb-1">Acceso Centralizado</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">
+              Gestione operaciones, usuarios e inventarios desde una interfaz corporativa segura.
             </p>
-        </footer>
-    </main>
+          </div>
+        </div>
 
+        <div class="flex items-start gap-6">
+          <div
+            class="mt-1 w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+            <span class="material-symbols-outlined text-[#ffc107] text-2xl">monitoring</span>
+          </div>
+          <div>
+            <h3 class="text-white text-lg font-medium mb-1">Control de Datos</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">
+              Monitoreo de actividad en tiempo real con trazabilidad completa de cada acción.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-16 lg:mt-20 pt-8 border-t border-white/5">
+        <p class="text-[10px] text-gray-500 uppercase tracking-widest leading-loose">
+          Sistema Privado • Acceso exclusivo para empleados registrados<br />
+          Trotapie S.A. de C.V. México
+        </p>
+      </div>
+    </div>
+  </aside>
+
+  <main
+    class="w-full md:w-7/12 lg:w-1/2 bg-white flex flex-col justify-start md:justify-center items-center px-6 py-10 sm:px-10 md:p-16 lg:p-24 relative">
+    
+    <!-- Header móvil -->
+    <div class="md:hidden w-full max-w-sm mb-10">
+      <div class="flex items-center gap-2">
+        <span class="text-[#1e2124] font-bold text-2xl tracking-tighter">trotapie</span>
+      </div>
+      <div class="flex items-center gap-1.5 mt-1">
+        <div class="w-1 h-1 rounded-full bg-accent"></div>
+        <span class="text-[#1e2124] text-[10px] font-bold uppercase tracking-widest">Admin</span>
+      </div>
+    </div>
+
+    <div class="w-full max-w-sm">
+      <header class="mb-10 md:mb-12">
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-[#1e2124] mb-3 sm:mb-4 tracking-tight">
+          Bienvenido
+        </h1>
+        <p class="text-gray-500 text-base sm:text-lg">Inicie sesión para continuar</p>
+      </header>
+
+      <form class="mt-8" [formGroup]="signInForm" #signInNgForm="ngForm">
+        <mat-form-field class="w-full">
+          <mat-label>Email</mat-label>
+          <input id="email" matInput [formControlName]="'email'" />
+          @if (signInForm.get('email').hasError('required')) {
+            <mat-error>Email address is required</mat-error>
+          }
+          @if (signInForm.get('email').hasError('email')) {
+            <mat-error>Please enter a valid email address</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field class="w-full">
+          <mat-label>Password</mat-label>
+          <input id="password" matInput type="password" [formControlName]="'password'" #passwordField />
+          <button mat-icon-button type="button"
+            (click)="passwordField.type === 'password' ? (passwordField.type = 'text') : (passwordField.type = 'password')"
+            matSuffix>
+            @if (passwordField.type === 'password') {
+              <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:eye'"></mat-icon>
+            }
+            @if (passwordField.type === 'text') {
+              <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:eye-slash'"></mat-icon>
+            }
+          </button>
+          <mat-error>Password is required</mat-error>
+        </mat-form-field>
+
+        <div class="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <mat-checkbox class="-ml-2" [color]="'primary'" [formControlName]="'rememberMe'">
+            Remember me
+          </mat-checkbox>
+
+          <a class="text-sm sm:text-md font-medium text-[#1e2124] hover:underline"
+            [routerLink]="['/forgot-password']">
+            Forgot password?
+          </a>
+        </div>
+
+        <button class="fuse-mat-button-large mt-6 w-full" mat-raised-button [color]="'primary'"
+          [disabled]="signInForm.disabled" (click)="signIn()">
+          @if (!signInForm.disabled) {
+            <span>Sign in</span>
+          }
+          @if (signInForm.disabled) {
+            <mat-progress-spinner [diameter]="24" [mode]="'indeterminate'"></mat-progress-spinner>
+          }
+        </button>
+      </form>
+
+      <!-- Footer móvil “normal” -->
+      <footer class="mt-10 text-center md:hidden">
+        <p class="text-[9px] text-gray-300 uppercase tracking-[0.3em] font-medium">
+          © 2024 Trotapie S.A. de C.V.
+        </p>
+      </footer>
+    </div>
+
+    <!-- Footer desktop fijo -->
+    <footer class="hidden md:block absolute bottom-10 left-0 right-0 text-center">
+      <p class="text-[9px] text-gray-300 uppercase tracking-[0.3em] font-medium">
+        © 2024 Trotapie S.A. de C.V.
+      </p>
+    </footer>
+  </main>
 </body>
+
 
 </html>

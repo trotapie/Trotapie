@@ -6,10 +6,13 @@ import { Component, OnDestroy } from '@angular/core';
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.scss'
 })
-export class AdminComponent implements OnDestroy{
+export class AdminComponent implements OnDestroy {
 
 
   ngOnDestroy(): void {
-      localStorage.removeItem('accessToken')
+    let lang = localStorage.getItem('lang');
+    localStorage.clear()
+    localStorage.setItem('lang', lang);
+    window.location.reload();
   }
 }

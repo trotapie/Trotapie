@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
@@ -18,6 +18,7 @@ import { QuickChatComponent } from 'app/layout/common/quick-chat/quick-chat.comp
 import { SearchComponent } from 'app/layout/common/search/search.component';
 import { ShortcutsComponent } from 'app/layout/common/shortcuts/shortcuts.component';
 import { UserComponent } from 'app/layout/common/user/user.component';
+import { MaterialModule } from 'app/shared/material.module';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
@@ -38,9 +39,12 @@ import { Subject, takeUntil } from 'rxjs';
         RouterOutlet,
         QuickChatComponent,
         FuseVerticalNavigationComponent,
+        MaterialModule
     ],
 })
 export class CompactLayoutComponent implements OnInit, OnDestroy {
+        private router = inject(Router);
+    
     isScreenSmall: boolean;
     navigation: Navigation;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
@@ -120,5 +124,17 @@ export class CompactLayoutComponent implements OnInit, OnDestroy {
             // Toggle the opened status
             navigation.toggle();
         }
+    }
+
+    regresarInicio() {
+        if (sessionStorage.length !== 0) {
+            sessionStorage.clear();
+        }
+
+        // if (this.router.url === '/inicio') {
+        //     window.location.reload();
+        // } else {
+            this.router.navigate(['/inicio']);
+        // }
     }
 }

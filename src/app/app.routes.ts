@@ -84,6 +84,7 @@ export const appRoutes: Route[] = [
                 path: 'admin',
                 canActivate: [AuthGuard],
                 canActivateChild: [AuthGuard],
+                data: { layout: 'compact' },
                 loadChildren: () =>
                     import('app/components/admin/admin.routes').then(m => m.default)
             }

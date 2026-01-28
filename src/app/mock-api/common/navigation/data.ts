@@ -8,12 +8,27 @@ export const defaultNavigation: FuseNavigationItem[] = [
         type : 'basic',
         icon : 'heroicons_outline:chart-pie',
         link : '/example'
-    }
+    },
+    
 ];
 export const compactNavigation: FuseNavigationItem[] = [
     {
+        id   : 'hoteles',
+        title: 'hoteles',
+        type : 'basic',
+        icon : 'heroicons_outline:chart-pie',
+        link : '/admin-hoteles'
+    },
+    {
+        id   : 'Actividades',
+        title: 'Actividades',
+        type : 'basic',
+        icon : 'heroicons_outline:chart-pie',
+        link : '/example'
+    },
+    {
         id   : 'example',
-        title: 'Example',
+        title: 'Solicitudes cotizacion',
         type : 'basic',
         icon : 'heroicons_outline:chart-pie',
         link : '/example'
@@ -35,5 +50,5 @@ export const horizontalNavigation: FuseNavigationItem[] = [
         type : 'basic',
         icon : 'heroicons_outline:chart-pie',
         link : '/example'
-    }
+    },
 ];
