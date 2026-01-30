@@ -1,0 +1,163 @@
+.table-shell {
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--mat-sys-surface, #fff);
+}
+
+.table-toolbar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 16px 8px 16px;
+
+    .title {
+        margin: 0;
+        font-weight: 700;
+        letter-spacing: -0.2px;
+    }
+
+    .subtitle {
+        margin: 2px 0 0 0;
+        font-size: 12px;
+        // opacity: 0.7;
+    }
+
+    .toolbar-right {
+        display: flex;
+        gap: 12px;
+    }
+
+    .search {
+        width: 500px;
+    }
+
+    .btn-add mat-icon {
+        margin-right: 6px;
+    }
+}
+
+.chips-row {
+    padding: 0 16px 10px 16px;
+
+    .chip-active {
+        font-weight: 700;
+    }
+}
+
+.table-wrapper {
+    max-height: 520px; // scroll suave si crece
+    overflow: auto;
+}
+
+.pretty-table {
+    width: 100%;
+}
+
+// .mat-mdc-header-row {
+//     color:rgb(33, 120, 93);
+//     background: rgb(255, 255, 255);
+// }
+
+.mat-mdc-header-cell {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.row {
+    transition: background 120ms ease;
+
+    &:hover {
+        background: rgba(0, 0, 0, 0.03);
+    }
+}
+
+/* zebra */
+.mat-mdc-row:nth-child(even) .mat-mdc-cell {
+    background: rgba(0, 0, 0, 0.015);
+}
+
+.mat-mdc-cell,
+.mat-mdc-header-cell {
+    padding: 14px 16px !important;
+    border-bottom-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+.mono {
+    font-variant-numeric: tabular-nums;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+        monospace;
+}
+
+.cell-main {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+
+    .cell-title {
+        font-weight: 700;
+    }
+
+    .cell-subtitle {
+        font-size: 12px;
+        // opacity: 0.65;
+        margin-top: 2px;
+    }
+}
+
+.pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 12px;
+    background: rgba(0, 0, 0, 0.06);
+}
+
+.pill-warn {
+    background: rgba(255, 193, 7, 0.25);
+}
+
+.actions-col {
+    width: 60px;
+    text-align: right;
+}
+
+.danger-item {
+    color: #c62828;
+}
+
+.empty {
+    padding: 24px !important;
+}
+
+.empty-state {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    // opacity: 0.85;
+
+    mat-icon {
+        // opacity: 0.7;
+    }
+
+    .empty-title {
+        font-weight: 800;
+    }
+
+    .empty-subtitle {
+        font-size: 12px;
+        // opacity: 0.8;
+    }
+}
+
+.table-footer {
+    padding: 8px 8px 8px 8px;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+mat-form-field.search {
+  --mat-form-field-container-shape: 60px;
+  --mdc-outlined-text-field-container-shape: 30px;
+}
