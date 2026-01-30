@@ -13,11 +13,11 @@
                     </button>
                 </div>
             </div>
-            <!-- <qrcode
-[qrdata]="urlQR"
-[width]="3000"
-[errorCorrectionLevel]="'M'">
-</qrcode> -->
+                            <!-- <qrcode
+                [qrdata]="urlQR"
+                [width]="3000"
+                [errorCorrectionLevel]="'M'">
+                </qrcode> -->
             <fuse-card class="filter-article flex w-full flex-col p-1">
                 @if(!isScreenSmall){
                 <mat-tab-group class="sm:px-2" mat-stretch-tabs="false" [animationDuration]="'0'">
@@ -124,40 +124,6 @@
                     <div class="text-2xl my-4 font-semibold leading-tight text-center">
                         {{t('ver-galeria')}}
                     </div>
-                    <!-- @if(isScreenSmall){
-                <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4 p-2">
-                    <div *ngFor="let imagen of imagenes" class="w-full h-30 bg-cover bg-center rounded-xl shadow-md"
-                        [ngStyle]="{ 'background-image': 'url(' + imagen + ')' }"></div>
-                </div>
-                }
-                @if(!isScreenSmall){ -->
-                    <!-- <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <button *ngFor="let img of imagenes; let i = index" class="p-0 bg-transparent border-0 group"
-                            (click)="open(i, $event)">
-                            <img [src]="img" class="w-full h-30 object-cover rounded-xl shadow-md" />
-                        </button>
-                    </div> -->
-                    <!-- <div class="grid grid-cols-2 md:grid-cols-3 auto-rows-[180px] gap-3">
-                        <ng-container *ngFor="let img of imagenes; let i = index">
-                    
-                            <button *ngIf="i < 5" class="relative overflow-hidden rounded-xl group p-0 bg-transparent border-0
-                                 {{
-                                   i === 0 || i === 3
-                                     ? 'md:col-span-2 md:row-span-2'
-                                     : 'md:col-span-1 md:row-span-1'
-                                 }}" (click)="open(i, $event)">
-                                <img [src]="img"
-                                    class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
-                            </button>
-                    
-                            <button *ngIf="i === 5" class="relative rounded-xl bg-gray-200 flex items-center justify-center
-                                 text-xl font-medium hover:bg-gray-300 transition
-                                 md:col-span-1 md:row-span-1" (click)="open(0, $event)">
-                                Ver más
-                            </button>
-                    
-                        </ng-container>
-                    </div> -->
                     <div class="grid grid-cols-3 gap-3
             auto-rows-[80px] sm:auto-rows-[110px] md:auto-rows-[180px]">
 
@@ -166,9 +132,9 @@
                             <!-- IMÁGENES -->
                             <button *ngIf="i < 5"
                                 class="relative overflow-hidden rounded-xl group p-0 bg-transparent border-0" [ngClass]="{
-        'col-span-2 row-span-2': i === 0 || i === 3,
-        'col-span-1 row-span-1': i === 1 || i === 2
-      }" (click)="open(i, $event)">
+                   'col-span-2 row-span-2': i === 0 || i === 3,
+                   'col-span-1 row-span-1': i === 1 || i === 2
+                 }" (click)="open(i, $event)">
                                 <img [src]="img" draggable="false" (contextmenu)="$event.preventDefault()"
                                     class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                             </button>
@@ -308,17 +274,6 @@
             </fuse-card>
         </div>
         <div *ngIf="!isOpen" class="sticky bottom-4 w-full z-50">
-            <!-- <div class="relative flex justify-end pr-4">
-                <button (click)="abrirModal()" aria-label="Enviar WhatsApp">
-                    <div class="absolute bottom-16 right-0 whitespace-pre-line flex justify-center items-center 
-         bg-[#F9B44B]  hover:bg-[#e0a13a] font-semibold text-md px-3 py-1 
-         rounded-t-2xl shadow animate-bounce text-center z-10 backdrop-blur text-white">
-                        <mat-icon svgIcon="mat_outline:request_quote" class="mr-1 text-white"></mat-icon>
-                        {{t('cotizar')}}
-                    </div>
-                    <img class="w-16 h-16 p-2 bg-white rounded-full" src="assets/images/logos/trotapie-iso.png" />
-                </button>
-            </div> -->
             <div class="relative flex justify-end pr-4">
                 <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
 

@@ -58,7 +58,7 @@
   "beneficio-anticipo": "Minimum down payment to book, <strong>secure</strong> confirmation",
   "sin-descripcion": "The description of this hotel is not yet available in this language.",
   "sin-amenidades": "Amenities are not yet available in this language.",
-  "cotizacion-mensaje": "Hello, I am {{nombre}} and I am interested in a quote for the hotel {{hotel}} in {{ciudad}}.\nNights: {{noches}}\nMeal Plan: {{regimen.descripcion}}\nCheck-in Date: {{entrada}}\nCheck-out Date: {{salida}}\nRooms: {{habitaciones}}\n{{detalleHabitaciones.traduccion}}\nSpecial Requests: {{especiales}}\nPhone: {{telefono}}\nEmail: {{correo}}\nAdvisor: {{asesor}}",
+  "cotizacion-mensaje": "Hello, I am {{nombre}} and I am interested in a quote for the hotel {{hotel}} in {{ciudad}}.\nNights: {{noches}}\nMeal Plan: {{regimen.descripcion}}\nCheck-in Date: {{entrada}}\nCheck-out Date: {{salida}}\nRooms: {{habitaciones}}\n{{detalleHabitaciones.traduccion}}\nSpecial Requests: {{especiales}}\nPhone: {{telefono}}\nEmail: {{correo}}\nAdvisor: {{asesor}} \n Quotation number: {{id}}",
    "empleado_otro": "Other",
   "ver-mas": "See more",
   "ver-menos": "See less",

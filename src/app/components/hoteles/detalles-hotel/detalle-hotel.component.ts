@@ -62,6 +62,9 @@ export class DetalleHotelComponent {
     intervalId: any;
     mesActual = new Date();
     verMasDescripcion = false;
+
+    mensaje: any
+
     dateFilter = (date: Date | null): boolean => {
         if (!date) return false;
 
@@ -200,17 +203,6 @@ export class DetalleHotelComponent {
         }));
     }
 
-    //async registrar() {
-    //try {
-    //const data = await this.supabase.signUp(
-    //   'prueba@gmail.com',
-    //   '12345678'
-    // );
-    // console.log('Usuario registrado:', data);
-    //} catch (err) {
-    //    console.error('No se pudo registrar:', err);
-    //}
-    //}
 
     ngAfterViewInit(): void {
         this.onDragBound = this.onDrag.bind(this);
@@ -242,7 +234,7 @@ export class DetalleHotelComponent {
         this.router.navigate(['/hoteles']);
     }
 
-    async guardarCliente(mensaje) {
+    async guardarCliente(mensaje, msjWhats) {
         const { telefono, ofertas, nombre, correo } = this.reservacionForm.getRawValue();
 
         try {
@@ -270,6 +262,31 @@ export class DetalleHotelComponent {
             };
 
             const solicitud = await this.supabase.crearSolicitudCotizacion(payload);
+            console.log(solicitud);
+
+            if(solicitud){
+                this.mensaje = await this.buildCotizacionMensaje({
+                    nombre,
+                    hotel: this.hotel.nombre_hotel,
+                    ciudad: msjWhats.ciudad,
+                    noches: this.noches,
+                    regimen: msjWhats.regimen,
+                    entrada: msjWhats.fechaFormateadaInicio,
+                    salida: msjWhats.fechaFormateadaFin,
+                    habitaciones: msjWhats.totalRooms,
+                    detalleHabitaciones: msjWhats.detalleHabitaciones,
+                    especiales: msjWhats.especiales,
+                    telefono,
+                    correo,
+                    asesor: msjWhats.asesor.nombre,
+                    id: solicitud.id
+                });
+    
+                const telefonoTrotapie = '526188032003'; // <— ajusta aquí tu número
+                const url = `https://wa.me/${telefonoTrotapie}?text=${encodeURIComponent(this.mensaje)}`;
+    
+                window.open(url, '_blank');
+            }
 
         } catch (err) {
             console.error('Error guardando cliente:', err);
@@ -297,21 +314,22 @@ export class DetalleHotelComponent {
         const detalleHabitaciones = this.formatHabitaciones(rooms);
         const totalRooms = rooms.length;
 
-        const mensaje = await this.buildCotizacionMensaje({
-            nombre,
-            hotel: this.hotel.nombre_hotel,
-            ciudad,
-            noches: this.noches,
-            regimen,
-            entrada: fechaFormateadaInicio,
-            salida: fechaFormateadaFin,
-            habitaciones: totalRooms,
-            detalleHabitaciones,
-            especiales,
-            telefono,
-            correo,
-            asesor: asesor.nombre,
-        });
+        // this.mensaje = await this.buildCotizacionMensaje({
+        //     nombre,
+        //     hotel: this.hotel.nombre_hotel,
+        //     ciudad,
+        //     noches: this.noches,
+        //     regimen,
+        //     entrada: fechaFormateadaInicio,
+        //     salida: fechaFormateadaFin,
+        //     habitaciones: totalRooms,
+        //     detalleHabitaciones,
+        //     especiales,
+        //     telefono,
+        //     correo,
+        //     asesor: asesor.nombre,
+        //     id:0
+        // });
 
         this.guardarCliente({
             nombre,
@@ -327,14 +345,29 @@ export class DetalleHotelComponent {
             telefono,
             correo,
             asesor: asesor.id,
+        }, {
+            nombre,
+            hotel: this.hotel.nombre_hotel,
+            ciudad,
+            noches: this.noches,
+            regimen,
+            entrada: fechaFormateadaInicio,
+            salida: fechaFormateadaFin,
+            habitaciones: totalRooms,
+            detalleHabitaciones,
+            especiales,
+            telefono,
+            correo,
+            asesor: asesor.nombre,
+            id: 0
         });
 
 
-        // WhatsApp México: 52 + número local sin espacios ni guiones
-        const telefonoTrotapie = '526188032003'; // <— ajusta aquí tu número
-        const url = `https://wa.me/${telefonoTrotapie}?text=${encodeURIComponent(mensaje)}`;
+        // // WhatsApp México: 52 + número local sin espacios ni guiones
+        // const telefonoTrotapie = '526188032003'; // <— ajusta aquí tu número
+        // const url = `https://wa.me/${telefonoTrotapie}?text=${encodeURIComponent(mensaje)}`;
 
-        window.open(url, '_blank');
+        // window.open(url, '_blank');
     }
 
     // private formatHabitaciones(rooms: Room[]): string {
@@ -427,9 +460,9 @@ export class DetalleHotelComponent {
         });
 
         this.reservacionForm.get('rangoFechas')!.valueChanges.subscribe(range => {
-            this.calcularNoches(range?.start, range?.end);            
+            this.calcularNoches(range?.start, range?.end);
         });
-        
+
         if (this.opcionesRegimen?.length === 1) {
             this.reservacionForm.get('regimen')?.patchValue(
                 this.opcionesRegimen[0].descripcion
@@ -831,18 +864,18 @@ export class DetalleHotelComponent {
     }
 
     toggleVerMas(element: HTMLElement): void {
-    const estabaExpandido = this.verMasDescripcion;
+        const estabaExpandido = this.verMasDescripcion;
 
-    this.verMasDescripcion = !this.verMasDescripcion;
+        this.verMasDescripcion = !this.verMasDescripcion;
 
-    // Si estaba expandido y ahora se colapsa
-    if (estabaExpandido) {
-        setTimeout(() => {
-            element.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center', // o 'nearest' si lo quieres más preciso
-            });
-        }, 50);
+        // Si estaba expandido y ahora se colapsa
+        if (estabaExpandido) {
+            setTimeout(() => {
+                element.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center', // o 'nearest' si lo quieres más preciso
+                });
+            }, 50);
+        }
     }
-}
 }
