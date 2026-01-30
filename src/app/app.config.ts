@@ -19,6 +19,8 @@ import { firstValueFrom } from 'rxjs';
 import { TranslocoHttpLoader } from './core/transloco/transloco.http-loader';
 import { mockApiInterceptor } from '@fuse/lib/mock-api';
 import { getDefaultLang } from './lang.utils';
+import { MatPaginatorIntl } from '@angular/material/paginator';
+import { getSpanishPaginatorIntl } from './core/i18n/mat-paginator-es';
 
 export const appConfig: ApplicationConfig = {
     providers: [
@@ -54,6 +56,10 @@ export const appConfig: ApplicationConfig = {
                     monthYearA11yLabel: 'LLLL yyyy',
                 },
             },
+        },
+        {
+            provide: MatPaginatorIntl,
+            useFactory: getSpanishPaginatorIntl,
         },
 
         // Transloco Config

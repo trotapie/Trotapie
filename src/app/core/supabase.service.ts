@@ -4,6 +4,7 @@ import { environment } from '../../environments/environment';
 import { getDefaultLang } from 'app/lang.utils';
 import { TranslocoService } from '@jsverse/transloco';
 import { Observable } from 'rxjs';
+import { ISolicitudCotizacionListado } from 'app/interface/solicitudes-cotizacion.interface';
 
 const ES_ID = 1;
 
@@ -16,6 +17,11 @@ export class SupabaseService {
     this.client = createClient(environment.supabaseUrl, environment.supabaseAnonKey, {
       auth: { persistSession: true, autoRefreshToken: true },
     });
+  }
+
+  // ✅ agrega esto dentro de SupabaseService
+  getClient(): SupabaseClient {
+    return this.client;
   }
 
   // ===== AUTH =====
@@ -241,7 +247,7 @@ export class SupabaseService {
     if (error) throw error;
     if (!data) return null;
 
-    const actividadesTraducidas = (data?.actividades )
+    const actividadesTraducidas = (data?.actividades)
       .map((x: any) => {
         const act = x.actividad;
         const tLang = act?.traducciones?.find(
@@ -438,5 +444,18 @@ export class SupabaseService {
   //   })
   // );
   // }
+
+  async obtenerSolicitudesCotizacion() {
+    const { data, error } = await this.client
+      .rpc('obtener_solicitudes_cotizacion');
+
+    if (error) throw error;
+
+    console.log(data);
+    
+    
+    return data as ISolicitudCotizacionListado[];
+  }
+
 
 }

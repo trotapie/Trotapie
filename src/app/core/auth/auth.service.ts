@@ -1,178 +1,119 @@
-import { HttpClient } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
-import { AuthUtils } from 'app/core/auth/auth.utils';
+import { Injectable, inject } from '@angular/core';
 import { UserService } from 'app/core/user/user.service';
-import { catchError, Observable, of, switchMap, throwError } from 'rxjs';
+import { from, map, Observable, of, switchMap, catchError } from 'rxjs';
+import { SupabaseService } from '../supabase.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-    private _authenticated: boolean = false;
-    private _httpClient = inject(HttpClient);
-    private _userService = inject(UserService);
+  private _authenticated = false;
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Accessors
-    // -----------------------------------------------------------------------------------------------------
+  private _supabase = inject(SupabaseService);
+  private _userService = inject(UserService);
 
-    /**
-     * Setter & getter for access token
-     */
-    set accessToken(token: string) {
-        localStorage.setItem('accessToken', token);
+  // ---------------------------------------------
+  // Access token (compatibilidad con Fuse)
+  // ---------------------------------------------
+  set accessToken(token: string) {
+    localStorage.setItem('accessToken', token);
+  }
+
+  get accessToken(): string {
+    return localStorage.getItem('accessToken') ?? '';
+  }
+
+  // ---------------------------------------------
+  // Sign in (Supabase)
+  // ---------------------------------------------
+  signIn(credentials: { email: string; password: string }): Observable<any> {
+    // si ya está autenticado en memoria, no bloquees el login
+    // (puedes decidir mantener el throw, pero luego causa fricción)
+    if (this._authenticated) {
+      return of(true);
     }
 
-    get accessToken(): string {
-        return localStorage.getItem('accessToken') ?? '';
-    }
-
-    // -----------------------------------------------------------------------------------------------------
-    // @ Public methods
-    // -----------------------------------------------------------------------------------------------------
-
-    /**
-     * Forgot password
-     *
-     * @param email
-     */
-    forgotPassword(email: string): Observable<any> {
-        return this._httpClient.post('api/auth/forgot-password', email);
-    }
-
-    /**
-     * Reset password
-     *
-     * @param password
-     */
-    resetPassword(password: string): Observable<any> {
-        return this._httpClient.post('api/auth/reset-password', password);
-    }
-
-    /**
-     * Sign in
-     *
-     * @param credentials
-     */
-    signIn(credentials: { email: string; password: string }): Observable<any> {
-        // Throw error, if the user is already logged in
-        if (this._authenticated) {
-            return throwError('User is already logged in.');
+    return from(this._supabase.signIn(credentials.email, credentials.password)).pipe(
+      switchMap(({ data, error }) => {
+        if (error || !data?.session) {
+          throw error ?? new Error('No session returned');
         }
 
-        return this._httpClient.post('api/auth/sign-in', credentials).pipe(
-            switchMap((response: any) => {
-                // Store the access token in the local storage
-                this.accessToken = response.accessToken;
+        // token (compatibilidad)
+        this.accessToken = data.session.access_token;
 
-                // Set the authenticated flag to true
-                this._authenticated = true;
+        // auth flag
+        this._authenticated = true;
 
-                // Store the user on the user service
-                this._userService.user = response.user;
+        // user en Fuse UserService (mapea como necesites)
+        const u = data.user;
+        this._userService.user = {
+          id: u.id,
+          email: u.email,
+          name: (u.user_metadata as any)?.name
+            ?? (u.user_metadata as any)?.full_name
+            ?? u.email,
+        } as any;
 
-                // Return a new observable with the response
-                return of(response);
-            })
-        );
-    }
-
-    /**
-     * Sign in using the access token
-     */
-    signInUsingToken(): Observable<any> {
-        // Sign in using the token
-        return this._httpClient
-            .post('api/auth/sign-in-with-token', {
-                accessToken: this.accessToken,
-            })
-            .pipe(
-                catchError(() =>
-                    // Return false
-                    of(false)
-                ),
-                switchMap((response: any) => {
-                    // Replace the access token with the new one if it's available on
-                    // the response object.
-                    //
-                    // This is an added optional step for better security. Once you sign
-                    // in using the token, you should generate a new one on the server
-                    // side and attach it to the response object. Then the following
-                    // piece of code can replace the token with the refreshed one.
-                    if (response.accessToken) {
-                        this.accessToken = response.accessToken;
-                    }
-
-                    // Set the authenticated flag to true
-                    this._authenticated = true;
-
-                    // Store the user on the user service
-                    this._userService.user = response.user;
-
-                    // Return true
-                    return of(true);
-                })
-            );
-    }
-
-    /**
-     * Sign out
-     */
-    signOut(): Observable<any> {
-        // Remove the access token from the local storage
-        localStorage.removeItem('accessToken');
-
-        // Set the authenticated flag to false
+        return of({ user: this._userService.user, session: data.session });
+      }),
+      catchError((err) => {
         this._authenticated = false;
+        localStorage.removeItem('accessToken');
+        throw err;
+      })
+    );
+  }
 
-        // Return the observable
+  // ---------------------------------------------
+  // Sign out
+  // ---------------------------------------------
+  signOut(): Observable<any> {
+    return from(this._supabase.signOut()).pipe(
+      map(() => {
+        localStorage.removeItem('accessToken');
+        this._authenticated = false;
+        return true;
+      }),
+      catchError(() => {
+        // aunque falle, limpia local
+        localStorage.removeItem('accessToken');
+        this._authenticated = false;
         return of(true);
-    }
+      })
+    );
+  }
 
-    /**
-     * Sign up
-     *
-     * @param user
-     */
-    signUp(user: {
-        name: string;
-        email: string;
-        password: string;
-        company: string;
-    }): Observable<any> {
-        return this._httpClient.post('api/auth/sign-up', user);
-    }
+  // ---------------------------------------------
+  // Check (AuthGuard / initialDataResolver)
+  // ---------------------------------------------
+  check(): Observable<boolean> {
+  if (this._authenticated) {
+    return of(true);
+  }
 
-    /**
-     * Unlock session
-     *
-     * @param credentials
-     */
-    unlockSession(credentials: {
-        email: string;
-        password: string;
-    }): Observable<any> {
-        return this._httpClient.post('api/auth/unlock-session', credentials);
-    }
+  return from(this._supabase.getSession()).pipe(
+    switchMap(({ data, error }) => {
+      const session = data?.session;
 
-    /**
-     * Check the authentication status
-     */
-    check(): Observable<boolean> {
-        // Check if the user is logged in
-        if (this._authenticated) {
-            return of(true);
-        }
+      if (error || !session) {
+        this._authenticated = false;
+        return of(false);
+      }
 
-        // Check the access token availability
-        if (!this.accessToken) {
-            return of(false);
-        }
+      this.accessToken = session.access_token; // opcional, por compatibilidad
+      this._authenticated = true;
 
-        // Check the access token expire date
-        if (AuthUtils.isTokenExpired(this.accessToken)) {
-            return of(false);
-        }
+      const u = session.user;
+      this._userService.user = {
+        id: u.id,
+        email: u.email,
+        name: (u.user_metadata as any)?.name
+          ?? (u.user_metadata as any)?.full_name
+          ?? u.email,
+      } as any;
 
-        // If the access token exists, and it didn't expire, sign in using it
-        return this.signInUsingToken();
-    }
+      return of(true);
+    }),
+    catchError(() => of(false))
+  );
+}
 }

@@ -3,6 +3,7 @@ import { initialDataResolver } from 'app/app.resolvers';
 import { AuthGuard } from 'app/core/auth/guards/auth.guard';
 import { NoAuthGuard } from 'app/core/auth/guards/noAuth.guard';
 import { LayoutComponent } from 'app/layout/layout.component';
+import { ClearSessionGuard } from './core/auth/guards/clear-session.guard';
 
 // @formatter:off
 /* eslint-disable max-len */
@@ -74,10 +75,12 @@ export const appRoutes: Route[] = [
         children: [
             {
                 path: 'inicio',
+                canActivate: [ClearSessionGuard],
                 loadChildren: () => import('app/components/inicio/seleccion-destino/seleccion-destino.routes').then(m => m.default)
             },
             {
                 path: 'hoteles',
+                canActivate: [ClearSessionGuard],
                 loadChildren: () => import('app/components/hoteles/hoteles.routes').then(m => m.default)
             },
             {

@@ -96,42 +96,69 @@ export class AuthSignInComponent implements OnInit {
     /**
      * Sign in
      */
+    // async signIn() {
+    //     // Return if the form is invalid
+    //     if (this.signInForm.invalid) {
+    //         return;
+    //     }
+
+    //     this.signInForm.disable();
+
+    //     this.showAlert = false;
+
+    //     const { data, error } = await this.supabase.signIn(this.signInForm.get('email').value, this.signInForm.get('password').value);
+
+    //     if (data) {
+    //         console.log('si entra');
+    //         this.accessToken = data.session.access_token;
+
+    //         // Set the authenticated flag to true
+    //         this._authenticated = true;
+
+    //         // Store the user on the user service
+    //         // this._userService.user = response.user;
+    //         const redirectURL =
+    //             this._activatedRoute.snapshot.queryParamMap.get(
+    //                 'redirectURL'
+    //             ) || '/signed-in-redirect';
+
+    //         // Navigate to the redirect url
+    //         this._router.navigateByUrl(redirectURL);
+    //     }
+
+    //     if (error) {
+    //         this.alert = {
+    //             type: 'error',
+    //             message: 'Wrong email or password',
+    //         };
+    //         this.showAlert = true;
+    //     }
+    // }
+
     async signIn() {
-        // Return if the form is invalid
-        if (this.signInForm.invalid) {
-            return;
-        }
+        if (this.signInForm.invalid) return;
 
         this.signInForm.disable();
-
         this.showAlert = false;
 
-        const { data, error } = await this.supabase.signIn(this.signInForm.get('email').value, this.signInForm.get('password').value);
+        this._authService.signIn({
+            email: this.signInForm.get('email')?.value,
+            password: this.signInForm.get('password')?.value,
+        }).subscribe({
+            next: () => {
+                const redirectURL =
+                    this._activatedRoute.snapshot.queryParamMap.get('redirectURL') ||
+                    '/signed-in-redirect';
 
-        if (data) {
-            console.log('si entra');
-            this.accessToken = data.session.access_token;
-
-            // Set the authenticated flag to true
-            this._authenticated = true;
-
-            // Store the user on the user service
-            // this._userService.user = response.user;
-            const redirectURL =
-                this._activatedRoute.snapshot.queryParamMap.get(
-                    'redirectURL'
-                ) || '/signed-in-redirect';
-
-            // Navigate to the redirect url
-            this._router.navigateByUrl(redirectURL);
-        }
-
-        if (error) {
-            this.alert = {
-                type: 'error',
-                message: 'Wrong email or password',
-            };
-            this.showAlert = true;
-        }
+                this._router.navigateByUrl(redirectURL);
+            },
+            error: () => {
+                this.signInForm.enable();
+                this.alert = { type: 'error', message: 'Wrong email or password' };
+                this.showAlert = true;
+            },
+        });
     }
+
+
 }

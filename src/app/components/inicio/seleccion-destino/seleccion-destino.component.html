@@ -1,4 +1,4 @@
-<style>
+ <style>
     .accordion-content {
         max-height: 0;
         overflow: hidden;
@@ -48,7 +48,6 @@
                                     <h1 class="text-2xl font-bold text-white tracking-tight"></h1>
 
                                     <div class="relative w-full mx-auto" (click)="$event.stopPropagation()">
-                                        <!-- BOTÓN PRINCIPAL -->
                                         <button type="button" (click)="toggleDropdown($event)" class="w-full bg-green-700 hover:bg-emerald-800 text-white px-8 py-5 rounded-full
              flex items-center justify-between shadow-2xl
              transition-all duration-300 active:scale-[0.98]">
@@ -70,7 +69,6 @@
                                             </span>
                                         </button>
 
-                                        <!-- DROPDOWN -->
                                         <div class="absolute bottom-full left-0 right-0 mb-4
              bg-white dark:bg-gray-800 rounded-[2rem]
              overflow-hidden dropdown-shadow
@@ -80,7 +78,6 @@
         : 'opacity-0 translate-y-4 pointer-events-none'">
                                             <div class="p-2">
 
-                                                <!-- NACIONALES -->
                                                 <button type="button" class="w-full group/item flex items-center gap-4 p-5
                  rounded-[1.5rem] transition-all duration-200
                  hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -101,8 +98,6 @@
                                                         </span>
                                                     </div>
                                                 </button>
-
-                                                <!-- INTERNACIONALES -->
                                                 <button type="button" class="w-full group/item flex items-center gap-4 p-5
                  rounded-[1.5rem] transition-all duration-200
                  hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -128,17 +123,6 @@
                                         </div>
                                     </div>
                                 </div>
-                                <!-- <button
-                                        class="px-8 py-3 bg-green-700 text-white text-lg font-semibold rounded-full shadow-md hover:bg-green-800 transition"
-                                        (click)=" cargarDestinos(1); showOverlay();">
-                                        {{ t('destinos-nacionales') }}
-                                    </button>
-
-                                    <button class="px-8 py-3 bg-[#F9B44B] text-white text-lg font-semibold rounded-full shadow-md
-         hover:bg-[#e0a13a] transition
-         [text-shadow:_0_2px_2px_rgba(0,0,0,0.50)]" (click)="showOverlay(); cargarDestinos(2)">
-                                        {{ t('destinos-internacionales') }}
-                                    </button> -->
                             </div>
                         </ng-container>
 
@@ -200,4 +184,4 @@
 
         <app-footer />
     </ng-container>
-</div>
+</div> 

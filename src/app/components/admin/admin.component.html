@@ -1,1 +1,41 @@
-<p>admin works!</p>
+<!-- <div class="bg-card dark flex flex-auto flex-col overflow-hidden rounded-2xl shadow sm:col-span-2 lg:col-span-3">
+    <div class="ml-10 mr-6 mt-10 flex items-center justify-between sm:mr-10">
+        <div class="flex flex-col">
+            <div class="mr-4 text-2xl font-semibold leading-7 tracking-tight md:text-3xl">
+                Visitors Overview
+            </div>
+            <div class="text-secondary font-medium">
+                Number of unique visitors
+            </div>
+        </div>
+        <div class="ml-2">
+            <mat-button-toggle-group class="hidden space-x-1 border-none sm:inline-flex" value="this-year"
+                #visitorsYearSelector="matButtonToggleGroup">
+                <mat-button-toggle class="overflow-hidden rounded-full border-none px-1.5 font-medium"
+                    value="last-year">Last Year
+                </mat-button-toggle>
+                <mat-button-toggle class="overflow-hidden rounded-full border-none px-1.5 font-medium"
+                    value="this-year">This Year
+                </mat-button-toggle>
+            </mat-button-toggle-group>
+            <div class="sm:hidden">
+                <button mat-icon-button [matMenuTriggerFor]="visitorsMenu">
+                    <mat-icon [svgIcon]="
+                                        'heroicons_outline:ellipsis-vertical'
+                                    "></mat-icon>
+                </button>
+                <mat-menu #visitorsMenu="matMenu">
+                    <button mat-menu-item>This Year</button>
+                    <button mat-menu-item>Last Year</button>
+                </mat-menu>
+            </div>
+        </div>
+    </div>
+    <div class="flex h-80 flex-auto flex-col">
+        <apx-chart class="h-full w-full flex-auto" [chart]="chartVisitors.chart" [colors]="chartVisitors.colors"
+            [dataLabels]="chartVisitors.dataLabels" [fill]="chartVisitors.fill" [grid]="chartVisitors.grid" [series]="
+                            chartVisitors.series[visitorsYearSelector.value]
+                        " [stroke]="chartVisitors.stroke" [tooltip]="chartVisitors.tooltip"
+            [xaxis]="chartVisitors.xaxis" [yaxis]="chartVisitors.yaxis"></apx-chart>
+    </div>
+</div> -->
