@@ -259,8 +259,6 @@ export class DetalleHotelComponent {
             };
 
             const solicitud = await this.supabase.crearSolicitudCotizacion(payload);
-            console.log(solicitud.id);
-            return solicitud.id;
 
         } catch (err) {
             console.error('Error guardando cliente:', err);
@@ -318,7 +316,6 @@ export class DetalleHotelComponent {
             telefono,
             correo,
             asesor: asesor.nombre,
-            id: id
         });
 
         
