@@ -288,7 +288,7 @@ export class DetalleHotelComponent {
         const detalleHabitaciones = this.formatHabitaciones(rooms);
         const totalRooms = rooms.length;
 
-        const id = this.guardarCliente({
+        const id = await this.guardarCliente({
             nombre,
             hotel: this.hotel.nombre_hotel,
             ciudad,
