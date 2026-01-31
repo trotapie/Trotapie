@@ -62,9 +62,6 @@ export class DetalleHotelComponent {
     intervalId: any;
     mesActual = new Date();
     verMasDescripcion = false;
-
-    mensaje: any
-
     dateFilter = (date: Date | null): boolean => {
         if (!date) return false;
 
@@ -234,67 +231,41 @@ export class DetalleHotelComponent {
         this.router.navigate(['/hoteles']);
     }
 
-    async guardarCliente(mensaje, msjWhats) {
+    async guardarCliente(mensaje) {
         const { telefono, ofertas, nombre, correo } = this.reservacionForm.getRawValue();
 
         try {
             const nuevoCliente = {
-                nombre,
+                nombre: nombre,
                 email: correo,
-                telefono,
+                telefono: telefono,
                 recibir_ofertas: ofertas
             };
 
-            const cliente = await this.supabase.upsertCliente(nuevoCliente);
+            const data = await this.supabase.upsertCliente(nuevoCliente);
 
             const payload = {
-                cliente_id: cliente.id,
+                cliente_id: data.id,
                 hotel_id: this.hotel.id,
-                empleado_id: mensaje.asesor,
+                empleado_id: mensaje.asesor, // de tabla empleados
                 idioma: this._translocoService.getActiveLang(),
-                regimen_id: mensaje.regimen?.id ?? null,
-                fecha_entrada: mensaje.entrada,
-                fecha_salida: mensaje.salida,
+                regimen_id: mensaje.regimen?.id ?? null, // si aplica
+                fecha_entrada: mensaje.entrada,   // 'YYYY-MM-DD'
+                fecha_salida: mensaje.salida,       // 'YYYY-MM-DD'
                 noches: this.noches,
-                habitaciones: mensaje.detalleHabitaciones,
+                habitaciones: mensaje.detalleHabitaciones, // json
                 peticiones_especiales: mensaje.especiales?.trim() ? mensaje.especiales.trim() : null,
                 recibir_ofertas: mensaje.recibirOfertas,
             };
 
             const solicitud = await this.supabase.crearSolicitudCotizacion(payload);
-
-            // ✅ Asegurar que ya llegó el ID
-            if (!solicitud?.id) {
-                throw new Error('No se recibió el id de la solicitud de cotización');
-            }
-
-            // ✅ buildCotizacionMensaje normalmente no necesita await
-            this.mensaje = this.buildCotizacionMensaje({
-                nombre,
-                hotel: this.hotel.nombre_hotel,
-                ciudad: msjWhats.ciudad,
-                noches: this.noches,
-                regimen: msjWhats.regimen,
-                entrada: msjWhats.fechaFormateadaInicio,
-                salida: msjWhats.fechaFormateadaFin,
-                habitaciones: msjWhats.totalRooms,
-                detalleHabitaciones: msjWhats.detalleHabitaciones,
-                especiales: msjWhats.especiales,
-                telefono,
-                correo,
-                asesor: msjWhats.asesor.nombre,
-                id: solicitud.id
-            });
-
-            const telefonoTrotapie = '526188032003';
-            const url = `https://wa.me/${telefonoTrotapie}?text=${encodeURIComponent(this.mensaje)}`;
-            window.open(url, '_blank');
+            console.log(solicitud.id);
+            return solicitud.id;
 
         } catch (err) {
             console.error('Error guardando cliente:', err);
         }
     }
-
 
 
     async abrirWhatsApp() {
@@ -317,24 +288,7 @@ export class DetalleHotelComponent {
         const detalleHabitaciones = this.formatHabitaciones(rooms);
         const totalRooms = rooms.length;
 
-        // this.mensaje = await this.buildCotizacionMensaje({
-        //     nombre,
-        //     hotel: this.hotel.nombre_hotel,
-        //     ciudad,
-        //     noches: this.noches,
-        //     regimen,
-        //     entrada: fechaFormateadaInicio,
-        //     salida: fechaFormateadaFin,
-        //     habitaciones: totalRooms,
-        //     detalleHabitaciones,
-        //     especiales,
-        //     telefono,
-        //     correo,
-        //     asesor: asesor.nombre,
-        //     id:0
-        // });
-
-        this.guardarCliente({
+        const id = this.guardarCliente({
             nombre,
             hotel: this.hotel.nombre_hotel,
             ciudad,
@@ -348,7 +302,9 @@ export class DetalleHotelComponent {
             telefono,
             correo,
             asesor: asesor.id,
-        }, {
+        });
+
+        const mensaje = await this.buildCotizacionMensaje({
             nombre,
             hotel: this.hotel.nombre_hotel,
             ciudad,
@@ -362,17 +318,38 @@ export class DetalleHotelComponent {
             telefono,
             correo,
             asesor: asesor.nombre,
-            id: 0
+            id: id
         });
 
+        
 
-        // // WhatsApp México: 52 + número local sin espacios ni guiones
-        // const telefonoTrotapie = '526188032003'; // <— ajusta aquí tu número
-        // const url = `https://wa.me/${telefonoTrotapie}?text=${encodeURIComponent(mensaje)}`;
 
-        // window.open(url, '_blank');
+        // WhatsApp México: 52 + número local sin espacios ni guiones
+        const telefonoTrotapie = '526188032003'; // <— ajusta aquí tu número
+        const url = `https://wa.me/${telefonoTrotapie}?text=${encodeURIComponent(mensaje)}`;
+
+        window.open(url, '_blank');
     }
 
+    // private formatHabitaciones(rooms: Room[]): string {
+    //     return rooms.map((r, i) => {
+    //         const partes: string[] = [];
+    //         partes.push(`${r.adults} ${this.plural('adulto', r.adults)}`);
+
+    //         if (r.children > 0) {
+    //             const ninos = `${r.children} ${this.plural('niño', r.children)}`;
+    //             if (r.childAges?.length) {
+    //                 const edades = r.childAges.join(', ');
+    //                 const suf = r.childAges.length === 1 ? 'año' : 'años';
+    //                 partes.push(`${ninos} · edades: ${edades} ${suf}`);
+    //             } else {
+    //                 partes.push(ninos);
+    //             }
+    //         }
+
+    //         return `Habitación ${i + 1}: ${partes.join(' · ')}`;
+    //     }).join('\n');
+    // }
     private formatHabitaciones(rooms: Room[]): { traduccion: string; es: string } {
         const datos = {
             traduccion: rooms.map((r, i) => {
@@ -444,9 +421,9 @@ export class DetalleHotelComponent {
         });
 
         this.reservacionForm.get('rangoFechas')!.valueChanges.subscribe(range => {
-            this.calcularNoches(range?.start, range?.end);
+            this.calcularNoches(range?.start, range?.end);            
         });
-
+        
         if (this.opcionesRegimen?.length === 1) {
             this.reservacionForm.get('regimen')?.patchValue(
                 this.opcionesRegimen[0].descripcion
@@ -848,18 +825,18 @@ export class DetalleHotelComponent {
     }
 
     toggleVerMas(element: HTMLElement): void {
-        const estabaExpandido = this.verMasDescripcion;
+    const estabaExpandido = this.verMasDescripcion;
 
-        this.verMasDescripcion = !this.verMasDescripcion;
+    this.verMasDescripcion = !this.verMasDescripcion;
 
-        // Si estaba expandido y ahora se colapsa
-        if (estabaExpandido) {
-            setTimeout(() => {
-                element.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center', // o 'nearest' si lo quieres más preciso
-                });
-            }, 50);
-        }
+    // Si estaba expandido y ahora se colapsa
+    if (estabaExpandido) {
+        setTimeout(() => {
+            element.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center', // o 'nearest' si lo quieres más preciso
+            });
+        }, 50);
     }
+}
 }
