@@ -18,7 +18,9 @@ import { getDefaultLang } from 'app/lang.utils';
 @Component({
     selector: 'hoteles',
     templateUrl: './hoteles.component.html',
-    imports: [MaterialModule, FormsModule, FloatingSearchComponent, TranslocoModule, FooterComponent],
+    imports: [MaterialModule, FormsModule,
+        //  FloatingSearchComponent,
+          TranslocoModule, FooterComponent],
     encapsulation: ViewEncapsulation.None,
     standalone: true
 })

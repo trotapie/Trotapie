@@ -115,8 +115,14 @@
     background: rgba(0, 0, 0, 0.06);
 }
 
+.pill-ok {
+    background: rgb(181, 229, 213);
+}
 .pill-warn {
-    background: rgba(255, 193, 7, 0.25);
+    background: rgb(246, 210, 101);
+}
+.pill-danger {
+    background: rgb(254, 122, 122);
 }
 
 .actions-col {

@@ -3,6 +3,7 @@ import { AdminComponent } from './admin.component';
 import { AdminHotelesComponent } from './hoteles/admin-hoteles.component';
 import { AdminActividadesComponent } from './actividades/admin-actividades.component';
 import { SolicitudesCotizacionComponent } from './solicitudes-cotizacion/solicitudes-cotizacion.component';
+import { CotizacionComponent } from './solicitudes-cotizacion/cotizacion/cotizacion.component';
 
 export default [
     {
@@ -22,8 +23,8 @@ export default [
         component: SolicitudesCotizacionComponent,
     },
     {
-        path: '',
-        component: AdminComponent,
+        path: 'edicion-cotizacion/:id',
+        component: CotizacionComponent,
     },
 
 ] as Routes;

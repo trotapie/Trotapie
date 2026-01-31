@@ -450,10 +450,6 @@ export class SupabaseService {
       .rpc('obtener_solicitudes_cotizacion');
 
     if (error) throw error;
-
-    console.log(data);
-    
-    
     return data as ISolicitudCotizacionListado[];
   }
 

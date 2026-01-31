@@ -84,6 +84,12 @@ export const appRoutes: Route[] = [
                 loadChildren: () => import('app/components/hoteles/hoteles.routes').then(m => m.default)
             },
             {
+                path: 'cotizacion',
+                canActivate: [ClearSessionGuard],
+                 data: { layout: 'empty' },
+                loadChildren: () => import('app/components/admin/solicitudes-cotizacion/cotizacion/cotizacion.routes').then(m => m.default)
+            },
+            {
                 path: 'admin',
                 canActivate: [AuthGuard],
                 canActivateChild: [AuthGuard],

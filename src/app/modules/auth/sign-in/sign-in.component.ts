@@ -25,8 +25,8 @@ import { SupabaseService } from 'app/core/supabase.service';
     encapsulation: ViewEncapsulation.None,
     animations: fuseAnimations,
     imports: [
-        RouterLink,
-        FuseAlertComponent,
+        // RouterLink,
+        // FuseAlertComponent,
         FormsModule,
         ReactiveFormsModule,
         MatFormFieldModule,

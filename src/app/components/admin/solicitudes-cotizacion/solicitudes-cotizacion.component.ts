@@ -2,6 +2,7 @@ import { AfterViewInit, Component, inject, OnInit, ViewChild } from '@angular/co
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
+import { RouterLink } from '@angular/router';
 import { FuseSplashScreenService } from '@fuse/services/splash-screen';
 import { SupabaseService } from 'app/core/supabase.service';
 import { ISolicitudCotizacionListado } from 'app/interface/solicitudes-cotizacion.interface';
@@ -9,7 +10,7 @@ import { MaterialModule } from 'app/shared/material.module';
 
 @Component({
   selector: 'app-solicitudes-cotizacion',
-  imports: [MaterialModule],
+  imports: [MaterialModule, RouterLink],
   templateUrl: './solicitudes-cotizacion.component.html',
   styleUrl: './solicitudes-cotizacion.component.scss'
 })
@@ -134,8 +135,5 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
     this.dataSource.paginator?.firstPage();
   }
 
-  // ✅ acciones con tu modelo real
-  onView(row: ISolicitudCotizacionListado) { }
-  onEdit(row: ISolicitudCotizacionListado) { }
-  onDelete(row: ISolicitudCotizacionListado) { }
+
 }
