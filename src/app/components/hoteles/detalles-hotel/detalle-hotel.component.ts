@@ -252,20 +252,17 @@ export class DetalleHotelComponent {
                 hotel_id: this.hotel.id,
                 empleado_id: mensaje.asesor, // de tabla empleados
                 idioma: this._translocoService.getActiveLang(),
-                regimen_id: mensaje.regimen?.id ?? null, // si aplica
-                fecha_entrada: mensaje.entrada,   // 'YYYY-MM-DD'
-                fecha_salida: mensaje.salida,       // 'YYYY-MM-DD'
+                regimen_id: mensaje.regimen?.id ?? null,
+                fecha_entrada: mensaje.entrada,
+                fecha_salida: mensaje.salida,
                 noches: this.noches,
-                habitaciones: mensaje.detalleHabitaciones, // json
+                habitaciones: mensaje.detalleHabitaciones,
                 peticiones_especiales: mensaje.especiales?.trim() ? mensaje.especiales.trim() : null,
                 recibir_ofertas: mensaje.recibirOfertas,
             };
 
-            const solicitud = await this.supabase.crearSolicitudCotizacion(payload);
-            console.log(solicitud);
-
-            if(solicitud){
-                this.mensaje = await this.buildCotizacionMensaje({
+            const solicitud = await this.supabase.crearSolicitudCotizacion(payload).finally(() => {
+                this.mensaje = this.buildCotizacionMensaje({
                     nombre,
                     hotel: this.hotel.nombre_hotel,
                     ciudad: msjWhats.ciudad,
@@ -281,11 +278,15 @@ export class DetalleHotelComponent {
                     asesor: msjWhats.asesor.nombre,
                     id: solicitud.id
                 });
-    
+
                 const telefonoTrotapie = '526188032003'; // <— ajusta aquí tu número
                 const url = `https://wa.me/${telefonoTrotapie}?text=${encodeURIComponent(this.mensaje)}`;
-    
+
                 window.open(url, '_blank');
+            });
+
+            if (solicitud) {
+
             }
 
         } catch (err) {
@@ -370,25 +371,6 @@ export class DetalleHotelComponent {
         // window.open(url, '_blank');
     }
 
-    // private formatHabitaciones(rooms: Room[]): string {
-    //     return rooms.map((r, i) => {
-    //         const partes: string[] = [];
-    //         partes.push(`${r.adults} ${this.plural('adulto', r.adults)}`);
-
-    //         if (r.children > 0) {
-    //             const ninos = `${r.children} ${this.plural('niño', r.children)}`;
-    //             if (r.childAges?.length) {
-    //                 const edades = r.childAges.join(', ');
-    //                 const suf = r.childAges.length === 1 ? 'año' : 'años';
-    //                 partes.push(`${ninos} · edades: ${edades} ${suf}`);
-    //             } else {
-    //                 partes.push(ninos);
-    //             }
-    //         }
-
-    //         return `Habitación ${i + 1}: ${partes.join(' · ')}`;
-    //     }).join('\n');
-    // }
     private formatHabitaciones(rooms: Room[]): { traduccion: string; es: string } {
         const datos = {
             traduccion: rooms.map((r, i) => {
