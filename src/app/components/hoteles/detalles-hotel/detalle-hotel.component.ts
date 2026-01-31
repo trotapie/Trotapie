@@ -239,18 +239,18 @@ export class DetalleHotelComponent {
 
         try {
             const nuevoCliente = {
-                nombre: nombre,
+                nombre,
                 email: correo,
-                telefono: telefono,
+                telefono,
                 recibir_ofertas: ofertas
             };
 
-            const data = await this.supabase.upsertCliente(nuevoCliente);
+            const cliente = await this.supabase.upsertCliente(nuevoCliente);
 
             const payload = {
-                cliente_id: data.id,
+                cliente_id: cliente.id,
                 hotel_id: this.hotel.id,
-                empleado_id: mensaje.asesor, // de tabla empleados
+                empleado_id: mensaje.asesor,
                 idioma: this._translocoService.getActiveLang(),
                 regimen_id: mensaje.regimen?.id ?? null,
                 fecha_entrada: mensaje.entrada,
@@ -261,38 +261,40 @@ export class DetalleHotelComponent {
                 recibir_ofertas: mensaje.recibirOfertas,
             };
 
-            const solicitud = await this.supabase.crearSolicitudCotizacion(payload).finally(() => {
-                this.mensaje = this.buildCotizacionMensaje({
-                    nombre,
-                    hotel: this.hotel.nombre_hotel,
-                    ciudad: msjWhats.ciudad,
-                    noches: this.noches,
-                    regimen: msjWhats.regimen,
-                    entrada: msjWhats.fechaFormateadaInicio,
-                    salida: msjWhats.fechaFormateadaFin,
-                    habitaciones: msjWhats.totalRooms,
-                    detalleHabitaciones: msjWhats.detalleHabitaciones,
-                    especiales: msjWhats.especiales,
-                    telefono,
-                    correo,
-                    asesor: msjWhats.asesor.nombre,
-                    id: solicitud.id
-                });
+            const solicitud = await this.supabase.crearSolicitudCotizacion(payload);
 
-                const telefonoTrotapie = '526188032003'; // <— ajusta aquí tu número
-                const url = `https://wa.me/${telefonoTrotapie}?text=${encodeURIComponent(this.mensaje)}`;
+            // ✅ Asegurar que ya llegó el ID
+            if (!solicitud?.id) {
+                throw new Error('No se recibió el id de la solicitud de cotización');
+            }
 
-                window.open(url, '_blank');
+            // ✅ buildCotizacionMensaje normalmente no necesita await
+            this.mensaje = this.buildCotizacionMensaje({
+                nombre,
+                hotel: this.hotel.nombre_hotel,
+                ciudad: msjWhats.ciudad,
+                noches: this.noches,
+                regimen: msjWhats.regimen,
+                entrada: msjWhats.fechaFormateadaInicio,
+                salida: msjWhats.fechaFormateadaFin,
+                habitaciones: msjWhats.totalRooms,
+                detalleHabitaciones: msjWhats.detalleHabitaciones,
+                especiales: msjWhats.especiales,
+                telefono,
+                correo,
+                asesor: msjWhats.asesor.nombre,
+                id: solicitud.id
             });
 
-            if (solicitud) {
-
-            }
+            const telefonoTrotapie = '526188032003';
+            const url = `https://wa.me/${telefonoTrotapie}?text=${encodeURIComponent(this.mensaje)}`;
+            window.open(url, '_blank');
 
         } catch (err) {
             console.error('Error guardando cliente:', err);
         }
     }
+
 
 
     async abrirWhatsApp() {
