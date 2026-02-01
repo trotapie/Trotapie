@@ -289,7 +289,7 @@ export class DetalleHotelComponent {
         const mensaje = await this.buildCotizacionMensaje({
             nombre,
             hotel: this.hotel.nombre_hotel,
-            ciudad,
+            ciudad: this.hotel.destino.nombre,
             noches: this.noches,
             regimen,
             entrada: fechaFormateadaInicio,

@@ -51,6 +51,7 @@ export interface IDetalleHotel {
     imagenes: Imagenes[];
     regimenes: any[],
     actividades: any[];
+    destino: any;
 }
 
 export interface Imagenes {

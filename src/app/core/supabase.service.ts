@@ -201,6 +201,11 @@ export class SupabaseService {
     descuento_id,
     concepto_id,
     regimen_id,
+    
+    destino:destinos!hoteles_destino_id_fkey (
+    id,
+    nombre
+  ),
 
     traducciones:hotel_traducciones!hotel_traducciones_hotel_id_fkey (
       idioma_id,
