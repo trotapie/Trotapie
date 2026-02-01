@@ -286,22 +286,6 @@ export class DetalleHotelComponent {
         const detalleHabitaciones = this.formatHabitaciones(rooms);
         const totalRooms = rooms.length;
 
-        const id = await this.guardarCliente({
-            nombre,
-            hotel: this.hotel.nombre_hotel,
-            ciudad,
-            noches: this.noches,
-            regimen,
-            entrada: fechaInicio,
-            salida: fechaFin,
-            habitaciones: totalRooms,
-            detalleHabitaciones,
-            especiales,
-            telefono,
-            correo,
-            asesor: asesor.id,
-        });
-
         const mensaje = await this.buildCotizacionMensaje({
             nombre,
             hotel: this.hotel.nombre_hotel,
@@ -326,6 +310,23 @@ export class DetalleHotelComponent {
         const url = `https://wa.me/${telefonoTrotapie}?text=${encodeURIComponent(mensaje)}`;
 
         window.open(url, '_blank');
+        
+        this.guardarCliente({
+            nombre,
+            hotel: this.hotel.nombre_hotel,
+            ciudad,
+            noches: this.noches,
+            regimen,
+            entrada: fechaInicio,
+            salida: fechaFin,
+            habitaciones: totalRooms,
+            detalleHabitaciones,
+            especiales,
+            telefono,
+            correo,
+            asesor: asesor.id,
+        });
+
     }
 
     // private formatHabitaciones(rooms: Room[]): string {
@@ -423,7 +424,7 @@ export class DetalleHotelComponent {
         
         if (this.opcionesRegimen?.length === 1) {
             this.reservacionForm.get('regimen')?.patchValue(
-                this.opcionesRegimen[0].descripcion
+                this.opcionesRegimen[0]
             );
         }
 
