@@ -1,5 +1,6 @@
 <div #scrollContainer class="absolute inset-0 flex flex-col min-w-0 overflow-y-auto" cdkScrollable>
 
+    @if(esEdicion){
     <div class="flex min-w-0 flex-auto flex-col mx-6 mt-4">
         <div
             class="flex top-0 z-50 items-center justify-between w-full py-2 px-2 md:px-4 transition-all duration-300 backdrop-blur-md">
@@ -14,33 +15,48 @@
             </div>
         </div>
     </div>
+    }
 
+    @if(!esEdicion){
+    <header class="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <img src="assets/images/logos/trotapie.png" alt="Logo Trotapie"
+                    class="h-auto w-32 sm:w-40 md:w-48 lg:w-56 p-1 cursor-pointer" />
+            </div>
+            <div class="flex items-center gap-4 text-xs font-medium text-slate-500 dark:text-slate-400">
+                <span>Cotización: 24.ene.2026</span>
+            </div>
+        </div>
+    </header>
+    }
     <section class="bg-card m-5 rounded-3xl shadow-xl">
 
-        <div
-            class="text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-200 px-5">
+        <div class="text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-200 px-5">
             <main class="max-w-7xl mx-auto px-4 py-2 pb-32">
                 <section class="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16 items-start">
                     <div class="space-y-6 pt-4">
-    
+
                         <h1 class="text-5xl lg:text-6xl font-black text-[#1e3a5f] dark:text-white leading-tight">
                             Reserva tu viaje a
                             <span class="text-[#1e3a5f] dark:text-blue-400">Cancún</span>
                         </h1>
-    
+
                         <p class="text-sm text-slate-600 dark:text-slate-400 max-w-md leading-relaxed">
-                            Diseñamos esta propuesta personalizada según tus preferencias. Si tienes alguna duda, tu agente
+                            Diseñamos esta propuesta personalizada según tus preferencias. Si tienes alguna duda, tu
+                            agente
                             está listo para
                             asistirte.
                         </p>
-    
+
                         <div
                             class="bg-white dark:bg-slate-800 p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-50 dark:border-slate-700 space-y-6">
-    
+
                             <div class="flex items-center gap-4">
                                 <div
                                     class="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center">
-                                    <mat-icon class="icon-size-5 icon-thick" [svgIcon]="'heroicons_outline:calendar-days'"></mat-icon>
+                                    <mat-icon class="icon-size-5 icon-thick"
+                                        [svgIcon]="'heroicons_outline:calendar-days'"></mat-icon>
                                 </div>
                                 <div>
                                     <p
@@ -53,7 +69,7 @@
                                     <p class="text-xs text-slate-500">3 noches, 2 mayores</p>
                                 </div>
                             </div>
-    
+
                             <div
                                 class="pt-6 border-t border-slate-50 dark:border-slate-700 flex items-center justify-between">
                                 <div>
@@ -61,32 +77,42 @@
                                         class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
                                         Precio total
                                     </p>
+                                    @if(esEdicion){
+                                    <p class="text-3xl font-black text-[#1e3a5f] dark:text-white tracking-tight">
+                                        MXN
+                                    </p>
+                                    }
+                                    @if(!esEdicion){
                                     <p class="text-3xl font-black text-[#1e3a5f] dark:text-white tracking-tight">
                                         MXN$ 19,109
                                     </p>
+                                    }
                                 </div>
-    
+
+                                @if(!esEdicion){
                                 <button
                                     class="bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
                                     Contactar agente
                                 </button>
+                                }
                             </div>
-    
+
                             <div
                                 class="flex items-center gap-2 text-[10px] text-slate-400 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl font-medium">
-                                <mat-icon class="icon-size-5 icon-thick" [svgIcon]="'heroicons_outline:information-circle'"></mat-icon>
+                                <mat-icon class="icon-size-5 icon-thick"
+                                    [svgIcon]="'heroicons_outline:information-circle'"></mat-icon>
                                 Consulta con tu agente los medios de pago disponibles.
                             </div>
                         </div>
                     </div>
-    
+
                     <!-- IMAGEN HERO -->
                     <div class="relative h-[550px] rounded-[2.5rem] overflow-hidden shadow-2xl">
                         <img alt="Playa Paraíso Cancún" class="w-full h-full object-cover"
                             src="https://lh3.googleusercontent.com/aida-public/AB6AXuB7zzeQTQfusTKFs5lS7esOhSpLimQK3KaFRyVmOIzgxHgnSdHgiv-BORJ1JIIfOm4LW4tzjjX45_w-Neefdque80RDSn2b3EiGklH-Y7UrXU0PFWkfXQyEELveld_ZKfy9pZjTqboqM0nPQpzTXrxApaDj4_m7vvRl4ImBdz346okcmbeJ2sSE7dQmN5Zpbsdmf19kmCjOU86Zd_WeEkHkl2GrTCFB8ybFszUdRsZ6mKZ5C_rc5CpdsUWj4t4YkgV0zdxiid5Hwd38" />
-    
+
                         <div
-                            class="absolute bottom-8 left-8 right-8 p-6 bg-white/20 backdrop-blur-xl rounded-2xl border border-white/30 text-white">
+                            class="absolute bottom-8 left-8 right-8 p-6 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/30 text-white">
                             <p class="text-[10px] uppercase tracking-[0.2em] font-black mb-1 opacity-80">
                                 Destino Destacado
                             </p>
@@ -96,7 +122,7 @@
                         </div>
                     </div>
                 </section>
-    
+
                 <div class="flex items-center gap-4 mb-8">
                     <h2 class="text-2xl font-black text-[#1e3a5f] dark:text-white">Alojamiento Seleccionado</h2>
                     <div class="h-px flex-1 bg-slate-200 dark:bg-slate-800 opacity-50"></div>
@@ -110,10 +136,14 @@
                                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuCKsYro9vnttzyPqTLyYTMaHRb5tA7Oh7sF9TwYpQqtLdybkgi-mFhSy8Ccs225NckIo8P065IJemKLU_CFN5r7R1k256K1LAHDqA-pzHm6QVxYuBeUO1RjBWJF_gmZP6LJRxrU3hJ01GTq8OyLDOVaQvZghM5-YPH-oH230AQjOFMY-WOl8ECs98w1c_jJv7MpRLfqlG7iX6jqXziojEC6WgrEUcT5yjTz-hVtY5_HRZYTDbS_9cb-wGrR0tFODa6eZdA7lhDMgh4b" />
                                 <div
                                     class="absolute top-6 left-6 bg-white/95 dark:bg-slate-900/95 px-3 py-1.5 rounded-full shadow-lg flex items-center gap-0.5">
-                                    <mat-icon class="icon-size-5 text-amber-400" [svgIcon]="'heroicons_solid:star'"></mat-icon>
-                                    <mat-icon class="icon-size-5 text-amber-400" [svgIcon]="'heroicons_solid:star'"></mat-icon>
-                                    <mat-icon class="icon-size-5 text-amber-400" [svgIcon]="'heroicons_solid:star'"></mat-icon>
-                                    <mat-icon class="icon-size-5 text-amber-400" [svgIcon]="'heroicons_solid:star'"></mat-icon>
+                                    <mat-icon class="icon-size-5 text-amber-400"
+                                        [svgIcon]="'heroicons_solid:star'"></mat-icon>
+                                    <mat-icon class="icon-size-5 text-amber-400"
+                                        [svgIcon]="'heroicons_solid:star'"></mat-icon>
+                                    <mat-icon class="icon-size-5 text-amber-400"
+                                        [svgIcon]="'heroicons_solid:star'"></mat-icon>
+                                    <mat-icon class="icon-size-5 text-amber-400"
+                                        [svgIcon]="'heroicons_solid:star'"></mat-icon>
                                 </div>
                             </div>
                             <div class="lg:col-span-8 p-10 flex flex-col justify-between">
@@ -130,7 +160,8 @@
                                     </div>
                                     <div
                                         class="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 px-4 py-2 rounded-full text-[10px] uppercase tracking-widest font-black flex items-center gap-1.5 border border-emerald-100 dark:border-emerald-800/30">
-                                        <mat-icon class="icon-size-5 text-emerald-600 icon-thick" [svgIcon]="'heroicons_outline:check-badge'"></mat-icon>
+                                        <mat-icon class="icon-size-5 text-emerald-600 icon-thick"
+                                            [svgIcon]="'heroicons_outline:check-badge'"></mat-icon>
                                         All inclusive
                                     </div>
                                 </div>
@@ -256,50 +287,85 @@
                         <button
                             class="flex items-center gap-2 text-slate-900 dark:text-blue-400 font-black text-sm uppercase tracking-widest hover:underline group">
                             Ver todas las fotos
-                            <mat-icon class="icon-size-5 icon-thick transition-transform group-hover:translate-x-1" [svgIcon]="'heroicons_outline:arrow-right'"></mat-icon>
+                            <mat-icon class="icon-size-5 icon-thick transition-transform group-hover:translate-x-1"
+                                [svgIcon]="'heroicons_outline:arrow-right'"></mat-icon>
                         </button>
                     </div>
                 </div>
                 <div
                     class="mt-20 p-8 bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/30 rounded-[2rem] flex gap-5">
-                    <mat-icon class="icon-size-5 icon-thick text-blue-800 dark:text-blue-300" [svgIcon]="'heroicons_outline:information-circle'"></mat-icon>
+                    <mat-icon class="icon-size-5 icon-thick text-blue-800 dark:text-blue-300"
+                        [svgIcon]="'heroicons_outline:information-circle'"></mat-icon>
                     <div
                         class="text-[11px] font-medium text-blue-800 dark:text-blue-300 leading-relaxed uppercase tracking-wider">
-                        Los precios y disponibilidad de productos mostrados son solo de referencia y válidos al momento de
+                        Los precios y disponibilidad de productos mostrados son solo de referencia y válidos al momento
+                        de
                         la
-                        búsqueda, quedando así sujetos a cambios hasta que se confirme la reserva. No podemos garantizar que
+                        búsqueda, quedando así sujetos a cambios hasta que se confirme la reserva. No podemos garantizar
+                        que
                         estos precios y/o productos sigan disponibles al momento de la contratación, el precio y los
                         productos
                         finales serán confirmados al momento de realizar la reserva.
                     </div>
                 </div>
-    
+
             </main>
-            <div
-                class="sticky bottom-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-slate-100 dark:border-slate-800 z-50">
-                <div class="max-w-7xl mx-auto px-10 py-5 flex items-center justify-between">
-                    <div class="hidden md:block">
-                        <p
-                            class="text-[10px] uppercase tracking-widest font-black text-slate-400 dark:text-slate-500 mb-0.5">
-                            Reserva tu viaje a Cancún</p>
-                        <p class="text-sm font-bold text-slate-900 dark:text-white">Krystal Cancún • 4 Estrellas • Todo
-                            Incluido
+            <div class="sticky bottom-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl
+         border-t border-slate-100 dark:border-slate-800 z-50">
+
+                <div class="max-w-7xl mx-auto px-4 sm:px-10 py-4 sm:py-5
+           flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
+
+                    <div>
+                        <p class="text-[10px] uppercase tracking-widest font-black
+               text-slate-400 dark:text-slate-500 mb-0.5">
+                            Reserva tu viaje a Cancún
+                        </p>
+                        <p class="text-sm font-bold text-slate-900 dark:text-white">
+                            Krystal Cancún • 4 Estrellas • Todo Incluido
                         </p>
                     </div>
-                    <div class="flex items-center gap-12">
-                        <div class="text-right">
-                            <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-0.5">Total
-                                propuesta
+
+                    <div class="w-full sm:w-auto
+             flex items-center justify-between sm:justify-end
+             gap-4 sm:gap-12">
+
+                        <div class="text-left sm:text-right">
+                            <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-0.5">
+                                Total propuesta
                             </p>
-                            <p class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">MXN$ 19,109</p>
+                            <p class="text-xl sm:text-2xl font-black
+                 text-slate-900 dark:text-white tracking-tight">
+                                MXN$ 19,109
+                            </p>
                         </div>
-                        <button
-                            class="bg-[#1e3a5f] text-white px-12 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-[1.02] transition-all shadow-xl shadow-blue-900/20">
+
+                        @if(esEdicion){
+                        <button class="bg-primary text-white
+               px-6 sm:px-12 py-3 sm:py-4
+               rounded-2xl font-black text-xs uppercase tracking-widest
+               hover:scale-[1.02] transition-all
+               shadow-xl shadow-blue-900/20
+               whitespace-nowrap">
+                            Guardar cotización
+                        </button>
+                        }
+
+                        @if(!esEdicion){
+                        <button class="bg-[#1e3a5f] text-white
+               px-6 sm:px-12 py-3 sm:py-4
+               rounded-2xl font-black text-xs uppercase tracking-widest
+               hover:scale-[1.02] transition-all
+               shadow-xl shadow-blue-900/20
+               whitespace-nowrap">
                             Contactar agente
                         </button>
+                        }
                     </div>
+
                 </div>
             </div>
+
         </div>
     </section>
 

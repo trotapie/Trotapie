@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MaterialModule } from 'app/shared/material.module';
 
 @Component({
@@ -11,10 +11,17 @@ import { MaterialModule } from 'app/shared/material.module';
   standalone: true
 })
 export class CotizacionComponent implements OnInit {
+  private router = inject(Router)
   private title = inject(Title);
-  private meta = inject(Meta)
+  private meta = inject(Meta);
+
+  esEdicion: boolean;
 
   ngOnInit() {
+
+    const url = this.router.url;
+    this.esEdicion = url.includes('edicion-cotizacion') ? true : false
+
     this.title.setTitle('Reserva tu viaje a Cancún - Cotización | Trotapie');
 
     this.meta.updateTag({
