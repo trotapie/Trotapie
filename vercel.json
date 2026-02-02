@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/share/cotizacion/:id", "destination": "/api/share/cotizacion/:id" },
+
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
