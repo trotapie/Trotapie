@@ -458,5 +458,18 @@ export class SupabaseService {
     return data as ISolicitudCotizacionListado[];
   }
 
+  async obtenerCotizacionPorPublicId(publicId: string) {
+    const { data, error } = await this.client.rpc(
+      'obtener_cotizacion_por_public_id',
+      { p_public_id: publicId }
+    );
+// TODO: AGREGAR LA IMAGEN DE FONDO DEL DESTINO Y TRAERLA Y HACER LA TABLA DE LOS TIPO DE HABITACION PARA RELACIONARLA CON SU ID A 
+// LA TABLA DE SOLICITUDES Y AL TRAER LA INFO MOSTRAR LA DESCRIPCION, 
+// TAMBIEN TRAER EL REGIMEN QUE SE SELECCIONO
+    if (error) throw error;
+
+    return data?.[0] ?? null;
+  }
+
 
 }
