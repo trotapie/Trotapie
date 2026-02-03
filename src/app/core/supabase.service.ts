@@ -463,13 +463,37 @@ export class SupabaseService {
       'obtener_cotizacion_por_public_id',
       { p_public_id: publicId }
     );
-// TODO: AGREGAR LA IMAGEN DE FONDO DEL DESTINO Y TRAERLA Y HACER LA TABLA DE LOS TIPO DE HABITACION PARA RELACIONARLA CON SU ID A 
-// LA TABLA DE SOLICITUDES Y AL TRAER LA INFO MOSTRAR LA DESCRIPCION, 
-// TAMBIEN TRAER EL REGIMEN QUE SE SELECCIONO
     if (error) throw error;
-
+    
     return data?.[0] ?? null;
+    // TODO: AGREGAR LA IMAGEN DE FONDO DEL DESTINO Y TRAERLA  Y AL TRAER LA INFO MOSTRAR LA DESCRIPCION, 
+    // TAMBIEN TRAER EL REGIMEN QUE SE SELECCIONO
   }
 
+  tipoHabitaciones() {
+    console.log('aqui');
 
+    return this.client
+      .from('tipos_habitacion')
+      .select('*')
+  }
+
+  async actualizarPrecioYHabitacion(
+  publicId: string,
+  precio: number,
+  tipoHabitacionId: number
+) {
+  const precioLimpio = Number(String(precio).replace(/[$,]/g, ''));
+
+  const { error } = await this.client.rpc(
+    'actualizar_cotizacion_publica',
+    {
+      p_public_id: publicId,
+      p_precio: precioLimpio,
+      p_tipo_habitacion: tipoHabitacionId,
+    }
+  );
+
+  if (error) throw error;
+}
 }

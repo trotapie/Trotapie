@@ -42,6 +42,7 @@ import { NgApexchartsModule } from 'ng-apexcharts';
 import { HttpClientJsonpModule } from '@angular/common/http';
 import { NgxDaterangepickerMd } from 'ngx-daterangepicker-material';
 import { CustomScrollbarThumbDirective } from './directives/scroll.directive';
+import { ImporteMxnBlurDirective } from './directives/importe.directive';
 @NgModule({
   imports: [
     MatButtonModule,
@@ -104,7 +105,8 @@ import { CustomScrollbarThumbDirective } from './directives/scroll.directive';
     NgSwitch, 
     HttpClientJsonpModule,
     NgxDaterangepickerMd.forRoot(),
-    CustomScrollbarThumbDirective
+    CustomScrollbarThumbDirective,
+    ImporteMxnBlurDirective
   ],
   exports: [
     MatButtonModule,
@@ -166,7 +168,8 @@ import { CustomScrollbarThumbDirective } from './directives/scroll.directive';
     NgSwitch,
     HttpClientJsonpModule,
     NgxDaterangepickerMd,
-    CustomScrollbarThumbDirective
+    CustomScrollbarThumbDirective,
+    ImporteMxnBlurDirective
   ]
 })
 export class MaterialModule {}
