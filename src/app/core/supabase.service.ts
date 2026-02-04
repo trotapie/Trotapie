@@ -464,36 +464,40 @@ export class SupabaseService {
       { p_public_id: publicId }
     );
     if (error) throw error;
-    
+
     return data?.[0] ?? null;
     // TODO: AGREGAR LA IMAGEN DE FONDO DEL DESTINO Y TRAERLA  Y AL TRAER LA INFO MOSTRAR LA DESCRIPCION, 
     // TAMBIEN TRAER EL REGIMEN QUE SE SELECCIONO
   }
 
   tipoHabitaciones() {
-    console.log('aqui');
-
     return this.client
       .from('tipos_habitacion')
       .select('*')
   }
 
-  async actualizarPrecioYHabitacion(
-  publicId: string,
-  precio: number,
-  tipoHabitacionId: number
-) {
-  const precioLimpio = Number(String(precio).replace(/[$,]/g, ''));
+  estatusCotizaciones() {
+    return this.client
+      .from('estatus_cotizacion')
+      .select('id, clave, nombre, activo, orden')
+      .eq('activo', true); // 👈 ordenados
+  }
 
-  const { error } = await this.client.rpc(
-    'actualizar_cotizacion_publica',
-    {
-      p_public_id: publicId,
+  async actualizarPrecioHabitacionYEstatus(
+    publicId: string,
+    precio: number | string,
+    tipoHabitacionId: number,
+    estatusClave: string
+  ) {
+    const precioLimpio = Number(String(precio).replace(/[$,]/g, ''));
+
+    const { error } = await this.client.rpc('actualizar_cotizacion_publica', {
+      p_public_id: publicId.trim(),
       p_precio: precioLimpio,
       p_tipo_habitacion: tipoHabitacionId,
-    }
-  );
+      p_estatus_clave: estatusClave,
+    });
 
-  if (error) throw error;
-}
+    if (error) throw error;
+  }
 }

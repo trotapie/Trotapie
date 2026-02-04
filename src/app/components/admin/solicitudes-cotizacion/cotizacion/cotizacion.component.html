@@ -88,28 +88,53 @@
 
                                 <div
                                     class="pt-6 border-t border-slate-50 dark:border-slate-700 flex items-center justify-between">
-                                    <div>
-                                        <p
-                                            class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
-                                            Precio total
-                                        </p>
-                                        @if(esEdicion){
-                                        <input type="tel" formControlName="precio" inputmode="numeric" autofocus class="flex-1 h-12 px-4 border-2 rounded-xl
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <!-- Precio -->
+                                        <div>
+                                            <p
+                                                class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
+                                                Precio total
+                                            </p>
+
+                                            @if (esEdicion) {
+                                            <input type="tel" formControlName="precio" inputmode="numeric" autofocus
+                                                class="w-full h-12 px-4 border-2 rounded-xl
                focus:outline-none transition-colors
                dark:bg-slate-800 dark:text-white" [ngClass]="precioInvalido
-          ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-          : 'border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-primary'" importeMxnBlur />
-                                        <p *ngIf="precioInvalido" class="mt-2 text-xs text-red-600 font-medium">
-                                            <span *ngIf="precioCtrl?.errors?.['required']">
-                                                El precio es obligatorio
-                                            </span>
-                                        </p>
-                                        }
-                                        @if(!esEdicion){
-                                        <p class="text-3xl font-black text-[#1e3a5f] dark:text-white tracking-tight">
-                                            MXN$ {{informacionCotizacion.precio_cotizacion}}
-                                        </p>
-                                        }
+          ? 'border-red-500 focus:border-red-500'
+          : 'border-slate-200 dark:border-slate-700 focus:border-primary'" importeMxnBlur />
+                                            }
+
+                                            @if (!esEdicion) {
+                                            <p
+                                                class="text-3xl font-black text-[#1e3a5f] dark:text-white tracking-tight">
+                                                MXN$ {{ informacionCotizacion.precio_cotizacion }}
+                                            </p>
+                                            }
+                                        </div>
+
+                                        <!-- Estatus -->
+                                        <div>
+                                            @if (esEdicion) {
+                                            <p
+                                                class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
+                                                Estatus de la cotización
+                                            </p>
+
+                                            <select formControlName="estatus" class="w-full h-12 px-4 pr-10 border-2 rounded-xl
+                 focus:outline-none transition-colors
+                 dark:bg-slate-800 dark:text-white appearance-none" [ngClass]="estatusInvalido
+            ? 'border-red-500 focus:border-red-500'
+            : 'border-slate-200 dark:border-slate-700 focus:border-primary'">
+                                                <option value="" disabled>Selecciona estatus</option>
+
+                                                @for (e of estatusOpciones; track e.id) {
+                                                <option [value]="e.clave">{{ e.nombre }}</option>
+                                                }
+                                            </select>
+                                            }
+                                        </div>
                                     </div>
 
                                     @if(!esEdicion){
@@ -174,9 +199,6 @@
                                         </ng-container>
                                     </div>
 
-                                    <!-- <div class="flex items-center"> -->
-
-                                    <!-- </div> -->
                                 </div>
                                 <div class="lg:col-span-8 p-10 flex flex-col justify-between">
                                     <div class="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-10">
@@ -184,6 +206,13 @@
                                             <h3
                                                 class="text-4xl font-black text-slate-900 dark:text-white tracking-tight">
                                                 {{informacionCotizacion.nombre_hotel}} </h3>
+                                            <button mat-raised-button color="primary" class=" w-30 text-white"
+                                                (click)="abrirUbicacion()">
+                                                <mat-icon class="icon-size-5"
+                                                    [svgIcon]="'heroicons_outline:map-pin'"></mat-icon>
+                                                Ubicacion
+                                            </button>
+                                            <!-- TODO: agregar ubicacion -->
                                             <!-- <p
                                                 class="text-slate-400 dark:text-slate-500 flex items-center gap-1.5 mt-2 text-sm font-medium">
                                                 <span class="material-icons-outlined text-base">place</span>
@@ -225,7 +254,6 @@
                                                 class="text-[10px] text-slate-400 uppercase tracking-widest font-black mb-2">
                                                 Habitación</p>
                                             @if(esEdicion && filteredOptions$){
-                                            <!-- TODO: CUANDO SEA EDICION TRAER UN SELECT CON LOS TIPO DE HABITACIONES PARA QUE LO PUEDAN EDITAR -->
                                             <mat-form-field class="w-full">
                                                 <input type="text" matInput placeholder="Selecciona tipo de habitación"
                                                     formControlName="tipoHabitacion" [matAutocomplete]="auto" />
@@ -240,7 +268,8 @@
                                             </mat-form-field>
                                             }
                                             @if(!esEdicion){
-                                            <p class="font-bold text-slate-900 dark:text-white">{{informacionCotizacion.habitacion}}</p>
+                                            <p class="font-bold text-slate-900 dark:text-white">
+                                                {{informacionCotizacion.habitacion}}</p>
                                             <p class="text-xs text-emerald-600 dark:text-emerald-400 font-bold mt-0.5">
                                                 Confirmación
                                                 Inmediata</p>
@@ -250,75 +279,32 @@
                                 </div>
                             </div>
                             <!-- TODO: AMENIDADES DEL HOTEL -->
-                            <!-- <div class="bg-slate-50/50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700">
-                                <div
-                                    class="grid grid-cols-1 md:grid-cols-3 gap-0 divide-x divide-slate-100 dark:divide-slate-700">
+                            <div
+                                class="bg-slate-50/50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700">
+                                <div class="grid grid-cols-1 gap-0 divide-x divide-slate-100 dark:divide-slate-700">
                                     <div class="p-10">
                                         <h4
                                             class="text-[11px] uppercase tracking-widest font-black mb-6 text-slate-400 dark:text-slate-500">
-                                            Instalaciones</h4>
-                                        <ul class="space-y-4 text-xs font-semibold text-slate-600 dark:text-slate-400">
-                                            <li class="flex items-center gap-3"><span
-                                                    class="material-icons-outlined text-[14px] text-emerald-500">check_circle</span>
-                                                3 Piscinas exteriores</li>
-                                            <li class="flex items-center gap-3"><span
-                                                    class="material-icons-outlined text-[14px] text-emerald-500">check_circle</span>
-                                                Acceso directo a playa</li>
-                                            <li class="flex items-center gap-3"><span
-                                                    class="material-icons-outlined text-[14px] text-emerald-500">check_circle</span>
-                                                Gimnasio equipado</li>
-                                            <li class="flex items-center gap-3"><span
-                                                    class="material-icons-outlined text-[14px] text-emerald-500">check_circle</span>
-                                                Club de niños</li>
-                                        </ul>
+                                            Amenidades</h4>
+                                        <section
+                                            class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 space-y-4 text-xs font-semibold  text-slate-600 dark:text-slate-400">
+                                            @for (e of informacionCotizacion.actividades; track e.id) {
+                                            <span class="flex items-center gap-3"><mat-icon
+                                                    class="icon-size-5 text-emerald-600 icon-thick"
+                                                    [svgIcon]="'heroicons_outline:check-badge'"></mat-icon>
+                                                {{e.descripcion}}</span>
+                                            }
+                                        </section>
                                     </div>
-                                    <div class="p-10">
-                                        <h4
-                                            class="text-[11px] uppercase tracking-widest font-black mb-6 text-slate-400 dark:text-slate-500">
-                                            Gastronomía</h4>
-                                        <ul class="space-y-4 text-xs font-semibold text-slate-600 dark:text-slate-400">
-                                            <li class="flex items-center gap-3"><span
-                                                    class="material-icons-outlined text-[14px] text-emerald-500">check_circle</span>
-                                                4 Restaurantes temáticos</li>
-                                            <li class="flex items-center gap-3"><span
-                                                    class="material-icons-outlined text-[14px] text-emerald-500">check_circle</span>
-                                                Bar en área de piscina</li>
-                                            <li class="flex items-center gap-3"><span
-                                                    class="material-icons-outlined text-[14px] text-emerald-500">check_circle</span>
-                                                Buffet internacional</li>
-                                            <li class="flex items-center gap-3"><span
-                                                    class="material-icons-outlined text-[14px] text-emerald-500">check_circle</span>
-                                                Snack bar 24/7</li>
-                                        </ul>
-                                    </div>
-                                    <div class="p-10">
-                                        <h4
-                                            class="text-[11px] uppercase tracking-widest font-black mb-6 text-slate-400 dark:text-slate-500">
-                                            Servicios</h4>
-                                        <ul class="space-y-4 text-xs font-semibold text-slate-600 dark:text-slate-400">
-                                            <li class="flex items-center gap-3"><span
-                                                    class="material-icons-outlined text-[14px] text-emerald-500">check_circle</span>
-                                                Wi-Fi alta velocidad</li>
-                                            <li class="flex items-center gap-3"><span
-                                                    class="material-icons-outlined text-[14px] text-emerald-500">check_circle</span>
-                                                Conserjería 24 hrs</li>
-                                            <li class="flex items-center gap-3"><span
-                                                    class="material-icons-outlined text-[14px] text-emerald-500">check_circle</span>
-                                                Servicio de spa (extra)</li>
-                                            <li class="flex items-center gap-3"><span
-                                                    class="material-icons-outlined text-[14px] text-emerald-500">check_circle</span>
-                                                Valet parking</li>
-                                        </ul>
-                                    </div>
+
                                 </div>
-                            </div> -->
+                            </div>
                         </div>
                     </div>
                     <div class="mt-20">
                         <h3 class="text-2xl font-black mb-8 text-slate-900 dark:text-white">Fotos del alojamiento</h3>
                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
 
-                            <!-- Columna 1 -->
                             <div class="space-y-6">
                                 <img class="w-full h-56 object-cover rounded-[2rem] shadow-lg" [src]="fotoUrl(0)"
                                     alt="Foto 1" loading="lazy" />
@@ -326,7 +312,6 @@
                                     alt="Foto 2" loading="lazy" />
                             </div>
 
-                            <!-- Columna 2 -->
                             <div class="space-y-6">
                                 <img class="w-full h-[450px] object-cover rounded-[2rem] shadow-lg" [src]="fotoUrl(2)"
                                     alt="Foto 3" loading="lazy" />
@@ -334,7 +319,6 @@
                                     alt="Foto 4" loading="lazy" />
                             </div>
 
-                            <!-- Columna 3 -->
                             <div class="space-y-6">
                                 <img class="w-full h-56 object-cover rounded-[2rem] shadow-lg" [src]="fotoUrl(4)"
                                     alt="Foto 5" loading="lazy" />
@@ -342,7 +326,6 @@
                                     alt="Foto 6" loading="lazy" />
                             </div>
 
-                            <!-- Columna 4 -->
                             <div class="space-y-6">
                                 <img class="w-full h-[450px] object-cover rounded-[2rem] shadow-lg" [src]="fotoUrl(6)"
                                     alt="Foto 7" loading="lazy" />
@@ -419,13 +402,12 @@
                             </div>
 
                             @if(esEdicion){
-                            <!-- TODO: HACER EL GUARDADO DE LA COTIZACION  -->
-                            <button class="bg-primary text-white
-                   px-6 sm:px-12 py-3 sm:py-4
-                   rounded-2xl font-black text-xs uppercase tracking-widest
-                   hover:scale-[1.02] transition-all
-                   shadow-xl shadow-blue-900/20
-                   whitespace-nowrap" (click)="modalCotizacion()">
+                            <button type="button" [disabled]="edicionForm.invalid" class="bg-primary text-white
+         px-6 sm:px-12 py-3 sm:py-4
+         rounded-2xl font-black text-xs uppercase tracking-widest
+         transition-all shadow-xl shadow-blue-900/20 whitespace-nowrap
+         disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none
+         disabled:hover:scale-100 hover:scale-[1.02]" (click)="modalCotizacion()">
                                 Guardar cotización
                             </button>
                             }
@@ -540,6 +522,25 @@
     </div>
 </div>
 }
+
+<div *ngIf="mostrarMapa" [ubicacion]="informacionCotizacion.ubicacion"
+    class="fixed inset-0 z-[999] bg-black/50 backdrop-blur-sm flex items-end justify-center">
+    <div
+        class="bg-white dark:bg-gray-900 w-4/5 max-h-[75%] rounded-t-2xl shadow-xl p-4 overflow-hidden animate-slide-up relative">
+
+        <!-- Botón cerrar -->
+        <button class="absolute top-2 right-4 text-gray-600 dark:text-gray-300" (click)="abrirUbicacion()">
+            <mat-icon svgIcon="heroicons_outline:x-mark" class="w-8 h-8"></mat-icon>
+        </button>
+
+        <!-- Contenido: Mapa -->
+        <div class="text-center text-xl font-bold mb-4">ubicacion</div>
+        <!-- <div class="text-center text-xl font-bold mb-4">{{t('ubicacion')}}</div> -->
+        <div class="w-full h-[400px] rounded-xl overflow-hidden">
+            <app-mapa></app-mapa>
+        </div>
+    </div>
+</div>
 
 <ng-template #skeletonCotizacion>
     <div class="animate-pulse">

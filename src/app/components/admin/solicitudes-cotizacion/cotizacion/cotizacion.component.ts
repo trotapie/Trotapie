@@ -3,10 +3,11 @@ import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { SupabaseService } from 'app/core/supabase.service';
 import { MaterialModule } from 'app/shared/material.module';
-import { ICotizacion } from './cotizacion.interface';
+import { ICotizacion, IEstatusCotizacion } from './cotizacion.interface';
 import { DateI18nPipe } from 'app/core/i18n/date-i18n.pipe';
 import { FormBuilder, Validators } from '@angular/forms';
 import { map, Observable, startWith } from 'rxjs';
+import { MapaComponent } from 'app/components/hoteles/mapa/mapa.component';
 
 type Tile = { key: string; url: string; alt: string; class: string };
 
@@ -17,7 +18,7 @@ interface TipoHabitacion {
 }
 @Component({
   selector: 'app-modificar-cotizacion',
-  imports: [MaterialModule, RouterLink, DateI18nPipe],
+  imports: [MaterialModule, RouterLink, DateI18nPipe, MapaComponent],
   templateUrl: './cotizacion.component.html',
   styleUrl: './cotizacion.component.scss',
   standalone: true
@@ -35,6 +36,8 @@ export class CotizacionComponent implements OnInit {
   informacionCotizacion: ICotizacion
   esEdicion: boolean;
   enviarCotizacion: boolean;
+  mostrarMapa = false;
+  estatusOpciones: IEstatusCotizacion[] = []
 
   telefonoForm = this.fb.group({
     telefono: [
@@ -50,7 +53,8 @@ export class CotizacionComponent implements OnInit {
 
   edicionForm = this.fb.group({
     precio: [null, [Validators.required]],
-    tipoHabitacion: [null as TipoHabitacion,[Validators.required]]
+    tipoHabitacion: [null as TipoHabitacion, [Validators.required]],
+    estatus: ['', [Validators.required]]
   });
 
   tiposHabitacion: TipoHabitacion[] = [];
@@ -59,12 +63,9 @@ export class CotizacionComponent implements OnInit {
   async ngOnInit() {
     try {
       this.cargando = true;
-
       const url = this.router.url;
       const id = this.route.snapshot.paramMap.get('id');
       this.informacionCotizacion = await this.supabase.obtenerCotizacionPorPublicId(id);
-      console.log(this.informacionCotizacion);
-
       this.esEdicion = url.includes('edicion-cotizacion') ? true : false
 
       if (this.esEdicion) {
@@ -100,7 +101,6 @@ export class CotizacionComponent implements OnInit {
     } finally {
       this.cargando = false;
       this.edicionForm.get('tipoHabitacion')?.valueChanges.subscribe(valor => {
-        console.log(valor);
 
         const texto = typeof valor === 'string' ? valor : valor.nombre_habitacion || '';
         this.filteredOptions$ = this.tiposHabitacion.filter(m =>
@@ -112,7 +112,25 @@ export class CotizacionComponent implements OnInit {
 
   async obtenerInformacionCatalogosEdicion() {
     const { data } = await this.supabase.tipoHabitaciones();
+    const estatus = await this.supabase.estatusCotizaciones();
+    this.estatusOpciones = estatus.data
+
     this.filteredOptions$ = this.tiposHabitacion = data;
+    const datosHotel = {
+      ubicacion: this.informacionCotizacion.ubicacion
+
+    }
+    sessionStorage.setItem('hotel', JSON.stringify(datosHotel))
+
+    this.edicionForm.patchValue({
+      precio: this.informacionCotizacion.precio_cotizacion,
+      tipoHabitacion: this.tiposHabitacion.find(
+        item => item.id === this.informacionCotizacion.tipo_habitacion
+      ),
+      estatus: this.estatusOpciones.find(
+        item => item.nombre === this.informacionCotizacion.estatus
+      )?.clave ?? ''
+    });
   }
 
   private _filter(value: string): TipoHabitacion[] {
@@ -157,13 +175,8 @@ export class CotizacionComponent implements OnInit {
 
   modalCotizacion() {
     this.enviarCotizacion = true;
-    const { precio, tipoHabitacion } = this.edicionForm.value
-    console.log(precio, tipoHabitacion);
-    console.log();
-    const valor = this.edicionForm.get('tipoHabitacion').value;
-    
-    this.supabase.actualizarPrecioYHabitacion(this.informacionCotizacion.public_id, precio, valor.id)
-
+    const { precio, tipoHabitacion, estatus } = this.edicionForm.value
+    this.supabase.actualizarPrecioHabitacionYEstatus(this.informacionCotizacion.public_id, precio, tipoHabitacion.id, estatus)
   }
 
   get telefonoCtrl() {
@@ -211,5 +224,10 @@ Quedo atento(a) a cualquier comentario o ajuste que requiera.
     window.open(whatsappUrl, '_blank');
     this.enviarCotizacion = false;
   }
+
+  abrirUbicacion() {
+    this.mostrarMapa = !this.mostrarMapa;
+  }
+
 
 }

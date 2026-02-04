@@ -35,3 +35,12 @@ export interface Imagene {
     descripcion:    null;
     tipo_imagen_id: null;
 }
+
+export interface IEstatusCotizacion {
+    id:     number;
+    clave:  string;
+    nombre: string;
+    activo: boolean;
+    orden:  number;
+}
+
