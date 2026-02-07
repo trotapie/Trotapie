@@ -600,6 +600,10 @@
     vertical-align: baseline;
 }
 
+.slow-spin {
+  animation: spin 6s linear infinite;
+}
+
 // .always-scrollbar {
 //   position: relative;
 // }

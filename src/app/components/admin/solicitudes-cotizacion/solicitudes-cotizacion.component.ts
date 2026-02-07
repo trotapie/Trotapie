@@ -6,11 +6,12 @@ import { RouterLink } from '@angular/router';
 import { FuseSplashScreenService } from '@fuse/services/splash-screen';
 import { SupabaseService } from 'app/core/supabase.service';
 import { ISolicitudCotizacionListado } from 'app/interface/solicitudes-cotizacion.interface';
+import { EstatusComponent } from 'app/shared/estatus/estatus.component';
 import { MaterialModule } from 'app/shared/material.module';
 
 @Component({
   selector: 'app-solicitudes-cotizacion',
-  imports: [MaterialModule, RouterLink],
+  imports: [MaterialModule, RouterLink, EstatusComponent],
   templateUrl: './solicitudes-cotizacion.component.html',
   styleUrl: './solicitudes-cotizacion.component.scss'
 })

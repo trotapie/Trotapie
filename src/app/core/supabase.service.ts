@@ -470,6 +470,18 @@ export class SupabaseService {
     // TAMBIEN TRAER EL REGIMEN QUE SE SELECCIONO
   }
 
+  async obtenerCotizacionPorPublicIdCliente(publicId: string) {
+    const { data, error } = await this.client.rpc(
+      'obtener_cotizacion_por_public_id_cliente',
+      { p_public_id: publicId }
+    );
+    if (error) throw error;
+
+    return data?.[0] ?? null;
+    // TODO: AGREGAR LA IMAGEN DE FONDO DEL DESTINO Y TRAERLA  Y AL TRAER LA INFO MOSTRAR LA DESCRIPCION, 
+    // TAMBIEN TRAER EL REGIMEN QUE SE SELECCIONO
+  }
+
   tipoHabitaciones() {
     return this.client
       .from('tipos_habitacion')

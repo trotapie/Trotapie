@@ -12,7 +12,7 @@ export class MapaComponent implements OnInit, AfterViewInit {
     hotel: Hotel;
     ngOnInit() {
 
-        this.hotel = JSON.parse(sessionStorage.getItem('hotel'))
+        this.hotel = JSON.parse(sessionStorage.getItem('hotel'))       
         const url = this.hotel.ubicacion;
 
         this.coordenadas = this.extraerCoordenadasDesdeUrl(url);

@@ -8,6 +8,8 @@ import { DateI18nPipe } from 'app/core/i18n/date-i18n.pipe';
 import { FormBuilder, Validators } from '@angular/forms';
 import { map, Observable, startWith } from 'rxjs';
 import { MapaComponent } from 'app/components/hoteles/mapa/mapa.component';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { EstatusComponent } from 'app/shared/estatus/estatus.component';
 
 type Tile = { key: string; url: string; alt: string; class: string };
 
@@ -18,7 +20,7 @@ interface TipoHabitacion {
 }
 @Component({
   selector: 'app-modificar-cotizacion',
-  imports: [MaterialModule, RouterLink, DateI18nPipe, MapaComponent],
+  imports: [MaterialModule, RouterLink, DateI18nPipe, MapaComponent, TranslocoModule, EstatusComponent],
   templateUrl: './cotizacion.component.html',
   styleUrl: './cotizacion.component.scss',
   standalone: true
@@ -31,6 +33,7 @@ export class CotizacionComponent implements OnInit {
   private route = inject(ActivatedRoute)
   private supabase = inject(SupabaseService);
   private fb = inject(FormBuilder);
+  private _translocoService = inject(TranslocoService);
   cargando = true;
 
   informacionCotizacion: ICotizacion
@@ -67,10 +70,23 @@ export class CotizacionComponent implements OnInit {
       const id = this.route.snapshot.paramMap.get('id');
       this.informacionCotizacion = await this.supabase.obtenerCotizacionPorPublicId(id);
       this.esEdicion = url.includes('edicion-cotizacion') ? true : false
+      const datosHotel = {
+        ubicacion: this.informacionCotizacion.ubicacion,
+        nombre_hotel: this.informacionCotizacion.nombre_hotel
+      }
+
+      sessionStorage.setItem('hotel', JSON.stringify(datosHotel))
 
       if (this.esEdicion) {
         this.obtenerInformacionCatalogosEdicion()
+        this.informacionCotizacion = await this.supabase.obtenerCotizacionPorPublicId(id);
+        console.log(this.informacionCotizacion);
+
+      } else {
+        this.informacionCotizacion = await this.supabase.obtenerCotizacionPorPublicIdCliente(id);
+        this.setActiveLang(this.informacionCotizacion.idioma)
       }
+
 
       this.title.setTitle('Reserva tu viaje a Cancún - Cotización | Trotapie');
 
@@ -116,11 +132,7 @@ export class CotizacionComponent implements OnInit {
     this.estatusOpciones = estatus.data
 
     this.filteredOptions$ = this.tiposHabitacion = data;
-    const datosHotel = {
-      ubicacion: this.informacionCotizacion.ubicacion
 
-    }
-    sessionStorage.setItem('hotel', JSON.stringify(datosHotel))
 
     this.edicionForm.patchValue({
       precio: this.informacionCotizacion.precio_cotizacion,
@@ -227,6 +239,12 @@ Quedo atento(a) a cualquier comentario o ajuste que requiera.
 
   abrirUbicacion() {
     this.mostrarMapa = !this.mostrarMapa;
+  }
+
+  setActiveLang(lang: string): void {
+    // Set the active lang
+    this._translocoService.setActiveLang(lang);
+    localStorage.setItem('lang', lang);
   }
 
 
