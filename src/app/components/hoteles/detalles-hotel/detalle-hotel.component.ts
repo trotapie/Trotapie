@@ -553,7 +553,7 @@ export class DetalleHotelComponent {
 
 
     abrirUbicacion() {
-        this.mostrarMapa = true;
+        this.mostrarMapa = !this.mostrarMapa;
     }
 
     cerrarMapa() {
