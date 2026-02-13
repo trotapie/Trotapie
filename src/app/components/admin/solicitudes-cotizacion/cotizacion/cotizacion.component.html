@@ -41,19 +41,21 @@
                 <div class="text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-200 px-5">
                     <main class="max-w-7xl mx-auto px-4 py-2 pb-32">
                         <section class="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16 items-start">
-                            <div class="space-y-6 pt-4">
+                            <div>
 
-                                <h1
-                                    class="text-5xl lg:text-6xl font-black text-[#1e3a5f] dark:text-white leading-tight">
-                                    {{ t('reserva_viaje', { destino: informacionCotizacion.destino_nombre }) }}
-                                </h1>
+                                <section class="space-y-6 pt-4">
+                                    <h1
+                                        class="text-5xl lg:text-6xl font-black text-[#1e3a5f] dark:text-white leading-tight">
+                                        {{ t('reserva_viaje', { destino: informacionCotizacion.destino_nombre }) }}
+                                    </h1>
 
-                                <p class="text-sm text-slate-600 dark:text-slate-400 max-w-md leading-relaxed">
-                                    {{ t('descripcion_cotizacion')}}
-                                </p>
+                                    <p class="text-sm text-slate-600 dark:text-slate-400 max-w-md leading-relaxed">
+                                        {{ t('descripcion_cotizacion')}}
+                                    </p>
+                                </section>
 
                                 <div
-                                    class="bg-white dark:bg-slate-800 p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-50 dark:border-slate-700 space-y-6">
+                                    class="bg-white dark:bg-slate-800 p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-50 dark:border-slate-700">
 
                                     <div class="flex items-center gap-4">
                                         <div
@@ -73,7 +75,6 @@
                                                 |
                                                 dateI18n:'dd MMM yyyy':informacionCotizacion.idioma}}
                                             </p>
-                                            <!-- TODO: HACER LA TRADUCCION CUANDO NO SEA EDICION -->
                                             <p class="text-xs text-slate-500">
                                                 {{ t('noches-s', { noches: informacionCotizacion.noches }) }},
                                                 {{informacionCotizacion.idioma ==='es' ?
@@ -81,6 +82,26 @@
                                                 informacionCotizacion.habitaciones.traduccion }}
                                             </p>
                                         </div>
+                                    </div>
+                                    <div class="mt-6">
+                                        @if (esEdicion) {
+                                        <p
+                                            class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
+                                            Politicas de reservación
+                                        </p>
+
+                                        <select formControlName="estatus" class="w-full h-12 px-4 pr-10 border-2 rounded-xl
+                                                     focus:outline-none transition-colors
+                                                     dark:bg-slate-800 dark:text-white appearance-none" [ngClass]="estatusInvalido
+                                                ? 'border-red-500 focus:border-red-500'
+                                                : 'border-slate-200 dark:border-slate-700 focus:border-primary'">
+                                            <option value="" disabled>Selecciona estatus</option>
+
+                                            @for (e of estatusOpciones; track e.id) {
+                                            <option [value]="e.clave">{{ e.nombre }}</option>
+                                            }
+                                        </select>
+                                        }
                                     </div>
 
                                     <div
@@ -90,16 +111,191 @@
                                             <div>
                                                 <p
                                                     class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
-                                                    {{ t('precio_total') }}
+                                                    <!-- {{ t('precio_total') }} --> Precio sin seguro
                                                 </p>
 
                                                 @if (esEdicion) {
                                                 <input type="tel" formControlName="precio" inputmode="numeric" autofocus
                                                     class="w-full h-12 px-4 border-2 rounded-xl
-               focus:outline-none transition-colors
-               dark:bg-slate-800 dark:text-white" [ngClass]="precioInvalido
-          ? 'border-red-500 focus:border-red-500'
-          : 'border-slate-200 dark:border-slate-700 focus:border-primary'" importeMxnBlur />
+                                                focus:outline-none transition-colors
+                                                dark:bg-slate-800 dark:text-white" [ngClass]="precioInvalido
+                                           ? 'border-red-500 focus:border-red-500'
+                                           : 'border-slate-200 dark:border-slate-700 focus:border-primary'"
+                                                    importeMxnBlur />
+                                                }
+
+                                                @if (!esEdicion) {
+                                                <p
+                                                    class="text-3xl font-black text-[#1e3a5f] dark:text-white tracking-tight">
+                                                    MXN$ {{ informacionCotizacion.precio_cotizacion }}
+                                                </p>
+                                                }
+                                            </div>
+
+                                            <div>
+                                                @if (esEdicion) {
+                                                <p
+                                                    class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
+                                                    Politicas de reservación
+                                                </p>
+
+                                                <mat-form-field appearance="fill" class="tp-select w-full" [ngClass]="estatusInvalido
+                                                    ? 'tp-invalid'
+                                                    : 'tp-valid'">
+
+                                                    <mat-select formControlName="condicionesPrecioSinSeguro" multiple
+                                                        panelClass="tp-select-panel">
+                                                        <mat-select-trigger>
+                                                            {{
+                                                            estatusLabelPrimerSeleccionado('condicionesPrecioSinSeguro')
+                                                            }}
+                                                            @if
+                                                            ((edicionForm.get('condicionesPrecioSinSeguro')?.value?.length
+                                                            ||
+                                                            0) > 1) {
+                                                            <span class="ml-1 text-xs opacity-70">
+                                                                (+{{
+                                                                (edicionForm.get('condicionesPrecioSinSeguro')?.value?.length
+                                                                ||
+                                                                0) - 1 }}
+                                                                más)
+                                                            </span>
+                                                            }
+                                                        </mat-select-trigger>
+
+                                                        @for (e of politicas; track e.id) {
+                                                        <mat-option [value]="e">{{ e.descripcion }}</mat-option>
+                                                        }
+                                                    </mat-select>
+                                                </mat-form-field>
+                                                }
+                                            </div>
+                                        </div>
+
+                                        @if(!esEdicion){
+                                        <button
+                                            class="bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
+                                            {{ t('contactar_agente') }}
+                                        </button>
+                                        }
+                                    </div>
+
+                                    <div
+                                        class="grid grid-cols-1  text-[10px] text-slate-400 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl font-medium space-y-2">
+                                        @for (e of edicionForm.get('condicionesPrecioSinSeguro')?.value; track e.id) {
+                                        <span class="flex items-center gap-2">
+                                            <mat-icon class="icon-size-5 icon-thick"
+                                                [svgIcon]="'heroicons_outline:information-circle'"></mat-icon>
+                                            <!-- {{ t('medios_pago') }} -->
+                                            {{e.descripcion}}
+                                        </span>
+                                        }
+                                    </div>
+                                    <div
+                                        class="pt-6 border-t border-slate-50 dark:border-slate-700 flex items-center justify-between">
+
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <p
+                                                    class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
+                                                    <!-- {{ t('precio_total') }} --> Precio con seguro
+                                                </p>
+
+                                                @if (esEdicion) {
+                                                <input type="tel" formControlName="precioConSeguro" inputmode="numeric" autofocus
+                                                    class="w-full h-12 px-4 border-2 rounded-xl
+                                                focus:outline-none transition-colors
+                                                dark:bg-slate-800 dark:text-white" [ngClass]="precioInvalido
+                                           ? 'border-red-500 focus:border-red-500'
+                                           : 'border-slate-200 dark:border-slate-700 focus:border-primary'"
+                                                    importeMxnBlur />
+                                                }
+
+                                                @if (!esEdicion) {
+                                                <p
+                                                    class="text-3xl font-black text-[#1e3a5f] dark:text-white tracking-tight">
+                                                    MXN$ {{ informacionCotizacion.precio_cotizacion }}
+                                                </p>
+                                                }
+                                            </div>
+
+                                            <div>
+                                                @if (esEdicion) {
+                                                <p
+                                                    class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
+                                                    Politicas de reservación
+                                                </p>
+
+                                                <mat-form-field appearance="fill" class="tp-select w-full" [ngClass]="estatusInvalido
+                                                    ? 'tp-invalid'
+                                                    : 'tp-valid'">
+
+                                                    <mat-select formControlName="condicionesPrecioConSeguro" multiple
+                                                        panelClass="tp-select-panel">
+                                                        <mat-select-trigger>
+                                                            {{
+                                                            estatusLabelPrimerSeleccionado('condicionesPrecioConSeguro')
+                                                            }}
+                                                            @if
+                                                            ((edicionForm.get('condicionesPrecioConSeguro')?.value?.length
+                                                            ||
+                                                            0) > 1) {
+                                                            <span class="ml-1 text-xs opacity-70">
+                                                                (+{{
+                                                                (edicionForm.get('condicionesPrecioConSeguro')?.value?.length
+                                                                ||
+                                                                0) - 1 }}
+                                                                más)
+                                                            </span>
+                                                            }
+                                                        </mat-select-trigger>
+
+                                                        @for (e of politicas; track e.id) {
+                                                        <mat-option [value]="e">{{ e.descripcion }}</mat-option>
+                                                        }
+                                                    </mat-select>
+                                                </mat-form-field>
+                                                }
+                                            </div>
+                                        </div>
+
+                                        @if(!esEdicion){
+                                        <button
+                                            class="bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
+                                            {{ t('contactar_agente') }}
+                                        </button>
+                                        }
+                                    </div>
+
+                                    <div
+                                        class="grid grid-cols-1  text-[10px] text-slate-400 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl font-medium space-y-2">
+                                        @for (e of edicionForm.get('condicionesPrecioConSeguro')?.value; track e.id) {
+                                        <span class="flex items-center gap-2">
+                                            <mat-icon class="icon-size-5 icon-thick"
+                                                [svgIcon]="'heroicons_outline:information-circle'"></mat-icon>
+                                            <!-- {{ t('medios_pago') }} -->
+                                            {{e.descripcion}}
+                                        </span>
+                                        }
+                                    </div>
+                                    <div
+                                        class="pt-6 border-t border-slate-50 dark:border-slate-700 flex items-center justify-between">
+
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <p
+                                                    class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
+                                                    <!-- {{ t('precio_total') }} --> Precio a meses
+                                                </p>
+
+                                                @if (esEdicion) {
+                                                <input type="tel" formControlName="precioMeses" inputmode="numeric" autofocus
+                                                    class="w-full h-12 px-4 border-2 rounded-xl
+                                                focus:outline-none transition-colors
+                                                dark:bg-slate-800 dark:text-white" [ngClass]="precioInvalido
+                                           ? 'border-red-500 focus:border-red-500'
+                                           : 'border-slate-200 dark:border-slate-700 focus:border-primary'"
+                                                    importeMxnBlur />
                                                 }
 
                                                 @if (!esEdicion) {
@@ -117,17 +313,34 @@
                                                     Estatus de la cotización
                                                 </p>
 
-                                                <select formControlName="estatus" class="w-full h-12 px-4 pr-10 border-2 rounded-xl
-                 focus:outline-none transition-colors
-                 dark:bg-slate-800 dark:text-white appearance-none" [ngClass]="estatusInvalido
-            ? 'border-red-500 focus:border-red-500'
-            : 'border-slate-200 dark:border-slate-700 focus:border-primary'">
-                                                    <option value="" disabled>Selecciona estatus</option>
+                                                <mat-form-field appearance="fill" class="tp-select w-full" [ngClass]="estatusInvalido
+                                                    ? 'tp-invalid'
+                                                    : 'tp-valid'">
 
-                                                    @for (e of estatusOpciones; track e.id) {
-                                                    <option [value]="e.clave">{{ e.nombre }}</option>
-                                                    }
-                                                </select>
+                                                    <mat-select formControlName="condicionesPrecioMeses" multiple
+                                                        panelClass="tp-select-panel">
+                                                        <mat-select-trigger>
+                                                            {{ estatusLabelPrimerSeleccionado('condicionesPrecioMeses')
+                                                            }}
+                                                            @if
+                                                            ((edicionForm.get('condicionesPrecioMeses')?.value?.length
+                                                            ||
+                                                            0) > 1) {
+                                                            <span class="ml-1 text-xs opacity-70">
+                                                                (+{{
+                                                                (edicionForm.get('condicionesPrecioMeses')?.value?.length
+                                                                ||
+                                                                0) - 1 }}
+                                                                más)
+                                                            </span>
+                                                            }
+                                                        </mat-select-trigger>
+
+                                                        @for (e of politicas; track e.id) {
+                                                        <mat-option [value]="e">{{ e.descripcion }}</mat-option>
+                                                        }
+                                                    </mat-select>
+                                                </mat-form-field>
                                                 }
                                             </div>
                                         </div>
@@ -141,10 +354,15 @@
                                     </div>
 
                                     <div
-                                        class="flex items-center gap-2 text-[10px] text-slate-400 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl font-medium">
-                                        <mat-icon class="icon-size-5 icon-thick"
-                                            [svgIcon]="'heroicons_outline:information-circle'"></mat-icon>
-                                        {{ t('medios_pago') }}
+                                        class="grid grid-cols-1  text-[10px] text-slate-400 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl font-medium space-y-2">
+                                        @for (e of edicionForm.get('condicionesPrecioMeses')?.value; track e.id) {
+                                        <span class="flex items-center gap-2">
+                                            <mat-icon class="icon-size-5 icon-thick"
+                                                [svgIcon]="'heroicons_outline:information-circle'"></mat-icon>
+                                            <!-- {{ t('medios_pago') }} -->
+                                            {{e.descripcion}}
+                                        </span>
+                                        }
                                     </div>
                                 </div>
                             </div>
@@ -376,6 +594,7 @@
                  flex items-center justify-between sm:justify-end
                  gap-4 sm:gap-12">
 
+                                @if(!esEdicion && informacionCotizacion.precios.length === 1){
                                 <div class="text-left sm:text-right">
                                     <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-0.5">
                                         {{ t('total_propuesta') }}
@@ -383,13 +602,22 @@
                                     <p class="text-xl sm:text-2xl font-black
                      text-slate-900 dark:text-white tracking-tight">
                                         MXN
-                                        @if(!esEdicion){
-                                        ${{informacionCotizacion.precio_cotizacion}}
-                                        }@else{
-                                        {{edicionForm.get('precio').value}}
-                                        }
+                                        ${{informacionCotizacion.precios[0].precio}}
                                     </p>
                                 </div>
+                                }@else if(preciosList.length <= 1){
+                                <div class="text-left sm:text-right">
+                                    <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-0.5">
+                                        {{ t('total_propuesta') }}
+                                    </p>
+                                    <p class="text-xl sm:text-2xl font-black
+                         text-slate-900 dark:text-white tracking-tight">
+                                        MXN
+                                        {{edicionForm.get('precio').value}}
+                                    </p>
+                                </div>
+                                
+                                }
 
                                 @if(esEdicion){
                                 <button type="button" [disabled]="edicionForm.invalid" class="bg-primary text-white
