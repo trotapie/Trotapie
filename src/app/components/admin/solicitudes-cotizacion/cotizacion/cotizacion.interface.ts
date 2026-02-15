@@ -21,6 +21,7 @@ export interface ICotizacion {
     tipo_destino:      string;
     empleado_nombre:   string;
     estatus:           string;
+    precios:           PreciosYCondiciones[]
 }
 
 export interface Habitaciones {
@@ -44,3 +45,21 @@ export interface IEstatusCotizacion {
     orden:  number;
 }
 
+export interface PreciosYCondiciones {
+    tipo:        Tipo;
+    precio:      number;
+    condiciones: Condicione[];
+}
+
+export interface Condicione {
+    id:          string;
+    titulo:      string;
+    aplica_a:    Tipo[];
+    descripcion: string;
+}
+
+export enum Tipo {
+    AMeses = "a_meses",
+    ConSeguro = "con_seguro",
+    SinSeguro = "sin_seguro",
+}

@@ -3,7 +3,7 @@ import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { SupabaseService } from 'app/core/supabase.service';
 import { MaterialModule } from 'app/shared/material.module';
-import { ICotizacion, IEstatusCotizacion } from './cotizacion.interface';
+import { Condicione, ICotizacion, IEstatusCotizacion, PreciosYCondiciones } from './cotizacion.interface';
 import { DateI18nPipe } from 'app/core/i18n/date-i18n.pipe';
 import { FormBuilder, Validators } from '@angular/forms';
 import { map, Observable, startWith, subscribeOn } from 'rxjs';
@@ -82,13 +82,19 @@ export class CotizacionComponent implements OnInit {
     precioMeses: [null],
     tipoHabitacion: [null as TipoHabitacion, [Validators.required]],
     estatus: ['', [Validators.required]],
-    condicionesPrecioSinSeguro: this.fb.control<string[]>([]),
-    condicionesPrecioConSeguro: this.fb.control<string[]>([]),
-    condicionesPrecioMeses: this.fb.control<string[]>([]),
+    condicionesPrecioSinSeguro: this.fb.control<Condicione[]>([]),
+    condicionesPrecioConSeguro: this.fb.control<Condicione[]>([]),
+    condicionesPrecioMeses: this.fb.control<Condicione[]>([]),
   });
 
   tiposHabitacion: TipoHabitacion[] = [];
   filteredOptions$: TipoHabitacion[] = [];
+
+  precioSinSeguro: PreciosYCondiciones;
+  precioConSeguro: PreciosYCondiciones;
+  precioAMeses: PreciosYCondiciones;
+
+  comparePolitica = (a: any, b: any) => a?.id === b?.id;
 
   async ngOnInit() {
     try {
@@ -115,40 +121,11 @@ export class CotizacionComponent implements OnInit {
           ubicacion: this.informacionCotizacion.ubicacion,
           nombre_hotel: this.informacionCotizacion.nombre_hotel
         }
+        this.validacionesPreciosGuardados();
         this.setActiveLang(this.informacionCotizacion.idioma)
       }
       sessionStorage.setItem('hotel', JSON.stringify(datosHotel))
 
-      console.log(this.informacionCotizacion);
-
-
-
-      this.title.setTitle('Reserva tu viaje a Cancún - Cotización | Trotapie');
-
-      this.meta.updateTag({
-        name: 'description',
-        content: 'Cotiza tu viaje a Cancún con los mejores hoteles en Trotapie.'
-      });
-
-      this.meta.updateTag({
-        property: 'og:title',
-        content: 'Reserva tu viaje a Cancún - Cotización'
-      });
-
-      this.meta.updateTag({
-        property: 'og:description',
-        content: 'Cotiza hoteles en Cancún fácil y rápido con Trotapie.'
-      });
-
-      this.meta.updateTag({
-        property: 'og:image',
-        content: 'https://app.trotapie.com/assets/images/og/cancun-cotizacion.jpg'
-      });
-
-      this.meta.updateTag({
-        property: 'og:url',
-        content: window.location.href
-      });
     } finally {
       this.cargando = false;
       this.edicionForm.get('tipoHabitacion')?.valueChanges.subscribe(valor => {
@@ -176,17 +153,8 @@ export class CotizacionComponent implements OnInit {
     this.estatusOpciones = estatus.data
 
     this.filteredOptions$ = this.tiposHabitacion = data;
+    this.validacionesPreciosGuardados()
 
-
-    this.edicionForm.patchValue({
-      precio: this.informacionCotizacion.precio_cotizacion,
-      tipoHabitacion: this.tiposHabitacion.find(
-        item => item.id === this.informacionCotizacion.tipo_habitacion
-      ),
-      estatus: this.estatusOpciones.find(
-        item => item.nombre === this.informacionCotizacion.estatus
-      )?.clave ?? ''
-    });
   }
 
   private _filter(value: string): TipoHabitacion[] {
@@ -297,7 +265,31 @@ Quedo atento(a) a cualquier comentario o ajuste que requiera.
     return first?.descripcion ?? 'Selecciona condicion';
   }
 
+  validacionesPreciosGuardados() {
+    const { precios } = this.informacionCotizacion;
+    this.precioSinSeguro = precios.find(o => o.tipo === 'sin_seguro') ?? null;
+    this.precioConSeguro = precios.find(o => o.tipo === 'con_seguro') ?? null;
+    this.precioAMeses = precios.find(o => o.tipo === 'a_meses') ?? null;
 
+    if (this.esEdicion) {
+      this.edicionForm.patchValue({
+        precio: this.precioSinSeguro ? this.precioSinSeguro.precio : null,
+        precioConSeguro: this.precioConSeguro ? this.precioConSeguro.precio : null,
+        precioMeses: this.precioAMeses ? this.precioAMeses.precio : null,
+        tipoHabitacion: this.tiposHabitacion.find(
+          item => item.id === this.informacionCotizacion.tipo_habitacion
+        ),
+        estatus: this.estatusOpciones.find(
+          item => item.nombre === this.informacionCotizacion.estatus
+        )?.clave ?? '',
+        condicionesPrecioSinSeguro: this.precioSinSeguro? this.precioSinSeguro.condiciones : [],
+        condicionesPrecioConSeguro: this.precioConSeguro? this.precioConSeguro.condiciones : [],
+        condicionesPrecioMeses: this.precioAMeses? this.precioAMeses.condiciones : [],
+      });
+    }
+  }
+
+  
 
 
 
