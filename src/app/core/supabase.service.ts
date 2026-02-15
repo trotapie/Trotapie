@@ -495,21 +495,34 @@ export class SupabaseService {
       .eq('activo', true); // 👈 ordenados
   }
 
-  async actualizarPrecioHabitacionYEstatus(
+  async actualizarCotizacionPublicaCompleta(
     publicId: string,
-    precio: number | string,
-    tipoHabitacionId: number,
-    estatusClave: string
+    formValue: any
   ) {
-    const precioLimpio = Number(String(precio).replace(/[$,]/g, ''));
+    const limpiar = (v: any) => {
+      if (v === null || v === undefined || v === '') return null;
+      const n = Number(String(v).replace(/[$,\s]/g, ''));
+      return Number.isFinite(n) ? n : null;
+    };
+
+    const tipoHabitacionId = formValue.tipoHabitacion?.id;
+    const estatusClave = formValue.estatus;
+
+    if (!tipoHabitacionId || !estatusClave) return;
 
     const { error } = await this.client.rpc('actualizar_cotizacion_publica', {
       p_public_id: publicId.trim(),
-      p_precio: precioLimpio,
+      p_precio: limpiar(formValue.precio),
+      p_precio_con_seguro: limpiar(formValue.precioConSeguro),
+      p_precio_a_meses: limpiar(formValue.precioMeses),
       p_tipo_habitacion: tipoHabitacionId,
       p_estatus_clave: estatusClave,
+      p_condiciones_precio: formValue.condicionesPrecioSinSeguro ?? [],
+      p_condiciones_precio_seguro: formValue.condicionesPrecioConSeguro ?? [],
+      p_condiciones_precio_meses: formValue.condicionesPrecioMeses ?? [],
     });
 
     if (error) throw error;
   }
+
 }

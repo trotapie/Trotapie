@@ -161,9 +161,9 @@ export class CotizacionComponent implements OnInit {
 
       this.edicionForm?.valueChanges.subscribe(valor => {
         const precios = []
-        if (valor.precio)precios.push(valor.precio);
-        if (valor.precioConSeguro)precios.push(valor.precioConSeguro);
-        if (valor.precioMeses)precios.push(valor.precioMeses);
+        if (valor.precio) precios.push(valor.precio);
+        if (valor.precioConSeguro) precios.push(valor.precioConSeguro);
+        if (valor.precioMeses) precios.push(valor.precioMeses);
         this.preciosList = precios;
 
       })
@@ -231,8 +231,7 @@ export class CotizacionComponent implements OnInit {
 
   modalCotizacion() {
     this.enviarCotizacion = true;
-    const { precio, tipoHabitacion, estatus } = this.edicionForm.value
-    this.supabase.actualizarPrecioHabitacionYEstatus(this.informacionCotizacion.public_id, precio, tipoHabitacion.id, estatus)
+    this.supabase.actualizarCotizacionPublicaCompleta(this.informacionCotizacion.public_id, this.edicionForm.value);
   }
 
   get telefonoCtrl() {
