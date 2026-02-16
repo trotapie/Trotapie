@@ -282,14 +282,41 @@ Quedo atento(a) a cualquier comentario o ajuste que requiera.
         estatus: this.estatusOpciones.find(
           item => item.nombre === this.informacionCotizacion.estatus
         )?.clave ?? '',
-        condicionesPrecioSinSeguro: this.precioSinSeguro? this.precioSinSeguro.condiciones : [],
-        condicionesPrecioConSeguro: this.precioConSeguro? this.precioConSeguro.condiciones : [],
-        condicionesPrecioMeses: this.precioAMeses? this.precioAMeses.condiciones : [],
+        condicionesPrecioSinSeguro: this.precioSinSeguro ? this.precioSinSeguro.condiciones : [],
+        condicionesPrecioConSeguro: this.precioConSeguro ? this.precioConSeguro.condiciones : [],
+        condicionesPrecioMeses: this.precioAMeses ? this.precioAMeses.condiciones : [],
       });
     }
   }
 
-  
+
+  contactarAgente(tipo: 'sin_seguro' | 'con_seguro' | 'a_meses', total: string, link: string) {
+    const label: Record<string, string> = {
+      sin_seguro: 'sin seguro',
+      con_seguro: 'con seguro',
+      a_meses: 'a meses',
+    };
+    const url = `https://app.trotapie.com/cotizacion/${this.informacionCotizacion.public_id}`
+
+    let mensaje = `Hola 
+
+Estoy interesado(a) en esta cotización:
+${url}
+`;
+
+  if (tipo) {
+    mensaje += `
+Me gustó la opción ${label[tipo]} y me gustaría avanzar con la reserva.
+¿Me ayudas con los siguientes pasos?`;
+  } else {
+    mensaje += `
+Me gustaría avanzar con la reserva.
+¿Me ayudas con los siguientes pasos?`;
+  }
+
+    window.open(`https://wa.me/526188032003?text=${encodeURIComponent(mensaje)}`, '_blank');
+  }
+
 
 
 

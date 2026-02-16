@@ -178,7 +178,7 @@
                                         </div>
 
                                         @if(!esEdicion && precioSinSeguro){
-                                        <button
+                                        <button (click)="contactarAgente('sin_seguro')"
                                             class="bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
                                             {{ t('contactar_agente') }}
                                         </button>
@@ -286,7 +286,7 @@
                                         </div>
 
                                         @if(!esEdicion && precioConSeguro){
-                                        <button
+                                        <button (click)="contactarAgente('con_seguro')"
                                             class="bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
                                             {{ t('contactar_agente') }}
                                         </button>
@@ -392,7 +392,7 @@
                                         </div>
 
                                         @if(!esEdicion && precioAMeses){
-                                        <button
+                                        <button (click)="contactarAgente('a_meses')"
                                             class="bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
                                             {{ t('contactar_agente') }}
                                         </button>
@@ -696,7 +696,7 @@
                    rounded-2xl font-black text-xs uppercase tracking-widest
                    hover:scale-[1.02] transition-all
                    shadow-xl shadow-blue-900/20
-                   whitespace-nowrap">
+                   whitespace-nowrap" (click)="contactarAgente()">
                                 {{ t('contactar_agente') }}
                             </button>
                             }
