@@ -120,11 +120,11 @@ export class MaterialLayoutComponent implements OnInit, OnDestroy {
             sessionStorage.clear();
         }
 
-        // if (this.router.url === '/inicio') {
-        //     window.location.reload();
-        // } else {
+        if (this.router.url === '/inicio') {
+            window.location.reload();
+        } else {
             this.router.navigate(['/inicio']);
-        // }
+        }
     }
 
 }
