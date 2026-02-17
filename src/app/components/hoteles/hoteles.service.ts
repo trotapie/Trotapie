@@ -11,4 +11,18 @@ export class DatosService {
   obtenerJson(): Observable<any> {
     return this.http.get<any>(this.url);
   }
+
+  getWeather(lat: number, lon: number) {
+  return this.http.get(
+    `https://api.open-meteo.com/v1/forecast`,
+    {
+      params: {
+        latitude: lat,
+        longitude: lon,
+        current_weather: true
+      }
+    }
+  );
+}
+
 }
