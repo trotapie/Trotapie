@@ -94,5 +94,6 @@
   "desde_hora": "Desde las {{hora}} h",
   "hasta_hora": "Hasta las {{hora}} h",
   "estrellas": "estrellas",
-  "proximamente": "Próximamente"
+  "proximamente": "Próximamente",
+  "buscar-destinos": "Buscar destinos..."
 }

@@ -94,5 +94,6 @@
   "desde_hora": "From {{hora}}",
   "hasta_hora": "Until {{hora}}",
   "estrellas": "stars",
-  "proximamente": "Coming Soon"
+  "proximamente": "Coming Soon",
+  "buscar-destinos": "Search destinations..."
 }

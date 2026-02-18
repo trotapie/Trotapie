@@ -94,6 +94,7 @@
   "desde_hora": "À partir de {{hora}}",
   "hasta_hora": "Jusqu’à {{hora}}",
   "estrellas": "étoiles",
-  "proximamente": "Prochainement"
+  "proximamente": "Prochainement",
+  "buscar-destinos": "Rechercher des destinations..."
 
 }

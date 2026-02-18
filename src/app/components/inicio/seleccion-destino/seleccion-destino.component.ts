@@ -21,7 +21,7 @@ import { Destinos, GrupoDestino, Hotel, IHoteles } from 'app/components/hoteles/
   encapsulation: ViewEncapsulation.None,
   standalone: true
 })
-export class SeleccionDestinoComponent implements OnInit, AfterViewInit{
+export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
   private formBuilder = inject(FormBuilder);
   private router = inject(Router);
   private datosService = inject(DatosService);
@@ -88,18 +88,26 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit{
 
 
   avisoUrl = '';
-
   filtroDestino: string = '';
   verTodos = false;
   panelActivo = '';
   showMenu: boolean = false;
 
   dropdownOpen = false;
+  filterForm: FormGroup;
+
+  destinosFiltrados: any[] = [];
   constructor() {
   }
 
   ngOnInit() {
     this.obtenerImagenesFondo();
+    this.filterForm = this.formBuilder.group({
+      busqueda: ['']
+    });
+    this.filterForm.valueChanges.subscribe((value) => {
+      this.filtrarDestinos();
+    });
   }
 
   ngAfterViewInit(): void {
@@ -177,7 +185,6 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit{
   }
 
   async obtenerSoloDestinos() {
-    this.tipoDestino = sessionStorage.getItem('tipoDestino') !== null ? +sessionStorage.getItem('tipoDestino') : this.tipoDestino
     const { data, error } = await this.supabase.obtenerDestinos(this.tipoDestino);
     if (error) { this.error = error.message; return; }
 
@@ -196,6 +203,10 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit{
         destinos
       }));
     }
+
+    this.destinosFiltrados = this.tipoDestino === 1
+    ? this.destinos
+    : this.agrupadosDestinos;
   }
 
   cargaInfo(item) {
@@ -261,4 +272,25 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit{
     this.dropdownOpen = false;
   }
 
+
+  filtrarDestinos() {
+    const { busqueda } = this.filterForm.value;
+    const term = this.normalize(busqueda);
+    const lista = this.tipoDestino === 1 ? this.destinos : this.agrupadosDestinos;
+
+    if (!term) return this.destinosFiltrados = lista;
+
+    this.destinosFiltrados = lista.filter((d: any) =>
+      this.normalize(this.tipoDestino === 1 ? d.nombre : d.nombrePadre).includes(term)
+    );
+  }
+
+
+  private normalize(text: string): string {
+  return (text ?? '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // quita acentos
+    .trim();
+}
 }

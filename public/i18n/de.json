@@ -94,6 +94,7 @@
   "desde_hora": "Ab {{hora}} Uhr",
   "hasta_hora": "Bis {{hora}} Uhr",
   "estrellas": "Sterne",
-  "proximamente": "Demnächst"
+  "proximamente": "Demnächst",
+  "buscar-destinos": "Reiseziele suchen..."
 
 }
