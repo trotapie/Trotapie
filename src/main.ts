@@ -15,9 +15,11 @@ registerLocaleData(localeDe);
 import { bootstrapApplication } from '@angular/platform-browser';
 import { AppComponent } from 'app/app.component';
 import { appConfig } from 'app/app.config';
+import { inject } from '@vercel/analytics';
 import { injectSpeedInsights } from '@vercel/speed-insights';
 
 if (typeof window !== 'undefined') {
+  inject();
   injectSpeedInsights();
 }
 
