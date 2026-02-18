@@ -2,6 +2,7 @@
   "titulo-destinos": "Perfekt für Sie!",
   "destinos-nacionales": "Nationale Reiseziele",
   "destinos-internacionales": "Internationale Reiseziele",
+  "circuitos-cruceros": "Rundreisen & Kreuzfahrten",
   "selecciona-destino": "Wählen Sie Ihr Reiseziel",
   "texto-nacionales": "Mexiko überrascht Sie: Strände, Städte und einzigartige Momente.",
   "texto-internacionales": "Wählen Sie einen Kontinent, um die besten internationalen Reiseziele zu entdecken.",
@@ -92,5 +93,7 @@
   "contactar_agente": "Agent kontaktieren",
   "desde_hora": "Ab {{hora}} Uhr",
   "hasta_hora": "Bis {{hora}} Uhr",
-  "estrellas": "Sterne"
+  "estrellas": "Sterne",
+  "proximamente": "Demnächst"
+
 }

@@ -2,6 +2,7 @@
   "titulo-destinos": "Perfect for you!",
   "destinos-nacionales": "National Destinations",
   "destinos-internacionales": "International Destinations",
+  "circuitos-cruceros": "Travel Tours & Cruises",
   "selecciona-destino": "Choose your destination",
   "texto-nacionales": "Mexico surprises you: beaches, cities, and unique moments.",
   "texto-internacionales": "Select a continent to explore the best international destinations.",
@@ -92,5 +93,6 @@
   "contactar_agente": "Contact agent",
   "desde_hora": "From {{hora}}",
   "hasta_hora": "Until {{hora}}",
-  "estrellas": "stars"
+  "estrellas": "stars",
+  "proximamente": "Coming Soon"
 }

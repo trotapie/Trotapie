@@ -1,4 +1,4 @@
-import { Component, ElementRef, inject, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, inject, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, FormsModule } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import { Router } from '@angular/router';
@@ -21,7 +21,7 @@ import { Destinos, GrupoDestino, Hotel, IHoteles } from 'app/components/hoteles/
   encapsulation: ViewEncapsulation.None,
   standalone: true
 })
-export class SeleccionDestinoComponent implements OnInit {
+export class SeleccionDestinoComponent implements OnInit, AfterViewInit{
   private formBuilder = inject(FormBuilder);
   private router = inject(Router);
   private datosService = inject(DatosService);
@@ -101,6 +101,13 @@ export class SeleccionDestinoComponent implements OnInit {
   ngOnInit() {
     this.obtenerImagenesFondo();
   }
+
+  ngAfterViewInit(): void {
+    setTimeout(() => {
+      this.dropdownOpen = true;
+    }, 500);
+  }
+
 
   ngOnDestroy(): void {
     if (this.intervalId) clearInterval(this.intervalId);

@@ -1,4 +1,4 @@
- <style>
+<style>
     .accordion-content {
         max-height: 0;
         overflow: hidden;
@@ -38,12 +38,7 @@
 
                                 <div class="absolute inset-0 bg-black/40 z-0 pointer-events-none"></div>
 
-                                <div class="absolute top-10 z-10 flex flex-col items-center text-center px-6 space-y-2">
-                                    <span class="text-3xl font-bold">{{ t('titulo-destinos') }}</span>
-                                </div>
-
-
-                                <div class="absolute bottom-5 transform flex flex-col gap-4 z-20"
+                                <div class="absolute top-1 transform flex flex-col gap-4 z-20"
                                     (click)="closeDropdown()">
                                     <h1 class="text-2xl font-bold text-white tracking-tight"></h1>
 
@@ -69,8 +64,8 @@
                                             </span>
                                         </button>
 
-                                        <div class="absolute bottom-full left-0 right-0 mb-4
-             bg-white dark:bg-gray-800 rounded-[2rem]
+                                        <div class="absolute top-full left-0 right-0 mt-4
+             bg-white/85 dark:bg-gray-800 rounded-[2rem]
              overflow-hidden dropdown-shadow
              transition-all duration-300 z-20
              border border-white/20" [ngClass]="dropdownOpen
@@ -118,7 +113,26 @@
                                                         </span>
                                                     </div>
                                                 </button>
+                                                <button type="button" class="w-full group/item flex items-center gap-4 p-5
+                 rounded-[1.5rem] transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50
+                 hover:bg-gray-100 dark:hover:bg-gray-700" [disabled]="true"
+                                                    (click)="cargarDestinos(2); showOverlay(); closeDropdown();">
+                                                    <div class="w-12 h-12 flex items-center justify-center
+                   rounded-full overflow-hidden">
+                                                        <!-- <img class="w-full h-full object-cover"
+                                                            src="images/earth-icon.svg" alt="Internacional" /> -->
+                                                    </div>
 
+                                                    <div class="text-left">
+                                                        <span
+                                                            class="block text-lg font-bold text-gray-800 dark:text-gray-100">
+                                                            {{ t('circuitos-cruceros') }}
+                                                        </span>
+                                                        <span class="text-sm text-gray-500 dark:text-gray-400">
+                                                            {{ t('proximamente') }}
+                                                        </span>
+                                                    </div>
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -184,4 +198,4 @@
 
         <app-footer />
     </ng-container>
-</div> 
+</div>

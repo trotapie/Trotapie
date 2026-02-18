@@ -2,6 +2,7 @@
   "titulo-destinos": "Parfait pour vous !",
   "destinos-nacionales": "Destinations nationales",
   "destinos-internacionales": "Destinations internationales",
+  "circuitos-cruceros": "Circuits & Croisières",
   "selecciona-destino": "Choisissez votre destination",
   "texto-nacionales": "Le Mexique vous surprend : plages, villes et moments uniques.",
   "texto-internacionales": "Sélectionnez un continent pour explorer les meilleures destinations internationales.",
@@ -92,5 +93,7 @@
   "contactar_agente": "Contacter l’agent",
   "desde_hora": "À partir de {{hora}}",
   "hasta_hora": "Jusqu’à {{hora}}",
-  "estrellas": "étoiles"
+  "estrellas": "étoiles",
+  "proximamente": "Prochainement"
+
 }
