@@ -247,7 +247,9 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit{
   hideOverlay(): void {
     this.heroCard.face = 'front';
     this.overlayAnimatedOnce = false;
-
+    setTimeout(() => {
+      this.dropdownOpen = true;
+    }, 500);
   }
 
   toggleDropdown(ev: Event) {
