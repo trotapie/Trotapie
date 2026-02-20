@@ -1,0 +1,71 @@
+@keyframes fade-carousel {
+
+    0%,
+    20%,
+    100% {
+        opacity: 0;
+    }
+
+    25%,
+    45% {
+        opacity: 1;
+    }
+}
+
+.carousel-slide {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    animation: fade-carousel 12s infinite;
+}
+
+.carousel-slide:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.carousel-slide:nth-child(2) {
+    animation-delay: 3s;
+}
+
+.carousel-slide:nth-child(3) {
+    animation-delay: 6s;
+}
+
+.carousel-slide:nth-child(4) {
+    animation-delay: 9s;
+}
+
+@keyframes dot-blink {
+
+    0%,
+    20%,
+    100% {
+        background-color: rgba(255, 255, 255, 0.3);
+    }
+
+    25%,
+    45% {
+        background-color: #ffffff;
+    }
+}
+
+.dot {
+    background-color: rgba(255, 255, 255, 0.3);
+    animation: dot-blink 12s infinite;
+}
+
+.dot:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.dot:nth-child(2) {
+    animation-delay: 3s;
+}
+
+.dot:nth-child(3) {
+    animation-delay: 6s;
+}
+
+.dot:nth-child(4) {
+    animation-delay: 9s;
+}

@@ -20,7 +20,8 @@ export interface Hotel {
     orden: number | null;
     ubicacion: string | null;
     destinos: Destinos | null;   
-    descuento: Descuento | null; 
+    descuento: Descuento | null;
+    vistaLejana?: boolean; 
 }
 
 export interface DescripcionHotel {

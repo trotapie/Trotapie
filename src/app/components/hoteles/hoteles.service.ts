@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { IClima } from 'app/interface/clima.interface';
 import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
@@ -13,7 +14,7 @@ export class DatosService {
   }
 
   getWeather(lat: number, lon: number) {
-  return this.http.get(
+  return this.http.get<IClima>(
     `https://api.open-meteo.com/v1/forecast`,
     {
       params: {

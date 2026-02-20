@@ -79,6 +79,11 @@ export const appRoutes: Route[] = [
                 loadChildren: () => import('app/components/inicio/seleccion-destino/seleccion-destino.routes').then(m => m.default)
             },
             {
+                path: 'detalle-destino',
+                canActivate: [ClearSessionGuard],
+                loadChildren: () => import('app/components/inicio/detalle-destino/detalle-destino.routes').then(m => m.default)
+            },
+            {
                 path: 'hoteles',
                 canActivate: [ClearSessionGuard],
                 loadChildren: () => import('app/components/hoteles/hoteles.routes').then(m => m.default)

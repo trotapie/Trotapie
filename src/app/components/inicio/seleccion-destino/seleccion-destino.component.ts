@@ -213,7 +213,7 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
     this.destinoId = this.tipoDestino === 1 ? +item.id : +item.destinos[0].id
     sessionStorage.setItem('ciudad', this.destinoId.toString())
     sessionStorage.setItem('tipoDestino', this.tipoDestino.toString())
-    this.router.navigate(['/hoteles']);
+    this.router.navigate(['/detalle-destino']);
   }
 
   async obtenerImagenesFondo() {

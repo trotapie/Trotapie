@@ -14,12 +14,13 @@ export class MapaComponent implements OnInit, AfterViewInit {
 
         this.hotel = JSON.parse(sessionStorage.getItem('hotel'))       
         const url = this.hotel.ubicacion;
+console.log(url);
 
         this.coordenadas = this.extraerCoordenadasDesdeUrl(url);
     }
 
     ngAfterViewInit(): void {
-        this.map = L.map('map').setView([this.coordenadas.lat, this.coordenadas.lng], 17);
+        this.map = L.map('map').setView([this.coordenadas.lat, this.coordenadas.lng], this.hotel?.vistaLejana ? 12 : 17);
         const icon = L.icon({
             iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
             shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
