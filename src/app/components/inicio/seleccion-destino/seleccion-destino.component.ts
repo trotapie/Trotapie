@@ -106,7 +106,7 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
       busqueda: ['']
     });
     this.filterForm.valueChanges.subscribe((value) => {
-      this.filtrarDestinos();
+      this.filtrarDestinos(value.busqueda);
     });
   }
 
@@ -205,15 +205,15 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
     }
 
     this.destinosFiltrados = this.tipoDestino === 1
-    ? this.destinos
-    : this.agrupadosDestinos;
+      ? this.destinos
+      : this.agrupadosDestinos;
   }
 
   cargaInfo(item) {
     this.destinoId = this.tipoDestino === 1 ? +item.id : +item.destinos[0].id
     sessionStorage.setItem('ciudad', this.destinoId.toString())
     sessionStorage.setItem('tipoDestino', this.tipoDestino.toString())
-    this.router.navigate(['/detalle-destino']);
+    this.router.navigate(['/detalle-destino/' + this.destinoId]);
   }
 
   async obtenerImagenesFondo() {
@@ -272,25 +272,150 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
     this.dropdownOpen = false;
   }
 
+  private normalize(s?: string): string {
+    return (s ?? '')
+      .toString()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')     // acentos fuera
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ')        // símbolos -> espacio
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
 
-  filtrarDestinos() {
-    const { busqueda } = this.filterForm.value;
-    const term = this.normalize(busqueda);
-    const lista = this.tipoDestino === 1 ? this.destinos : this.agrupadosDestinos;
+  private tokenize(term: string): string[] {
+    const t = this.normalize(term);
+    if (!t) return [];
+    // tokens útiles (evita ruido)
+    return t.split(' ').filter(x => x.length >= 2);
+  }
 
-    if (!term) return this.destinosFiltrados = lista;
+  // ===================
+  // Variantes de búsqueda por item
+  // ===================
+  private buildSearchTextDestino(d: { nombre: string; continente: string | null }): string {
+    const nombre = d?.nombre ?? '';
+    const norm = this.normalize(nombre);
 
-    this.destinosFiltrados = lista.filter((d: any) =>
-      this.normalize(this.tipoDestino === 1 ? d.nombre : d.nombrePadre).includes(term)
+    // quitar paréntesis: "Nuevo Vallarta (Riviera Nayarit)" => "Nuevo Vallarta"
+    const sinParen = this.normalize(nombre.replace(/\([^)]*\)/g, ' '));
+
+    // extraer lo de paréntesis como keywords aparte: "Riviera Nayarit"
+    const parenMatches = [...nombre.matchAll(/\(([^)]*)\)/g)].map(m => m[1]);
+    const paren = this.normalize(parenMatches.join(' '));
+
+    // quitar "y alrededores" para que "cancun" encuentre "Cancún y alrededores" fuerte
+    const sinAlrededores = this.normalize(nombre.replace(/\by\s+alrededores\b/gi, ' '));
+
+    // continente (si lo llenas después)
+    const cont = this.normalize(d?.continente ?? '');
+
+    // sinónimos/aliases “manuales” (puedes ampliar)
+    const aliases: string[] = [];
+    if (norm.includes('cancun')) aliases.push('cancun zona hotelera quintana roo');
+    if (norm.includes('riviera maya')) aliases.push('playa del carmen tulum quintana roo');
+    if (norm.includes('los cabos')) aliases.push('cabo san lucas san jose del cabo baja california sur');
+    if (norm.includes('puerto vallarta')) aliases.push('vallarta jalisco');
+    if (norm.includes('nuevo vallarta')) aliases.push('nayarit riviera nayarit');
+
+    return this.normalize(
+      [
+        nombre,
+        norm,
+        sinParen,
+        paren,
+        sinAlrededores,
+        cont,
+        ...aliases,
+      ].filter(Boolean).join(' ')
     );
   }
 
+  // ===================
+  // Fuzzy ligero (typos)
+  // ===================
+  private levenshtein(a: string, b: string): number {
+    const m = a.length, n = b.length;
+    const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+    for (let i = 0; i <= m; i++) dp[i][0] = i;
+    for (let j = 0; j <= n; j++) dp[0][j] = j;
 
-  private normalize(text: string): string {
-  return (text ?? '')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '') // quita acentos
-    .trim();
-}
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+        dp[i][j] = Math.min(
+          dp[i - 1][j] + 1,
+          dp[i][j - 1] + 1,
+          dp[i - 1][j - 1] + cost
+        );
+      }
+    }
+    return dp[m][n];
+  }
+
+  private fuzzyTokenInText(text: string, token: string): boolean {
+    if (!token) return true;
+    if (text.includes(token)) return true;
+    if (token.length < 4) return false;
+
+    const maxDist = token.length <= 6 ? 1 : 2;
+    const win = token.length;
+
+    for (let i = 0; i <= text.length - win; i++) {
+      const slice = text.slice(i, i + win);
+      if (this.levenshtein(slice, token) <= maxDist) return true;
+    }
+    return false;
+  }
+
+  // ===================
+  // Scoring (ranking)
+  // ===================
+  private score(hay: string, raw: string, tokens: string[]): number {
+    const term = this.normalize(raw);
+    if (!term) return 0;
+
+    let score = 0;
+
+    // match fuerte por frase completa
+    if (hay === term) score += 1000;
+    if (hay.startsWith(term)) score += 700;
+    if (hay.includes(term)) score += 450;
+
+    // tokens (modo AND: todos deben matchear)
+    for (const t of tokens) {
+      if (hay.includes(t)) score += 120;
+      else if (this.fuzzyTokenInText(hay, t)) score += 80;
+      else return 0; // <- si quieres OR, quita este return y solo no sumes
+    }
+
+    return score;
+  }
+
+  // ===================
+  // Tu filtro final
+  // ===================
+  filtrarDestinos(value?: string) {
+    const lista = this.tipoDestino === 1 ? this.destinos : this.agrupadosDestinos;
+
+    const raw = value ?? '';
+    const term = this.normalize(raw);
+
+    if (!term) {
+      this.destinosFiltrados = lista;
+      return;
+    }
+
+    const tokens = this.tokenize(raw);
+
+    this.destinosFiltrados = lista
+      .map((d: any) => {
+        const hay = this.buildSearchTextDestino(d);
+        const s = this.score(hay, raw, tokens);
+        return { d, s };
+      })
+      .filter(x => x.s > 0)
+      .sort((a, b) => (b.s - a.s) || ((a.d?.orden ?? 9999) - (b.d?.orden ?? 9999)))
+      .map(x => x.d);
+  }
 }

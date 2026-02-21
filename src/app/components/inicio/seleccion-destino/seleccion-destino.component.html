@@ -210,7 +210,7 @@
                                     </div>
                                     <div
                                         class="flex items-center gap-1 text-[#006400] text-sm font-medium shrink-0 leading-none mr-2">
-                                        <span class="leading-none">Explore</span>
+                                        <span class="leading-none">{{ t('explorar') }}</span>
                                         <svg class="w-4 h-4 block" fill="none" stroke="currentColor" stroke-width="2"
                                             viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M4.5 19.5 19.5 4.5m0 0H8.25m11.25 0v11.25" stroke-linecap="round"
@@ -218,6 +218,29 @@
                                         </svg>
                                     </div>
                                 </a>
+                                <div *ngIf="destinosFiltrados.length === 0 "
+                                    class="mt-12 flex flex-col items-center justify-center text-center animate-fadeIn">
+
+                                    <div class="flex flex-col items-center justify-center bg-red-100/20 border border-red-400/40
+              rounded-2xl p-6 max-w-md shadow-lg backdrop-blur-sm">
+
+                                        <div
+                                            class="w-16 h-16 flex items-center justify-center rounded-full bg-red-500/20 mb-4">
+                                            <mat-icon class="text-red-500 text-4xl">travel_explore</mat-icon>
+                                        </div>
+
+                                        <h3 class="text-xl font-semibold text-red-500 mb-2">
+                                            {{ t('no-destinos') }}
+                                        </h3>
+
+                                        <p class="text-base text-gray-400">
+                                            {{ t('destinos-no-encontrados') }}
+                                            <br>
+                                            {{ t('intenta-otra-busqueda') }}
+                                        </p>
+
+                                    </div>
+                                </div>
                             </div>
                         </div>
 

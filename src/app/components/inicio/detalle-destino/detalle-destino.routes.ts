@@ -3,7 +3,7 @@ import { DetalleDestinoComponent } from './detalle-destino.component';
 
 export default [
     {
-        path: '',
+        path: ':id',
         component: DetalleDestinoComponent,
     }
 ] as Routes;

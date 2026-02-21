@@ -95,5 +95,12 @@
   "hasta_hora": "Until {{hora}}",
   "estrellas": "stars",
   "proximamente": "Coming Soon",
-  "buscar-destinos": "Search destinations..."
+  "buscar-destinos": "Search destinations...",
+  "ver-hoteles-en": "View hotels in {{destino}}",
+  "datos-rapidos": "Quick Facts",
+  "regresar-a-destinos": "Back to destinations",
+  "explorar": "Explore",
+  "no-destinos": "No destinations found",
+  "destinos-no-encontrados": "We couldn't find any results for your search.",
+  "intenta-otra-busqueda": "Try typing another destination or keyword."
 }

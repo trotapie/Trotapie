@@ -531,7 +531,6 @@ export class SupabaseService {
       p_destino_id: destinoId,
       p_codigo: lang,
     });
-    console.log(data);
     return data;
   }
 

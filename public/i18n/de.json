@@ -95,6 +95,12 @@
   "hasta_hora": "Bis {{hora}} Uhr",
   "estrellas": "Sterne",
   "proximamente": "Demnächst",
-  "buscar-destinos": "Reiseziele suchen..."
-
+  "buscar-destinos": "Reiseziele suchen...",
+  "ver-hoteles-en": "Hotels in {{destino}} anzeigen",
+  "datos-rapidos": "Wichtige Informationen",
+  "regresar-a-destinos": "Zurück zu den Reisezielen",
+  "explorar": "Entdecken",
+  "no-destinos": "Keine Reiseziele gefunden",
+  "destinos-no-encontrados": "Für Ihre Suche wurden keine Ergebnisse gefunden.",
+  "intenta-otra-busqueda": "Versuchen Sie einen anderen Namen oder ein anderes Stichwort."
 }

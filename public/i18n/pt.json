@@ -95,6 +95,12 @@
   "hasta_hora": "Até {{hora}}",
   "estrellas": "estrelas",
   "proximamente": "Em breve",
-  "buscar-destinos": "Buscar destinos..."
-
+  "buscar-destinos": "Buscar destinos...",
+  "ver-hoteles-en": "Ver hotéis em {{destino}}",
+  "datos-rapidos": "Dados rápidos",
+  "regresar-a-destinos": "Voltar aos destinos",
+  "explorar": "Explorar",
+  "no-destinos": "Não encontramos destinos",
+  "destinos-no-encontrados": "Não há resultados para sua busca.",
+  "intenta-otra-busqueda": "Tente digitar outro destino ou palavra-chave."
 }
