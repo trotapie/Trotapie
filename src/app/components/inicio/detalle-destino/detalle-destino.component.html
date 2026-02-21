@@ -28,125 +28,246 @@
 
     <body
         class="bg-background-light dark:bg-background-dark text-[#1b0e0e] dark:text-white transition-colors duration-300">
-        <div #scrollContainer class="absolute inset-0 flex flex-col min-w-0 overflow-y-auto" cdkScrollable>
+        <div *ngIf="!detallesDestino; else contenidoReal">
+
+            <!-- HEADER -->
             <header
                 class="sticky top-0 z-50 w-full border-b border-solid border-[#147052]/10 bg-background-light/80 backdrop-blur-md dark:bg-background-dark/80 px-6 md:px-20 py-4">
                 <div class="max-w-[1200px] mx-auto flex items-center justify-between">
                     <div class="flex items-center gap-6">
-                        <button mat-raised-button color="primary" class=" text-white ml-auto flex items-center justify-end gap-2"
-                            (click)="regresar()">
-                            <mat-icon class="icon-size-5 text-white" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>{{ t('inicio')
-                            }}
-                        </button>
+                        <div class="h-10 w-48 rounded-full bg-gray-200/70 dark:bg-white/10 animate-pulse"></div>
                     </div>
                 </div>
             </header>
+
             <main class="flex-1">
+
+                <!-- HERO TITLE -->
                 <section class="px-6 md:px-20 py-4">
-                    <h1 class="text-4xl md:text-6xl font-black text-gray-700 leading-tight mb-4">
-                        {{detallesDestino?.detalle?.nombre}}
-                        <br />{{detallesDestino?.detalle?.apodo}}
-                    </h1>
-                    <p class="max-w-2xl text-lg text-gray-700/90 font-medium">
-                        {{detallesDestino?.detalle?.descripcion_corta}}</p>
+                    <div
+                        class="h-12 md:h-16 w-72 md:w-[520px] rounded-xl bg-gray-200/70 dark:bg-white/10 animate-pulse">
+                    </div>
+                    <div
+                        class="mt-3 h-10 md:h-14 w-52 md:w-[360px] rounded-xl bg-gray-200/70 dark:bg-white/10 animate-pulse">
+                    </div>
+
+                    <div class="mt-4 space-y-2 max-w-2xl">
+                        <div class="h-5 w-full rounded bg-gray-200/70 dark:bg-white/10 animate-pulse"></div>
+                        <div class="h-5 w-5/6 rounded bg-gray-200/70 dark:bg-white/10 animate-pulse"></div>
+                        <div class="h-5 w-2/3 rounded bg-gray-200/70 dark:bg-white/10 animate-pulse"></div>
+                    </div>
                 </section>
+
+                <!-- CAROUSEL -->
                 <section class="px-6 md:px-20 py-8">
                     <div class="max-w-[1200px] mx-auto">
                         <div class="relative h-[500px] w-full overflow-hidden rounded-xl shadow-2xl">
-                            <div class="relative w-full h-[500px] overflow-hidden">
-                                <div *ngFor="let image of detallesDestino?.atracciones_principales; let i = index"
-                                    class="absolute inset-0 transition-opacity duration-1000 ease-in-out"
-                                    [class.opacity-100]="i === currentIndex" [class.opacity-0]="i !== currentIndex">
-                                    <img [src]="image.imagen_fondo" class="w-full h-full object-cover"
-                                        alt="carousel image" />
-                                    <div
-                                        class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20 flex flex-col justify-end p-8 md:p-16 z-10">
-                                        <span
-                                            class="mb-4 inline-block w-fit rounded-full bg-[#F9B44B] px-4 py-1 text-xs font-bold uppercase tracking-widest text-white">Sinaloa,
-                                            Mexico</span>
-                                        <h1 class="text-4xl md:text-6xl font-black text-white leading-tight mb-4">
-                                            {{image.nombre}}
-                                        </h1>
-                                        <p class="max-w-2xl text-lg text-white/90 font-medium">{{image.descripcion}}</p>
-                                    </div>
-                                </div>
+                            <div class="w-full h-full bg-gray-200/70 dark:bg-white/10 animate-pulse"></div>
 
+                            <!-- overlay hint -->
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent">
+                            </div>
+
+                            <div class="absolute bottom-0 left-0 right-0 p-8 md:p-16">
+                                <div class="h-6 w-40 rounded-full bg-white/20 animate-pulse"></div>
+                                <div class="mt-4 h-10 md:h-14 w-80 md:w-[520px] rounded-xl bg-white/20 animate-pulse">
+                                </div>
+                                <div class="mt-4 space-y-2 max-w-2xl">
+                                    <div class="h-4 w-full rounded bg-white/20 animate-pulse"></div>
+                                    <div class="h-4 w-5/6 rounded bg-white/20 animate-pulse"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </section>
+
+                <!-- CONTENT + SIDEBAR -->
                 <section class="px-6 md:px-20 py-12">
                     <div class="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
+
+                        <!-- LEFT -->
                         <div class="lg:col-span-2 space-y-6">
-                            <h2 class="text-3xl font-black text-[#1b0e0e] dark:text-white">
-                                {{detallesDestino?.detalle?.titulo_descripcion}}</h2>
-                            <p class="text-lg leading-relaxed text-gray-600 dark:text-gray-300">
-                                {{detallesDestino?.detalle?.descripcion_larga}}
-                            </p>
+
+                            <div class="h-9 w-80 rounded-xl bg-gray-200/70 dark:bg-white/10 animate-pulse"></div>
+
+                            <div class="space-y-3">
+                                <div class="h-5 w-full rounded bg-gray-200/70 dark:bg-white/10 animate-pulse"></div>
+                                <div class="h-5 w-11/12 rounded bg-gray-200/70 dark:bg-white/10 animate-pulse"></div>
+                                <div class="h-5 w-10/12 rounded bg-gray-200/70 dark:bg-white/10 animate-pulse"></div>
+                                <div class="h-5 w-9/12 rounded bg-gray-200/70 dark:bg-white/10 animate-pulse"></div>
+                            </div>
+
+                            <!-- Buttons skeleton -->
                             <div class="flex flex-wrap gap-4 pt-4">
-                                <button (click)="cargarInfo()"
-                                    class="flex items-center gap-2 rounded-full bg-[#147052] px-8 py-4 text-lg font-bold text-white shadow-lg shadow-[#147052]/30 transition-all hover:scale-105 hover:bg-[#147052]/90 active:scale-95">
-                                    <span class="material-symbols-outlined">hotel</span>
-                                    View Stays in Mazatlán
-                                </button>
-                                <button (click)="abrirUbicacion()"
-                                    class="flex items-center gap-2 rounded-full bg-[#147052]/10 px-8 py-4 text-lg font-bold text-[#147052] transition-all hover:bg-[#147052]/20">
-                                    <span class="material-symbols-outlined">map</span>
-                                    Explore Map
-                                </button>
+                                <div class="h-14 w-64 rounded-full bg-[#147052]/20 animate-pulse"></div>
+                                <div class="h-14 w-44 rounded-full bg-[#147052]/10 animate-pulse"></div>
                             </div>
                         </div>
-                        <!-- Sidebar Stats/Info -->
+
+                        <!-- SIDEBAR -->
                         <div class="rounded-xl bg-[#147052]/5 p-8 border border-[#147052]/10">
-                            <h3 class="text-xl font-bold mb-6 text-[#147052]">Quick Facts</h3>
+                            <div class="h-6 w-40 rounded bg-[#147052]/20 animate-pulse mb-6"></div>
+
                             <ul class="space-y-6">
+                                <!-- Temp item -->
                                 <li class="flex items-center gap-4">
-                                    <div
-                                        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white dark:bg-background-dark shadow-sm">
-                                        <span class="material-symbols-outlined text-[#147052]">thermostat</span>
+                                    <div class="h-10 w-10 rounded-full bg-gray-200/70 dark:bg-white/10 animate-pulse">
                                     </div>
-                                    <div>
-                                        <p class="text-xs font-bold uppercase text-[#147052]/60">Temp</p>
-                                        <p class="font-bold">{{ datosClima?.current_weather?.temperature }}°C</p>
-                                    </div>
-                                </li>
-                                <li *ngFor="let item of detallesDestino?.datos_rapidos" class="flex items-center gap-4">
-                                    <div
-                                        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white dark:bg-background-dark shadow-sm">
-                                        <span class="material-symbols-outlined text-[#147052]">{{ item.icono }}</span>
-                                    </div>
-                                    <div>
-                                        <p class="text-xs font-bold uppercase text-[#147052]/60">{{ item.label }}</p>
-                                        <p class="font-bold">{{ item.valor }}</p>
+                                    <div class="space-y-2">
+                                        <div class="h-3 w-16 rounded bg-[#147052]/20 animate-pulse"></div>
+                                        <div class="h-5 w-24 rounded bg-gray-200/70 dark:bg-white/10 animate-pulse">
+                                        </div>
                                     </div>
                                 </li>
+
+                                <!-- Quick facts (repeat) -->
+                                <ng-container *ngFor="let _ of [1,2,3,4,5]">
+                                    <li class="flex items-center gap-4">
+                                        <div
+                                            class="h-10 w-10 rounded-full bg-gray-200/70 dark:bg-white/10 animate-pulse">
+                                        </div>
+                                        <div class="space-y-2">
+                                            <div class="h-3 w-28 rounded bg-[#147052]/20 animate-pulse"></div>
+                                            <div class="h-5 w-40 rounded bg-gray-200/70 dark:bg-white/10 animate-pulse">
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ng-container>
                             </ul>
                         </div>
+
                     </div>
                 </section>
 
-                <div *ngIf="mostrarMapa"
-                    class="fixed inset-0 z-[999] bg-black/50 backdrop-blur-sm flex items-end justify-center">
-                    <div
-                        class="bg-white dark:bg-gray-900 w-4/5 max-h-[75%] rounded-t-2xl shadow-xl p-4 overflow-hidden animate-slide-up relative">
-
-                        <!-- Botón cerrar -->
-                        <button class="absolute top-2 right-4 text-gray-600 dark:text-gray-300"
-                            (click)="abrirUbicacion()">
-                            <mat-icon svgIcon="heroicons_outline:x-mark" class="w-8 h-8"></mat-icon>
-                        </button>
-
-                        <!-- Contenido: Mapa -->
-                        <div class="text-center text-xl font-bold mb-4">Mazatlan</div>
-                        <!-- <div class="text-center text-xl font-bold mb-4">{{t('ubicacion')}}</div> -->
-                        <div class="w-full h-[400px] rounded-xl overflow-hidden">
-                            <app-mapa></app-mapa>
-                        </div>
-                    </div>
-                </div>
                 <app-footer />
             </main>
         </div>
+        <ng-template #contenidoReal>
+            <div #scrollContainer class="absolute inset-0 flex flex-col min-w-0 overflow-y-auto" cdkScrollable>
+                <header
+                    class="sticky top-0 z-50 w-full border-b border-solid border-[#147052]/10 bg-background-light/80 backdrop-blur-md dark:bg-background-dark/80 px-6 md:px-20 py-4">
+                    <div class="max-w-[1200px] mx-auto flex items-center justify-between">
+                        <div class="flex items-center gap-6">
+                            <button mat-raised-button color="accent"
+                                class=" text-white ml-auto flex items-center justify-end gap-2" (click)="regresar()">
+                                <mat-icon class="icon-size-5 text-white"
+                                    [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>{{ t('regresar-a-destinos')
+                                }}
+                            </button>
+                        </div>
+                    </div>
+                </header>
+                <main class="flex-1">
+                    <section class="px-6 md:px-20 py-4">
+                        <h1 class="text-4xl md:text-6xl font-black text-gray-700 leading-tight mb-4">
+                            {{detallesDestino?.detalle?.nombre}}
+                            <br />{{detallesDestino?.detalle?.apodo}}
+                        </h1>
+                        <p class="max-w-2xl text-lg text-gray-700/90 font-medium">
+                            {{detallesDestino?.detalle?.descripcion_corta}}</p>
+                    </section>
+                    <section class="px-6 md:px-20 py-8">
+                        <div class="max-w-[1200px] mx-auto">
+                            <div class="relative h-[500px] w-full overflow-hidden rounded-xl shadow-2xl">
+                                <div class="relative w-full h-[500px] overflow-hidden">
+                                    <div *ngFor="let image of detallesDestino?.atracciones_principales; let i = index"
+                                        class="absolute inset-0 transition-opacity duration-1000 ease-in-out"
+                                        [class.opacity-100]="i === currentIndex" [class.opacity-0]="i !== currentIndex">
+                                        <img [src]="image.imagen_fondo" class="w-full h-full object-cover"
+                                            alt="carousel image" />
+                                        <div
+                                            class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20 flex flex-col justify-end p-8 md:p-16 z-10">
+                                            <span
+                                                class="mb-4 inline-block w-fit rounded-full bg-[#F9B44B] px-4 py-1 text-xs font-bold uppercase tracking-widest text-white">Sinaloa,
+                                                Mexico</span>
+                                            <h1 class="text-4xl md:text-6xl font-black text-white leading-tight mb-4">
+                                                {{image.nombre}}
+                                            </h1>
+                                            <p class="max-w-2xl text-lg text-white/90 font-medium">{{image.descripcion}}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    <section class="px-6 md:px-20 py-12">
+                        <div class="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
+                            <div class="lg:col-span-2 space-y-6">
+                                <h2 class="text-3xl font-black text-[#1b0e0e] dark:text-white">
+                                    {{detallesDestino?.detalle?.titulo_descripcion}}</h2>
+                                <p class="text-lg leading-relaxed text-gray-600 dark:text-gray-300">
+                                    {{detallesDestino?.detalle?.descripcion_larga}}
+                                </p>
+                                <div class="flex flex-wrap gap-4 pt-4">
+                                    <button (click)="cargarInfo()"
+                                        class="flex items-center gap-2 rounded-full bg-[#147052] px-8 py-4 text-lg font-bold text-white shadow-lg shadow-[#147052]/30 transition-all hover:scale-105 hover:bg-[#147052]/90 active:scale-95">
+                                        <span class="material-symbols-outlined">hotel</span>
+                                        {{ t('ver-hoteles-en', { destino: detallesDestino?.detalle?.nombre }) }}
+                                    </button>
+                                    <button (click)="abrirUbicacion()"
+                                        class="flex items-center gap-2 rounded-full bg-[#147052]/10 px-8 py-4 text-lg font-bold text-[#147052] transition-all hover:bg-[#147052]/20">
+                                        <span class="material-symbols-outlined">map</span>
+                                        {{ t('ubicacion') }}
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Sidebar Stats/Info -->
+                            <div class="rounded-xl bg-[#147052]/5 p-8 border border-[#147052]/10">
+                                <h3 class="text-xl font-bold mb-6 text-[#147052]">{{t('datos-rapidos')}}</h3>
+                                <ul class="space-y-6">
+                                    <li class="flex items-center gap-4">
+                                        <div
+                                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white dark:bg-background-dark shadow-sm">
+                                            <span class="material-symbols-outlined text-[#147052]">thermostat</span>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs font-bold uppercase text-[#147052]/60">Temp</p>
+                                            <p class="font-bold">{{ datosClima?.current_weather?.temperature }}°C</p>
+                                        </div>
+                                    </li>
+                                    <li *ngFor="let item of detallesDestino?.datos_rapidos"
+                                        class="flex items-center gap-4">
+                                        <div
+                                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white dark:bg-background-dark shadow-sm">
+                                            <span class="material-symbols-outlined text-[#147052]">{{ item.icono
+                                                }}</span>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs font-bold uppercase text-[#147052]/60">{{ item.label }}
+                                            </p>
+                                            <p class="font-bold">{{ item.valor }}</p>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+
+                    <div *ngIf="mostrarMapa"
+                        class="fixed inset-0 z-[999] bg-black/50 backdrop-blur-sm flex items-end justify-center">
+                        <div
+                            class="bg-white dark:bg-gray-900 w-4/5 max-h-[75%] rounded-t-2xl shadow-xl p-4 overflow-hidden animate-slide-up relative">
+
+                            <!-- Botón cerrar -->
+                            <button class="absolute top-2 right-4 text-gray-600 dark:text-gray-300"
+                                (click)="abrirUbicacion()">
+                                <mat-icon svgIcon="heroicons_outline:x-mark" class="w-8 h-8"></mat-icon>
+                            </button>
+
+                            <!-- Contenido: Mapa -->
+                            <div class="text-center text-xl font-bold mb-4">Mazatlan</div>
+                            <!-- <div class="text-center text-xl font-bold mb-4">{{t('ubicacion')}}</div> -->
+                            <div class="w-full h-[400px] rounded-xl overflow-hidden">
+                                <app-mapa></app-mapa>
+                            </div>
+                        </div>
+                    </div>
+                    <app-footer />
+                </main>
+            </div>
+        </ng-template>
     </body>
 </ng-container>
 
