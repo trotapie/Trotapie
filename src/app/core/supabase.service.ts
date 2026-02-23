@@ -525,4 +525,13 @@ export class SupabaseService {
     if (error) throw error;
   }
 
+  async obtenerDetalleDestino(destinoId: number, lang?: string) {
+    
+    const { data, error } = await this.client.rpc('get_detalle_destino', {
+      p_destino_id: destinoId,
+      p_codigo: lang,
+    });
+    return data;
+  }
+
 }
