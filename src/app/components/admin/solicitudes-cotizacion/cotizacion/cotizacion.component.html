@@ -104,13 +104,10 @@
                                         }
                                     </div>
 
-                                    <div
-                                        class="pt-6 border-t border-slate-50 dark:border-slate-700 flex items-center justify-between">
+                                    <div class="pt-6 border-t border-slate-50 dark:border-slate-700 pb-4">
 
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                             <div>
-
-
                                                 @if (esEdicion) {
                                                 <p
                                                     class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
@@ -120,8 +117,8 @@
                                                     class="w-full h-12 px-4 border-2 rounded-xl
                                                 focus:outline-none transition-colors
                                                 dark:bg-slate-800 dark:text-white" [ngClass]="precioInvalido
-                                           ? 'border-red-500 focus:border-red-500'
-                                           : 'border-slate-200 dark:border-slate-700 focus:border-primary'"
+                                                ? 'border-red-500 focus:border-red-500'
+                                                : 'border-slate-200 dark:border-slate-700 focus:border-primary'"
                                                     importeMxnBlur />
                                                 }
 
@@ -174,15 +171,18 @@
                                                     </mat-select>
                                                 </mat-form-field>
                                                 }
+                                                <div
+                                                    class="flex items-center justify-center sm:items-end sm:justify-end ">
+                                                    @if(!esEdicion && precioSinSeguro){
+                                                    <button (click)="contactarAgente('sin_seguro')"
+                                                        class="bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
+                                                        {{ t('contactar_agente') }}
+                                                    </button>
+                                                    }
+                                                </div>
                                             </div>
                                         </div>
 
-                                        @if(!esEdicion && precioSinSeguro){
-                                        <button (click)="contactarAgente('sin_seguro')"
-                                            class="bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
-                                            {{ t('contactar_agente') }}
-                                        </button>
-                                        }
                                     </div>
 
                                     @if(esEdicion){
@@ -212,10 +212,9 @@
                                         }
                                     </div>
                                     }
-                                    <div
-                                        class="pt-6 border-t border-slate-50 dark:border-slate-700 flex items-center justify-between">
+                                    <div class="pt-6 border-t border-slate-50 dark:border-slate-700 pb-4">
 
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                             <div>
 
 
@@ -282,15 +281,19 @@
                                                     </mat-select>
                                                 </mat-form-field>
                                                 }
+                                                <div
+                                                    class="flex items-center justify-center sm:items-end sm:justify-end ">
+
+                                                    @if(!esEdicion && precioConSeguro){
+                                                    <button (click)="contactarAgente('con_seguro')"
+                                                        class="bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
+                                                        {{ t('contactar_agente') }}
+                                                    </button>
+                                                    }
+                                                </div>
                                             </div>
                                         </div>
 
-                                        @if(!esEdicion && precioConSeguro){
-                                        <button (click)="contactarAgente('con_seguro')"
-                                            class="bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
-                                            {{ t('contactar_agente') }}
-                                        </button>
-                                        }
                                     </div>
 
                                     @if(esEdicion){
@@ -319,10 +322,9 @@
                                         }
                                     </div>
                                     }
-                                    <div
-                                        class="pt-6 border-t border-slate-50 dark:border-slate-700 flex items-center justify-between">
+                                    <div class="pt-6 border-t border-slate-50 dark:border-slate-700 pb-4">
 
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                             <div>
 
 
@@ -388,15 +390,18 @@
                                                     </mat-select>
                                                 </mat-form-field>
                                                 }
+                                                <div
+                                                    class="flex items-center justify-center sm:items-end sm:justify-end ">
+                                                    @if(!esEdicion && precioAMeses){
+                                                    <button (click)="contactarAgente('a_meses')"
+                                                        class="bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
+                                                        {{ t('contactar_agente') }}
+                                                    </button>
+                                                    }
+                                                </div>
                                             </div>
                                         </div>
 
-                                        @if(!esEdicion && precioAMeses){
-                                        <button (click)="contactarAgente('a_meses')"
-                                            class="bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
-                                            {{ t('contactar_agente') }}
-                                        </button>
-                                        }
                                     </div>
 
                                     @if(esEdicion){
