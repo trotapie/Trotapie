@@ -17,6 +17,7 @@ import { FuseSplashScreenService } from '@fuse/services/splash-screen';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { FooterComponent } from 'app/footer/footer.component';
 import { getDefaultLang } from 'app/lang.utils';
+import { ImagenesCarruselComponent } from 'app/shared/imagenes-carrusel/imagenes-carrusel.component';
 
 
 type Room = { adults: number; children: number; childAges: (number | null)[] };
@@ -24,7 +25,7 @@ type Room = { adults: number; children: number; childAges: (number | null)[] };
     selector: 'detalle-hotel',
     standalone: true,
     templateUrl: './detalle-hotel.component.html',
-    imports: [MaterialModule, MapaComponent, TranslocoModule, FooterComponent
+    imports: [MaterialModule, MapaComponent, TranslocoModule, FooterComponent, ImagenesCarruselComponent
         //  QRCodeComponent, 
     ],
     encapsulation: ViewEncapsulation.None,
@@ -160,12 +161,10 @@ export class DetalleHotelComponent {
         this.descripcionLista = this.hotel.actividades;
         this.ubicacion = this.hotel.ubicacion;
 
-        this.cargarImagenesConDelay();
         this.mostrarInfo = true;
         this.splashScreen.hide();
 
         this.obtenerEmpleados();
-        this.obtenerTipoImagen();
 
 
         this._translocoService.langChanges$.subscribe(async (activeLang) => {
@@ -210,22 +209,6 @@ export class DetalleHotelComponent {
         clearInterval(this.intervalId);
     }
 
-    async cargarImagenesConDelay() {
-        const urls: string[] = (this.hotel?.imagenes ?? [])
-            .map((x: any) => typeof x === 'string' ? x : x?.url_imagen)
-            .filter((x: string | undefined): x is string => !!x);
-
-        this.imagenes = [];
-        for (const url of urls) {
-            await this.delay(300);
-            this.imagenes.push(url);
-            this.imagenesFilter.push(url);
-        }
-    }
-
-    delay(ms: number) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
 
     regresar() {
         this.router.navigate(['/hoteles']);
@@ -247,13 +230,13 @@ export class DetalleHotelComponent {
             const payload = {
                 cliente_id: data.id,
                 hotel_id: this.hotel.id,
-                empleado_id: mensaje.asesor, // de tabla empleados
+                empleado_id: mensaje.asesor, 
                 idioma: this._translocoService.getActiveLang(),
-                regimen_id: mensaje.regimen?.id ?? null, // si aplica
-                fecha_entrada: mensaje.entrada,   // 'YYYY-MM-DD'
-                fecha_salida: mensaje.salida,       // 'YYYY-MM-DD'
+                regimen_id: mensaje.regimen?.id ?? null, 
+                fecha_entrada: mensaje.entrada, 
+                fecha_salida: mensaje.salida, 
                 noches: this.noches,
-                habitaciones: mensaje.detalleHabitaciones, // json
+                habitaciones: mensaje.detalleHabitaciones, 
                 peticiones_especiales: mensaje.especiales?.trim() ? mensaje.especiales.trim() : null,
                 recibir_ofertas: mensaje.recibirOfertas,
             };
@@ -302,11 +285,7 @@ export class DetalleHotelComponent {
             asesor: asesor.nombre,
         });
 
-        
-
-
-        // WhatsApp México: 52 + número local sin espacios ni guiones
-        const telefonoTrotapie = '526188032003'; // <— ajusta aquí tu número
+        const telefonoTrotapie = '526188032003'; 
         const url = `https://wa.me/${telefonoTrotapie}?text=${encodeURIComponent(mensaje)}`;
 
         window.open(url, '_blank');
@@ -329,25 +308,6 @@ export class DetalleHotelComponent {
 
     }
 
-    // private formatHabitaciones(rooms: Room[]): string {
-    //     return rooms.map((r, i) => {
-    //         const partes: string[] = [];
-    //         partes.push(`${r.adults} ${this.plural('adulto', r.adults)}`);
-
-    //         if (r.children > 0) {
-    //             const ninos = `${r.children} ${this.plural('niño', r.children)}`;
-    //             if (r.childAges?.length) {
-    //                 const edades = r.childAges.join(', ');
-    //                 const suf = r.childAges.length === 1 ? 'año' : 'años';
-    //                 partes.push(`${ninos} · edades: ${edades} ${suf}`);
-    //             } else {
-    //                 partes.push(ninos);
-    //             }
-    //         }
-
-    //         return `Habitación ${i + 1}: ${partes.join(' · ')}`;
-    //     }).join('\n');
-    // }
     private formatHabitaciones(rooms: Room[]): { traduccion: string; es: string } {
         const datos = {
             traduccion: rooms.map((r, i) => {
@@ -546,12 +506,6 @@ export class DetalleHotelComponent {
         }
     }
 
-
-    // abrirUbicacion() {
-    //     window.open(this.hotel.descripcion.ubicacion, '_blank');
-    // }
-
-
     abrirUbicacion() {
         this.mostrarMapa = !this.mostrarMapa;
     }
@@ -574,70 +528,7 @@ export class DetalleHotelComponent {
         return m ? m[1] : null;
     }
 
-    big(url: string): string {
-        const id = this.getIdFromDriveUrl(url);
-        if (!id) return url;
-        return `https://drive.google.com/uc?export=view&id=${id}`;
-        // Alternativa (a veces más rápida):
-        // return `https://lh3.googleusercontent.com/d/${id}=w1600`;
-    }
 
-    small(url: string): string {
-        return url.replace(/sz=w\d+/i, 'sz=w400');
-    }
-
-    private updateCurrent() {
-        this.current = {
-            src: this.imagenesFilter[this.currentIndex],
-            alt: `Imagen ${this.currentIndex + 1}/${this.imagenesFilter.length}`
-        };
-        // (Opcional) asegurar miniatura activa a la vista
-        setTimeout(() => {
-            const btn = this.thumbBtns?.get(this.currentIndex)?.nativeElement;
-            btn?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-        });
-    }
-
-    open(i: number, event: MouseEvent) {
-        this.currentIndex = i;
-        this.updateCurrent();
-
-        const target = event.currentTarget as HTMLElement;
-        const rect = target.getBoundingClientRect();
-        const originX = ((event.clientX - rect.left) / rect.width) * 100;
-        const originY = ((event.clientY - rect.top) / rect.height) * 100;
-        this.origin = `${originX}% ${originY}%`;
-
-        this.isOpen = true;
-        setTimeout(() => (this.show = true), 10);
-    }
-
-    close() {
-        this.show = false;
-        setTimeout(() => (this.isOpen = false), 300);
-    }
-
-    next(event: Event) {
-        event.stopPropagation();
-        this.currentIndex = (this.currentIndex + 1) % this.imagenesFilter.length;
-        this.updateCurrent();
-    }
-
-    prev(event: Event) {
-        event.stopPropagation();
-        this.currentIndex = (this.currentIndex - 1 + this.imagenesFilter.length) % this.imagenesFilter.length;
-        this.updateCurrent();
-    }
-
-    goTo(i: number, event: Event) {
-        event.stopPropagation();
-        this.currentIndex = i;
-        this.updateCurrent();
-    }
-
-    onBackdrop(event: MouseEvent) {
-        if (event.target === this.overlay?.nativeElement) this.close();
-    }
 
     onDragStart(event: PointerEvent) {
         event.preventDefault();
@@ -647,16 +538,12 @@ export class DetalleHotelComponent {
         const el = event.currentTarget as HTMLElement | null;
         if (!el) return;
 
-        // Si el usuario está scrolleando verticalmente, lo traducimos a horizontal en la tira
         const delta = Math.abs(event.deltaY) >= Math.abs(event.deltaX)
             ? event.deltaY
             : event.deltaX;
 
-        // Desplaza la tira
         el.scrollLeft += delta;
 
-        // Nota: evitar preventDefault() aquí porque los listeners de 'wheel'
-        // suelen ser pasivos y el navegador lo ignoraría.
     }
 
     abrirForm() {
@@ -694,7 +581,6 @@ export class DetalleHotelComponent {
         }
     }
 
-    // --- Menores (ajusta childAges) ---
     incChildren(i: number) {
         const list = [...this.rooms()];
         const r = { ...list[i] };
@@ -716,7 +602,6 @@ export class DetalleHotelComponent {
         }
     }
 
-    // Habitaciones
     addRoom() {
         if (this.rooms().length >= this.MAX_ROOMS) return;
         this.rooms.set([...this.rooms(), { adults: 2, children: 0, childAges: [] }]);
@@ -728,7 +613,6 @@ export class DetalleHotelComponent {
         this.rooms.set(list);
     }
 
-    // Validación: todas las edades seleccionadas
     roomNeedsAges(r: Room) {
         return r.children > 0 && r.childAges.some(a => a === null);
     }
@@ -763,10 +647,8 @@ export class DetalleHotelComponent {
     private async buildCotizacionMensaje(params: Record<string, any>) {
         const active = this._translocoService.getActiveLang(); // idioma actual
 
-        // Asegura que el idioma activo esté cargado
         await firstValueFrom(this._translocoService.load(active));
 
-        // Si no es español, asegura que español esté cargado
         if (active !== 'es') {
             await firstValueFrom(this._translocoService.load('es'));
         }
@@ -786,48 +668,12 @@ export class DetalleHotelComponent {
         ].join('\n');
     }
 
-    async obtenerTipoImagen() {
-        const data = await this.supabase.obtenerTiposImagenHotel();
-        let tipoImagenId: number[] = [];
-        const imaagenesExistentes = this.hotel?.imagenes.forEach(imagen => {
-            if (tipoImagenId.length === 0) {
-                tipoImagenId.push(imagen.tipo_imagen_id);
-            } else if (!tipoImagenId.includes(imagen.tipo_imagen_id)) {
-                tipoImagenId.push(imagen.tipo_imagen_id);
-            }
-        });
-        this.tiposImagen = data.filter(tipo => tipoImagenId.includes(tipo.id));
-    }
-
-    getTipoLabel(tipo: any): string {
-        const lang = this._translocoService.getActiveLang?.() ?? 'es';
-        const t = (tipo.traducciones || []).find((x: any) => x.lang === lang);
-        return t?.descripcion ?? tipo.clave ?? 'Tipo';
-    }
-
-    onTipoChange(tipoId: number | null) {
-        this.selectedTipoId = tipoId;
-        if (this.selectedTipoId === 0) {
-            this.imagenesFilter = (this.hotel?.imagenes ?? [])
-                .map((x: any) => x?.url_imagen)
-                .filter((x: string | undefined): x is string => !!x);
-        } else {
-            this.imagenesFilter = (this.hotel?.imagenes ?? [])
-                .filter((x: any) => x?.tipo_imagen_id === this.selectedTipoId)
-                .map((x: any) => x?.url_imagen)
-                .filter((x: string | undefined): x is string => !!x);
-        }
-        this.currentIndex = 0;
-        this.updateCurrent();
-
-    }
 
     toggleVerMas(element: HTMLElement): void {
     const estabaExpandido = this.verMasDescripcion;
 
     this.verMasDescripcion = !this.verMasDescripcion;
 
-    // Si estaba expandido y ahora se colapsa
     if (estabaExpandido) {
         setTimeout(() => {
             element.scrollIntoView({

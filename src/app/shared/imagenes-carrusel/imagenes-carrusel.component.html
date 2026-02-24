@@ -1,0 +1,191 @@
+<ng-container *transloco="let t">
+    <div class="mt-10">
+        @if(!esCotizacion){
+        <div class="text-2xl my-4 font-semibold leading-tight text-center">
+            {{t('ver-galeria')}}
+        </div>
+        <div class="grid grid-cols-3 gap-3
+            auto-rows-[80px] sm:auto-rows-[110px] md:auto-rows-[180px]">
+
+            <ng-container *ngFor="let img of imagenes; let i = index">
+
+                <button *ngIf="i < 5" class="relative overflow-hidden rounded-xl group p-0 bg-transparent border-0"
+                    [ngClass]="{
+                   'col-span-2 row-span-2': i === 0 || i === 3,
+                   'col-span-1 row-span-1': i === 1 || i === 2
+                 }" (click)="open(i, $event)">
+                    <img [src]="img" draggable="false" (contextmenu)="$event.preventDefault()"
+                        class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                </button>
+
+                <button *ngIf="i === 5" (click)="open(5, $event)" class="relative overflow-hidden rounded-xl group
+           col-span-1 row-span-1
+           flex items-center justify-center">
+
+                    <div class="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-105"
+                        [ngStyle]="{
+            'background-image': 'url(' + img + ')'
+        }">
+                    </div>
+
+                    <div class="absolute inset-0 bg-black/50"></div>
+                    <span class="relative z-10 text-white text-lg font-semibold">
+                        {{ t('ver-mas') }}
+                    </span>
+                </button>
+
+
+            </ng-container>
+
+        </div>
+        }@if(esCotizacion){
+        <h3 class="text-2xl font-black mb-8 text-slate-900 dark:text-white">{{
+            t('fotos_alojamiento') }}
+        </h3>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+
+            <div class="space-y-6">
+                <img class="w-full h-56 object-cover rounded-[2rem] shadow-lg hover:scale-105 transition-transform duration-300" (click)="open(0, $event)" [src]="imagenes[0]" alt="Foto hotel"
+                    loading="lazy" />
+                <img class="w-full h-[400px] object-cover rounded-[2rem] shadow-lg hover:scale-105 transition-transform duration-300" (click)="open(1, $event)" [src]="imagenes[1]" alt="Foto hotel"
+                    loading="lazy" />
+            </div>
+
+            <div class="space-y-6">
+                <img class="w-full h-[450px] object-cover rounded-[2rem] shadow-lg hover:scale-105 transition-transform duration-300" (click)="open(2, $event)" [src]="imagenes[2]" alt="Foto hotel"
+                    loading="lazy" />
+                <img class="w-full h-44 object-cover rounded-[2rem] shadow-lg hover:scale-105 transition-transform duration-300" (click)="open(3, $event)" [src]="imagenes[3]" alt="Foto hotel"
+                    loading="lazy" />
+            </div>
+
+            <div class="space-y-6">
+                <img class="w-full h-56 object-cover rounded-[2rem] shadow-lg hover:scale-105 transition-transform duration-300" (click)="open(4, $event)" [src]="imagenes[4]" alt="Foto hotel"
+                    loading="lazy" />
+                <img class="w-full h-[380px] object-cover rounded-[2rem] shadow-lg hover:scale-105 transition-transform duration-300" (click)="open(5, $event)" [src]="imagenes[5]" alt="Foto hotel"
+                    loading="lazy" />
+            </div>
+
+            <div class="space-y-6">
+                <img class="w-full h-[450px] object-cover rounded-[2rem] shadow-lg hover:scale-105 transition-transform duration-300" (click)="open(6, $event)"[src]="imagenes[6]" alt="Foto hotel"
+                    loading="lazy" />
+                <img class="w-full h-48 object-cover rounded-[2rem] shadow-lg hover:scale-105 transition-transform duration-300" (click)="open(7, $event)" [src]="imagenes[7]" alt="Foto hotel"
+                    loading="lazy" />
+            </div>
+
+        </div>
+
+        <div class="mt-12 flex justify-center">
+            <button
+                class="flex items-center gap-2 text-slate-900 dark:text-blue-400 font-black text-sm uppercase tracking-widest hover:underline group" (click)="open(8, $event)">
+                {{ t('ver_todas_fotos') }}
+                <mat-icon class="icon-size-5 icon-thick transition-transform group-hover:translate-x-1"
+                    [svgIcon]="'heroicons_outline:arrow-right'"></mat-icon>
+            </button>
+        </div>
+        }
+
+
+        <div *ngIf="isOpen" #overlay class="fixed inset-0 z-99" (click)="onBackdrop($event)">
+
+            <div class="absolute inset-0 bg-black/90 opacity-100"></div>
+            <section class="mb-2 items-center justify-center flex">
+
+                <div class="absolute top-3 left-3 md:top-6 md:left-6
+         flex flex-col gap-6 md:gap-2
+         sm:flex-row sm:gap-3
+         z-30 max-w-[90vw]">
+
+                    <div class="text-white/90 w-20 text-sm md:text-lg px-2.5 py-1 rounded bg-black/40">
+                        {{ currentIndex + 1 }}/{{ imagenesFilter.length }}
+                    </div>
+
+                    <mat-form-field appearance="outline" class="w-52 pill-mat-form-field z-999 ">
+                        <mat-select [(value)]="selectedTipoId" class="text-white rounded-2xl"
+                            (selectionChange)="onTipoChange($event.value)">
+
+                            <mat-option [value]="0">
+                                {{ t('todas-imagenes') }}
+                            </mat-option>
+
+                            <mat-option *ngFor="let tipo of tiposImagen; trackBy: trackById" [value]="tipo.id">
+                                {{ getTipoLabel(tipo) }}
+                            </mat-option>
+
+                        </mat-select>
+                    </mat-form-field>
+
+                </div>
+
+
+                <div class="absolute inset-0 flex items-center justify-center select-none">
+
+                    <img #modalImg draggable="false" (contextmenu)="$event.preventDefault()" [src]="current.src"
+                        [alt]="current.alt || ''" [style.transformOrigin]="origin" [class]="
+                                                        'max-w-[90vw] max-h-[80vh] w-auto h-auto object-contain rounded-xl shadow-2xl transition ' +
+                                                        'duration-300 ease-out will-change-transform ' +
+                                                        (show ? 'scale-100 opacity-100' : 'scale-50 opacity-0')
+                                                      " (pointerdown)="onDragStart($event)" />
+
+                    <button mat-icon-button type="button" (click)="prev($event)"
+                        class="absolute left-3 md:left-6 top-1/2 -translate-y-1/2
+                                         p-2 md:p-3 rounded-full bg-white text-black
+                                         hover:bg-gray-100 focus:outline-none shadow-md transition-colors duration-200">
+                        <mat-icon class="text-black w-5 h-5" [svgIcon]="'heroicons_outline:arrow-left'">
+                        </mat-icon>
+                    </button>
+
+                    <button mat-icon-button class="absolute right-3 md:right-6 top-1/2 -translate-y-1/2
+                                                       rounded-full  bg-white text-black" (click)="next($event)">
+                        <mat-icon class="icon-size-5 text-black" [svgIcon]="'heroicons_outline:arrow-right'"></mat-icon>
+                    </button>
+                    <div class="absolute top-3 right-3 md:top-6 md:right-6 flex items-center gap-2 z-20">
+                        <button mat-raised-button class="rounded-full px-4 py-2 gap-1
+                                              bg-[#F9B44B]  hover:bg-[#e0a13a]
+                                               text-white backdrop-blur shadow-md
+                                               transition [text-shadow:_0_2px_2px_rgba(0,0,0,0.50)]"
+                            (click)="abrirModal()">
+                            <mat-icon svgIcon="mat_outline:request_quote"
+                                class="mr-1 [filter:drop-shadow(0_2px_2px_rgba(0,0,0,0.45))]"></mat-icon>
+                            {{t('cotizar')}}
+                        </button>
+
+                        <button mat-raised-button class="rounded-full bg-white/20 hover:bg-white/30
+                                               text-white backdrop-blur
+                                               focus:outline-none" (click)="close()">
+                            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:x-mark'">
+                            </mat-icon>
+                        </button>
+
+                    </div>
+
+                </div>
+            </section>
+            <div class="absolute bottom-3 md:bottom-6 left-1/2 -translate-x-1/2
+         max-w-[92vw] md:max-w-[80vw] w-full px-3 mt-2">
+                <div class="flex gap-2 overflow-x-auto no-scrollbar
+           bg-black/30 rounded-xl p-2 backdrop-blur" (wheel)="onThumbsWheel($event)">
+
+                    <button *ngFor="let thumb of imagenesFilter; let i = index" #thumbBtn
+                        class="relative shrink-0 rounded-lg overflow-hidden focus:outline-none"
+                        (click)="goTo(i, $event)">
+                        <img [src]="thumb" draggable="false" (contextmenu)="$event.preventDefault()"
+                            class="h-16 w-24 md:h-20 md:w-28 object-cover"
+                            [class]="(i === currentIndex) ? 'ring-2 ring-white/90' : 'ring-1 ring-white/30'" />
+                        <span *ngIf="i === currentIndex"
+                            class="absolute inset-0 ring-2 ring-white/90 rounded-lg pointer-events-none"></span>
+                    </button>
+
+                </div>
+            </div>
+        </div>
+
+        <div #gallery class="pswp-gallery grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4 p-2">
+            <a *ngFor="let item of items" class="block w-full rounded-xl shadow-md bg-cover bg-center"
+                [ngStyle]="{ 'background-image': 'url(' + item.src + ')' }" [href]="item.src"
+                [attr.data-pswp-width]="item.w" [attr.data-pswp-height]="item.h" data-cropped="true">
+                <span class="sr-only">{{t('abrir-imagen')}}</span>
+            </a>
+        </div>
+    </div>
+</ng-container>

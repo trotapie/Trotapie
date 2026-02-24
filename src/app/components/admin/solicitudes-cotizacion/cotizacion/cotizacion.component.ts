@@ -11,6 +11,7 @@ import { MapaComponent } from 'app/components/hoteles/mapa/mapa.component';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { EstatusComponent } from 'app/shared/estatus/estatus.component';
 import { CommonModule } from '@angular/common';
+import { ImagenesCarruselComponent } from 'app/shared/imagenes-carrusel/imagenes-carrusel.component';
 
 export interface PoliticaHotel {
   id: string;
@@ -29,7 +30,7 @@ interface TipoHabitacion {
 }
 @Component({
   selector: 'app-modificar-cotizacion',
-  imports: [MaterialModule, RouterLink, DateI18nPipe, MapaComponent, TranslocoModule, EstatusComponent, CommonModule],
+  imports: [MaterialModule, RouterLink, DateI18nPipe, MapaComponent, TranslocoModule, EstatusComponent, CommonModule, ImagenesCarruselComponent],
   templateUrl: './cotizacion.component.html',
   styleUrl: './cotizacion.component.scss',
   standalone: true

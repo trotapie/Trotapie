@@ -114,7 +114,7 @@
                                                 @if (esEdicion) {
                                                 <p
                                                     class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
-                                                    {{ t('precio_sin_seguro') }} 
+                                                    {{ t('precio_sin_seguro') }}
                                                 </p>
                                                 <input type="tel" formControlName="precio" inputmode="numeric" autofocus
                                                     class="w-full h-12 px-4 border-2 rounded-xl
@@ -128,7 +128,7 @@
                                                 @if (!esEdicion && precioSinSeguro) {
                                                 <p
                                                     class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
-                                                    {{ t('precio_sin_seguro') }} 
+                                                    {{ t('precio_sin_seguro') }}
                                                 </p>
                                                 <p
                                                     class="text-3xl font-black text-[#1e3a5f] dark:text-white tracking-tight">
@@ -211,7 +211,7 @@
                                         </span>
                                         }
                                     </div>
-                                }
+                                    }
                                     <div
                                         class="pt-6 border-t border-slate-50 dark:border-slate-700 flex items-center justify-between">
 
@@ -262,7 +262,7 @@
                                                             {{
                                                             estatusLabelPrimerSeleccionado('condicionesPrecioConSeguro')
                                                             }}
-                                                            @if 
+                                                            @if
                                                             ((edicionForm.get('condicionesPrecioConSeguro')?.value?.length
                                                             ||
                                                             0) > 1) {
@@ -329,7 +329,7 @@
                                                 @if (esEdicion) {
                                                 <p
                                                     class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
-                                                    {{ t('precio_a_meses') }} 
+                                                    {{ t('precio_a_meses') }}
                                                 </p>
                                                 <input type="tel" formControlName="precioMeses" inputmode="numeric"
                                                     autofocus class="w-full h-12 px-4 border-2 rounded-xl
@@ -574,51 +574,7 @@
                             </div>
                         </div>
                         <div class="mt-20">
-                            <h3 class="text-2xl font-black mb-8 text-slate-900 dark:text-white">{{
-                                t('fotos_alojamiento') }}
-                            </h3>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-
-                                <div class="space-y-6">
-                                    <img class="w-full h-56 object-cover rounded-[2rem] shadow-lg" [src]="fotoUrl(0)"
-                                        alt="Foto hotel" loading="lazy" />
-                                    <img class="w-full h-[400px] object-cover rounded-[2rem] shadow-lg"
-                                        [src]="fotoUrl(1)" alt="Foto hotel" loading="lazy" />
-                                </div>
-
-                                <div class="space-y-6">
-                                    <img class="w-full h-[450px] object-cover rounded-[2rem] shadow-lg"
-                                        [src]="fotoUrl(2)" alt="Foto hotel" loading="lazy" />
-                                    <img class="w-full h-44 object-cover rounded-[2rem] shadow-lg" [src]="fotoUrl(3)"
-                                        alt="Foto hotel" loading="lazy" />
-                                </div>
-
-                                <div class="space-y-6">
-                                    <img class="w-full h-56 object-cover rounded-[2rem] shadow-lg" [src]="fotoUrl(4)"
-                                        alt="Foto hotel" loading="lazy" />
-                                    <img class="w-full h-[380px] object-cover rounded-[2rem] shadow-lg"
-                                        [src]="fotoUrl(5)" alt="Foto hotel" loading="lazy" />
-                                </div>
-
-                                <div class="space-y-6">
-                                    <img class="w-full h-[450px] object-cover rounded-[2rem] shadow-lg"
-                                        [src]="fotoUrl(6)" alt="Foto hotel" loading="lazy" />
-                                    <img class="w-full h-48 object-cover rounded-[2rem] shadow-lg" [src]="fotoUrl(7)"
-                                        alt="Foto hotel" loading="lazy" />
-                                </div>
-
-                            </div>
-                            <!-- TODO: MANDAR A VER TODAS LAS IMAGENES Y VER LA MANERA QUE SEA RESPONSIVO YA QUE EN TELEFONO NO QUIERO QUE 
-                         SE MUESTREN LAS 8 SINO QUE BAJE A 4 Y PUEDE QUE OTRO DISEÑO  -->
-                            <div class="mt-12 flex justify-center">
-                                <button
-                                    class="flex items-center gap-2 text-slate-900 dark:text-blue-400 font-black text-sm uppercase tracking-widest hover:underline group">
-                                    {{ t('ver_todas_fotos') }}
-                                    <mat-icon
-                                        class="icon-size-5 icon-thick transition-transform group-hover:translate-x-1"
-                                        [svgIcon]="'heroicons_outline:arrow-right'"></mat-icon>
-                                </button>
-                            </div>
+                            <app-imagenes-carrusel [imagenesCargadas]="informacionCotizacion.imagenes" />
                         </div>
                         <div
                             class="mt-20 p-8 bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/30 rounded-[2rem] flex gap-5">
