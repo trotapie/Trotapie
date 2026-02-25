@@ -4,7 +4,7 @@ import { FormBuilder, FormControl, FormGroup, FormsModule } from '@angular/forms
 import { Destinos, GrupoDestino, Hotel, HotelConDestino, IHoteles } from './hoteles.interface';
 import { MaterialModule } from 'app/shared/material.module';
 import { Router } from '@angular/router';
-import { Observable, startWith } from 'rxjs';
+import { Observable, startWith, Subject, takeUntil } from 'rxjs';
 import { DatosService } from './hoteles.service';
 import { FuseSplashScreenService } from '@fuse/services/splash-screen';
 import { FloatingSearchComponent } from './search-component/floating-search.component';
@@ -14,13 +14,13 @@ import { MatSelect, MatSelectChange } from '@angular/material/select';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { FooterComponent } from 'app/footer/footer.component';
 import { getDefaultLang } from 'app/lang.utils';
+import { FuseMediaWatcherService } from '@fuse/services/media-watcher/public-api';
 
 @Component({
     selector: 'hoteles',
     templateUrl: './hoteles.component.html',
     imports: [MaterialModule, FormsModule,
-        //  FloatingSearchComponent,
-          TranslocoModule, FooterComponent],
+        TranslocoModule, FooterComponent],
     encapsulation: ViewEncapsulation.None,
     standalone: true
 })
@@ -33,7 +33,9 @@ export class HotelesComponent {
     private supabase = inject(SupabaseService);
     private sanitizer = inject(DomSanitizer)
     private _translocoService = inject(TranslocoService);
-
+    private _unsubscribeAll: Subject<any> = new Subject<any>();
+    private _fuseMediaWatcherService = inject(FuseMediaWatcherService)
+    
     /**
      * Constructor
      */
@@ -96,15 +98,17 @@ export class HotelesComponent {
     filtroDestino: string = '';
     verTodos = false;
     panelActivo = '';
+    isScreenSmall: boolean;
+
     constructor() {
     }
 
     async ngOnInit() {
         if (sessionStorage.getItem('tipoDestino') === null) {
-             this.router.navigate(['/inicio']);
-        }else{
+            this.router.navigate(['/inicio']);
+        } else {
             this.obtenerSoloDestinos();
-    
+
             this.hotelesForm = this.formBuilder.group({
                 hotelSeleccionado: ['']
             });
@@ -127,15 +131,20 @@ export class HotelesComponent {
                         ? this.sanitizer.bypassSecurityTrustHtml(hotel.descuento.icono)
                         : null
                 }));
-    
+
                 if (this.tipoDestino === 2) {
                     this.gruposDestinos = this.agruparHotelesPorDestino(info)
                 }
-    
+
                 this.destinoSeleccionado(info);
                 this.listaHoteles = info;
             });
         }
+        this._fuseMediaWatcherService.onMediaChange$
+            .pipe(takeUntil(this._unsubscribeAll))
+            .subscribe(({ matchingAliases }) => {
+                this.isScreenSmall = !matchingAliases.includes('md');
+            });
     }
 
     ngAfterViewInit(): void {
@@ -183,7 +192,7 @@ export class HotelesComponent {
 
     async obtenerDestinos() {
         this.tipoDestino = sessionStorage.getItem('tipoDestino') !== null ? +sessionStorage.getItem('tipoDestino') : this.tipoDestino
-        
+
         const { data, error } = await this.supabase.obtenerDestinos(this.tipoDestino);
         if (error) { this.error = error.message; return; }
 
@@ -572,8 +581,9 @@ export class HotelesComponent {
 
 
     hotelesMostrados(grupo: any) {
+        
         const hoteles = grupo?.hoteles ?? [];
-        return this.estaExpandido(grupo) ? hoteles : hoteles;
+        return this.estaExpandido(grupo) ? hoteles : this.isScreenSmall ? hoteles.slice(0, 2) : hoteles.slice(0, 3);
     }
 
     trackByGrupo = (_: number, g: any) => g?.destino_id ?? g?.id ?? g?.destino ?? _;

@@ -238,29 +238,28 @@
                     </div>
                     <div *ngIf="tipoDestino === 2" class="space-y-4 m-4">
                         <div *ngIf="gruposDestinos.length === 0 && ciudadSeleccionada"
-                                    class="mt-12 flex flex-col items-center justify-center text-center animate-fadeIn">
+                            class="mt-12 flex flex-col items-center justify-center text-center animate-fadeIn">
 
-                                    <div class="flex flex-col items-center justify-center bg-red-100/20 border border-red-400/40 
+                            <div class="flex flex-col items-center justify-center bg-red-100/20 border border-red-400/40 
            rounded-2xl p-6 max-w-md shadow-lg backdrop-blur-sm">
 
-                                        <div
-                                            class="w-16 h-16 flex items-center justify-center rounded-full bg-red-500/20 mb-4">
-                                            <mat-icon class="text-red-500 text-4xl">hotel</mat-icon>
-                                        </div>
-
-                                        <h3 class="text-xl font-semibold text-red-500 mb-2">
-                                            {{ t('no-hoteles') }}
-
-                                        </h3>
-
-                                        <p class="text-base text-gray-400">
-                                            {{ t('hoteles-no-encontrados') }}
-                                            <br>
-                                            {{ t('seleccionar-nueva-ciudad') }}
-                                        </p>
-
-                                    </div>
+                                <div class="w-16 h-16 flex items-center justify-center rounded-full bg-red-500/20 mb-4">
+                                    <mat-icon class="text-red-500 text-4xl">hotel</mat-icon>
                                 </div>
+
+                                <h3 class="text-xl font-semibold text-red-500 mb-2">
+                                    {{ t('no-hoteles') }}
+
+                                </h3>
+
+                                <p class="text-base text-gray-400">
+                                    {{ t('hoteles-no-encontrados') }}
+                                    <br>
+                                    {{ t('seleccionar-nueva-ciudad') }}
+                                </p>
+
+                            </div>
+                        </div>
                         <div *ngFor="let grupo of gruposDestinos"
                             class="accordion-item  bg-white dark:bg-slate-800/50 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700/50 overflow-hidden">
                             <div class="accordion-header cursor-pointer group flex items-center justify-between p-4 md:p-6"
@@ -287,11 +286,11 @@
                                         </mat-icon></span>
                                 </div>
                             </div>
-                            <div class="accordion-content">
-                                <div class="p-6 pt-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div class="accordion-content overflow-y-auto cdkScrollable" cdkScrollable>
+                                <div class="p-6 pt-0 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                                     <div *ngFor="let hotel of hotelesMostrados(grupo); trackBy: trackByHotelId"
                                         class="bg-slate-50 dark:bg-slate-900 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-700 group/card relative">
-                                        <div class="relative h-48 overflow-hidden">
+                                        <div class="relative h-48 w-auto overflow-hidden">
                                             <img alt="Resort"
                                                 class="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-700"
                                                 [src]="hotel.fondo || fallback" />
@@ -301,8 +300,9 @@
                                                 <span
                                                     class="bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-1 uppercase tracking-wider">
                                                     <span *ngIf="hotel.descuentoSeguro" class=" inline-flex items-center justify-center
-                        w-4 h-4
-                        [&>svg]:w-4 [&>svg]:h-4 [&>svg]:align-middle" [innerHTML]="hotel.descuentoSeguro">
+                                                    w-4 h-4
+                                                    [&>svg]:w-4 [&>svg]:h-4 [&>svg]:align-middle"
+                                                        [innerHTML]="hotel.descuentoSeguro">
                                                     </span>
                                                     {{ hotel?.descuento.tipo_descuento }}
                                                 </span>
@@ -343,6 +343,20 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <div *ngIf="grupo?.hoteles?.length > 3"
+                                            class="md:col-span-3 sm:col-span-2 col-span-1 relative my-2">
+
+                                            <button #toggleGrupoBtn type="button" class="absolute inset-0 flex items-center justify-center text-lg font-medium text-primary
+             cursor-pointer hover:underline select-none" (click)="toggleGrupo(grupo, toggleGrupoBtn)">
+                                                <mat-icon>
+                                                    {{ estaExpandido(grupo) ? 'expand_less' : 'expand_more' }}
+                                                </mat-icon>
+
+                                                {{ estaExpandido(grupo) ? t('ver-menos') : t('ver-mas') }}
+                                            </button>
+
+                                        </div>
+
                                 </div>
                             </div>
                         </div>
