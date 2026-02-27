@@ -88,7 +88,7 @@
   "confirmacion_inmediata": "Confirmación Inmediata",
   "fotos_alojamiento": "Fotos del alojamiento",
   "ver_todas_fotos": "Ver todas las fotos",
-  "aviso_legal": "Los precios y disponibilidad de productos mostrados son solo de referencia y válidos al momento de la búsqueda, quedando así sujetos a cambios hasta que se confirme la reserva. No podemos garantizar que estos precios y/o productos sigan disponibles al momento de la contratación, el precio y los productos finales serán confirmados al momento de realizar la reserva.",
+  "aviso_legal": "Los precios y la disponibilidad mostrados son únicamente informativos y corresponden al momento de la búsqueda. Pueden cambiar antes de confirmar la reserva. El precio y los productos finales se confirmarán al completar la contratación.",
   "total_propuesta": "Total propuesta",
   "contactar_agente": "Contactar agente",
   "desde_hora": "Desde las {{hora}} h",
