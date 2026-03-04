@@ -43,6 +43,7 @@ import { HttpClientJsonpModule } from '@angular/common/http';
 import { NgxDaterangepickerMd } from 'ngx-daterangepicker-material';
 import { CustomScrollbarThumbDirective } from './directives/scroll.directive';
 import { ImporteMxnBlurDirective } from './directives/importe.directive';
+import { PorcentajeBlurDirective } from './directives/porcentajeBlur.directive';
 @NgModule({
   imports: [
     MatButtonModule,
@@ -106,7 +107,8 @@ import { ImporteMxnBlurDirective } from './directives/importe.directive';
     HttpClientJsonpModule,
     NgxDaterangepickerMd.forRoot(),
     CustomScrollbarThumbDirective,
-    ImporteMxnBlurDirective
+    ImporteMxnBlurDirective,
+    PorcentajeBlurDirective
   ],
   exports: [
     MatButtonModule,
@@ -169,7 +171,8 @@ import { ImporteMxnBlurDirective } from './directives/importe.directive';
     HttpClientJsonpModule,
     NgxDaterangepickerMd,
     CustomScrollbarThumbDirective,
-    ImporteMxnBlurDirective
+    ImporteMxnBlurDirective,
+    PorcentajeBlurDirective
   ]
 })
 export class MaterialModule {}
