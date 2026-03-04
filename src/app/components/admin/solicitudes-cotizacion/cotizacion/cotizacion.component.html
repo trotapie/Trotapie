@@ -223,13 +223,33 @@
                                                     class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
                                                     {{ t('precio_con_seguro') }}
                                                 </p>
-                                                <input type="tel" formControlName="precioConSeguro" inputmode="numeric"
+                                                <!-- <input type="tel" formControlName="precioConSeguro" inputmode="numeric"
                                                     autofocus class="w-full h-12 px-4 border-2 rounded-xl
                                                 focus:outline-none transition-colors
                                                 dark:bg-slate-800 dark:text-white" [ngClass]="precioInvalido
                                            ? 'border-red-500 focus:border-red-500'
                                            : 'border-slate-200 dark:border-slate-700 focus:border-primary'"
-                                                    importeMxnBlur />
+                                                    importeMxnBlur /> -->
+                                                <div class="w-full">
+                                                    <div class="flex w-full h-12 rounded-xl border-2 overflow-hidden
+                                                         dark:bg-slate-800 transition-colors"
+                                                        [ngClass]="precioInvalido
+                                                    ? 'border-red-500 focus-within:border-red-500'
+                                                    : 'border-slate-200 dark:border-slate-700 focus-within:border-primary'">
+
+                                                        <input type="tel" formControlName="precioConSeguro" inputmode="numeric"
+                                                            class="w-2/3 px-4 focus:outline-none bg-transparent"
+                                                            importeMxnBlur />
+
+
+                                                        <div class="w-px bg-slate-200 dark:bg-slate-700"></div>
+
+                                                        <input type="tel" formControlName="porcentajeSeguro"
+                                                            inputmode="decimal"
+                                                            class="w-1/3 px-4 text-right focus:outline-none bg-transparent"
+                                                            porcentajeBlur placeholder="0%" />
+                                                    </div>
+                                                </div>
                                                 }
 
                                                 @if (!esEdicion && precioConSeguro) {
@@ -333,13 +353,33 @@
                                                     class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
                                                     {{ t('precio_a_meses') }}
                                                 </p>
-                                                <input type="tel" formControlName="precioMeses" inputmode="numeric"
+                                                <!-- <input type="tel" formControlName="precioMeses" inputmode="numeric"
                                                     autofocus class="w-full h-12 px-4 border-2 rounded-xl
                                                 focus:outline-none transition-colors
                                                 dark:bg-slate-800 dark:text-white" [ngClass]="precioInvalido
                                            ? 'border-red-500 focus:border-red-500'
                                            : 'border-slate-200 dark:border-slate-700 focus:border-primary'"
-                                                    importeMxnBlur />
+                                                    importeMxnBlur /> -->
+                                                <div class="w-full">
+                                                    <div class="flex w-full h-12 rounded-xl border-2 overflow-hidden
+                                                         dark:bg-slate-800 transition-colors"
+                                                        [ngClass]="precioInvalido
+                                                    ? 'border-red-500 focus-within:border-red-500'
+                                                    : 'border-slate-200 dark:border-slate-700 focus-within:border-primary'">
+
+                                                        <input type="tel" formControlName="precioMeses" inputmode="numeric"
+                                                            class="w-2/3 px-4 focus:outline-none bg-transparent"
+                                                            importeMxnBlur />
+
+
+                                                        <div class="w-px bg-slate-200 dark:bg-slate-700"></div>
+
+                                                        <input type="tel" formControlName="porcentajeMeses"
+                                                            inputmode="decimal"
+                                                            class="w-1/3 px-4 text-right focus:outline-none bg-transparent"
+                                                            porcentajeBlur placeholder="0%" />
+                                                    </div>
+                                                </div>
                                                 }
 
                                                 @if (!esEdicion && precioAMeses) {
@@ -433,8 +473,8 @@
 
                             <!-- IMAGEN HERO -->
                             <div class="relative h-[550px] rounded-[2.5rem] overflow-hidden shadow-2xl">
-                                <img alt="Playa Paraíso Cancún" class="w-full h-full object-cover"
-                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuB7zzeQTQfusTKFs5lS7esOhSpLimQK3KaFRyVmOIzgxHgnSdHgiv-BORJ1JIIfOm4LW4tzjjX45_w-Neefdque80RDSn2b3EiGklH-Y7UrXU0PFWkfXQyEELveld_ZKfy9pZjTqboqM0nPQpzTXrxApaDj4_m7vvRl4ImBdz346okcmbeJ2sSE7dQmN5Zpbsdmf19kmCjOU86Zd_WeEkHkl2GrTCFB8ybFszUdRsZ6mKZ5C_rc5CpdsUWj4t4YkgV0zdxiid5Hwd38" />
+                                <img alt="Imagen destino" class="w-full h-full object-cover"
+                                    [src]="informacionCotizacion.imagen_cotizacion || fallback" />
 
                                 <div
                                     class="absolute bottom-8 left-8 right-8 p-6 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/30 text-white">

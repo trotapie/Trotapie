@@ -86,6 +86,8 @@ export class CotizacionComponent implements OnInit {
     condicionesPrecioSinSeguro: this.fb.control<Condicione[]>([]),
     condicionesPrecioConSeguro: this.fb.control<Condicione[]>([]),
     condicionesPrecioMeses: this.fb.control<Condicione[]>([]),
+    porcentajeSeguro: [null],
+    porcentajeMeses: [null],
   });
 
   tiposHabitacion: TipoHabitacion[] = [];
@@ -125,8 +127,7 @@ export class CotizacionComponent implements OnInit {
         this.validacionesPreciosGuardados();
         this.setActiveLang(this.informacionCotizacion.idioma)
       }
-      sessionStorage.setItem('hotel', JSON.stringify(datosHotel))
-
+      sessionStorage.setItem('hotel', JSON.stringify(datosHotel))      
     } finally {
       this.cargando = false;
       this.edicionForm.get('tipoHabitacion')?.valueChanges.subscribe(valor => {
