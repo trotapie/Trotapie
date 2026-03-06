@@ -56,6 +56,7 @@ export interface Condicione {
     titulo:      string;
     aplica_a:    Tipo[];
     descripcion: string;
+    tipoPoliticas: string;
 }
 
 export enum Tipo {

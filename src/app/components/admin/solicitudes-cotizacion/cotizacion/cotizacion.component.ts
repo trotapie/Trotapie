@@ -14,10 +14,10 @@ import { CommonModule } from '@angular/common';
 import { ImagenesCarruselComponent } from 'app/shared/imagenes-carrusel/imagenes-carrusel.component';
 
 export interface PoliticaHotel {
-  id: string;
+  id: number;
   titulo: string;
   descripcion: string;
-  aplica_a: Array<'sin_seguro' | 'con_seguro' | 'a_meses'>;
+  tipoPoliticas?: string;
 }
 
 type Tile = { key: string; url: string; alt: string; class: string };
@@ -52,17 +52,65 @@ export class CotizacionComponent implements OnInit {
   mostrarMapa = false;
   estatusOpciones: IEstatusCotizacion[] = []
   preciosList: string[] = [];
-
-  politicas: PoliticaHotel[] = [
-    { id: 'POL-002', titulo: 'Garantía con tarjeta', descripcion: 'Se requiere tarjeta o depósito. Puede haber preautorización según el hotel.', aplica_a: ['sin_seguro', 'con_seguro', 'a_meses'] },
-    { id: 'POL-003', titulo: 'Cancelación flexible', descripcion: 'Cancelación sin costo hasta 24/48/72 h antes (según hotel). Después aplica penalización.', aplica_a: ['sin_seguro', 'con_seguro', 'a_meses'] },
-    { id: 'POL-004', titulo: 'No reembolsable', descripcion: 'No hay devolución por cancelación/cambios/no show (según tarifa).', aplica_a: ['sin_seguro', 'a_meses'] },
-    { id: 'POL-005', titulo: 'No show', descripcion: 'Si no se presenta y no cancela, se cobra 1 noche o el total (según hotel).', aplica_a: ['sin_seguro', 'con_seguro', 'a_meses'] },
-    { id: 'POL-006', titulo: 'Cambios', descripcion: 'Cambios de fechas/nombre sujetos a disponibilidad y diferencia de tarifa.', aplica_a: ['sin_seguro', 'con_seguro', 'a_meses'] },
-    { id: 'POL-007', titulo: 'Impuestos y cargos', descripcion: 'Impuestos/cargos locales o resort fee pueden cobrarse al reservar o al check-in.', aplica_a: ['sin_seguro', 'con_seguro', 'a_meses'] },
-    { id: 'POL-008', titulo: 'Ocupación / menores', descripcion: 'Ocupación máxima según habitación. Menores y personas extra pueden generar cargo.', aplica_a: ['sin_seguro', 'con_seguro', 'a_meses'] },
-    { id: 'POL-009', titulo: 'Seguro (coberturas)', descripcion: 'Con seguro: cancelación/reprogramación solo por causas cubiertas y con comprobantes.', aplica_a: ['con_seguro'] },
-    { id: 'POL-010', titulo: 'Pago a meses', descripcion: 'Meses sujetos a banco/proveedor. Reembolsos (si aplican) no alteran cargos del banco.', aplica_a: ['a_meses'] },
+  politicas: PoliticaHotel[] = []
+  politicasApartado: PoliticaHotel[] = [
+    {
+      "id": 1,
+      "titulo": "Apartado con anticipo",
+      "descripcion": "Se permite apartar la tarifa mediante un anticipo, el monto restante deberá liquidarse para confirmar la reserva."
+    },
+    {
+      "id": 2,
+      "titulo": "Pago del anticipo",
+      "descripcion": "El anticipo para apartar la reserva deberá pagarse en una sola exhibición."
+    },
+    {
+      "id": 3,
+      "titulo": "Condición del anticipo",
+      "descripcion": "El anticipo no es reembolsable; sin embargo, puede aplicarse como saldo a favor para futuras reservas, servicios o productos con la agencia."
+    },
+    {
+      "id": 4,
+      "titulo": "Métodos de pago",
+      "descripcion": "Pague después: Aceptamos todos los métodos de pago (Efectivo y Transferencias SPEI)."
+    },
+    {
+      "id": 5,
+      "titulo": "Promoción a meses",
+      "descripcion": "Pague después: Promoción a meses sin intereses (Aplica restricciones)."
+    },
+    {
+      "id": 6,
+      "titulo": "3 meses sin intereses",
+      "descripcion": "3 Meses sin intereses: BBVA México, Banamex, BradesCard México."
+    },
+    {
+      "id": 7,
+      "titulo": "6 meses sin intereses",
+      "descripcion": "6 Meses sin intereses: Afirme, American Express, Banamex, Banorte, BBVA México, Banca Mifel, BanBajio, Banregio, Banjercito, Banco Azteca, Falabella, HSBC, Inbursa, Invex, Liverpool VISA, Santander, Scotiabank, Suburbia."
+    },
+    {
+      "id": 8,
+      "titulo": "Cancelación posterior al pago total",
+      "descripcion": "Al liquidar el pago total, la reserva contara con cancelación sin costo dentro de las 72 horas posteriores."
+    }
+  ];
+  politicasNoReembolsable: PoliticaHotel[] = [
+    {
+      "id": 1,
+      "titulo": "Confirmación de reserva",
+      "descripcion": "La reserva se confirma únicamente con pago total."
+    },
+    {
+      "id": 2,
+      "titulo": "Cancelaciones y cambios",
+      "descripcion": "No se puede cancelar ni realizar cambios."
+    },
+    {
+      "id": 3,
+      "titulo": "Métodos de pago",
+      "descripcion": "Aceptamos todos los métodos de pago."
+    }
   ];
 
   telefonoForm = this.fb.group({
@@ -88,6 +136,7 @@ export class CotizacionComponent implements OnInit {
     condicionesPrecioMeses: this.fb.control<Condicione[]>([]),
     porcentajeSeguro: [null],
     porcentajeMeses: [null],
+    tipoTarifa: ['']
   });
 
   tiposHabitacion: TipoHabitacion[] = [];
@@ -117,7 +166,11 @@ export class CotizacionComponent implements OnInit {
           nombre_hotel: this.informacionCotizacion.nombre_hotel
         }
         this.setActiveLang('es')
-
+        const info = this.informacionCotizacion.precios.find(item => item.tipo === 'a_meses')
+        this.edicionForm.patchValue({
+          tipoTarifa: info.condiciones[0].tipoPoliticas
+        })
+        this.politicas = info.condiciones[0].tipoPoliticas === 'apartado' ? this.politicasApartado : this.politicasNoReembolsable;
       } else {
         this.informacionCotizacion = await this.supabase.obtenerCotizacionPorPublicIdCliente(id);
         datosHotel = {
@@ -127,7 +180,8 @@ export class CotizacionComponent implements OnInit {
         this.validacionesPreciosGuardados();
         this.setActiveLang(this.informacionCotizacion.idioma)
       }
-      sessionStorage.setItem('hotel', JSON.stringify(datosHotel))      
+
+      sessionStorage.setItem('hotel', JSON.stringify(datosHotel))
     } finally {
       this.cargando = false;
       this.edicionForm.get('tipoHabitacion')?.valueChanges.subscribe(valor => {
@@ -136,6 +190,16 @@ export class CotizacionComponent implements OnInit {
         this.filteredOptions$ = this.tiposHabitacion.filter(m =>
           m.nombre_habitacion.toUpperCase().includes(texto.toUpperCase())
         );
+      });
+
+      this.edicionForm.get('tipoTarifa')?.valueChanges.subscribe(valor => {
+        this.edicionForm.patchValue({
+          condicionesPrecioMeses: []
+        })
+        this.politicas = valor === 'apartado' ? this.politicasApartado : this.politicasNoReembolsable;
+        this.politicas.forEach(item => {
+          item.tipoPoliticas = valor;
+        })
       });
 
       this.edicionForm?.valueChanges.subscribe(valor => {
@@ -234,12 +298,15 @@ export class CotizacionComponent implements OnInit {
     const mensaje = `
 Buen día,
 
-Le comparto la cotización solicitada para su viaje.
-Puede consultarla en el siguiente enlace:
+Me da mucho gusto compartirle la cotización de su viaje. Preparé esta propuesta considerando lo que me comentó para que sea una excelente experiencia.
 
+Puede revisarla aquí: 
 ${url}
 
-Quedo atento(a) a cualquier comentario o ajuste que requiera.
+Si todo está en orden, con gusto puedo apoyarle a asegurar disponibilidad y tarifa cuanto antes.
+¿Le gustaría que avancemos con la reserva?
+
+Quedamos a sus ordenes.
   `.trim();
 
     const mensajeCodificado = encodeURIComponent(mensaje);
@@ -260,10 +327,10 @@ Quedo atento(a) a cualquier comentario o ajuste que requiera.
     localStorage.setItem('lang', lang);
   }
 
-  estatusLabelPrimerSeleccionado(campoForm: string): string {
+  estatusLabelPrimerSeleccionado(campoForm: string, datos: PoliticaHotel[] = []): string {
     const selected: any[] = this.edicionForm.get(campoForm)?.value ?? [];
     if (!selected.length) return 'Selecciona condicion';
-    const first = this.politicas.find(e => e.id === selected[0].id);
+    const first = datos.find(e => e.id === selected[0].id);
     return first?.descripcion ?? 'Selecciona condicion';
   }
 
@@ -306,15 +373,15 @@ Estoy interesado(a) en esta cotización:
 ${url}
 `;
 
-  if (tipo) {
-    mensaje += `
+    if (tipo) {
+      mensaje += `
 Me gustó la opción ${label[tipo]} y me gustaría avanzar con la reserva.
 ¿Me ayudas con los siguientes pasos?`;
-  } else {
-    mensaje += `
+    } else {
+      mensaje += `
 Me gustaría avanzar con la reserva.
 ¿Me ayudas con los siguientes pasos?`;
-  }
+    }
 
     window.open(`https://wa.me/526188032003?text=${encodeURIComponent(mensaje)}`, '_blank');
   }
