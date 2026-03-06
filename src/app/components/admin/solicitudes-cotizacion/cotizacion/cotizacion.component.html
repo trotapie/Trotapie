@@ -308,6 +308,76 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        @if(!esEdicion){
+                                    <div class="p-2 -mt-2 mb-2">
+                                        <div class="rounded-xl p-8 relative overflow-hidden ">
+                                            <div
+                                                class="absolute top-0 right-0 w-64 h-64 bg-[#EAB308]/10 rounded-full -mr-32 -mt-32 blur-3xl">
+                                            </div>
+                                            <div
+                                                class="absolute bottom-0 left-0 w-64 h-64 bg-[#EAB308]/5 rounded-full -ml-32 -mb-32 blur-3xl">
+                                            </div>
+                                            <div
+                                                class="relative grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                                <div class="flex flex-col gap-4 group">
+                                                    <div class="flex items-center gap-3">
+                                                        <div
+                                                            class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                            <span
+                                                                class="material-symbols-outlined text-2xl">confirmation_number</span>
+                                                        </div>
+                                                        <h3 class="text-xs font-bold uppercase tracking-widest">Apartado
+                                                        </h3>
+                                                    </div>
+                                                    <div class="flex flex-col">
+                                                        <span
+                                                            class="text-3xl font-extrabold tracking-tight">{{edicionForm.get('cantidadApartado').value | currency}} MXN</span>
+                                                        <span class="text-[#EAB308] text-xs font-medium mt-1">Pagado</span>
+                                                    </div>
+                                                </div>
+                                                <div class="flex flex-col gap-4 group">
+                                                    <div class="flex items-center gap-3">
+                                                        <div
+                                                            class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                            <span
+                                                                class="material-symbols-outlined text-2xl">credit_score</span>
+                                                        </div>
+                                                        <h3 class="text-xs font-bold uppercase tracking-widest">Pague
+                                                            Después
+                                                        </h3>
+                                                    </div>
+                                                    <div class="flex flex-col">
+                                                        <span
+                                                            class="text-3xl font-extrabold tracking-tight">{{edicionForm.get('pagueDespuesApartado').value | currency}} MXN</span>
+                                                        <span class="text-slate-500 text-xs font-medium mt-1"> 
+                                                            Pendiente</span>
+                                                    </div>
+                                                </div>
+                                                <!-- Fecha Card -->
+                                                <div class="flex flex-col gap-4 group">
+                                                    <div class="flex items-center gap-3">
+                                                        <div
+                                                            class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                            <span
+                                                                class="material-symbols-outlined text-2xl">event_upcoming</span>
+                                                        </div>
+                                                        <h3 class="text-xs font-bold uppercase tracking-widest">Fecha
+                                                            Límite
+                                                        </h3>
+                                                    </div>
+                                                    <div class="flex flex-col">
+                                                        <span
+                                                            class="text-[#EAB308] text-3xl font-extrabold tracking-tight">30
+                                                            Oct 2026</span>
+                                                        <span class="text-slate-500 text-xs font-medium mt-1">Ultimo dia
+                                                            de
+                                                            pago</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    }
 
                                     </div>
 
@@ -459,10 +529,13 @@
 
 
                                     @if(!esEdicion){
-                                    <div class="p-4 mt-4">
-                                        <div class="rounded-xl p-8 shadow-sm relative overflow-hidden ">
+                                    <div class="p-2 -mt-2 mb-2">
+                                        <div class="rounded-xl p-8 relative overflow-hidden ">
                                             <div
-                                                class="absolute top-0 right-0 w-64 h-64 bg-[#EAB308]/5 rounded-full -mr-32 -mt-32 blur-3xl">
+                                                class="absolute top-0 right-0 w-64 h-64 bg-[#EAB308]/10 rounded-full -mr-32 -mt-32 blur-3xl">
+                                            </div>
+                                            <div
+                                                class="absolute bottom-0 left-0 w-64 h-64 bg-[#EAB308]/5 rounded-full -ml-32 -mb-32 blur-3xl">
                                             </div>
                                             <div
                                                 class="relative grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -478,7 +551,7 @@
                                                     </div>
                                                     <div class="flex flex-col">
                                                         <span
-                                                            class="text-3xl font-extrabold tracking-tight">$500.00 MXN</span>
+                                                            class="text-3xl font-extrabold tracking-tight">{{edicionForm.get('cantidadMeses').value | currency}} MXN</span>
                                                         <span class="text-[#EAB308] text-xs font-medium mt-1">Pagado</span>
                                                     </div>
                                                 </div>
@@ -495,7 +568,7 @@
                                                     </div>
                                                     <div class="flex flex-col">
                                                         <span
-                                                            class="text-3xl font-extrabold tracking-tight">$1,200.00 MXN</span>
+                                                            class="text-3xl font-extrabold tracking-tight">{{edicionForm.get('pagueDespuesMeses').value | currency}} MXN</span>
                                                         <span class="text-slate-500 text-xs font-medium mt-1"> 
                                                             Pendiente</span>
                                                     </div>

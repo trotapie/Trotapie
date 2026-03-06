@@ -136,7 +136,11 @@ export class CotizacionComponent implements OnInit {
     condicionesPrecioMeses: this.fb.control<Condicione[]>([]),
     porcentajeSeguro: [null],
     porcentajeMeses: [null],
-    tipoTarifa: ['']
+    tipoTarifa: [''],
+    pagueDespuesApartado: [null],
+    cantidadApartado: [null],
+    pagueDespuesMeses: [null],
+    cantidadMeses: [null]
   });
 
   tiposHabitacion: TipoHabitacion[] = [];
@@ -179,6 +183,12 @@ export class CotizacionComponent implements OnInit {
         }
         this.validacionesPreciosGuardados();
         this.setActiveLang(this.informacionCotizacion.idioma)
+        this.informacionCotizacion.precios.forEach(item => {
+          if(item.tipo !== 'sin_seguro'){
+            this.calcularPagos(item.precio, 10, item.tipo) 
+          }
+        })
+
       }
 
       sessionStorage.setItem('hotel', JSON.stringify(datosHotel))
@@ -386,6 +396,23 @@ Me gustaría avanzar con la reserva.
     window.open(`https://wa.me/526188032003?text=${encodeURIComponent(mensaje)}`, '_blank');
   }
 
+
+  calcularPagos(total: number, porcentajeApartado: number, campo: string) {
+    const apartado = Math.round(total * (porcentajeApartado / 100));
+    const pagueDespues = total - apartado;
+
+    if (campo === 'a_meses') {
+      this.edicionForm.patchValue({
+        pagueDespuesMeses: pagueDespues,
+        cantidadMeses: apartado
+      })
+    } else if (campo === 'con_seguro') {
+      this.edicionForm.patchValue({
+        pagueDespuesApartado: pagueDespues,
+        cantidadApartado: apartado
+      })
+    }
+  }
 
 
 
