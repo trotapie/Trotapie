@@ -42,18 +42,21 @@ export const appConfig: ApplicationConfig = {
             provide: DateAdapter,
             useClass: LuxonDateAdapter,
         },
-        { provide: MAT_DATE_LOCALE, useValue: 'es-MX' },
+        {
+            provide: MAT_DATE_LOCALE,
+            useValue: 'es-MX'
+        },
         {
             provide: MAT_DATE_FORMATS,
             useValue: {
                 parse: {
-                    dateInput: 'D',
+                    dateInput: 'dd/MM/yyyy',
                 },
                 display: {
-                    dateInput: 'DDD',
-                    monthYearLabel: 'LLL yyyy',
-                    dateA11yLabel: 'DD',
-                    monthYearA11yLabel: 'LLLL yyyy',
+                    dateInput: 'dd/MM/yyyy',
+                    monthYearLabel: 'MMM yyyy',
+                    dateA11yLabel: 'dd/MM/yyyy',
+                    monthYearA11yLabel: 'MMMM yyyy',
                 },
             },
         },
@@ -99,7 +102,7 @@ export const appConfig: ApplicationConfig = {
             },
             fuse: {
                 layout: 'material',
-                scheme: 'light',
+                scheme: 'light', // 'light' | 'dark' | 'auto'
                 screens: {
                     sm: '600px',
                     md: '960px',
