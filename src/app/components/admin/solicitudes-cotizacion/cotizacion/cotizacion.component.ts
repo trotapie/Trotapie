@@ -3,7 +3,7 @@ import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { SupabaseService } from 'app/core/supabase.service';
 import { MaterialModule } from 'app/shared/material.module';
-import { Condicione, ICotizacion, IEstatusCotizacion, PreciosYCondiciones } from './cotizacion.interface';
+import { Condicione, ICotizacion, IEstatusCotizacion, PoliticaHotel, PreciosYCondiciones } from './cotizacion.interface';
 import { DateI18nPipe } from 'app/core/i18n/date-i18n.pipe';
 import { FormBuilder, Validators } from '@angular/forms';
 import { map, Observable, startWith, subscribeOn } from 'rxjs';
@@ -12,13 +12,6 @@ import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { EstatusComponent } from 'app/shared/estatus/estatus.component';
 import { CommonModule } from '@angular/common';
 import { ImagenesCarruselComponent } from 'app/shared/imagenes-carrusel/imagenes-carrusel.component';
-
-export interface PoliticaHotel {
-  id: number;
-  titulo: string;
-  descripcion: string;
-  tipoPoliticas?: string;
-}
 
 type Tile = { key: string; url: string; alt: string; class: string };
 
@@ -53,65 +46,8 @@ export class CotizacionComponent implements OnInit {
   estatusOpciones: IEstatusCotizacion[] = []
   preciosList: string[] = [];
   politicas: PoliticaHotel[] = []
-  politicasApartado: PoliticaHotel[] = [
-    {
-      "id": 1,
-      "titulo": "Apartado con anticipo",
-      "descripcion": "Se permite apartar la tarifa mediante un anticipo, el monto restante deberá liquidarse para confirmar la reserva."
-    },
-    {
-      "id": 2,
-      "titulo": "Pago del anticipo",
-      "descripcion": "El anticipo para apartar la reserva deberá pagarse en una sola exhibición."
-    },
-    {
-      "id": 3,
-      "titulo": "Condición del anticipo",
-      "descripcion": "El anticipo no es reembolsable; sin embargo, puede aplicarse como saldo a favor para futuras reservas, servicios o productos con la agencia."
-    },
-    {
-      "id": 4,
-      "titulo": "Métodos de pago",
-      "descripcion": "Pague después: Aceptamos todos los métodos de pago (Efectivo y Transferencias SPEI)."
-    },
-    {
-      "id": 5,
-      "titulo": "Promoción a meses",
-      "descripcion": "Pague después: Promoción a meses sin intereses (Aplica restricciones)."
-    },
-    {
-      "id": 6,
-      "titulo": "3 meses sin intereses",
-      "descripcion": "3 Meses sin intereses: BBVA México, Banamex, BradesCard México."
-    },
-    {
-      "id": 7,
-      "titulo": "6 meses sin intereses",
-      "descripcion": "6 Meses sin intereses: Afirme, American Express, Banamex, Banorte, BBVA México, Banca Mifel, BanBajio, Banregio, Banjercito, Banco Azteca, Falabella, HSBC, Inbursa, Invex, Liverpool VISA, Santander, Scotiabank, Suburbia."
-    },
-    {
-      "id": 8,
-      "titulo": "Cancelación posterior al pago total",
-      "descripcion": "Al liquidar el pago total, la reserva contara con cancelación sin costo dentro de las 72 horas posteriores."
-    }
-  ];
-  politicasNoReembolsable: PoliticaHotel[] = [
-    {
-      "id": 1,
-      "titulo": "Confirmación de reserva",
-      "descripcion": "La reserva se confirma únicamente con pago total."
-    },
-    {
-      "id": 2,
-      "titulo": "Cancelaciones y cambios",
-      "descripcion": "No se puede cancelar ni realizar cambios."
-    },
-    {
-      "id": 3,
-      "titulo": "Métodos de pago",
-      "descripcion": "Aceptamos todos los métodos de pago."
-    }
-  ];
+  politicasApartado: PoliticaHotel[] = [];
+  politicasNoReembolsable: PoliticaHotel[] = [];
 
   telefonoForm = this.fb.group({
     telefono: [
@@ -136,6 +72,8 @@ export class CotizacionComponent implements OnInit {
     condicionesPrecioMeses: this.fb.control<Condicione[]>([]),
     porcentajeSeguro: [null],
     porcentajeMeses: [null],
+    fechaLimiteSeguro: [null],
+    fechaLimiteMeses: [null],
     tipoTarifa: [''],
     pagueDespuesApartado: [null],
     cantidadApartado: [null],
@@ -170,11 +108,7 @@ export class CotizacionComponent implements OnInit {
           nombre_hotel: this.informacionCotizacion.nombre_hotel
         }
         this.setActiveLang('es')
-        const info = this.informacionCotizacion.precios.find(item => item.tipo === 'a_meses')
-        this.edicionForm.patchValue({
-          tipoTarifa: info.condiciones[0].tipoPoliticas
-        })
-        this.politicas = info.condiciones[0].tipoPoliticas === 'apartado' ? this.politicasApartado : this.politicasNoReembolsable;
+
       } else {
         this.informacionCotizacion = await this.supabase.obtenerCotizacionPorPublicIdCliente(id);
         datosHotel = {
@@ -183,13 +117,29 @@ export class CotizacionComponent implements OnInit {
         }
         this.validacionesPreciosGuardados();
         this.setActiveLang(this.informacionCotizacion.idioma)
-        this.informacionCotizacion.precios.forEach(item => {
-          if(item.tipo !== 'sin_seguro'){
-            this.calcularPagos(item.precio, 10, item.tipo) 
+        this.informacionCotizacion.precios.forEach(item => {          
+          switch (item.tipo) {
+            case 'a_meses':
+              this.calcularPagos(item.precio, item.porcentaje, item.tipo)
+              break;
+              case 'con_seguro':
+                this.calcularPagos(item.precio, item.porcentaje, item.tipo)
+              break;
+          
+            default:
+              break;
           }
         })
 
       }
+      this.politicasApartado = this.informacionCotizacion.politicas_tarifas.apartado
+      this.politicasNoReembolsable = this.informacionCotizacion.politicas_tarifas.noReembolsable
+
+      const info = this.informacionCotizacion.precios.find(item => item.tipo === 'a_meses')
+      this.edicionForm.patchValue({
+        tipoTarifa: info.condiciones[0].tipoPoliticas
+      })
+      this.politicas = info.condiciones[0].tipoPoliticas === 'apartado' ? this.politicasApartado : this.politicasNoReembolsable;
 
       sessionStorage.setItem('hotel', JSON.stringify(datosHotel))
     } finally {
@@ -364,6 +314,10 @@ Quedamos a sus ordenes.
         condicionesPrecioSinSeguro: this.precioSinSeguro ? this.precioSinSeguro.condiciones : [],
         condicionesPrecioConSeguro: this.precioConSeguro ? this.precioConSeguro.condiciones : [],
         condicionesPrecioMeses: this.precioAMeses ? this.precioAMeses.condiciones : [],
+        porcentajeSeguro: this.informacionCotizacion.porcentaje_seguro,
+        porcentajeMeses: this.informacionCotizacion.porcentaje_meses,
+        fechaLimiteSeguro: this.informacionCotizacion.fecha_limite_seguro,
+        fechaLimiteMeses: this.informacionCotizacion.fecha_limite_meses,
       });
     }
   }

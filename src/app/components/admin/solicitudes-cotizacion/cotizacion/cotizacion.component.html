@@ -375,8 +375,8 @@
                                                         </div>
                                                         <div class="flex flex-col">
                                                             <span
-                                                                class="text-[#EAB308] text-3xl font-extrabold tracking-tight">30
-                                                                Oct 2026</span>
+                                                                class="text-[#EAB308] text-3xl font-extrabold tracking-tight">{{informacionCotizacion.fecha_limite_seguro |
+                                                dateI18n:'dd MMM yyyy':informacionCotizacion.idioma}}</span>
                                                             <span class="text-slate-500 text-xs font-medium mt-1">Ultimo
                                                                 dia
                                                                 de
@@ -399,7 +399,7 @@
                                                 Fecha
                                                 Límite
                                             </mat-label>
-                                            <input matInput [matDatepicker]="picker" (click)="picker.open()">
+                                            <input matInput [matDatepicker]="picker" (click)="picker.open()" formControlName="fechaLimiteSeguro">
                                             <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
                                             <mat-datepicker #picker></mat-datepicker>
                                         </mat-form-field>
@@ -612,8 +612,8 @@
                                                     </div>
                                                     <div class="flex flex-col">
                                                         <span
-                                                            class="text-[#EAB308] text-3xl font-extrabold tracking-tight">30
-                                                            Oct 2026</span>
+                                                            class="text-[#EAB308] text-3xl font-extrabold tracking-tight">{{informacionCotizacion.fecha_limite_meses |
+                                                dateI18n:'dd MMM yyyy':informacionCotizacion.idioma}}</span>
                                                         <span class="text-slate-500 text-xs font-medium mt-1">Ultimo dia
                                                             de
                                                             pago</span>
@@ -633,7 +633,7 @@
                                                 Fecha
                                                 Límite
                                             </mat-label>
-                                            <input matInput [matDatepicker]="picker" (click)="picker.open()">
+                                            <input matInput [matDatepicker]="picker" (click)="picker.open()" formControlName="fechaLimiteMeses">
                                             <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
                                             <mat-datepicker #picker></mat-datepicker>
                                         </mat-form-field>

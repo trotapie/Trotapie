@@ -495,38 +495,42 @@ export class SupabaseService {
       .eq('activo', true); // 👈 ordenados
   }
 
-  async actualizarCotizacionPublicaCompleta(
-    publicId: string,
-    formValue: any
-  ) {
+  async actualizarCotizacionPublicaCompleta(publicId: string, formValue: any) {
+
     const limpiar = (v: any) => {
-      if (v === null || v === undefined || v === '') return null;
+      if (!v) return null;
       const n = Number(String(v).replace(/[$,\s]/g, ''));
       return Number.isFinite(n) ? n : null;
     };
 
-    const tipoHabitacionId = formValue.tipoHabitacion?.id;
-    const estatusClave = formValue.estatus;
-
-    if (!tipoHabitacionId || !estatusClave) return;
-
     const { error } = await this.client.rpc('actualizar_cotizacion_publica', {
+
       p_public_id: publicId.trim(),
+
       p_precio: limpiar(formValue.precio),
       p_precio_con_seguro: limpiar(formValue.precioConSeguro),
       p_precio_a_meses: limpiar(formValue.precioMeses),
-      p_tipo_habitacion: tipoHabitacionId,
-      p_estatus_clave: estatusClave,
+
+      p_tipo_habitacion: formValue.tipoHabitacion?.id,
+      p_estatus_clave: formValue.estatus,
+
       p_condiciones_precio: formValue.condicionesPrecioSinSeguro ?? [],
       p_condiciones_precio_seguro: formValue.condicionesPrecioConSeguro ?? [],
       p_condiciones_precio_meses: formValue.condicionesPrecioMeses ?? [],
+
+      p_porcentaje_seguro: formValue.porcentajeSeguro,
+      p_porcentaje_meses: formValue.porcentajeMeses,
+
+      p_fecha_limite_seguro: formValue.fechaLimiteSeguro,
+      p_fecha_limite_meses: formValue.fechaLimiteMeses
+
     });
 
     if (error) throw error;
   }
 
   async obtenerDetalleDestino(destinoId: number, lang?: string) {
-    
+
     const { data, error } = await this.client.rpc('get_detalle_destino', {
       p_destino_id: destinoId,
       p_codigo: lang,
