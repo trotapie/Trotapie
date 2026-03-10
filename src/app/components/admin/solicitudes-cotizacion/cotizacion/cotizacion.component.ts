@@ -117,15 +117,15 @@ export class CotizacionComponent implements OnInit {
         }
         this.validacionesPreciosGuardados();
         this.setActiveLang(this.informacionCotizacion.idioma)
-        this.informacionCotizacion.precios.forEach(item => {          
+        this.informacionCotizacion.precios.forEach(item => {
           switch (item.tipo) {
             case 'a_meses':
               this.calcularPagos(item.precio, item.porcentaje, item.tipo)
               break;
-              case 'con_seguro':
-                this.calcularPagos(item.precio, item.porcentaje, item.tipo)
+            case 'con_seguro':
+              this.calcularPagos(item.precio, item.porcentaje, item.tipo)
               break;
-          
+
             default:
               break;
           }
@@ -316,8 +316,9 @@ Quedamos a sus ordenes.
         condicionesPrecioMeses: this.precioAMeses ? this.precioAMeses.condiciones : [],
         porcentajeSeguro: this.informacionCotizacion.porcentaje_seguro,
         porcentajeMeses: this.informacionCotizacion.porcentaje_meses,
-        fechaLimiteSeguro: this.informacionCotizacion.fecha_limite_seguro,
-        fechaLimiteMeses: this.informacionCotizacion.fecha_limite_meses,
+        fechaLimiteSeguro: this.parseLocalDate(this.informacionCotizacion.fecha_limite_seguro),
+        fechaLimiteMeses: this.parseLocalDate(this.informacionCotizacion.fecha_limite_meses),
+
       });
     }
   }
@@ -368,6 +369,12 @@ Me gustaría avanzar con la reserva.
     }
   }
 
+  private parseLocalDate(dateStr: string | null | undefined): Date | null {
+    if (!dateStr) return null;
+
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }
 
 
 }
