@@ -289,15 +289,15 @@ export class CotizacionComponent implements OnInit {
     this.precioConSeguro = precios.find(o => o.tipo === 'con_seguro') ?? null;
     this.precioAMeses = precios.find(o => o.tipo === 'a_meses') ?? null;
 
-    this.precioSinSeguro.condiciones.forEach(element => {
+    this.precioSinSeguro?.condiciones.forEach(element => {
       element.descripcion = this.informacionCotizacion.politicas_tarifas.noReembolsable.find(item => item.id === element.id).descripcion
     });
 
-    this.precioConSeguro.condiciones.forEach(element => {
+    this.precioConSeguro?.condiciones.forEach(element => {
       element.descripcion = this.informacionCotizacion.politicas_tarifas.apartado.find(item => item.id === element.id).descripcion
     });
 
-    this.precioAMeses.condiciones.forEach(element => {
+    this.precioAMeses?.condiciones.forEach(element => {
       element.descripcion = element.tipoPoliticas === 'apartado' ?
         this.informacionCotizacion.politicas_tarifas.apartado.find(item => item.id === element.id).descripcion :
         this.informacionCotizacion.politicas_tarifas.noReembolsable.find(item => item.id === element.id).descripcion;

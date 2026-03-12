@@ -199,6 +199,8 @@
                                         }
 
                                     </div>
+                                    <hr class="my-6 border-slate-200 dark:border-slate-700">
+
                                     }
                                     @if(!esEdicion && precioSinSeguro){
                                     <div
@@ -213,7 +215,6 @@
                                         }
                                     </div>
                                     }
-                                    <hr class="my-6 border-slate-200 dark:border-slate-700">
                                     <div class=" border-t border-slate-50 dark:border-slate-700 pb-4">
 
                                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -310,7 +311,9 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        @if(!esEdicion){
+                                        @if(!esEdicion && precioConSeguro){
+                                        <hr class="my-6 border-slate-200 dark:border-slate-700">
+
                                         <div class="p-2 -mt-2 mb-2">
                                             <div class="rounded-xl p-8 relative overflow-hidden ">
                                                 <div
@@ -410,6 +413,8 @@
                                         }
 
                                     </div>
+                                    <hr class="my-6 border-slate-200 dark:border-slate-700">
+
                                     }
                                     @if(!esEdicion && precioConSeguro){
                                     <div
@@ -422,9 +427,9 @@
                                         </span>
                                         }
                                     </div>
+                                    <hr class="my-6 border-slate-200 dark:border-slate-700">
                                     }
 
-                                    <hr class="my-6 border-slate-200 dark:border-slate-700">
 
                                     <div class=" border-t border-slate-50 dark:border-slate-700 pb-4">
 
@@ -545,7 +550,7 @@
 
 
 
-                                    @if(!esEdicion){
+                                    @if(!esEdicion && precioAMeses){
                                     <div class="p-2 -mt-2 mb-2">
                                         <div class="rounded-xl p-8 relative overflow-hidden ">
                                             <div
