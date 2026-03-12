@@ -109,5 +109,8 @@
   "pagado": "Pago",
   "pendiente": "Pendente",
   "ultimo_dia_pago": "Último dia para pagamento",
-  "mensaje-cotizacion-viaje": "Bom dia,\n\nFico muito feliz em compartilhar a cotação da sua viagem. Preparei esta proposta considerando o que você comentou para que seja uma excelente experiência.\n\nVocê pode revisá-la aqui:\n{{url}}\n\nSe tudo estiver correto, terei prazer em ajudá-lo a garantir a disponibilidade e a tarifa o quanto antes.\nGostaria que avançássemos com a reserva?\n\nFicamos à sua disposição."
+  "mensaje-cotizacion-viaje": "Bom dia,\n\nFico muito feliz em compartilhar a cotação da sua viagem. Preparei esta proposta considerando o que você comentou para que seja uma excelente experiência.\n\nVocê pode revisá-la aqui:\n{{url}}\n\nSe tudo estiver correto, terei prazer em ajudá-lo a garantir a disponibilidade e a tarifa o quanto antes.\nGostaria que avançássemos com a reserva?\n\nFicamos à sua disposição.",
+  "mensaje-interes-cotizacion": "Olá\n\nTenho interesse nesta cotação:\n{{url}}\n",
+  "mensaje-interes-opcion": "Gostei da opção {{opcion}} e gostaria de avançar com a reserva.\nVocê pode me ajudar com os próximos passos?",
+  "mensaje-interes-reserva": "Gostaria de avançar com a reserva.\nVocê pode me ajudar com os próximos passos?"
 }

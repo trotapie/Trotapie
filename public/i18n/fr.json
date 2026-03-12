@@ -104,5 +104,8 @@
   "destinos-no-encontrados": "Nous n'avons trouvé aucun résultat pour votre recherche.",
   "intenta-otra-busqueda": "Essayez un autre nom ou mot-clé.",
   "ultimo_dia_pago": "Último dia para pagamento",
-  "mensaje-cotizacion-viaje": "Bonjour,\n\nJe suis ravi de vous partager le devis de votre voyage. J’ai préparé cette proposition en tenant compte de ce que vous m’avez indiqué afin que ce soit une excellente expérience.\n\nVous pouvez la consulter ici :\n{{url}}\n\nSi tout est en ordre, je serai heureux de vous aider à sécuriser la disponibilité et le tarif dès que possible.\nSouhaitez-vous que nous procédions à la réservation ?\n\nNous restons à votre disposition."
+  "mensaje-cotizacion-viaje": "Bonjour,\n\nJe suis ravi de vous partager le devis de votre voyage. J’ai préparé cette proposition en tenant compte de ce que vous m’avez indiqué afin que ce soit une excellente expérience.\n\nVous pouvez la consulter ici :\n{{url}}\n\nSi tout est en ordre, je serai heureux de vous aider à sécuriser la disponibilité et le tarif dès que possible.\nSouhaitez-vous que nous procédions à la réservation ?\n\nNous restons à votre disposition.",
+  "mensaje-interes-cotizacion": "Bonjour\n\nJe suis intéressé(e) par ce devis :\n{{url}}\n",
+  "mensaje-interes-opcion": "L’option {{opcion}} m’a plu et j’aimerais poursuivre la réservation.\nPouvez-vous m’aider avec les prochaines étapes ?",
+  "mensaje-interes-reserva": "J’aimerais poursuivre la réservation.\nPouvez-vous m’aider avec les prochaines étapes ?"
 }

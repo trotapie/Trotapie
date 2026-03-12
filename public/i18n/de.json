@@ -109,5 +109,8 @@
   "pagado": "Bezahlt",
   "pendiente": "Ausstehend",
   "ultimo_dia_pago": "Letzter Zahlungstag",
-   "mensaje-cotizacion-viaje": "Guten Tag,\n\nEs freut mich sehr, Ihnen das Angebot für Ihre Reise zu teilen. Ich habe diesen Vorschlag auf Grundlage Ihrer Angaben vorbereitet, damit es eine großartige Erfahrung wird.\n\nSie können ihn hier ansehen:\n{{url}}\n\nWenn alles in Ordnung ist, unterstütze ich Sie gerne dabei, die Verfügbarkeit und den Preis so schnell wie möglich zu sichern.\nMöchten Sie mit der Reservierung fortfahren?\n\nWir stehen Ihnen gerne zur Verfügung."
+  "mensaje-cotizacion-viaje": "Guten Tag,\n\nEs freut mich sehr, Ihnen das Angebot für Ihre Reise zu teilen. Ich habe diesen Vorschlag auf Grundlage Ihrer Angaben vorbereitet, damit es eine großartige Erfahrung wird.\n\nSie können ihn hier ansehen:\n{{url}}\n\nWenn alles in Ordnung ist, unterstütze ich Sie gerne dabei, die Verfügbarkeit und den Preis so schnell wie möglich zu sichern.\nMöchten Sie mit der Reservierung fortfahren?\n\nWir stehen Ihnen gerne zur Verfügung.",
+  "mensaje-interes-cotizacion": "Hallo\n\nIch interessiere mich für dieses Angebot:\n{{url}}\n",
+  "mensaje-interes-opcion": "Mir hat die Option {{opcion}} gefallen und ich möchte mit der Reservierung fortfahren.\nKönnen Sie mir bei den nächsten Schritten helfen?",
+  "mensaje-interes-reserva": "Ich möchte mit der Reservierung fortfahren.\nKönnen Sie mir bei den nächsten Schritten helfen?"
 }

@@ -258,7 +258,7 @@ export class CotizacionComponent implements OnInit {
 
     const mensaje = await this.buildMensajeCotizacionViaje(url);
     const mensajeCodificado = encodeURIComponent(mensaje);
-    
+
     // TODO: HACER EL CAMBIO DEL 52 Y VER EL DE LOS DEMAS PAISES
     const whatsappUrl = `https://wa.me/52${telefonoLimpio}?text=${mensajeCodificado}`;
 
@@ -327,7 +327,7 @@ export class CotizacionComponent implements OnInit {
   }
 
 
-  contactarAgente(tipo: 'sin_seguro' | 'con_seguro' | 'a_meses', total: string, link: string) {
+  async contactarAgente(tipo: 'sin_seguro' | 'con_seguro' | 'a_meses', total: string, link: string) {
     const label: Record<string, string> = {
       sin_seguro: 'sin seguro',
       con_seguro: 'con seguro',
@@ -335,21 +335,26 @@ export class CotizacionComponent implements OnInit {
     };
     const url = `https://app.trotapie.com/cotizacion/${this.informacionCotizacion.public_id}`
 
-    let mensaje = `Hola 
+    //     let mensaje = `Hola 
 
-Estoy interesado(a) en esta cotización:
-${url}
-`;
+    // Estoy interesado(a) en esta cotización:
+    // ${url}
+    // `;
 
-    if (tipo) {
-      mensaje += `
-Me gustó la opción ${label[tipo]} y me gustaría avanzar con la reserva.
-¿Me ayudas con los siguientes pasos?`;
-    } else {
-      mensaje += `
-Me gustaría avanzar con la reserva.
-¿Me ayudas con los siguientes pasos?`;
-    }
+    //     if (tipo) {
+    //       mensaje += `
+    // Me gustó la opción ${label[tipo]} y me gustaría avanzar con la reserva.
+    // ¿Me ayudas con los siguientes pasos?`;
+    //     } else {
+    //       mensaje += `
+    // Me gustaría avanzar con la reserva.
+    // ¿Me ayudas con los siguientes pasos?`;
+    //     }
+    const mensaje = await this.buildMensajeInteres(
+      url,
+      tipo,
+      label
+    );
 
     window.open(`https://wa.me/526188032003?text=${encodeURIComponent(mensaje)}`, '_blank');
   }
@@ -415,5 +420,73 @@ Me gustaría avanzar con la reserva.
       '',
       msgEs,
     ].join('\n');
+  }
+
+  private async buildMensajeInteres(
+    url: string,
+    tipo?: string,
+    label?: Record<string, string>
+  ): Promise<string> {
+
+    const idioma = (this.informacionCotizacion?.idioma || 'es')
+      .toLowerCase()
+      .trim()
+      .split('-')[0];
+
+    await firstValueFrom(this._translocoService.load(idioma));
+
+    if (idioma !== 'es') {
+      await firstValueFrom(this._translocoService.load('es'));
+    }
+
+    const header = this._translocoService.translate(
+      'mensaje-interes-cotizacion',
+      { url },
+      idioma
+    );
+
+    const body = tipo
+      ? this._translocoService.translate(
+        'mensaje-interes-opcion',
+        { opcion: label?.[tipo] },
+        idioma
+      )
+      : this._translocoService.translate(
+        'mensaje-interes-reserva',
+        {},
+        idioma
+      );
+
+    let mensaje = `${header}\n${body}`;
+
+    if (idioma !== 'es') {
+      const headerEs = this._translocoService.translate(
+        'mensaje-interes-cotizacion',
+        { url },
+        'es'
+      );
+
+      const bodyEs = tipo
+        ? this._translocoService.translate(
+          'mensaje-interes-opcion',
+          { opcion: label?.[tipo] },
+          'es'
+        )
+        : this._translocoService.translate(
+          'mensaje-interes-reserva',
+          {},
+          'es'
+        );
+
+      mensaje = [
+        mensaje,
+        '',
+        '────────────',
+        '',
+        `${headerEs}\n${bodyEs}`
+      ].join('\n');
+    }
+
+    return mensaje;
   }
 }
