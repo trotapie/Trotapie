@@ -55,10 +55,11 @@ export interface PreciosYCondiciones {
     precio: number;
     porcentaje: number;
     condiciones: Condicione[];
+    id: number;
 }
 
 export interface Condicione {
-    id: string;
+    id: number;
     titulo: string;
     aplica_a: Tipo[];
     descripcion: string;

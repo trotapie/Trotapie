@@ -102,5 +102,12 @@
   "explorar": "Entdecken",
   "no-destinos": "Keine Reiseziele gefunden",
   "destinos-no-encontrados": "Für Ihre Suche wurden keine Ergebnisse gefunden.",
-  "intenta-otra-busqueda": "Versuchen Sie einen anderen Namen oder ein anderes Stichwort."
+  "intenta-otra-busqueda": "Versuchen Sie einen anderen Namen oder ein anderes Stichwort.",
+  "apartado": "Reservierungsanzahlung",
+  "pague_despues": "Später bezahlen",
+  "fecha_limite": "Frist",
+  "pagado": "Bezahlt",
+  "pendiente": "Ausstehend",
+  "ultimo_dia_pago": "Letzter Zahlungstag",
+   "mensaje-cotizacion-viaje": "Guten Tag,\n\nEs freut mich sehr, Ihnen das Angebot für Ihre Reise zu teilen. Ich habe diesen Vorschlag auf Grundlage Ihrer Angaben vorbereitet, damit es eine großartige Erfahrung wird.\n\nSie können ihn hier ansehen:\n{{url}}\n\nWenn alles in Ordnung ist, unterstütze ich Sie gerne dabei, die Verfügbarkeit und den Preis so schnell wie möglich zu sichern.\nMöchten Sie mit der Reservierung fortfahren?\n\nWir stehen Ihnen gerne zur Verfügung."
 }

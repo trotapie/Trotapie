@@ -6,12 +6,13 @@ import { MaterialModule } from 'app/shared/material.module';
 import { Condicione, ICotizacion, IEstatusCotizacion, PoliticaHotel, PreciosYCondiciones } from './cotizacion.interface';
 import { DateI18nPipe } from 'app/core/i18n/date-i18n.pipe';
 import { FormBuilder, Validators } from '@angular/forms';
-import { map, Observable, startWith, subscribeOn } from 'rxjs';
+import { firstValueFrom, map, Observable, startWith, subscribeOn } from 'rxjs';
 import { MapaComponent } from 'app/components/hoteles/mapa/mapa.component';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { EstatusComponent } from 'app/shared/estatus/estatus.component';
 import { CommonModule } from '@angular/common';
 import { ImagenesCarruselComponent } from 'app/shared/imagenes-carrusel/imagenes-carrusel.component';
+import { find } from 'lodash';
 
 type Tile = { key: string; url: string; alt: string; class: string };
 
@@ -125,7 +126,6 @@ export class CotizacionComponent implements OnInit {
             case 'con_seguro':
               this.calcularPagos(item.precio, item.porcentaje, item.tipo)
               break;
-
             default:
               break;
           }
@@ -252,24 +252,13 @@ export class CotizacionComponent implements OnInit {
     this.telefonoCtrl?.setValue(limpio, { emitEvent: false });
   }
 
-  sendCotizacion() {
+  async sendCotizacion() {
     const telefonoLimpio = this.telefonoForm.get('telefono').value.replace(/\D/g, '');
     const url = `https://app.trotapie.com/cotizacion/${this.informacionCotizacion.public_id}`
-    const mensaje = `
-Buen día,
 
-Me da mucho gusto compartirle la cotización de su viaje. Preparé esta propuesta considerando lo que me comentó para que sea una excelente experiencia.
-
-Puede revisarla aquí: 
-${url}
-
-Si todo está en orden, con gusto puedo apoyarle a asegurar disponibilidad y tarifa cuanto antes.
-¿Le gustaría que avancemos con la reserva?
-
-Quedamos a sus ordenes.
-  `.trim();
-
+    const mensaje = await this.buildMensajeCotizacionViaje(url);
     const mensajeCodificado = encodeURIComponent(mensaje);
+    
     // TODO: HACER EL CAMBIO DEL 52 Y VER EL DE LOS DEMAS PAISES
     const whatsappUrl = `https://wa.me/52${telefonoLimpio}?text=${mensajeCodificado}`;
 
@@ -299,6 +288,20 @@ Quedamos a sus ordenes.
     this.precioSinSeguro = precios.find(o => o.tipo === 'sin_seguro') ?? null;
     this.precioConSeguro = precios.find(o => o.tipo === 'con_seguro') ?? null;
     this.precioAMeses = precios.find(o => o.tipo === 'a_meses') ?? null;
+
+    this.precioSinSeguro.condiciones.forEach(element => {
+      element.descripcion = this.informacionCotizacion.politicas_tarifas.noReembolsable.find(item => item.id === element.id).descripcion
+    });
+
+    this.precioConSeguro.condiciones.forEach(element => {
+      element.descripcion = this.informacionCotizacion.politicas_tarifas.apartado.find(item => item.id === element.id).descripcion
+    });
+
+    this.precioAMeses.condiciones.forEach(element => {
+      element.descripcion = element.tipoPoliticas === 'apartado' ?
+        this.informacionCotizacion.politicas_tarifas.apartado.find(item => item.id === element.id).descripcion :
+        this.informacionCotizacion.politicas_tarifas.noReembolsable.find(item => item.id === element.id).descripcion;
+    });
 
     if (this.esEdicion) {
       this.edicionForm.patchValue({
@@ -377,4 +380,40 @@ Me gustaría avanzar con la reserva.
   }
 
 
+  private async buildMensajeCotizacionViaje(url: string): Promise<string> {
+    const idiomaRaw = this.informacionCotizacion?.idioma || 'es';
+
+    const idioma = idiomaRaw
+      .toLowerCase()
+      .trim()
+      .split('-')[0];
+
+    await firstValueFrom(this._translocoService.load(idioma));
+
+    if (idioma !== 'es') {
+      await firstValueFrom(this._translocoService.load('es'));
+    }
+
+    const msgIdioma = this._translocoService.translate(
+      'mensaje-cotizacion-viaje',
+      { url },
+      idioma
+    );
+
+    if (idioma === 'es') return msgIdioma;
+
+    const msgEs = this._translocoService.translate(
+      'mensaje-cotizacion-viaje',
+      { url },
+      'es'
+    );
+
+    return [
+      msgIdioma,
+      '',
+      '────────────',
+      '',
+      msgEs,
+    ].join('\n');
+  }
 }

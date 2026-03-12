@@ -102,5 +102,12 @@
   "explorar": "Explore",
   "no-destinos": "No destinations found",
   "destinos-no-encontrados": "We couldn't find any results for your search.",
-  "intenta-otra-busqueda": "Try typing another destination or keyword."
+  "intenta-otra-busqueda": "Try typing another destination or keyword.",
+  "apartado": "Reservation deposit",
+  "pague_despues": "Pay later",
+  "fecha_limite": "Deadline",
+  "pagado": "Paid",
+  "pendiente": "Pending",
+  "ultimo_dia_pago": "Last day to pay",
+  "mensaje-cotizacion-viaje": "Good day,\n\nI’m pleased to share your travel quote with you. I prepared this proposal based on what you mentioned so it can be a great experience.\n\nYou can review it here:\n{{url}}\n\nIf everything looks good, I would be happy to help secure the availability and rate as soon as possible.\nWould you like us to proceed with the reservation?\n\nWe remain at your service."
 }

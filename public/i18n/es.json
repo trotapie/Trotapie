@@ -102,5 +102,12 @@
   "explorar": "Explorar",
   "no-destinos": "No encontramos destinos",
   "destinos-no-encontrados": "No hay resultados para tu búsqueda.",
-  "intenta-otra-busqueda": "Intenta escribir otro destino o palabra clave."
+  "intenta-otra-busqueda": "Intenta escribir otro destino o palabra clave.",
+  "apartado": "Apartado",
+  "pague_despues": "Pague después",
+  "fecha_limite": "Fecha límite",
+  "pagado": "Pagado",
+  "pendiente": "Pendiente",
+  "ultimo_dia_pago": "Último día de pago",
+  "mensaje-cotizacion-viaje": "Buen día,\n\nMe da mucho gusto compartirle la cotización de su viaje. Preparé esta propuesta considerando lo que me comentó para que sea una excelente experiencia.\n\nPuede revisarla aquí:\n{{url}}\n\nSi todo está en orden, con gusto puedo apoyarle a asegurar disponibilidad y tarifa cuanto antes.\n¿Le gustaría que avancemos con la reserva?\n\nQuedamos a sus órdenes."
 }

@@ -329,7 +329,7 @@
                                                                     class="material-symbols-outlined text-2xl">confirmation_number</span>
                                                             </div>
                                                             <h3 class="text-xs font-bold uppercase tracking-widest">
-                                                                Apartado
+                                                                {{t('apartado')}}
                                                             </h3>
                                                         </div>
                                                         <div class="flex flex-col">
@@ -337,7 +337,7 @@
                                                                 class="text-3xl font-extrabold tracking-tight">{{edicionForm.get('cantidadApartado').value
                                                                 | currency}} MXN</span>
                                                             <span
-                                                                class="text-[#EAB308] text-xs font-medium mt-1">Pagado</span>
+                                                                class="text-[#EAB308] text-xs font-medium mt-1">{{t('pagado')}}</span>
                                                         </div>
                                                     </div>
                                                     <div class="flex flex-col gap-4 group">
@@ -348,8 +348,7 @@
                                                                     class="material-symbols-outlined text-2xl">credit_score</span>
                                                             </div>
                                                             <h3 class="text-xs font-bold uppercase tracking-widest">
-                                                                Pague
-                                                                Después
+                                                                {{t('pague_despues')}}
                                                             </h3>
                                                         </div>
                                                         <div class="flex flex-col">
@@ -357,7 +356,7 @@
                                                                 class="text-3xl font-extrabold tracking-tight">{{edicionForm.get('pagueDespuesApartado').value
                                                                 | currency}} MXN</span>
                                                             <span class="text-slate-500 text-xs font-medium mt-1">
-                                                                Pendiente</span>
+                                                                {{t('pendiente')}}</span>
                                                         </div>
                                                     </div>
                                                     <!-- Fecha Card -->
@@ -369,18 +368,14 @@
                                                                     class="material-symbols-outlined text-2xl">event_upcoming</span>
                                                             </div>
                                                             <h3 class="text-xs font-bold uppercase tracking-widest">
-                                                                Fecha
-                                                                Límite
+                                                                {{t('fecha_limite')}}
                                                             </h3>
                                                         </div>
                                                         <div class="flex flex-col">
                                                             <span
                                                                 class="text-[#EAB308] text-3xl font-extrabold tracking-tight">{{informacionCotizacion.fecha_limite_seguro |
                                                 dateI18n:'dd MMM yyyy':informacionCotizacion.idioma}}</span>
-                                                            <span class="text-slate-500 text-xs font-medium mt-1">Ultimo
-                                                                dia
-                                                                de
-                                                                pago</span>
+                                                            <span class="text-slate-500 text-xs font-medium mt-1">{{t('ultimo_dia_pago')}}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -568,7 +563,7 @@
                                                             <span
                                                                 class="material-symbols-outlined text-2xl">confirmation_number</span>
                                                         </div>
-                                                        <h3 class="text-xs font-bold uppercase tracking-widest">Apartado
+                                                        <h3 class="text-xs font-bold uppercase tracking-widest">{{t('apartado')}}
                                                         </h3>
                                                     </div>
                                                     <div class="flex flex-col">
@@ -576,7 +571,7 @@
                                                             class="text-3xl font-extrabold tracking-tight">{{edicionForm.get('cantidadMeses').value
                                                             | currency}} MXN</span>
                                                         <span
-                                                            class="text-[#EAB308] text-xs font-medium mt-1">Pagado</span>
+                                                            class="text-[#EAB308] text-xs font-medium mt-1">{{t('pagado')}}</span>
                                                     </div>
                                                 </div>
                                                 <div class="flex flex-col gap-4 group">
@@ -586,8 +581,7 @@
                                                             <span
                                                                 class="material-symbols-outlined text-2xl">credit_score</span>
                                                         </div>
-                                                        <h3 class="text-xs font-bold uppercase tracking-widest">Pague
-                                                            Después
+                                                        <h3 class="text-xs font-bold uppercase tracking-widest">{{t('pague_despues')}}
                                                         </h3>
                                                     </div>
                                                     <div class="flex flex-col">
@@ -595,7 +589,7 @@
                                                             class="text-3xl font-extrabold tracking-tight">{{edicionForm.get('pagueDespuesMeses').value
                                                             | currency}} MXN</span>
                                                         <span class="text-slate-500 text-xs font-medium mt-1">
-                                                            Pendiente</span>
+                                                            {{t('pendiente')}}</span>
                                                     </div>
                                                 </div>
                                                 <!-- Fecha Card -->
@@ -606,17 +600,14 @@
                                                             <span
                                                                 class="material-symbols-outlined text-2xl">event_upcoming</span>
                                                         </div>
-                                                        <h3 class="text-xs font-bold uppercase tracking-widest">Fecha
-                                                            Límite
+                                                        <h3 class="text-xs font-bold uppercase tracking-widest">{{t('fecha_limite')}}
                                                         </h3>
                                                     </div>
                                                     <div class="flex flex-col">
                                                         <span
                                                             class="text-[#EAB308] text-3xl font-extrabold tracking-tight">{{informacionCotizacion.fecha_limite_meses |
                                                 dateI18n:'dd MMM yyyy':informacionCotizacion.idioma}}</span>
-                                                        <span class="text-slate-500 text-xs font-medium mt-1">Ultimo dia
-                                                            de
-                                                            pago</span>
+                                                        <span class="text-slate-500 text-xs font-medium mt-1">{{t('ultimo_dia_pago')}}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -630,8 +621,7 @@
                                         <mat-form-field>
                                             <mat-label
                                                 class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
-                                                Fecha
-                                                Límite
+                                                {{t('fecha_limite')}}
                                             </mat-label>
                                             <input matInput [matDatepicker]="picker" (click)="picker.open()" formControlName="fechaLimiteMeses">
                                             <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
