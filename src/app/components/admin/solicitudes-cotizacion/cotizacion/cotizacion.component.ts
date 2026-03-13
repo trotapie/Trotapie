@@ -137,9 +137,9 @@ export class CotizacionComponent implements OnInit {
 
       const info = this.informacionCotizacion.precios.find(item => item.tipo === 'a_meses')
       this.edicionForm.patchValue({
-        tipoTarifa: info.condiciones[0].tipoPoliticas
+        tipoTarifa: info?.condiciones[0].tipoPoliticas
       })
-      this.politicas = info.condiciones[0].tipoPoliticas === 'apartado' ? this.politicasApartado : this.politicasNoReembolsable;
+      this.politicas = info?.condiciones[0].tipoPoliticas === 'apartado' ? this.politicasApartado : this.politicasNoReembolsable;
 
       sessionStorage.setItem('hotel', JSON.stringify(datosHotel))
     } finally {
