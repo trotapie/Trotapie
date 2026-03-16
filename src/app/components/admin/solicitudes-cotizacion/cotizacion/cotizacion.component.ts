@@ -329,27 +329,12 @@ export class CotizacionComponent implements OnInit {
 
   async contactarAgente(tipo: 'sin_seguro' | 'con_seguro' | 'a_meses', total: string, link: string) {
     const label: Record<string, string> = {
-      sin_seguro: 'sin seguro',
-      con_seguro: 'con seguro',
-      a_meses: 'a meses',
+      sin_seguro: 'opcion-sin-seguro',
+      con_seguro: 'opcion-con-seguro',
+      a_meses: 'opcion-a-meses',
     };
     const url = `https://app.trotapie.com/cotizacion/${this.informacionCotizacion.public_id}`
 
-    //     let mensaje = `Hola 
-
-    // Estoy interesado(a) en esta cotización:
-    // ${url}
-    // `;
-
-    //     if (tipo) {
-    //       mensaje += `
-    // Me gustó la opción ${label[tipo]} y me gustaría avanzar con la reserva.
-    // ¿Me ayudas con los siguientes pasos?`;
-    //     } else {
-    //       mensaje += `
-    // Me gustaría avanzar con la reserva.
-    // ¿Me ayudas con los siguientes pasos?`;
-    //     }
     const mensaje = await this.buildMensajeInteres(
       url,
       tipo,
@@ -361,7 +346,7 @@ export class CotizacionComponent implements OnInit {
 
 
   calcularPagos(total: number, porcentajeApartado: number, campo: string) {
-    const apartado = Math.round(total * (porcentajeApartado / 100));
+    const apartado = total * (porcentajeApartado / 100);
     const pagueDespues = total - apartado;
 
     if (campo === 'a_meses') {
@@ -439,6 +424,10 @@ export class CotizacionComponent implements OnInit {
       await firstValueFrom(this._translocoService.load('es'));
     }
 
+    const opcionTraducida = tipo
+      ? this._translocoService.translate(label?.[tipo], {}, idioma)
+      : '';
+
     const header = this._translocoService.translate(
       'mensaje-interes-cotizacion',
       { url },
@@ -448,7 +437,7 @@ export class CotizacionComponent implements OnInit {
     const body = tipo
       ? this._translocoService.translate(
         'mensaje-interes-opcion',
-        { opcion: label?.[tipo] },
+        { opcion: opcionTraducida },
         idioma
       )
       : this._translocoService.translate(
@@ -460,6 +449,11 @@ export class CotizacionComponent implements OnInit {
     let mensaje = `${header}\n${body}`;
 
     if (idioma !== 'es') {
+
+      const opcionEs = tipo
+        ? this._translocoService.translate(label?.[tipo], {}, 'es')
+        : '';
+
       const headerEs = this._translocoService.translate(
         'mensaje-interes-cotizacion',
         { url },
@@ -469,7 +463,7 @@ export class CotizacionComponent implements OnInit {
       const bodyEs = tipo
         ? this._translocoService.translate(
           'mensaje-interes-opcion',
-          { opcion: label?.[tipo] },
+          { opcion: opcionEs },
           'es'
         )
         : this._translocoService.translate(

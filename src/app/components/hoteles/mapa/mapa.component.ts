@@ -14,8 +14,6 @@ export class MapaComponent implements OnInit, AfterViewInit {
 
         this.hotel = JSON.parse(sessionStorage.getItem('hotel'))       
         const url = this.hotel.ubicacion;
-console.log(url);
-
         this.coordenadas = this.extraerCoordenadasDesdeUrl(url);
     }
 

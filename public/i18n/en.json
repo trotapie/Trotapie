@@ -112,5 +112,8 @@
   "mensaje-cotizacion-viaje": "Good day,\n\nI’m pleased to share your travel quote with you. I prepared this proposal based on what you mentioned so it can be a great experience.\n\nYou can review it here:\n{{url}}\n\nIf everything looks good, I would be happy to help secure the availability and rate as soon as possible.\nWould you like us to proceed with the reservation?\n\nWe remain at your service.",
   "mensaje-interes-cotizacion": "Hello\n\nI am interested in this quote:\n{{url}}\n",
   "mensaje-interes-opcion": "I liked the {{opcion}} option and would like to proceed with the reservation.\nCould you help me with the next steps?",
-  "mensaje-interes-reserva": "I would like to proceed with the reservation.\nCould you help me with the next steps?"
+  "mensaje-interes-reserva": "I would like to proceed with the reservation.\nCould you help me with the next steps?",
+  "opcion-sin-seguro": "Non-refundable rate",
+  "opcion-con-seguro": "Reservation deposit",
+  "opcion-a-meses": "Installments"
 }
