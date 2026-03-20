@@ -110,5 +110,6 @@
   "mensaje-interes-reserva": "J’aimerais poursuivre la réservation.\nPouvez-vous m’aider avec les prochaines étapes ?",
   "opcion-sin-seguro": "Tarif non remboursable",
   "opcion-con-seguro": "Acompte de réservation",
-  "opcion-a-meses": "Paiement en plusieurs fois"
+  "opcion-a-meses": "Paiement en plusieurs fois",
+   "regresar": "Retour"
 }

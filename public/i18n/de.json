@@ -115,5 +115,6 @@
   "mensaje-interes-reserva": "Ich möchte mit der Reservierung fortfahren.\nKönnen Sie mir bei den nächsten Schritten helfen?",
   "opcion-sin-seguro": "Nicht erstattungsfähiger Tarif",
   "opcion-con-seguro": "Reservierungsanzahlung",
-  "opcion-a-meses": "Ratenzahlung"
+  "opcion-a-meses": "Ratenzahlung",
+  "regresar": "Zurück"
 }

@@ -115,5 +115,6 @@
   "mensaje-interes-reserva": "I would like to proceed with the reservation.\nCould you help me with the next steps?",
   "opcion-sin-seguro": "Non-refundable rate",
   "opcion-con-seguro": "Reservation deposit",
-  "opcion-a-meses": "Installments"
+  "opcion-a-meses": "Installments",
+  "regresar": "Back"
 }
