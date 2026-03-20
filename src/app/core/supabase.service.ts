@@ -423,13 +423,14 @@ export class SupabaseService {
       .select(`
     id,
     clave,
+    orden,
     traducciones:tipos_imagen_traducciones!fk_tipo_imagen (
       id,
       lang,
       descripcion
     )
   `)
-      .order('id');
+      .order('orden');
 
     return data;
   }
