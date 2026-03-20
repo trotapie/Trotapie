@@ -143,18 +143,9 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
         return;
       }
 
+      this.previousIndex = (this.previousIndex + 1) % this.imagenesFondo.length;
+      const nuevaUrl = this.imagenesFondo[this.previousIndex];
 
-      let newIndex: number;
-
-      // Elegir índice aleatorio distinto al anterior (si hay más de 1 imagen)
-      do {
-        newIndex = Math.floor(Math.random() * this.imagenesFondo.length);
-      } while (newIndex === this.previousIndex && this.imagenesFondo.length > 1);
-
-      this.previousIndex = newIndex;
-      const nuevaUrl = this.imagenesFondo[newIndex];
-
-      // Usar transición en lugar de asignar directo
       this.cambiarFondoConTransicion(nuevaUrl.url_imagen, nuevaUrl.nombre_destino);
 
     }, 3000); // 5 segundos
@@ -222,7 +213,6 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
 
   async obtenerImagenesFondo() {
     this.imagenesFondo = await this.supabase.getImagenesFondo();
-
     if (!this.imagenesFondo?.length) return;
 
     // ✅ 1) Mostrar la primera imagen inmediatamente (sin esperar al interval)
