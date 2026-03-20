@@ -137,6 +137,11 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                <div
+                                    class="absolute bottom-5 transform flex flex-col gap-4 z-20 text-3xl text-[#f7be07]">
+                                    <strong>{{currentText}}</strong>
+                                </div>
                             </div>
                         </ng-container>
 
@@ -161,7 +166,8 @@
       ]">
                         <div class="bg-white rounded-2xl shadow-xlw-full h-full flex flex-col">
 
-                            <div class="bg-gradient-to-b from-[#147052] via-[#2f8a6d] to-white rounded-t-2xl px-8 pt-6 pb-14">
+                            <div
+                                class="bg-gradient-to-b from-[#147052] via-[#2f8a6d] to-white rounded-t-2xl px-8 pt-6 pb-14">
                                 <div class="flex items-center justify-between">
                                     <button type="button" mat-icon-button
                                         class="rounded-full hover:bg-white/60 transition" (click)="hideOverlay()">

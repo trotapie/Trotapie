@@ -13,6 +13,7 @@ import { getDefaultLang } from 'app/lang.utils';
 import { FooterComponent } from 'app/footer/footer.component';
 import { DatosService } from 'app/components/hoteles/hoteles.service';
 import { Destinos, GrupoDestino, Hotel, IHoteles } from 'app/components/hoteles/hoteles.interface';
+import { IImagenesFondo } from './imagenes-fondo.interface';
 
 @Component({
   selector: 'app-seleccion-destino',
@@ -60,10 +61,12 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
   tipoDestino: number = 1;
   gruposDestinos: GrupoDestino[] = [];
 
-  imagenesFondo: string[] = [];
+  imagenesFondo: IImagenesFondo[] = [];
 
   currentIndex = 0;
-  currentImage = this.imagenesFondo[Math.floor(Math.random() * this.imagenesFondo.length)];
+  index = Math.floor(Math.random() * this.imagenesFondo.length)
+  currentText = this.imagenesFondo[this.index]?.nombre_destino;
+  currentImage = this.imagenesFondo[this.index]?.url_imagen;
   overlayImage: string | null = null;
   isTransitioning = false;
 
@@ -152,13 +155,12 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
       const nuevaUrl = this.imagenesFondo[newIndex];
 
       // Usar transición en lugar de asignar directo
-      this.cambiarFondoConTransicion(nuevaUrl);
+      this.cambiarFondoConTransicion(nuevaUrl.url_imagen, nuevaUrl.nombre_destino);
 
     }, 3000); // 5 segundos
   }
 
-  cambiarFondoConTransicion(url: string): void {
-    // Si ya estamos en transición, opcional: ignorar para no encimar
+  cambiarFondoConTransicion(url: string, text): void {
     if (this.isTransitioning) {
       return;
     }
@@ -170,8 +172,10 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
       this.isTransitioning = true;
 
       // Duración debe coincidir con la del CSS (500ms)
+      this.currentText = text
       setTimeout(() => {
         this.currentImage = url;      // Actualizamos el fondo base
+        this.currentText = text
         this.isTransitioning = false; // Fin de transición
         this.overlayImage = null;     // Quitamos la capa extra
       }, 500);
@@ -228,9 +232,9 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
     const firstUrl = this.imagenesFondo[firstIndex];
 
     // (opcional pero recomendado) precarga para evitar parpadeo/latencia
-    await this.preloadImage(firstUrl);
+    await this.preloadImage(firstUrl.url_imagen);
 
-    this.cambiarFondoConTransicion(firstUrl);
+    this.cambiarFondoConTransicion(firstUrl.url_imagen, firstUrl.nombre_destino);
 
     // ✅ 2) Ya después arrancas el carrusel
     this.startRandomCarousel();

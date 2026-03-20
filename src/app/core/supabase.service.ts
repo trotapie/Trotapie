@@ -410,12 +410,11 @@ export class SupabaseService {
   async getImagenesFondo() {
     const { data, error } = await this.client
       .from('imagenes_fondo')
-      .select('url_imagen')
+      .select('url_imagen, nombre_destino')
       .eq('activo', true)
       .order('id', { ascending: true });
-    const imagenes = data.map(img => img.url_imagen);
     if (error) throw error;
-    return imagenes;
+    return data;
   }
 
   async obtenerTiposImagenHotel() {
