@@ -1,0 +1,290 @@
+<!-- <div  class="fixed inset-0 z-[999] bg-black/50 backdrop-blur-sm flex items-end justify-center"> -->
+<ng-container *transloco="let t">
+
+    <div  class="fixed inset-0 z-[999] bg-black/70 backdrop-blur-sm flex items-end justify-center">
+        <div
+            class="bg-white dark:bg-gray-900 w-full sm:w-4/5 md:w-[640px] h-[100svh] max-h-[100svh] rounded-t-2xl shadow-xl animate-slide-up relative overflow-hidden">
+
+            <button class="absolute top-3 right-4 text-gray-600 dark:text-gray-300" (click)="cerrarModal()">
+                <mat-icon svgIcon="heroicons_outline:x-mark" class="w-8 h-8"></mat-icon>
+            </button>
+
+            <div *ngIf="!form">
+                <div>
+                    <div class="flex justify-center mt-[5%] mb-8">
+                        <img class="w-56 h-15 " src="assets/images/logos/trotapie.png" alt="Logo Trotapie" />
+                    </div>
+                    <div class="mx-8">
+                        <div class="flex items-center mb-4">
+                            <img class="w-8 h-8 mr-2" src="assets/icons/cama-hotel.svg" />
+                            <span [innerHTML]="t('beneficio-hoteles')"></span>
+                        </div>
+
+                        <div class="flex items-center mb-4">
+                            <img class="w-8 h-8 mr-2" src="assets/icons/avion3.svg" />
+                            <span [innerHTML]="t('beneficio-vuelos')"></span>
+                        </div>
+
+                        <div class="flex items-center mb-4">
+                            <mat-icon svgIcon="heroicons_outline:banknotes" class="w-8 h-8 mr-2 text-black">
+                            </mat-icon>
+                            <span [innerHTML]="t('beneficio-pagos')"></span>
+                        </div>
+
+                        <div class="flex items-center mb-4">
+                            <mat-icon svgIcon="heroicons_outline:credit-card" class="w-8 h-8 mr-2 text-black">
+                            </mat-icon>
+                            <span [innerHTML]="t('beneficio-meses')"></span>
+                        </div>
+
+                        <div class="flex items-center mb-4">
+                            <img class="w-8 h-8 mr-2" src="assets/icons/support.svg" />
+                            <span [innerHTML]="t('beneficio-atencion')"></span>
+                        </div>
+
+                        <div class="flex items-center">
+                            <img class="w-8 h-8 mr-2" src="assets/icons/tips.svg" />
+                            <span [innerHTML]="t('beneficio-anticipo')"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative h-[4px] overflow-hidden bg-gray-200/60 my-6">
+                    <span class="absolute inset-0 shimmer"></span>
+                </div>
+
+                <div class="absolute left-0 right-0 bottom-4 px-6 space-y-2">
+                    <article class="text-center ">
+                        <strong> {{t('operadores-verificados')}}</strong>
+                    </article>
+                    <button mat-raised-button color="primary"
+                        class="w-full text-white animate-pulse-slow shadow-lg bg-[#F9B44B]  hover:bg-[#e0a13a] [text-shadow:_0_2px_2px_rgba(0,0,0,0.50)]"
+                        (click)="abrirForm()">
+                        <div class="flex items-center justify-center ">
+                            <img class="w-6 h-6 mr-3 [filter:drop-shadow(0_2px_2px_rgba(0,0,0,0.45))]"
+                                src="assets/icons/concerge.svg" />
+                            <b>{{t('cotiza-ahora')}}</b>
+                        </div>
+                    </button>
+                    <article class="text-center ">
+                        <strong> {{t('cotizacion')}}</strong>
+                    </article>
+                </div>
+            </div>
+            <div *ngIf="form" class="grid grid-rows-[auto,1fr,auto] h-full overscroll-contain touch-pan-y">
+
+                <div class="px-4 pt-6 pb-3 border-b bg-black text-white sticky top-0 backdrop-blur rounded-t-md">
+                    <div class="flex items-center space-x-3">
+                        <img class="w-12 h-12 p-2 bg-white rounded-full" src="assets/images/logos/trotapie-iso.png"
+                            alt="Logo" />
+
+                        <div class="flex flex-col leading-tight">
+                            <span class="text-2xl font-semibold">{{t('asistente')}}</span>
+                            <span class="text-md text-white">{{ hotel.nombre_hotel }}</span>
+                        </div>
+                    </div>
+                    <button class="absolute top-7 right-4 text-gray-300 hover:text-white transition"
+                        (click)="cerrarModal()">
+                        <mat-icon svgIcon="heroicons_outline:x-mark" class="w-8 h-8"></mat-icon>
+                    </button>
+                </div>
+
+                <div class="px-4 py-4 overflow-y-auto">
+                    <form [formGroup]="reservacionForm" class="space-y-3">
+
+                        <div class="flex items-center justify-center gap-x-3 -mb-4">
+                            <mat-form-field class="w-8/12 ff-underline cursor-pointer" appearance="fill"
+                                [formGroupName]="'rangoFechas'" (click)="picker.open()">
+                                <mat-label class="block text-md font-semibold text-green-700">
+                                    {{ t('rango-fecha') }} ({{ noches }} {{ t('noches') }})
+                                </mat-label>
+
+                                <mat-date-range-input [rangePicker]="picker" [dateFilter]="dateFilter"
+                                    class="pointer-events-none">
+                                    <input matStartDate placeholder="Fecha inicio" formControlName="start" />
+                                    <input matEndDate placeholder="Fecha fin" formControlName="end" />
+                                </mat-date-range-input>
+
+                                <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+                                <mat-date-range-picker #picker></mat-date-range-picker>
+                            </mat-form-field>
+
+
+                            <button mat-raised-button [matMenuTriggerFor]="roomsMenu" #menuTrigger="matMenuTrigger"
+                                color="primary" class="!rounded-lg !w-4/12 !h-40 flex px-2 flex-col items-center justify-center
+         text-white shadow-md hover:shadow-lg
+         transition ">
+
+                                <div class="text-md font-medium mt-2">{{t('habitaciones')}}</div>
+
+                                <div class="flex items-center justify-center gap-5 mb-1">
+                                    <div class="flex items-center gap-1 text-lg font-semibold">
+                                        <mat-icon class="text-white">bed</mat-icon>
+                                        <span>{{ totalRooms() }}</span>
+                                    </div>
+
+                                    <div class="flex items-center gap-1 text-lg font-semibold">
+                                        <mat-icon class="text-white">person</mat-icon>
+                                        <span>{{ totalPeople() }}</span>
+                                    </div>
+                                </div>
+                            </button>
+
+
+
+                            <mat-menu #roomsMenu="matMenu" hasBackdrop="true" [overlapTrigger]="false"
+                                class="!p-2 min-w-[340px] flex items-center">
+                                <div class="flex flex-col gap-3 p-2 max-h-96 overflow-y-auto"
+                                    (click)="$event.stopPropagation()">
+                                    <ng-container *ngFor="let r of rooms(); let i = index">
+                                        <div class="rounded-xl border p-3 flex flex-col gap-3">
+                                            <div class="flex items-center justify-between">
+                                                <div class="font-medium">{{t('habitacion')}} {{ i + 1 }}</div>
+                                                <button mat-icon-button (click)="removeRoom(i)"
+                                                    [disabled]="rooms().length === 1">
+                                                    <mat-icon>close</mat-icon>
+                                                </button>
+                                            </div>
+
+                                            <div class="flex items-center justify-between">
+                                                <div>
+                                                    <div class="font-medium">{{t('adultos')}}</div>
+                                                    <div class="text-xs text-gray-500">{{t('+18')}}</div>
+                                                </div>
+                                                <div class="flex items-center gap-2">
+                                                    <button mat-mini-fab (click)="decAdults(i)"
+                                                        [disabled]="r.adults <= MIN_ADULTS"><mat-icon>remove</mat-icon></button>
+                                                    <div class="w-6 text-center">{{ r.adults }}</div>
+                                                    <button mat-mini-fab (click)="incAdults(i)"
+                                                        [disabled]="(r.adults + r.children) >= MAX_PER_ROOM"><mat-icon>add</mat-icon></button>
+                                                </div>
+                                            </div>
+
+                                            <div class="flex items-center justify-between">
+                                                <div>
+                                                    <div class="font-medium">{{t('menores')}}</div>
+                                                    <div class="text-xs text-gray-500">{{t('-18')}}</div>
+                                                </div>
+                                                <div class="flex items-center gap-2">
+                                                    <button mat-mini-fab (click)="decChildren(i)"
+                                                        [disabled]="r.children <= 0"><mat-icon>remove</mat-icon></button>
+                                                    <div class="w-6 text-center">{{ r.children }}</div>
+                                                    <button mat-mini-fab (click)="incChildren(i)"
+                                                        [disabled]="(r.adults + r.children) >= MAX_PER_ROOM"><mat-icon>add</mat-icon></button>
+                                                </div>
+                                            </div>
+
+                                            <div *ngIf="r.children > 0" class="grid grid-cols-2 gap-x-2">
+                                                <ng-container *ngFor="let age of r.childAges; let j = index">
+                                                    <div class="flex items-center justify-between">
+                                                        <div>
+                                                            <div class="font-medium text-center">{{t('edad-menor')}}
+                                                                {{ j
+                                                                + 1 }}</div>
+                                                        </div>
+                                                    </div>
+
+                                                    <mat-form-field appearance="outline">
+                                                        <mat-select [value]="r.childAges[j]"
+                                                            (selectionChange)="setChildAge(i, j, $event.value)">
+                                                            <mat-option [value]="null"
+                                                                disabled>{{t('edad')}}</mat-option>
+                                                            <mat-option *ngFor="let a of ageOptions" [value]="a">{{
+                                                                a
+                                                                }}</mat-option>
+                                                        </mat-select>
+                                                    </mat-form-field>
+                                                </ng-container>
+                                            </div>
+
+
+                                            <div *ngIf="roomNeedsAges(r)" class="text-xs text-red-600">
+                                                {{t('selecciona-edad')}}
+                                            </div>
+
+                                            <div class="text-right text-xs text-gray-500">
+                                                Máx {{ MAX_PER_ROOM }} {{t('por-habitacion')}}
+                                            </div>
+                                        </div>
+                                    </ng-container>
+
+                                    <div class="flex items-center justify-between">
+                                        <button mat-stroked-button (click)="addRoom()"
+                                            [disabled]="rooms().length >= MAX_ROOMS">{{t('add-habitacion')}}</button>
+                                        <button mat-raised-button color="primary" (click)="menuTrigger.closeMenu()"
+                                            class="text-white" [disabled]="hasMissingAges()">{{t('aplicar')}}</button>
+                                    </div>
+                                </div>
+                            </mat-menu>
+                        </div>
+
+                        <div class="flex items-center gap-x-3 -mt-2">
+                            <div class="w-6/12">
+                                <label class="block text-sm font-medium text-green-700 mb-1">{{t('asesor')}}</label>
+                                <select formControlName="asesor" class="select-underline">
+                                    <option [ngValue]="null" disabled>{{t('selecciona-opcion')}}</option>
+                                    <option *ngFor="let op of asesores" [ngValue]="op">{{ op.nombre }}</option>
+                                </select>
+                            </div>
+
+                            <div class="w-6/12">
+                                <label class="block text-sm font-medium text-green-700 mb-1">{{t('regimen')}}</label>
+                                <select formControlName="regimen" class="select-underline">
+                                    <option [ngValue]="null" disabled>{{t('selecciona-opcion')}}</option>
+                                    <option *ngFor="let op of opcionesRegimen" [ngValue]="op">{{
+                                        op.descripcion }}</option>
+                                </select>
+
+                                <p *ngIf="reservacionForm.get('regimen')?.invalid && (reservacionForm.get('regimen')?.touched || reservacionForm.get('regimen')?.dirty)"
+                                    class="mt-1 text-xs text-red-600">
+                                    {{t('selecciona-opcion')}}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-green-700 mb-1">{{t('nombre')}}</label>
+                            <input formControlName="nombre" class="input-underline" />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-green-700 mb-1">{{t('telefono')}}</label>
+                            <input formControlName="telefono" class="input-underline" />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-green-700 mb-1">{{t('correo')}}</label>
+                            <input formControlName="correo" class="input-underline" />
+                        </div>
+
+                        <div class="pt-1">
+                            <label class="inline-flex items-center gap-3 cursor-pointer select-none">
+                                <input type="checkbox" formControlName="ofertas"
+                                    class="h-4 w-4 rounded border-gray-300 text-green-700 focus:ring-green-600" />
+                                <span class="text-sm font-medium text-green-700">{{t('ofertas')}}</span>
+                            </label>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-green-700 mb-1">{{t('peticiones')}}</label>
+                            <textarea formControlName="especiales" class="input-underline"></textarea>
+                        </div>
+
+                    </form>
+
+                </div>
+
+                <div class="p-4 border-t bg-white/90 dark:bg-gray-900/90 backdrop-blur">
+                    <button mat-raised-button color="primary" [disabled]="reservacionForm.invalid"
+                        class="w-full flex items-center justify-center text-white" (click)="abrirWhatsApp()">
+                        {{t('enviar-whats')}}
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</ng-container>
+
+
+<!-- </div> -->

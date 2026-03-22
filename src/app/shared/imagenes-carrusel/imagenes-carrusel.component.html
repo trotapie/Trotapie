@@ -188,4 +188,7 @@
             </a>
         </div>
     </div>
+    <section *ngIf="mostrarBot">
+        <bot-cotizador [hotel]="hotel" (cerrar)="cerrarModal()"/>
+    </section>
 </ng-container>

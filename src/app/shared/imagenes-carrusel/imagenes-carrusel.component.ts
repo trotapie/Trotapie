@@ -3,10 +3,12 @@ import { MaterialModule } from '../material.module';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { SupabaseService } from 'app/core/supabase.service';
 import { Router } from '@angular/router';
+import { BotCotizadorComponent } from 'app/bot-cotizador/bot-cotizador.component';
+import { IDetalleHotel } from 'app/components/hoteles/hoteles.interface';
 
 @Component({
   selector: 'app-imagenes-carrusel',
-  imports: [MaterialModule, TranslocoModule],
+  imports: [MaterialModule, TranslocoModule, BotCotizadorComponent],
   templateUrl: './imagenes-carrusel.component.html',
   styleUrl: './imagenes-carrusel.component.scss'
 })
@@ -15,6 +17,7 @@ export class ImagenesCarruselComponent implements OnInit {
   private supabase = inject(SupabaseService);
   private router = inject(Router)
   @Input() imagenesCargadas: any[] = [];
+  @Input() hotel: IDetalleHotel;
 
   imagenes: string[] = [];
   imagenesFilter: string[] = [];
@@ -26,6 +29,9 @@ export class ImagenesCarruselComponent implements OnInit {
   selectedTipoId: number = 0;
   tiposImagen: any[] = [];
   esCotizacion: boolean;
+  modalAbierto = false;
+  mostrarBot = false;
+
 
 
   @ViewChild('overlay') overlay?: ElementRef<HTMLDivElement>;
@@ -140,4 +146,31 @@ export class ImagenesCarruselComponent implements OnInit {
     const t = (tipo.traducciones || []).find((x: any) => x.lang === lang);
     return t?.descripcion ?? tipo.clave ?? 'Tipo';
   }
+
+  cerrarModal() {
+    this.modalAbierto = false;
+    this.mostrarBot = false;
+
+  }
+
+  abrirModal() {
+    this.mostrarBot = true;
+  }
+
+  onDragStart(event: PointerEvent) {
+    event.preventDefault();
+  }
+
+  onThumbsWheel(event: WheelEvent) {
+    const el = event.currentTarget as HTMLElement | null;
+    if (!el) return;
+
+    const delta = Math.abs(event.deltaY) >= Math.abs(event.deltaX)
+      ? event.deltaY
+      : event.deltaX;
+
+    el.scrollLeft += delta;
+
+  }
+
 }
