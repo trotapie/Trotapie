@@ -48,12 +48,12 @@ export class DetalleDestinoComponent implements OnInit {
 
     const datosHotel = {
       ubicacion: this.detallesDestino.ubicacion,
-      nombre_hotel: "Mazatlán",
+      nombre_hotel: this.detallesDestino.nombre,
       vistaLejana: true,
     }
 
     this._translocoService.langChanges$.subscribe(async (activeLang) => {
-      const informacionDestino = await this.supabase.obtenerDetalleDestino(1, activeLang);
+      const informacionDestino = await this.supabase.obtenerDetalleDestino(id, activeLang);
       this.detallesDestino = informacionDestino[0];
     });
     
