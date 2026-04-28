@@ -148,11 +148,24 @@
                     class="sticky top-0 z-50 w-full border-b border-solid border-[#147052]/10 bg-background-light/80 backdrop-blur-md dark:bg-background-dark/80 px-6 md:px-20 py-4">
                     <div class="max-w-[1200px] mx-auto flex items-center justify-between">
                         <div class="flex items-center gap-6">
-                            <button mat-raised-button color="accent"
-                                class=" text-white ml-auto flex items-center justify-end gap-2" (click)="regresar()">
-                                <mat-icon class="icon-size-5 text-white"
-                                    [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>{{ t('regresar-a-destinos')
-                                }}
+                            <button mat-raised-button color="accent" class="text-white ml-auto flex items-center gap-2"
+                                (click)="regresar()">
+
+                                <mat-icon class="icon-size-5 text-white" fontSet="material-symbols-outlined">
+                                    arrow_back
+                                </mat-icon>
+
+                                {{ t('regresar-a-destinos') }}
+                            </button>
+
+                            <button mat-raised-button (click)="cargarInfo()"
+                                class="text-white ml-auto flex items-center gap-2 bg-[#147052]">
+
+                                <mat-icon class="icon-size-5 text-white" fontSet="material-symbols-outlined">
+                                    hotel
+                                </mat-icon>
+
+                                {{ t('ver-hoteles-en', { destino: detallesDestino?.detalle?.nombre }) }}
                             </button>
                         </div>
                     </div>
@@ -161,12 +174,12 @@
                     <section class="px-6 md:px-20 py-4">
                         <h1 class="text-4xl md:text-6xl font-black text-gray-700 leading-tight mb-4">
                             {{detallesDestino?.detalle?.nombre}}
-                            <br />{{detallesDestino?.detalle?.apodo}}
+                            <!-- <br />{{detallesDestino?.detalle?.apodo}} -->
                         </h1>
-                        <p class="max-w-2xl text-lg text-gray-700/90 font-medium">
-                            {{detallesDestino?.detalle?.descripcion_corta}}</p>
+                        <!-- <p class="max-w-2xl text-lg text-gray-700/90 font-medium">
+                            {{detallesDestino?.detalle?.descripcion_corta}}</p> -->
                     </section>
-                    <section class="px-6 md:px-20 py-8">
+                    <section class="px-6 md:px-20">
                         <div class="max-w-[1200px] mx-auto">
                             <div class="relative h-[500px] w-full overflow-hidden rounded-xl shadow-2xl">
                                 <div class="relative w-full h-[500px] overflow-hidden">
@@ -175,11 +188,9 @@
                                         [class.opacity-100]="i === currentIndex" [class.opacity-0]="i !== currentIndex">
                                         <img [src]="image.imagen_fondo" class="w-full h-full object-cover"
                                             alt="carousel image" />
-                                        <div
-                                            class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20 flex flex-col justify-end p-8 md:p-16 z-10">
+                                        <div class="absolute inset-0 flex flex-col justify-end p-8 md:p-16 z-10">
                                             <span
-                                                class="mb-4 inline-block w-fit rounded-full bg-[#F9B44B] px-4 py-1 text-xs font-bold uppercase tracking-widest text-white">Sinaloa,
-                                                Mexico</span>
+                                                class="mb-4 inline-block w-fit rounded-full bg-[#F9B44B] px-4 py-1 text-xs font-bold uppercase tracking-widest text-white">{{detallesDestino?.nombre}}</span>
                                             <h1 class="text-4xl md:text-6xl font-black text-white leading-tight mb-4">
                                                 {{image.nombre}}
                                             </h1>
@@ -201,11 +212,7 @@
                                     {{detallesDestino?.detalle?.descripcion_larga}}
                                 </p>
                                 <div class="flex flex-wrap gap-4 pt-4">
-                                    <button (click)="cargarInfo()"
-                                        class="flex items-center gap-2 rounded-full bg-[#147052] px-8 py-4 text-lg font-bold text-white shadow-lg shadow-[#147052]/30 transition-all hover:scale-105 hover:bg-[#147052]/90 active:scale-95">
-                                        <span class="material-symbols-outlined">hotel</span>
-                                        {{ t('ver-hoteles-en', { destino: detallesDestino?.detalle?.nombre }) }}
-                                    </button>
+
                                     <button (click)="abrirUbicacion()"
                                         class="flex items-center gap-2 rounded-full bg-[#147052]/10 px-8 py-4 text-lg font-bold text-[#147052] transition-all hover:bg-[#147052]/20">
                                         <span class="material-symbols-outlined">map</span>
