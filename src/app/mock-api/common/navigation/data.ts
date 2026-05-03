@@ -13,8 +13,15 @@ export const defaultNavigation: FuseNavigationItem[] = [
 ];
 export const compactNavigation: FuseNavigationItem[] = [
     {
+        id   : 'destinos',
+        title: 'Destinos',
+        type : 'basic',
+        icon : 'heroicons_outline:map-pin',
+        link : 'admin/destinos'
+    },
+    {
         id   : 'hoteles',
-        title: 'hoteles',
+        title: 'Hoteles',
         type : 'basic',
         icon : 'heroicons_outline:building-office-2',
         link : 'admin/hoteles'

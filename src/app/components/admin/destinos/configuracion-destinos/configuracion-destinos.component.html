@@ -1,0 +1,81 @@
+<div class="flex min-w-0 flex-auto flex-col bg-gray-50">
+    <!-- Header -->
+    <!-- <div class="bg-white"> -->
+    <div class="mx-auto flex w-full max-w-screen-xl flex-col px-6 py-8 sm:px-8">
+        <div class="max-w-2xl">
+            <h1 class="text-3xl font-bold tracking-tight text-gray-900">
+                Panel de Destinos
+            </h1>
+        </div>
+    </div>
+    <!-- </div> -->
+
+    <!-- Content -->
+    <div class="mx-auto w-full max-w-screen-xl px-6 py-8 sm:px-8">
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+
+            <!-- Configuración de Tipos -->
+            <a [routerLink]="['/admin/destinos/configurar-tipos-destinos']"
+                class="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+                <div class="relative aspect-[16/9] w-full overflow-hidden bg-white">
+                    <img src="https://images.unsplash.com/photo-1499591934245-40b55745b905?q=80&w=1472&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                        alt="Metrópolis internacional al atardecer"
+                        class="block h-full w-full object-cover transition-transform duration-500 will-change-transform group-hover:scale-105" />
+
+                    <div
+                        class="pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-t from-white via-white/60 to-transparent">
+                    </div>
+                </div>
+
+                <div class="relative z-10 -mt-12 flex flex-1 flex-col p-6">
+                    <div
+                        class="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-gray-700 shadow-lg transition-colors duration-300 group-hover:text-white">
+                        <mat-icon class="icon-size-8" svgIcon="heroicons_outline:cog-8-tooth"></mat-icon>
+                    </div>
+
+                    <h2 class="text-2xl font-bold text-gray-900">
+                        Configuración de tipos de destino
+                    </h2>
+
+                    <p class="mt-2 flex-1 text-base leading-6 text-gray-500">
+                        Administra los tipos de destino disponibles, como nacional e internacional, para clasificar
+                        correctamente los destinos dentro del sistema.
+                    </p>
+
+                </div>
+            </a>
+
+            <a [routerLink]="['/admin/destinos/configurar-destinos']"
+                class="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+                <div class="relative aspect-[16/9] w-full overflow-hidden bg-white">
+                    <img src="https://images.unsplash.com/photo-1599707165899-d5c59208363b?q=80&w=774&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                        alt="Metrópolis internacional al atardecer"
+                        class="block h-full w-full object-cover transition-transform duration-500 will-change-transform group-hover:scale-105" />
+
+                    <div
+                        class="pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-t from-white via-white/60 to-transparent">
+                    </div>
+                </div>
+
+                <div class="relative z-10 -mt-12 flex flex-1 flex-col p-6">
+                    <div
+                        class="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-gray-700 shadow-lg transition-colors duration-300 group-hover:text-white">
+                        <mat-icon class="icon-size-8" svgIcon="heroicons_outline:map-pin"></mat-icon>
+                    </div>
+
+                    <h2 class="text-2xl font-bold text-gray-900">
+                        Configuración de destino y vista previa
+                    </h2>
+
+                    <p class="mt-2 flex-1 text-base leading-6 text-gray-500">
+                        Administra la información de cada destino, como nombre, imagen, descripción, ubicación y orden
+                        de visualización, además de revisar cómo se mostrará al usuario final.
+                    </p>
+
+                </div>
+            </a>
+
+
+        </div>
+    </div>
+</div>
