@@ -1,0 +1,356 @@
+<!-- <div class="w-full overflow-auto">
+    <table
+      mat-table
+      [dataSource]="dataSource"
+      cdkDropList
+      [cdkDropListData]="dataSource"
+      (cdkDropListDropped)="drop($event)"
+    >
+    
+      <ng-container matColumnDef="orden">
+        <th mat-header-cell *matHeaderCellDef>Orden</th>
+        <td mat-cell *matCellDef="let item; let i = index">
+          {{ i + 1 }}
+        </td>
+      </ng-container>
+    
+      <ng-container matColumnDef="nombre">
+        <th mat-header-cell *matHeaderCellDef>Nombre</th>
+        <td mat-cell *matCellDef="let item">
+          {{ item.nombre }}
+        </td>
+      </ng-container>
+    
+      <ng-container matColumnDef="acciones">
+        <th mat-header-cell *matHeaderCellDef>Acciones</th>
+        <td mat-cell *matCellDef="let item">
+          <mat-icon cdkDragHandle class="cursor-move">
+            drag_indicator
+          </mat-icon>
+        </td>
+      </ng-container>
+    
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    
+      <tr
+        mat-row
+        cdkDrag
+        *matRowDef="let row; columns: displayedColumns">
+      </tr>
+    
+    </table>
+</div> -->
+
+<div class="flex min-w-0 flex-auto flex-col ">
+
+    <!-- Header -->
+    <div class="flex h-16 shrink-0 items-center justify-between px-6 mt-2 ">
+
+        <div class="flex items-center gap-4">
+            <h2 class="text-3xl font-bold tracking-tight dark:text-white">
+                Destinos
+            </h2>
+
+        </div>
+
+        <button mat-raised-button color="primary" class="text-white">
+            <mat-icon class="mr-2 icon-size-5 text-whie" [svgIcon]="'heroicons_outline:plus'">
+            </mat-icon>
+            Nuevo destino
+        </button>
+    </div>
+
+    <!-- Barra de acciones -->
+    <!-- <div 
+        class="flex shrink-0 flex-wrap items-center justify-between gap-4 border-b bg-card px-6 py-3 dark:border-gray-700">
+
+        <div class="flex rounded-lg border border-gray-200 bg-gray-100 p-1 dark:border-gray-700 dark:bg-gray-800">
+            <button type="button"
+                class="rounded-md bg-white px-4 py-1.5 text-xs font-semibold text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white">
+                Todos
+            </button>
+
+            <button type="button"
+                class="rounded-md px-4 py-1.5 text-xs font-semibold text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
+                Nacionales
+            </button>
+
+            <button type="button"
+                class="rounded-md px-4 py-1.5 text-xs font-semibold text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
+                Internacionales
+            </button>
+        </div>
+
+        <div class="flex items-center gap-3">
+
+            <mat-form-field class="fuse-mat-dense fuse-mat-rounded min-w-64" subscriptSizing="dynamic">
+                <mat-icon matPrefix class="icon-size-5" [svgIcon]="'heroicons_solid:magnifying-glass'">
+                </mat-icon>
+
+                <input matInput placeholder="Buscar destino..." />
+            </mat-form-field>
+
+            <button mat-stroked-button class="rounded-md">
+                <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:funnel'">
+                </mat-icon>
+            </button>
+        </div>
+    </div> -->
+
+    <!-- Tabla -->
+    <div class="flex-auto overflow-auto bg-card m-3 rounded-3xl">
+
+        <!-- <table class="w-full min-w-[900px] border-separate border-spacing-0 text-left">
+
+            <thead class="sticky top-0 z-20 bg-gray-50 shadow dark:bg-gray-800">
+                <tr>
+                    <th class="w-24 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        ID
+                    </th>
+
+                    <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Nombre
+                    </th>
+
+                    <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Categoría
+                    </th>
+
+                    <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Región
+                    </th>
+
+                    <th class="w-32 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Estatus
+                    </th>
+
+                    <th class="w-24 px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Hoteles
+                    </th>
+
+                    <th class="w-36 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Actualizado
+                    </th>
+
+                    <th class="w-16 px-4 py-3"></th>
+                </tr>
+            </thead>
+
+            <tbody class="divide-y divide-gray-200 bg-white text-sm dark:divide-gray-700 dark:bg-gray-900">
+
+                <tr class="group cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
+                    <td class="px-4 py-3 font-mono text-xs text-gray-500">
+                        DST-8421
+                    </td>
+
+                    <td class="px-4 py-3 font-semibold text-gray-900 dark:text-white">
+                        Kyoto
+                    </td>
+
+                    <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
+                        Internacionales
+                    </td>
+
+                    <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
+                        Japan, Asia
+                    </td>
+
+                    <td class="px-4 py-3">
+                        <span
+                            class="inline-flex items-center rounded-full border border-green-200 bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-700">
+                            Publicado
+                        </span>
+                    </td>
+
+                    <td class="px-4 py-3 text-right font-mono text-xs text-gray-700 dark:text-gray-300">
+                        142
+                    </td>
+
+                    <td class="px-4 py-3 text-xs text-gray-500">
+                        Hace 2 horas
+                    </td>
+
+                    <td class="px-4 py-3 text-right">
+                        <button
+                            mat-icon-button
+                            class="opacity-0 transition-opacity group-hover:opacity-100">
+                            <mat-icon
+                                class="icon-size-5"
+                                [svgIcon]="'heroicons_outline:pencil-square'">
+                            </mat-icon>
+                        </button>
+                    </td>
+                </tr>
+
+                <tr class="group cursor-pointer bg-gray-50/50 transition-colors hover:bg-gray-100 dark:bg-gray-800/30 dark:hover:bg-gray-800">
+                    <td class="px-4 py-3 font-mono text-xs text-gray-500">
+                        DST-8422
+                    </td>
+
+                    <td class="px-4 py-3 font-semibold text-gray-900 dark:text-white">
+                        Cancún
+                    </td>
+
+                    <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
+                        Nacionales
+                    </td>
+
+                    <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
+                        Quintana Roo, México
+                    </td>
+
+                    <td class="px-4 py-3">
+                        <span
+                            class="inline-flex items-center rounded-full border border-green-200 bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-700">
+                            Publicado
+                        </span>
+                    </td>
+
+                    <td class="px-4 py-3 text-right font-mono text-xs text-gray-700 dark:text-gray-300">
+                        328
+                    </td>
+
+                    <td class="px-4 py-3 text-xs text-gray-500">
+                        Ayer
+                    </td>
+
+                    <td class="px-4 py-3 text-right">
+                        <button
+                            mat-icon-button
+                            class="opacity-0 transition-opacity group-hover:opacity-100">
+                            <mat-icon
+                                class="icon-size-5"
+                                [svgIcon]="'heroicons_outline:pencil-square'">
+                            </mat-icon>
+                        </button>
+                    </td>
+                </tr>
+
+                <tr class="group cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
+                    <td class="px-4 py-3 font-mono text-xs text-gray-500">
+                        DST-8423
+                    </td>
+
+                    <td class="px-4 py-3 font-semibold text-gray-900 dark:text-white">
+                        Paris
+                    </td>
+
+                    <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
+                        Internacionales
+                    </td>
+
+                    <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
+                        Île-de-France, France
+                    </td>
+
+                    <td class="px-4 py-3">
+                        <span
+                            class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
+                            Borrador
+                        </span>
+                    </td>
+
+                    <td class="px-4 py-3 text-right font-mono text-xs text-gray-700 dark:text-gray-300">
+                        0
+                    </td>
+
+                    <td class="px-4 py-3 text-xs text-gray-500">
+                        25 Oct 2023
+                    </td>
+
+                    <td class="px-4 py-3 text-right">
+                        <button
+                            mat-icon-button
+                            class="opacity-0 transition-opacity group-hover:opacity-100">
+                            <mat-icon
+                                class="icon-size-5"
+                                [svgIcon]="'heroicons_outline:pencil-square'">
+                            </mat-icon>
+                        </button>
+                    </td>
+                </tr>
+
+            </tbody>
+        </table> -->
+        <div class="w-full overflow-auto">
+            <table mat-table [dataSource]="dataSource" cdkDropList [cdkDropListData]="dataSource"
+                (cdkDropListDropped)="drop($event)">
+
+                <ng-container matColumnDef="orden">
+                    <th mat-header-cell *matHeaderCellDef>Orden</th>
+                    <td mat-cell *matCellDef="let item; let i = index">
+                        {{ i + 1 }}
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="destino">
+                    <th mat-header-cell *matHeaderCellDef>Destino</th>
+                    <td mat-cell *matCellDef="let item">
+                        {{ item.destino }}@if(item.destino_padre){, {{ item.destino_padre}}}
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="tipoDestino">
+                    <th mat-header-cell *matHeaderCellDef>Tipo Destino</th>
+                    <td mat-cell *matCellDef="let item">
+                        {{ item.tipo_destino }}
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="acciones">
+                    <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                    <td mat-cell *matCellDef="let item">
+                        <mat-icon cdkDragHandle class="cursor-move">
+                            drag_indicator
+                        </mat-icon>
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+
+                <tr mat-row cdkDrag *matRowDef="let row; columns: displayedColumns">
+                </tr>
+
+            </table>
+        </div>
+    </div>
+
+    <!-- Paginación -->
+    <!-- <div class="flex h-14 shrink-0 items-center justify-between border-t bg-card px-6 dark:border-gray-700">
+
+        <div class="text-xs text-gray-500">
+            Mostrando
+            <span class="font-mono font-semibold text-gray-900 dark:text-white">1</span>
+            a
+            <span class="font-mono font-semibold text-gray-900 dark:text-white">3</span>
+            de
+            <span class="font-mono font-semibold text-gray-900 dark:text-white">2,481</span>
+            registros
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button mat-icon-button>
+                <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:chevron-left'">
+                </mat-icon>
+            </button>
+
+            <div class="flex items-center gap-2 text-xs text-gray-500">
+                <span>Página</span>
+
+                <input
+                    class="h-8 w-12 rounded-md border border-gray-300 bg-white text-center font-mono text-xs outline-none focus:border-primary focus:ring-1 focus:ring-primary dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                    type="text" value="1" />
+
+                <span>
+                    de <span class="font-mono">414</span>
+                </span>
+            </div>
+
+            <button mat-icon-button>
+                <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:chevron-right'">
+                </mat-icon>
+            </button>
+        </div>
+    </div> -->
+
+</div>

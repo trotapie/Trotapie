@@ -1,0 +1,34 @@
+table {
+  width: 100%;
+  height: auto !important;
+}
+
+.mat-mdc-header-row {
+  height: 48px !important;
+}
+
+.mat-mdc-row {
+  height: 48px !important;
+  min-height: 48px !important;
+  max-height: 48px !important;
+}
+
+.mat-mdc-cell,
+.mat-mdc-header-cell {
+  height: 48px !important;
+  padding: 0 16px !important;
+  vertical-align: middle;
+}
+
+.mat-column-orden {
+  width: 80px;
+}
+
+.mat-column-acciones {
+  width: 100px;
+  text-align: center;
+}
+
+.cursor-move {
+  cursor: move;
+}

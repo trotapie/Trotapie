@@ -538,4 +538,18 @@ export class SupabaseService {
     return data;
   }
 
+  async consultarDestinos(): Promise<any> {
+    const { data, error } = await this.client
+      .rpc('obtener_destinos_con_hoteles', {
+        p_tipo_destino: 'TODOS'
+      });
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    return data;
+  }
+
 }
