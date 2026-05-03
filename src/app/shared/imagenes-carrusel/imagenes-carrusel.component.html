@@ -127,7 +127,7 @@
                                                         (show ? 'scale-100 opacity-100' : 'scale-50 opacity-0')
                                                       " (pointerdown)="onDragStart($event)" />
 
-                    <button mat-icon-button type="button" (click)="prev($event)"
+                    <button mat-icon-button type="button" (click)="prev($event); detenerAutoplay();"
                         class="absolute left-3 md:left-6 top-1/2 -translate-y-1/2
                                          p-2 md:p-3 rounded-full bg-white text-black
                                          hover:bg-gray-100 focus:outline-none shadow-md transition-colors duration-200">
@@ -136,7 +136,7 @@
                     </button>
 
                     <button mat-icon-button class="absolute right-3 md:right-6 top-1/2 -translate-y-1/2
-                                                       rounded-full  bg-white text-black" (click)="next($event)">
+                                                       rounded-full  bg-white text-black" (click)="next($event); detenerAutoplay();">
                         <mat-icon class="icon-size-5 text-black" [svgIcon]="'heroicons_outline:arrow-right'"></mat-icon>
                     </button>
                     <div class="absolute top-3 right-3 md:top-6 md:right-6 flex items-center gap-2 z-20">

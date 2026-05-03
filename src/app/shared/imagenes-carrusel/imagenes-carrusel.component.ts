@@ -1,4 +1,4 @@
-import { Component, ElementRef, inject, Input, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
+import { Component, ElementRef, inject, Input, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { MaterialModule } from '../material.module';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { SupabaseService } from 'app/core/supabase.service';
@@ -12,7 +12,7 @@ import { IDetalleHotel } from 'app/components/hoteles/hoteles.interface';
   templateUrl: './imagenes-carrusel.component.html',
   styleUrl: './imagenes-carrusel.component.scss'
 })
-export class ImagenesCarruselComponent implements OnInit {
+export class ImagenesCarruselComponent implements OnInit, OnDestroy {
   private _translocoService = inject(TranslocoService);
   private supabase = inject(SupabaseService);
   private router = inject(Router)
@@ -32,7 +32,7 @@ export class ImagenesCarruselComponent implements OnInit {
   modalAbierto = false;
   mostrarBot = false;
 
-
+  private autoplayInterval: any = null;
 
   @ViewChild('overlay') overlay?: ElementRef<HTMLDivElement>;
   @ViewChildren('thumbBtn') thumbBtns?: QueryList<ElementRef<HTMLButtonElement>>;
@@ -41,6 +41,27 @@ export class ImagenesCarruselComponent implements OnInit {
     const url = this.router.url;
     this.esCotizacion = url.includes('cotizacion') ? true : false
     this.cargarImagenesConDelay()
+  }
+
+  iniciarAutoplay(): void {
+    this.detenerAutoplay();
+
+    this.autoplayInterval = setInterval(() => {
+      if (this.isOpen && this.imagenesFilter.length > 1) {
+        this.next();
+      }
+    }, 5000);
+  }
+
+  detenerAutoplay(): void {
+    if (this.autoplayInterval) {
+      clearInterval(this.autoplayInterval);
+      this.autoplayInterval = null;
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.detenerAutoplay();
   }
 
   async cargarImagenesConDelay() {
@@ -69,16 +90,19 @@ export class ImagenesCarruselComponent implements OnInit {
     this.origin = `${originX}% ${originY}%`;
 
     this.isOpen = true;
+    this.iniciarAutoplay();
     setTimeout(() => (this.show = true), 10);
   }
 
   close() {
+    this.detenerAutoplay();
+
     this.show = false;
     setTimeout(() => (this.isOpen = false), 300);
   }
 
-  next(event: Event) {
-    event.stopPropagation();
+  next(event?: Event) {
+    event?.stopPropagation();
     this.currentIndex = (this.currentIndex + 1) % this.imagenesFilter.length;
     this.updateCurrent();
   }
@@ -93,6 +117,7 @@ export class ImagenesCarruselComponent implements OnInit {
     event.stopPropagation();
     this.currentIndex = i;
     this.updateCurrent();
+    this.detenerAutoplay();
   }
 
   onBackdrop(event: MouseEvent) {
