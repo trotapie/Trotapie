@@ -167,7 +167,7 @@
                                         [ngStyle]="{ 'background-image': 'url(' + (hotel.fondo || fallback) + ')' }"
                                         (click)="verDetalleHotel(hotel)">
 
-                                        <div class="absolute inset-0 bg-black/40 z-0"></div>
+                                        <div class="absolute inset-0 bg-black/25 z-0"></div>
                                         <div *ngIf="hotel?.descuento" class="absolute top-2 right-2 z-20">
                                             <div [ngClass]="getDescuentoClass(hotel)"
                                                 class="text-xs font-bold px-2 py-1">
@@ -294,7 +294,7 @@
                                             <img alt="Resort"
                                                 class="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-700"
                                                 [src]="hotel.fondo || fallback" />
-                                            <div class="absolute inset-0 bg-black/40"></div>
+                                            <div class="absolute inset-0 bg-black/25"></div>
                                             <div *ngIf="hotel?.descuento"
                                                 class="absolute top-4 left-4 flex flex-col gap-2">
                                                 <span
