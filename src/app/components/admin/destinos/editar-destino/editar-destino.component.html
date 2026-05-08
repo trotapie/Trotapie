@@ -1,0 +1,147 @@
+<div class="flex min-w-0 flex-auto flex-col bg-gray-50">
+    <div class="mx-auto flex w-full max-w-screen-xl flex-col px-6 py-6 sm:px-8">
+        <div class="mb-4 flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight text-gray-900">
+                    {{ esCreacion ? 'Nuevo destino' : 'Editar destino' }}
+                </h1>
+                <!-- <p class="mt-1 text-sm text-gray-500">
+                    Actualiza nombre, tipo, relaciones e imagenes del destino.
+                </p> -->
+            </div>
+
+            <button mat-stroked-button (click)="regresar()">
+                <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
+                Volver
+            </button>
+        </div>
+
+        @if (cargando) {
+        <div class="rounded-2xl border border-gray-200 bg-white p-8 text-center">
+            <mat-progress-spinner class="mx-auto" diameter="36" mode="indeterminate"></mat-progress-spinner>
+            <p class="mt-4 text-sm text-gray-500">Cargando informacion del destino...</p>
+        </div>
+        } @else {
+        <form [formGroup]="form" (ngSubmit)="guardar()"
+            class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
+            <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                <mat-form-field class="w-full">
+                    <mat-label>Nombre del destino</mat-label>
+                    <input matInput formControlName="nombre" maxlength="120" />
+                    @if (form.get('nombre')?.invalid && form.get('nombre')?.touched) {
+                    <mat-error>El nombre del destino es requerido.</mat-error>
+                    }
+                </mat-form-field>
+
+                <!-- <mat-form-field class="w-full">
+                    <mat-label>Orden del destino</mat-label>
+                    <input matInput type="number" min="0" formControlName="orden" />
+                    @if (form.get('orden')?.invalid && form.get('orden')?.touched) {
+                    <mat-error>El orden debe ser un numero mayor o igual a 0.</mat-error>
+                    }
+                </mat-form-field> -->
+
+                <mat-form-field class="w-full">
+                    <mat-label>Tipo de destino</mat-label>
+                    <mat-select formControlName="tipo_desino_id">
+                        @for (tipo of tiposDestino; track tipo.id) {
+                        <mat-option [value]="tipo.id">
+                            {{ tipo.nombre }}
+                        </mat-option>
+                        }
+                    </mat-select>
+                    @if (form.get('tipo_desino_id')?.invalid && form.get('tipo_desino_id')?.touched) {
+                    <mat-error>El tipo de destino es requerido.</mat-error>
+                    }
+                </mat-form-field>
+
+                @if (esTipoDos) {
+                <mat-form-field class="w-full">
+                    <mat-label>Destino padre</mat-label>
+                    <mat-select formControlName="destino_padre_id">
+                        <mat-option [value]="null">Sin destino padre</mat-option>
+                        @for (destino of destinosPadre; track destino.id) {
+                        <mat-option [value]="destino.id">
+                            {{ destino.nombre }}
+                        </mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field class="w-full">
+                    <mat-label>Continente</mat-label>
+                    <mat-select formControlName="continente_id">
+                        <mat-option [value]="null">Sin continente</mat-option>
+                        @for (continente of continentes; track continente.id) {
+                        <mat-option [value]="continente.id">
+                            {{ continente.nombre }}
+                        </mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+                }
+
+                <div class="space-y-2">
+                    <mat-form-field class="w-full">
+                        <mat-label>Imagen del destino (URL)</mat-label>
+                        <input matInput formControlName="imagen_destino" />
+                    </mat-form-field>
+
+                    @if (form.get('imagen_destino')?.value) {
+                    <div class="aspect-square w-full overflow-hidden rounded-lg border border-gray-200 bg-gray-50 p-2">
+                        <img [src]="form.get('imagen_destino')?.value" alt="Imagen destino" class="h-full w-full object-contain" />
+                    </div>
+                    }
+                </div>
+
+                <div class="space-y-2">
+                    <mat-form-field class="w-full">
+                        <mat-label>Imagen de cotizacion (URL)</mat-label>
+                        <input matInput formControlName="imagen_cotizacion" />
+                    </mat-form-field>
+
+                    @if (form.get('imagen_cotizacion')?.value) {
+                    <div class="aspect-square w-full overflow-hidden rounded-lg border border-gray-200 bg-gray-50 p-2">
+                        <img [src]="form.get('imagen_cotizacion')?.value" alt="Imagen cotizacion" class="h-full w-full object-contain" />
+                    </div>
+                    }
+                </div>
+            </div>
+
+            @if (error) {
+            <div class="mt-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {{ error }}
+            </div>
+            }
+
+            <div class="mt-6 flex items-center justify-end gap-3">
+                <button mat-stroked-button type="button" (click)="regresar()">Cancelar</button>
+                <button mat-flat-button color="primary" type="submit" [disabled]="guardando">
+                    @if (guardando) {
+                    Guardando...
+                    } @else {
+                    Guardar cambios
+                    }
+                </button>
+            </div>
+        </form>
+        }
+    </div>
+</div>
+
+@if (mostrarModalExito) {
+<div class="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 px-4">
+    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+        <h3 class="text-xl font-semibold text-gray-900">Actualizacion completada</h3>
+        <p class="mt-2 text-sm text-gray-600">
+            {{ esCreacion ? 'Destino creado correctamente.' : 'Destino actualizado correctamente.' }}
+        </p>
+
+        <div class="mt-6 flex justify-end">
+            <button mat-flat-button color="primary" (click)="cerrarModalExito()">
+                Aceptar
+            </button>
+        </div>
+    </div>
+</div>
+}

@@ -53,12 +53,65 @@
 
         </div>
 
-        <button mat-raised-button color="primary" class="text-white">
-            <mat-icon class="mr-2 icon-size-5 text-whie" [svgIcon]="'heroicons_outline:plus'">
-            </mat-icon>
-            Nuevo destino
+        <div class="flex items-center gap-3">
+            <button mat-stroked-button color="primary" [disabled]="!hayCambiosOrden || actualizandoOrden"
+                (click)="actualizarOrden()">
+                <mat-icon class="mr-2 icon-size-5" [svgIcon]="'heroicons_outline:arrow-path'"></mat-icon>
+                @if (actualizandoOrden) {
+                Actualizando...
+                } @else {
+                Actualizar orden
+                }
+            </button>
+
+            <button mat-raised-button color="primary" class="text-white"
+                [routerLink]="['/admin/destinos/configurar-destinos/nuevo']">
+                <mat-icon class="mr-2 icon-size-5 text-whie" [svgIcon]="'heroicons_outline:plus'">
+                </mat-icon>
+                Nuevo destino
+            </button>
+        </div>
+    </div>
+
+    <div class="mx-6 mb-2 flex items-center gap-2">
+        <button mat-stroked-button [color]="tipoVisible === 'NACIONAL' ? 'primary' : undefined"
+            (click)="seleccionarTipo('NACIONAL')">
+            Nacionales
+        </button>
+        <button mat-stroked-button [color]="tipoVisible === 'INTERNACIONAL' ? 'primary' : undefined"
+            (click)="seleccionarTipo('INTERNACIONAL')">
+            Internacionales
         </button>
     </div>
+    @if (tipoVisible === 'INTERNACIONAL') {
+    <div class="mx-6 mb-2 grid grid-cols-1 gap-3 md:grid-cols-3">
+        <mat-form-field>
+            <mat-label>Continente</mat-label>
+            <mat-select [value]="filtroContinenteId" (valueChange)="seleccionarContinente($event)">
+                <mat-option [value]="null">Todos los continentes</mat-option>
+                @for (continente of continentes; track continente.id) {
+                <mat-option [value]="continente.id">{{ continente.nombre }}</mat-option>
+                }
+            </mat-select>
+        </mat-form-field>
+
+        <mat-form-field class="md:col-span-2">
+            <mat-label>Pais</mat-label>
+            <mat-select [value]="filtroPais" (valueChange)="seleccionarPais($event)">
+                <mat-option [value]="null">Todos los paises</mat-option>
+                @for (pais of paisesDisponibles; track pais) {
+                <mat-option [value]="pais">{{ pais }}</mat-option>
+                }
+            </mat-select>
+        </mat-form-field>
+    </div>
+    }
+
+    @if (errorOrden) {
+    <div class="mx-6 mt-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+        {{ errorOrden }}
+    </div>
+    }
 
     <!-- Barra de acciones -->
     <!-- <div 
@@ -273,7 +326,7 @@
             </tbody>
         </table> -->
         <div class="w-full overflow-auto">
-            <table mat-table [dataSource]="dataSource" cdkDropList [cdkDropListData]="dataSource"
+            <table mat-table [dataSource]="dataSourceVisible" cdkDropList [cdkDropListData]="dataSourceVisible"
                 (cdkDropListDropped)="drop($event)">
 
                 <ng-container matColumnDef="orden">
@@ -300,9 +353,24 @@
                 <ng-container matColumnDef="acciones">
                     <th mat-header-cell *matHeaderCellDef>Acciones</th>
                     <td mat-cell *matCellDef="let item">
-                        <mat-icon cdkDragHandle class="cursor-move">
-                            drag_indicator
-                        </mat-icon>
+                        <div class="flex items-center justify-center gap-2">
+                            <!-- <button mat-icon-button [routerLink]="['/detalle-destino', item.id]" [matTooltip]="'Ver detalle'">
+                                <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:eye'"></mat-icon>
+                            </button> -->
+
+                            <button mat-icon-button [matTooltip]="'Ver hoteles'" (click)="verHoteles(item)">
+                                <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:building-office-2'"></mat-icon>
+                            </button>
+
+                            <button mat-icon-button [routerLink]="['/admin/destinos/configurar-destinos/editar', item.id]"
+                                [matTooltip]="'Editar destino'">
+                                <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
+                            </button>
+
+                            <button mat-icon-button [matTooltip]="'Reordenar'" cdkDragHandle>
+                                <mat-icon class="cursor-move">drag_indicator</mat-icon>
+                            </button>
+                        </div>
                     </td>
                 </ng-container>
 
@@ -354,3 +422,20 @@
     </div> -->
 
 </div>
+
+@if (mostrarModalOrdenExito) {
+<div class="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 px-4">
+    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+        <h3 class="text-xl font-semibold text-gray-900">Actualizacion completada</h3>
+        <p class="mt-2 text-sm text-gray-600">
+            Orden de destinos {{ tipoVisible === 'NACIONAL' ? 'nacionales' : 'internacionales' }} actualizado correctamente.
+        </p>
+
+        <div class="mt-6 flex justify-end">
+            <button mat-flat-button color="primary" (click)="cerrarModalOrdenExito()">
+                Aceptar
+            </button>
+        </div>
+    </div>
+</div>
+}

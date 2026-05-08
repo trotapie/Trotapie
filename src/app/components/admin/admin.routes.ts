@@ -7,6 +7,7 @@ import { CotizacionComponent } from './solicitudes-cotizacion/cotizacion/cotizac
 import { DestinosComponent } from './destinos/destinos/destinos.component';
 import { ConfiguracionDestinosComponent } from './destinos/configuracion-destinos/configuracion-destinos.component';
 import { TipoDestinosComponent } from './destinos/tipo-destinos/tipo-destinos.component';
+import { EditarDestinoComponent } from './destinos/editar-destino/editar-destino.component';
 
 export default [
     {
@@ -40,6 +41,14 @@ export default [
     {
         path: 'destinos/configurar-destinos',
         component: DestinosComponent,
+    },
+    {
+        path: 'destinos/configurar-destinos/editar/:id',
+        component: EditarDestinoComponent,
+    },
+    {
+        path: 'destinos/configurar-destinos/nuevo',
+        component: EditarDestinoComponent,
     },
 
 ] as Routes;

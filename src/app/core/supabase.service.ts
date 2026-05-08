@@ -321,6 +321,105 @@ export class SupabaseService {
       .order('orden', { ascending: true });
   }
 
+  async obtenerDestinoPorId(id: number) {
+    const { data, error } = await this.client
+      .from('destinos')
+      .select('id, nombre, orden, tipo_desino_id, destino_padre_id, continente_id, imagen_destino, imagen_cotizacion')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async obtenerTiposDestinoAdmin() {
+    const { data, error } = await this.client
+      .from('tipo_destinos')
+      .select('id, nombre')
+      .order('id', { ascending: true });
+
+    if (!error && data?.length) {
+      return data;
+    }
+
+    const { data: destinos, error: errorDestinos } = await this.client
+      .from('destinos')
+      .select('tipo_desino_id')
+      .not('tipo_desino_id', 'is', null);
+
+    if (errorDestinos) throw errorDestinos;
+
+    const idsUnicos = [...new Set((destinos ?? []).map((x: any) => x.tipo_desino_id))]
+      .filter((id) => Number.isFinite(id))
+      .sort((a, b) => a - b);
+
+    return idsUnicos.map((id: number) => ({
+      id,
+      nombre: id === 1 ? 'NACIONAL' : id === 2 ? 'INTERNACIONAL' : `TIPO ${id}`
+    }));
+  }
+
+  async obtenerDestinosPadreTipoDos(excluirId?: number) {
+    let query = this.client
+      .from('destinos')
+      .select('id, nombre')
+      .eq('tipo_desino_id', 2)
+      .is('destino_padre_id', null)
+      .order('nombre', { ascending: true });
+
+    if (excluirId) {
+      query = query.neq('id', excluirId);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    return data ?? [];
+  }
+
+  async actualizarDestinoAdmin(
+    id: number,
+    payload: {
+      nombre: string;
+      orden: number | null;
+      tipo_desino_id: number;
+      destino_padre_id: number | null;
+      continente_id: number | null;
+      imagen_destino: string | null;
+      imagen_cotizacion: string | null;
+    }
+  ) {
+    const { data, error } = await this.client
+      .from('destinos')
+      .update(payload)
+      .eq('id', id)
+      .select('id')
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async crearDestinoAdmin(
+    payload: {
+      nombre: string;
+      orden: number | null;
+      tipo_desino_id: number;
+      destino_padre_id: number | null;
+      continente_id: number | null;
+      imagen_destino: string | null;
+      imagen_cotizacion: string | null;
+    }
+  ) {
+    const { data, error } = await this.client
+      .from('destinos')
+      .insert(payload)
+      .select('id');
+
+    if (error) throw error;
+    return data;
+  }
+
 
   clientsRegister() {
     return this.client
@@ -550,6 +649,204 @@ export class SupabaseService {
     }
 
     return data;
+  }
+
+  async actualizarOrdenDestinos(
+    destinos: Array<{ id: number; orden: number }>
+  ) {
+    if (!destinos?.length) {
+      return [];
+    }
+
+    const resultados = await Promise.all(
+      destinos.map(({ id, orden }) =>
+        this.client
+          .from('destinos')
+          .update({ orden })
+          .eq('id', id)
+          .select('id, orden')
+          .maybeSingle()
+      )
+    );
+
+    const error = resultados.find((r) => r.error)?.error;
+
+    if (error) {
+      console.error('Error actualizando orden de destinos:', error);
+      throw error;
+    }
+
+    return resultados
+      .map((r) => r.data)
+      .filter(Boolean);
+  }
+
+  async obtenerDestinosAdmin() {
+    const { data, error } = await this.client
+      .from('destinos')
+      .select('id, nombre, tipo_desino_id, destino_padre_id, continente_id')
+      .order('nombre', { ascending: true });
+
+    if (error) throw error;
+    return data ?? [];
+  }
+
+  async obtenerRegimenesAdmin() {
+    const { data, error } = await this.client
+      .from('regimen')
+      .select(`
+        id,
+        traducciones:regimen_traducciones (
+          idioma_id,
+          descripcion
+        )
+      `)
+      .order('id', { ascending: true });
+
+    if (error) throw error;
+
+    return (data ?? []).map((item: any) => {
+      const traduccionEs = item?.traducciones?.find((x: any) => x.idioma_id === ES_ID);
+      return {
+        id: item.id,
+        descripcion: traduccionEs?.descripcion ?? `Regimen ${item.id}`
+      };
+    });
+  }
+
+  async obtenerHotelesAdminPorDestino(destinoId: number) {
+    const { data, error } = await this.client
+      .from('hoteles')
+      .select(`
+        id,
+        orden,
+        regimen_id,
+        destino_id,
+        traducciones:hotel_traducciones (
+          idioma_id,
+          nombre_hotel
+        ),
+        regimen:regimen_id (
+          id,
+          traducciones:regimen_traducciones (
+            idioma_id,
+            descripcion
+          )
+        )
+      `)
+      .eq('destino_id', destinoId)
+      .order('orden', { ascending: true });
+
+    if (error) throw error;
+
+    return (data ?? []).map((item: any) => {
+      const traduccionEs = item?.traducciones?.find((x: any) => x.idioma_id === ES_ID);
+      const regimenEs = item?.regimen?.traducciones?.find((x: any) => x.idioma_id === ES_ID);
+
+      return {
+        id: item.id,
+        orden: item.orden ?? null,
+        regimen_id: item.regimen_id ?? null,
+        destino_id: item.destino_id,
+        nombre_hotel: traduccionEs?.nombre_hotel ?? '',
+        regimen: regimenEs?.descripcion ?? ''
+      };
+    });
+  }
+
+  async obtenerHotelesAdminPorDestinoPadre(destinoPadreId: number) {
+    const { data, error } = await this.client
+      .from('hoteles')
+      .select(`
+        id,
+        orden,
+        regimen_id,
+        destino_id,
+        destinos:destino_id!inner (
+          destino_padre_id
+        ),
+        traducciones:hotel_traducciones (
+          idioma_id,
+          nombre_hotel
+        ),
+        regimen:regimen_id (
+          id,
+          traducciones:regimen_traducciones (
+            idioma_id,
+            descripcion
+          )
+        )
+      `)
+      .eq('destinos.destino_padre_id', destinoPadreId)
+      .order('orden', { ascending: true });
+
+    if (error) throw error;
+
+    return (data ?? []).map((item: any) => {
+      const traduccionEs = item?.traducciones?.find((x: any) => x.idioma_id === ES_ID);
+      const regimenEs = item?.regimen?.traducciones?.find((x: any) => x.idioma_id === ES_ID);
+
+      return {
+        id: item.id,
+        orden: item.orden ?? null,
+        regimen_id: item.regimen_id ?? null,
+        destino_id: item.destino_id,
+        nombre_hotel: traduccionEs?.nombre_hotel ?? '',
+        regimen: regimenEs?.descripcion ?? ''
+      };
+    });
+  }
+
+  async actualizarOrdenHoteles(hoteles: Array<{ id: number; orden: number }>) {
+    if (!hoteles?.length) {
+      return [];
+    }
+
+    const resultados = await Promise.all(
+      hoteles.map(({ id, orden }) =>
+        this.client
+          .from('hoteles')
+          .update({ orden })
+          .eq('id', id)
+          .select('id, orden')
+          .maybeSingle()
+      )
+    );
+
+    const error = resultados.find((r) => r.error)?.error;
+    if (error) throw error;
+
+    return resultados.map((r) => r.data).filter(Boolean);
+  }
+
+  async actualizarHotelAdmin(payload: {
+    hotelId: number;
+    nombre_hotel: string;
+    regimen_id: number | null;
+    orden: number | null;
+  }) {
+    const { error: errorHotel } = await this.client
+      .from('hoteles')
+      .update({
+        regimen_id: payload.regimen_id,
+        orden: payload.orden
+      })
+      .eq('id', payload.hotelId);
+
+    if (errorHotel) throw errorHotel;
+
+    const { error: errorTraduccion } = await this.client
+      .from('hotel_traducciones')
+      .upsert(
+        {
+          hotel_id: payload.hotelId,
+          idioma_id: ES_ID,
+          nombre_hotel: payload.nombre_hotel
+        },
+        { onConflict: 'hotel_id,idioma_id' }
+      );
+
+    if (errorTraduccion) throw errorTraduccion;
   }
 
 }
