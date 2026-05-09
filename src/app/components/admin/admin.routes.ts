@@ -8,6 +8,7 @@ import { DestinosComponent } from './destinos/destinos/destinos.component';
 import { ConfiguracionDestinosComponent } from './destinos/configuracion-destinos/configuracion-destinos.component';
 import { TipoDestinosComponent } from './destinos/tipo-destinos/tipo-destinos.component';
 import { EditarDestinoComponent } from './destinos/editar-destino/editar-destino.component';
+import { EditarPreviewDestinoComponent } from './destinos/editar-preview-destino/editar-preview-destino.component';
 
 export default [
     {
@@ -45,6 +46,10 @@ export default [
     {
         path: 'destinos/configurar-destinos/editar/:id',
         component: EditarDestinoComponent,
+    },
+    {
+        path: 'destinos/configurar-destinos/preview/:id',
+        component: EditarPreviewDestinoComponent,
     },
     {
         path: 'destinos/configurar-destinos/nuevo',

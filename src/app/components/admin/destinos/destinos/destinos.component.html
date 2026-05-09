@@ -367,6 +367,11 @@
                                 <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
                             </button>
 
+                            <button mat-icon-button [routerLink]="['/admin/destinos/configurar-destinos/preview', item.id]"
+                                [matTooltip]="'Editar preview'">
+                                <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:eye'"></mat-icon>
+                            </button>
+
                             <button mat-icon-button [matTooltip]="'Reordenar'" cdkDragHandle>
                                 <mat-icon class="cursor-move">drag_indicator</mat-icon>
                             </button>
