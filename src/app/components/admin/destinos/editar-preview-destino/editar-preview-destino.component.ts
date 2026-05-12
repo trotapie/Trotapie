@@ -54,11 +54,14 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
   mostrarModalNuevaActividad = false;
   mostrarModalConfirmarEliminarActividad = false;
   guardandoActividad = false;
+  traduciendoActividad = false;
   eliminandoActividadIndex: number | null = null;
   indiceActividadAEliminar: number | null = null;
   indiceDatoRapidoEditando: number | null = null;
   indiceTraduccionEditando: number | null = null;
   indiceActividadEditando: number | null = null;
+  concentradoTraduccionesActividad: Record<string, { nombre: string; descripcion: string }> = {};
+  private ultimaLlaveTraduccionActividad = '';
   private modalAbiertoPrevio = false;
   private bodyOverflowOriginal = '';
   private bodyPaddingRightOriginal = '';
@@ -288,6 +291,8 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
 
     this.formActividad.reset({ imagen_fondo: '' });
     this.formActividad.setControl('traducciones', this.fb.group(traducciones));
+    this.concentradoTraduccionesActividad = {};
+    this.ultimaLlaveTraduccionActividad = '';
     this.mostrarModalNuevaActividad = true;
     this.indiceActividadEditando = null;
   }
@@ -308,6 +313,8 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
       imagen_fondo: actividad.get('imagen_fondo')?.value ?? ''
     });
     this.formActividad.setControl('traducciones', this.fb.group(traducciones));
+    this.concentradoTraduccionesActividad = {};
+    this.ultimaLlaveTraduccionActividad = '';
     this.indiceActividadEditando = index;
     this.mostrarModalEditarActividad = true;
   }
@@ -316,6 +323,41 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     this.mostrarModalEditarActividad = false;
     this.mostrarModalNuevaActividad = false;
     this.indiceActividadEditando = null;
+    this.traduciendoActividad = false;
+    this.concentradoTraduccionesActividad = {};
+    this.ultimaLlaveTraduccionActividad = '';
+  }
+
+  async onActividadEsBlurOEnter(codigoIdioma: string, event?: Event): Promise<void> {
+    if (codigoIdioma !== 'es') {
+      return;
+    }
+
+    if (event instanceof KeyboardEvent && event.key === 'Enter') {
+      event.preventDefault();
+    }
+
+    if (this.traduciendoActividad || this.guardandoActividad) {
+      return;
+    }
+
+    const raw = this.formActividad.getRawValue();
+    const esNombre = this.limpiarTexto(raw?.traducciones?.es?.nombre);
+    const esDescripcion = this.limpiarTexto(raw?.traducciones?.es?.descripcion);
+    if (!esNombre || !esDescripcion) {
+      return;
+    }
+
+    this.traduciendoActividad = true;
+    this.error = '';
+
+    try {
+      await this.traducirActividadDesdeEspanol();
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudo traducir la actividad.';
+    } finally {
+      this.traduciendoActividad = false;
+    }
   }
 
   async guardarActividad() {
@@ -331,12 +373,14 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     this.guardandoActividad = true;
     this.error = '';
 
-    const raw = this.formActividad.getRawValue();
-    const actividadIndex = this.indiceActividadEditando;
-    const actividadExistente = actividadIndex !== null ? this.actividadesArray.at(actividadIndex) : null;
-    const actividadId = this.parseNumber(actividadExistente?.get('id')?.value);
-
     try {
+      await this.traducirActividadDesdeEspanol();
+
+      const raw = this.formActividad.getRawValue();
+      const actividadIndex = this.indiceActividadEditando;
+      const actividadExistente = actividadIndex !== null ? this.actividadesArray.at(actividadIndex) : null;
+      const actividadId = this.parseNumber(actividadExistente?.get('id')?.value);
+
       const guardada = await this.supabase.guardarActividadDestinoAdmin({
         destino_id: this.destinoId,
         actividad_id: actividadId,
@@ -377,6 +421,80 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     } finally {
       this.guardandoActividad = false;
     }
+  }
+
+  private async traducirActividadDesdeEspanol(): Promise<void> {
+    const raw = this.formActividad.getRawValue();
+    const esNombre = this.limpiarTexto(raw?.traducciones?.es?.nombre);
+    const esDescripcion = this.limpiarTexto(raw?.traducciones?.es?.descripcion);
+
+    if (!esNombre || !esDescripcion) {
+      return;
+    }
+
+    const llaveActual = `${esNombre}|${esDescripcion}`;
+    if (
+      llaveActual === this.ultimaLlaveTraduccionActividad &&
+      Object.keys(this.concentradoTraduccionesActividad).length > 0
+    ) {
+      return;
+    }
+
+    const response = await fetch(
+      'https://script.google.com/macros/s/AKfycbwJ64gxjQiSsfZzixzr0tIe1na6tM81oAAW9Cjt8uuI53DDSaaAn_UMl2zgU69ZYyg3/exec',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        },
+        body: JSON.stringify({
+          title: esNombre ?? '',
+          description: esDescripcion ?? ''
+        })
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('No se pudo traducir la actividad.');
+    }
+
+    const data = await response.json();
+    const traducciones = data?.data;
+
+    if (!traducciones || typeof traducciones !== 'object') {
+      return;
+    }
+
+    const concentrado = this.idiomas.reduce((acc, idioma) => {
+      const traduccionIdioma = traducciones?.[idioma.codigo];
+      if (!traduccionIdioma) {
+        return acc;
+      }
+
+      acc[idioma.codigo] = {
+        nombre: typeof traduccionIdioma.title === 'string' ? traduccionIdioma.title : '',
+        descripcion:
+          typeof traduccionIdioma.description === 'string' ? traduccionIdioma.description : ''
+      };
+
+      return acc;
+    }, {} as Record<string, { nombre: string; descripcion: string }>);
+
+    this.concentradoTraduccionesActividad = concentrado;
+
+    this.idiomas.forEach((idioma) => {
+      const traduccionIdioma = concentrado?.[idioma.codigo];
+      if (!traduccionIdioma) {
+        return;
+      }
+
+      this.formActividad.get(['traducciones', idioma.codigo, 'nombre'])?.setValue(traduccionIdioma.nombre);
+      this.formActividad
+        .get(['traducciones', idioma.codigo, 'descripcion'])
+        ?.setValue(traduccionIdioma.descripcion);
+    });
+
+    this.ultimaLlaveTraduccionActividad = llaveActual;
   }
 
   abrirModalConfirmarEliminarActividad(index: number) {

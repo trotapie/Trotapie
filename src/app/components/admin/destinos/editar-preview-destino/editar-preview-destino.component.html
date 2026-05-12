@@ -308,49 +308,51 @@
 
 @if (mostrarModalEditarTextoPreview) {
   <div class="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 px-4">
-    <div class="w-full max-w-3xl rounded-2xl bg-white p-6 shadow-2xl">
-      <h3 class="text-xl font-semibold text-gray-900">Editar texto del preview</h3>
+    <div class="flex h-[85vh] w-full max-w-3xl flex-col rounded-2xl bg-white p-6 shadow-2xl">
+      <h3 class="shrink-0 text-xl font-semibold text-gray-900">Editar texto del preview</h3>
 
-      <form [formGroup]="formEditarTextoPreview" class="mt-4 space-y-4">
-        <mat-form-field class="w-full">
-          <mat-label>Idioma</mat-label>
-          <input matInput formControlName="idioma" />
-        </mat-form-field>
+      <div class="mt-4 flex-1 overflow-y-auto pr-1">
+        <form [formGroup]="formEditarTextoPreview" class="space-y-4">
+          <mat-form-field class="w-full">
+            <mat-label>Idioma</mat-label>
+            <input matInput formControlName="idioma" />
+          </mat-form-field>
 
-        <mat-form-field class="w-full">
-          <mat-label>Nombre</mat-label>
-          <input matInput formControlName="nombre" />
-          @if (formEditarTextoPreview.get('nombre')?.invalid && formEditarTextoPreview.get('nombre')?.touched) {
-            <mat-error>El nombre es requerido.</mat-error>
-          }
-        </mat-form-field>
+          <mat-form-field class="w-full">
+            <mat-label>Nombre</mat-label>
+            <input matInput formControlName="nombre" />
+            @if (formEditarTextoPreview.get('nombre')?.invalid && formEditarTextoPreview.get('nombre')?.touched) {
+              <mat-error>El nombre es requerido.</mat-error>
+            }
+          </mat-form-field>
 
-        <mat-form-field class="w-full">
-          <mat-label>Titulo descripcion</mat-label>
-          <input matInput formControlName="titulo_descripcion" />
-          @if (formEditarTextoPreview.get('titulo_descripcion')?.invalid && formEditarTextoPreview.get('titulo_descripcion')?.touched) {
-            <mat-error>El titulo es requerido.</mat-error>
-          }
-        </mat-form-field>
+          <mat-form-field class="w-full">
+            <mat-label>Titulo descripcion</mat-label>
+            <input matInput formControlName="titulo_descripcion" />
+            @if (formEditarTextoPreview.get('titulo_descripcion')?.invalid && formEditarTextoPreview.get('titulo_descripcion')?.touched) {
+              <mat-error>El titulo es requerido.</mat-error>
+            }
+          </mat-form-field>
 
-        <mat-form-field class="w-full">
-          <mat-label>Descripcion corta</mat-label>
-          <textarea matInput formControlName="descripcion_corta" rows="3"></textarea>
-          @if (formEditarTextoPreview.get('descripcion_corta')?.invalid && formEditarTextoPreview.get('descripcion_corta')?.touched) {
-            <mat-error>La descripcion corta es requerida.</mat-error>
-          }
-        </mat-form-field>
+          <mat-form-field class="w-full">
+            <mat-label>Descripcion corta</mat-label>
+            <textarea matInput formControlName="descripcion_corta" rows="3"></textarea>
+            @if (formEditarTextoPreview.get('descripcion_corta')?.invalid && formEditarTextoPreview.get('descripcion_corta')?.touched) {
+              <mat-error>La descripcion corta es requerida.</mat-error>
+            }
+          </mat-form-field>
 
-        <mat-form-field class="w-full">
-          <mat-label>Descripcion larga</mat-label>
-          <textarea matInput formControlName="descripcion_larga" rows="5"></textarea>
-          @if (formEditarTextoPreview.get('descripcion_larga')?.invalid && formEditarTextoPreview.get('descripcion_larga')?.touched) {
-            <mat-error>La descripcion larga es requerida.</mat-error>
-          }
-        </mat-form-field>
-      </form>
+          <mat-form-field class="w-full">
+            <mat-label>Descripcion larga</mat-label>
+            <textarea matInput formControlName="descripcion_larga" rows="5"></textarea>
+            @if (formEditarTextoPreview.get('descripcion_larga')?.invalid && formEditarTextoPreview.get('descripcion_larga')?.touched) {
+              <mat-error>La descripcion larga es requerida.</mat-error>
+            }
+          </mat-form-field>
+        </form>
+      </div>
 
-      <div class="mt-6 flex justify-end gap-2">
+      <div class="mt-4 flex shrink-0 justify-end gap-2 border-t border-gray-200 pt-4">
         <button mat-stroked-button type="button" (click)="cerrarModalEditarTextoPreview()">Cancelar</button>
         <button mat-flat-button color="primary" type="button" (click)="guardarEdicionTextoPreview()">Guardar</button>
       </div>
@@ -360,7 +362,7 @@
 
 @if (mostrarModalEditarActividad || mostrarModalNuevaActividad) {
   <div class="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 px-4">
-    <div class="flex h-[85vh] w-full max-w-4xl flex-col rounded-2xl bg-white p-6 shadow-2xl">
+    <div class="relative flex h-[85vh] w-full max-w-4xl flex-col rounded-2xl bg-white p-6 shadow-2xl">
       <h3 class="shrink-0 text-xl font-semibold text-gray-900">
         {{ mostrarModalEditarActividad ? 'Editar actividad' : 'Crear nueva actividad' }}
       </h3>
@@ -381,34 +383,78 @@
             </div>
           }
 
-          <div formGroupName="traducciones" class="grid grid-cols-1 gap-4 md:grid-cols-2">
-            @for (idioma of idiomas; track idioma.id) {
-              <div [formGroupName]="idioma.codigo" class="rounded-xl border border-gray-200 p-3">
-                <p class="mb-2 text-sm font-semibold text-gray-700">{{ getNombreIdioma(idioma.codigo) }}</p>
+          <div formGroupName="traducciones" class="space-y-4">
+            @if (formActividad.get(['traducciones', 'es'])) {
+              <div formGroupName="es" class="rounded-xl border border-gray-200 p-3">
+                <p class="mb-2 text-sm font-semibold text-gray-700">{{ getNombreIdioma('es') }}</p>
                 <mat-form-field class="w-full">
                   <mat-label>Nombre</mat-label>
-                  <input matInput formControlName="nombre" />
+                  <input
+                    matInput
+                    formControlName="nombre"
+                    (blur)="onActividadEsBlurOEnter('es')"
+                    (keydown.enter)="onActividadEsBlurOEnter('es', $event)"
+                  />
                 </mat-form-field>
                 <mat-form-field class="w-full">
                   <mat-label>Descripcion</mat-label>
-                  <textarea matInput formControlName="descripcion" rows="2"></textarea>
+                  <textarea
+                    matInput
+                    formControlName="descripcion"
+                    rows="2"
+                    (blur)="onActividadEsBlurOEnter('es')"
+                    (keydown.enter)="onActividadEsBlurOEnter('es', $event)"
+                  ></textarea>
                 </mat-form-field>
               </div>
+            } @else {
+              <div class="rounded-xl border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800">
+                No se encontro la traduccion en espanol para capturar la actividad.
+              </div>
             }
+
+            <div class="rounded-xl border border-gray-200 bg-gray-50 p-3">
+              <p class="mb-3 text-sm font-semibold text-gray-700">Traducciones (solo informativo)</p>
+              <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                @for (idioma of idiomas; track idioma.id) {
+                  <div class="rounded-lg border border-gray-200 bg-white p-3">
+                    <p class="mb-1 text-sm font-semibold text-gray-700">{{ getNombreIdioma(idioma.codigo) }}</p>
+                    <p class="text-sm text-gray-900">
+                      {{ formActividad.get(['traducciones', idioma.codigo, 'nombre'])?.value || 'Sin nombre' }}
+                    </p>
+                    <p class="mt-1 text-sm text-gray-600">
+                      {{ formActividad.get(['traducciones', idioma.codigo, 'descripcion'])?.value || 'Sin descripcion' }}
+                    </p>
+                  </div>
+                }
+              </div>
+            </div>
           </div>
         </form>
       </div>
 
       <div class="mt-4 flex shrink-0 justify-end gap-2 border-t border-gray-200 pt-4">
         <button mat-stroked-button type="button" (click)="cerrarModalActividad()">Cancelar</button>
-        <button mat-flat-button color="primary" type="button" (click)="guardarActividad()" [disabled]="guardandoActividad">
+        <button mat-flat-button color="primary" type="button" (click)="guardarActividad()" [disabled]="guardandoActividad || traduciendoActividad">
           @if (guardandoActividad) {
             Guardando...
+          } @else if (traduciendoActividad) {
+            Traduciendo...
           } @else {
             {{ mostrarModalEditarActividad ? 'Guardar' : 'Agregar' }}
           }
         </button>
       </div>
+
+      @if (traduciendoActividad) {
+        <div class="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/80 backdrop-blur-[1px]">
+          <div class="flex flex-col items-center gap-3 rounded-xl border border-gray-200 bg-white px-6 py-5 shadow-lg">
+            <mat-progress-spinner diameter="40" mode="indeterminate"></mat-progress-spinner>
+            <p class="text-sm font-medium text-gray-700">Traduciendo actividad...</p>
+          </div>
+        </div>
+      }
     </div>
   </div>
 }
+
