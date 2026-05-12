@@ -1,1 +1,196 @@
-<p>admin-hoteles works!</p>
+<div class="flex min-w-0 flex-auto flex-col">
+    <div class="mt-2 flex h-16 shrink-0 items-center justify-between px-6">
+        <h2 class="text-3xl font-bold tracking-tight dark:text-white">Hoteles</h2>
+
+        <button mat-stroked-button color="primary" [disabled]="!hayCambiosOrden || actualizandoOrden"
+            (click)="actualizarOrden()">
+            <mat-icon class="mr-2 icon-size-5" [svgIcon]="'heroicons_outline:arrow-path'"></mat-icon>
+            @if (actualizandoOrden) {
+            Actualizando...
+            } @else {
+            Actualizar orden
+            }
+        </button>
+    </div>
+
+    <div class="mx-6 mt-2 rounded-2xl bg-card p-4">
+        <div class="mb-3 flex items-center gap-2">
+            <button mat-stroked-button [color]="tipoBusqueda === 'NACIONAL' ? 'primary' : undefined"
+                (click)="cambiarTipoBusqueda('NACIONAL')">
+                Nacional
+            </button>
+            <button mat-stroked-button [color]="tipoBusqueda === 'INTERNACIONAL' ? 'primary' : undefined"
+                (click)="cambiarTipoBusqueda('INTERNACIONAL')">
+                Internacional
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+            @if (tipoBusqueda === 'NACIONAL') {
+            <mat-form-field class="w-full md:col-span-2">
+                <mat-label>Destino nacional</mat-label>
+                <mat-select [value]="destinoSeleccionadoId" (valueChange)="seleccionarDestino($event)">
+                    <mat-option [value]="null">Selecciona un destino</mat-option>
+                    @for (destino of destinosNacionales; track destino.id) {
+                    <mat-option [value]="destino.id">
+                        {{ destino.nombre }}
+                    </mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+            } @else {
+            <mat-form-field class="w-full">
+                <mat-label>Continente</mat-label>
+                <mat-select [value]="continenteSeleccionadoId" (valueChange)="seleccionarContinente($event)">
+                    <mat-option [value]="null">Selecciona continente</mat-option>
+                    @for (continente of continentes; track continente.id) {
+                    <mat-option [value]="continente.id">{{ continente.nombre }}</mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+
+            <mat-form-field class="w-full">
+                <mat-label>Pais</mat-label>
+                <mat-select [value]="paisSeleccionadoId" (valueChange)="seleccionarPais($event)"
+                    [disabled]="!continenteSeleccionadoId">
+                    <mat-option [value]="null">Selecciona pais</mat-option>
+                    @for (pais of paisesInternacionales; track pais.id) {
+                    <mat-option [value]="pais.id">{{ pais.nombre }}</mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+
+            <mat-form-field class="w-full">
+                <mat-label>Destino</mat-label>
+                <mat-select [value]="destinoInternacionalId" (valueChange)="seleccionarDestinoInternacional($event)"
+                    [disabled]="!paisSeleccionadoId">
+                    <mat-option [value]="null">Todos los destinos del pais</mat-option>
+                    @for (destino of destinosInternacionalesPorPais; track destino.id) {
+                    <mat-option [value]="destino.id">{{ destino.nombre }}</mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+            }
+        </div>
+    </div>
+
+    @if (error) {
+    <div class="mx-6 mt-3 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+        {{ error }}
+    </div>
+    }
+
+    <div class="m-3 flex-auto overflow-auto rounded-3xl bg-card">
+        @if (cargando || cargandoHoteles) {
+        <div class="flex h-40 items-center justify-center">
+            <mat-progress-spinner diameter="36" mode="indeterminate"></mat-progress-spinner>
+        </div>
+        } @else if (!destinoSeleccionadoId) {
+        <div class="p-8 text-center text-sm text-gray-500">
+            @if (tipoBusqueda === 'NACIONAL') {
+            Selecciona un destino nacional para ver su concentrado de hoteles.
+            } @else {
+            Selecciona continente y pais para ver su concentrado de hoteles.
+            }
+        </div>
+        } @else if (!hoteles.length) {
+        <div class="p-8 text-center text-sm text-gray-500">
+            Este destino no tiene hoteles registrados.
+        </div>
+        } @else {
+        <table mat-table [dataSource]="hoteles" cdkDropList [cdkDropListData]="hoteles" (cdkDropListDropped)="drop($event)">
+            <ng-container matColumnDef="nombre_hotel">
+                <th mat-header-cell *matHeaderCellDef>Nombre hotel</th>
+                <td mat-cell *matCellDef="let item">{{ item.nombre_hotel }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="regimen">
+                <th mat-header-cell *matHeaderCellDef>Regimen</th>
+                <td mat-cell *matCellDef="let item">{{ item.regimen || '-' }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="orden">
+                <th mat-header-cell *matHeaderCellDef>Orden</th>
+                <td mat-cell *matCellDef="let item; let i = index">{{ i + 1 }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="acciones">
+                <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                <td mat-cell *matCellDef="let item">
+                    <div class="flex items-center justify-center gap-2">
+                        <button mat-icon-button [matTooltip]="'Editar hotel'" (click)="abrirModalEdicion(item)">
+                            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
+                        </button>
+
+                        <button mat-icon-button [matTooltip]="'Reordenar'" cdkDragHandle>
+                            <mat-icon class="cursor-move">drag_indicator</mat-icon>
+                        </button>
+                    </div>
+                </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row cdkDrag *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+        }
+    </div>
+</div>
+
+@if (mostrarModalOrdenExito) {
+<div class="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 px-4">
+    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+        <h3 class="text-xl font-semibold text-gray-900">Actualizacion completada</h3>
+        <p class="mt-2 text-sm text-gray-600">Orden de hoteles actualizado correctamente.</p>
+
+        <div class="mt-6 flex justify-end">
+            <button mat-flat-button color="primary" (click)="cerrarModalOrdenExito()">
+                Aceptar
+            </button>
+        </div>
+    </div>
+</div>
+}
+
+@if (mostrarModalEdicion) {
+<div class="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 px-4">
+    <div class="w-full max-w-xl rounded-2xl bg-white p-6 shadow-2xl">
+        <h3 class="text-xl font-semibold text-gray-900">Editar hotel</h3>
+
+        <form class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2" [formGroup]="formEditar">
+            <mat-form-field class="md:col-span-2">
+                <mat-label>Nombre hotel</mat-label>
+                <input matInput formControlName="nombre_hotel" />
+                @if (formEditar.get('nombre_hotel')?.invalid && formEditar.get('nombre_hotel')?.touched) {
+                <mat-error>El nombre del hotel es requerido.</mat-error>
+                }
+            </mat-form-field>
+
+            <mat-form-field>
+                <mat-label>Regimen</mat-label>
+                <mat-select formControlName="regimen_id">
+                    <mat-option [value]="null">Sin regimen</mat-option>
+                    @for (regimen of regimenes; track regimen.id) {
+                    <mat-option [value]="regimen.id">{{ regimen.descripcion }}</mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+
+            <mat-form-field>
+                <mat-label>Orden</mat-label>
+                <input matInput type="number" min="0" formControlName="orden" />
+            </mat-form-field>
+        </form>
+
+        <div class="mt-6 flex justify-end gap-2">
+            <button mat-stroked-button (click)="cerrarModalEdicion()">Cancelar</button>
+            <button mat-flat-button color="primary" [disabled]="guardandoEdicion" (click)="guardarEdicion()">
+                @if (guardandoEdicion) {
+                Guardando...
+                } @else {
+                Guardar cambios
+                }
+            </button>
+        </div>
+    </div>
+</div>
+}
