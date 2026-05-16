@@ -146,26 +146,31 @@
             <div #scrollContainer class="absolute inset-0 flex flex-col min-w-0 overflow-y-auto" cdkScrollable>
                 <header
                     class="sticky top-0 z-50 w-full border-b border-solid border-[#147052]/10 bg-background-light/80 backdrop-blur-md dark:bg-background-dark/80 px-6 md:px-20 py-4">
-                    <div class="max-w-[1200px] mx-auto flex items-center justify-between">
-                        <div class="flex items-center gap-6">
-                            <button mat-raised-button color="accent" class="text-white ml-auto flex items-center gap-2"
+                    <div class="max-w-[1200px] mx-auto w-full">
+                        <div class="flex w-full flex-col gap-3 sm:flex-row sm:items-center">
+                            <button mat-raised-button color="accent"
+                                class="text-white w-full sm:w-auto flex items-center justify-center gap-2"
                                 (click)="regresar()">
 
                                 <mat-icon class="icon-size-5 text-white" fontSet="material-symbols-outlined">
                                     arrow_back
                                 </mat-icon>
 
-                                {{ t('regresar-a-destinos') }}
+                                <span class="whitespace-normal text-center leading-tight">
+                                    {{ t('regresar-a-destinos') }}
+                                </span>
                             </button>
 
                             <button mat-raised-button (click)="cargarInfo()"
-                                class="text-white ml-auto flex items-center gap-2 bg-[#147052]">
+                                class="text-white w-full sm:w-auto flex items-center justify-center gap-2 bg-[#147052]">
 
                                 <mat-icon class="icon-size-5 text-white" fontSet="material-symbols-outlined">
                                     hotel
                                 </mat-icon>
 
-                                {{ t('ver-hoteles-en', { destino: detallesDestino?.detalle?.nombre }) }}
+                                <span class="whitespace-normal text-center leading-tight">
+                                    {{ t('ver-hoteles-en', { destino: detallesDestino?.detalle?.nombre }) }}
+                                </span>
                             </button>
                         </div>
                     </div>
