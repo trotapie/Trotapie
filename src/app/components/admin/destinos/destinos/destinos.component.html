@@ -44,7 +44,7 @@
 <div class="flex min-w-0 flex-auto flex-col ">
 
     <!-- Header -->
-    <div class="flex h-16 shrink-0 items-center justify-between px-6 mt-2 ">
+    <div class="mt-2 flex shrink-0 flex-col gap-3 px-6 sm:h-16 sm:flex-row sm:items-center sm:justify-between">
 
         <div class="flex items-center gap-4">
             <h2 class="text-3xl font-bold tracking-tight dark:text-white">
@@ -53,8 +53,9 @@
 
         </div>
 
-        <div class="flex items-center gap-3">
-            <button mat-stroked-button color="primary" [disabled]="!hayCambiosOrden || actualizandoOrden"
+        <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
+            <button mat-stroked-button color="primary" class="w-full sm:w-auto"
+                [disabled]="!hayCambiosOrden || actualizandoOrden"
                 (click)="actualizarOrden()">
                 <mat-icon class="mr-2 icon-size-5" [svgIcon]="'heroicons_outline:arrow-path'"></mat-icon>
                 @if (actualizandoOrden) {
@@ -64,7 +65,7 @@
                 }
             </button>
 
-            <button mat-raised-button color="primary" class="text-white"
+            <button mat-raised-button color="primary" class="w-full text-white sm:w-auto"
                 [routerLink]="['/admin/destinos/configurar-destinos/nuevo']">
                 <mat-icon class="mr-2 icon-size-5 text-whie" [svgIcon]="'heroicons_outline:plus'">
                 </mat-icon>
@@ -73,7 +74,7 @@
         </div>
     </div>
 
-    <div class="mx-6 mb-2 flex items-center gap-2">
+    <div class="mx-6 mb-2 mt-3 flex items-center gap-2">
         <button mat-stroked-button [color]="tipoVisible === 'NACIONAL' ? 'primary' : undefined"
             (click)="seleccionarTipo('NACIONAL')">
             Nacionales
