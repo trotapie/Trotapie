@@ -1,0 +1,167 @@
+<div class="flex min-w-0 flex-auto flex-col bg-gray-50">
+  <div class="mx-auto flex w-full max-w-screen-xl flex-col px-6 py-8 sm:px-8">
+    <div class="mb-4 flex items-center justify-between">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight text-gray-900">
+          Detalle de catalogo: {{ catalogo?.nombre || catalogo?.clave || 'Atracciones' }}
+        </h1>
+        <p class="mt-2 text-base text-gray-500">
+          Aqui se muestran los registros asociados a este valor del catalogo.
+        </p>
+      </div>
+
+      <button mat-stroked-button [routerLink]="['/admin/catalogos/atracciones']">
+        <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
+        Volver
+      </button>
+    </div>
+  </div>
+
+  <div class="mx-auto w-full max-w-screen-xl px-6 pb-8 sm:px-8">
+    @if (error) {
+      <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+        {{ error }}
+      </div>
+    }
+
+    <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div class="mb-4 text-sm text-gray-600">
+        Total de registros: <span class="font-semibold text-gray-900">{{ atracciones.length }}</span>
+      </div>
+
+      <div class="overflow-auto">
+        <table mat-table [dataSource]="atracciones">
+          <ng-container matColumnDef="id">
+            <th mat-header-cell *matHeaderCellDef>ID</th>
+            <td mat-cell *matCellDef="let item">{{ item.id }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="nombre">
+            <th mat-header-cell *matHeaderCellDef>Nombre</th>
+            <td mat-cell *matCellDef="let item">
+              @if (editingId === item.id) {
+                <mat-form-field class="w-full">
+                  <input matInput [(ngModel)]="editingDraft['nombre']" [ngModelOptions]="{ standalone: true }" />
+                </mat-form-field>
+              } @else {
+                {{ item.nombre || '-' }}
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="descripcion">
+            <th mat-header-cell *matHeaderCellDef>Descripcion</th>
+            <td mat-cell *matCellDef="let item">
+              @if (editingId === item.id) {
+                <mat-form-field class="w-full">
+                  <textarea
+                    matInput
+                    rows="2"
+                    [(ngModel)]="editingDraft['descripcion']"
+                    [ngModelOptions]="{ standalone: true }"
+                  ></textarea>
+                </mat-form-field>
+              } @else {
+                {{ item.descripcion || '-' }}
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="imagenes">
+            <th mat-header-cell *matHeaderCellDef>Imagenes</th>
+            <td mat-cell *matCellDef="let item">
+              @if ((item.imagenes?.length ?? 0) > 0) {
+                <div class="flex min-w-[260px] flex-col gap-2 py-1">
+                  @for (imagen of item.imagenes; track imagen.id) {
+                    <div class="flex items-center gap-2">
+                      <img
+                        [src]="imagen.imagen_url"
+                        alt="Imagen de atraccion"
+                        class="h-10 w-14 rounded-md border border-gray-200 object-cover"
+                      />
+                      <a
+                        class="max-w-[180px] truncate text-xs text-blue-700 hover:underline"
+                        [href]="imagen.imagen_url"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {{ imagen.imagen_url }}
+                      </a>
+                      @if (imagen.activa) {
+                        <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
+                          Activa
+                        </span>
+                      }
+                    </div>
+                  }
+                </div>
+              } @else {
+                -
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="orden">
+            <th mat-header-cell *matHeaderCellDef>Orden</th>
+            <td mat-cell *matCellDef="let item">
+              @if (editingId === item.id) {
+                <mat-form-field class="w-24">
+                  <input
+                    matInput
+                    type="number"
+                    [(ngModel)]="editingDraft['orden']"
+                    [ngModelOptions]="{ standalone: true }"
+                  />
+                </mat-form-field>
+              } @else {
+                {{ item.orden ?? '-' }}
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="activo">
+            <th mat-header-cell *matHeaderCellDef>Activo</th>
+            <td mat-cell *matCellDef="let item">
+              @if (editingId === item.id) {
+                <mat-slide-toggle [(ngModel)]="editingDraft['activo']" [ngModelOptions]="{ standalone: true }">
+                  {{ editingDraft['activo'] ? 'Si' : 'No' }}
+                </mat-slide-toggle>
+              } @else {
+                {{ item.activo ? 'Si' : 'No' }}
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef>Acciones</th>
+            <td mat-cell *matCellDef="let item">
+              @if (editingId === item.id) {
+                <div class="flex items-center gap-2">
+                  <button mat-stroked-button type="button" (click)="cancelarEdicion()" [disabled]="guardando">Cancelar</button>
+                  <button mat-flat-button color="primary" type="button" (click)="guardarEdicion(item)" [disabled]="guardando">
+                    @if (guardando) {
+                      Guardando...
+                    } @else {
+                      Guardar
+                    }
+                  </button>
+                </div>
+              } @else {
+                <button mat-stroked-button type="button" (click)="iniciarEdicion(item)">Editar</button>
+              }
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      </div>
+
+      @if (!loading && atracciones.length === 0) {
+        <div class="mt-4 text-sm text-gray-500">
+          No hay registros asociados a este catalogo.
+        </div>
+      }
+    </div>
+  </div>
+</div>
