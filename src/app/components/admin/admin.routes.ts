@@ -9,6 +9,8 @@ import { ConfiguracionDestinosComponent } from './destinos/configuracion-destino
 import { TipoDestinosComponent } from './destinos/tipo-destinos/tipo-destinos.component';
 import { EditarDestinoComponent } from './destinos/editar-destino/editar-destino.component';
 import { EditarPreviewDestinoComponent } from './destinos/editar-preview-destino/editar-preview-destino.component';
+import { CatalogoPlaceholderComponent } from './catalogos/catalogo-placeholder/catalogo-placeholder.component';
+import { AtraccionesDetalleComponent } from './catalogos/atracciones-detalle/atracciones-detalle.component';
 
 export default [
     {
@@ -20,8 +22,116 @@ export default [
         component: AdminHotelesComponent,
     },
     {
-        path: 'actividades',
+        path: 'catalogos',
         component: AdminActividadesComponent,
+    },
+    {
+        path: 'actividades',
+        redirectTo: 'catalogos',
+        pathMatch: 'full',
+    },
+    {
+        path: 'catalogos/actividades',
+        component: CatalogoPlaceholderComponent,
+        data: {
+            catalogoKey: 'actividades',
+            titulo: 'Catalogo de actividades',
+            descripcion: 'Gestiona el catalogo de actividades disponible para la operacion.'
+        }
+    },
+    {
+        path: 'catalogos/conceptos',
+        component: CatalogoPlaceholderComponent,
+        data: {
+            catalogoKey: 'conceptos',
+            titulo: 'Conceptos',
+            descripcion: 'Administra conceptos utilizados por hoteles y cotizaciones.'
+        }
+    },
+    {
+        path: 'catalogos/continentes',
+        component: CatalogoPlaceholderComponent,
+        data: {
+            catalogoKey: 'continentes',
+            titulo: 'Continentes',
+            descripcion: 'Gestiona continentes para clasificar destinos internacionales.'
+        }
+    },
+    {
+        path: 'catalogos/descuentos',
+        component: CatalogoPlaceholderComponent,
+        data: {
+            catalogoKey: 'descuentos',
+            titulo: 'Descuentos',
+            descripcion: 'Administra los descuentos disponibles dentro del sistema.'
+        }
+    },
+    {
+        path: 'catalogos/idiomas',
+        component: CatalogoPlaceholderComponent,
+        data: {
+            catalogoKey: 'idiomas',
+            titulo: 'Idiomas',
+            descripcion: 'Gestiona idiomas disponibles para contenidos y traducciones.'
+        }
+    },
+    {
+        path: 'catalogos/politicas',
+        component: CatalogoPlaceholderComponent,
+        data: {
+            catalogoKey: 'politicas',
+            titulo: 'Politicas',
+            descripcion: 'Administra politicas de reservacion y reglas operativas.'
+        }
+    },
+    {
+        path: 'catalogos/regimen-hotel',
+        component: CatalogoPlaceholderComponent,
+        data: {
+            catalogoKey: 'regimen_hotel',
+            titulo: 'Regimen de hotel',
+            descripcion: 'Gestiona regimenes asociados a hoteles y sus descripciones.'
+        }
+    },
+    {
+        path: 'catalogos/tarifas',
+        component: CatalogoPlaceholderComponent,
+        data: {
+            catalogoKey: 'tarifas',
+            titulo: 'Tarifas',
+            descripcion: 'Administra las tarifas utilizadas en cotizaciones y ventas.'
+        }
+    },
+    {
+        path: 'catalogos/tipo-imagen',
+        component: CatalogoPlaceholderComponent,
+        data: {
+            catalogoKey: 'tipo_imagen',
+            titulo: 'Tipo imagen',
+            descripcion: 'Gestiona tipos de imagen para clasificar contenido visual.'
+        }
+    },
+    {
+        path: 'catalogos/tipos-habitacion',
+        component: CatalogoPlaceholderComponent,
+        data: {
+            catalogoKey: 'tipos_habitacion',
+            titulo: 'Tipos habitacion',
+            descripcion: 'Administra tipos de habitacion para hoteles y cotizaciones.'
+        }
+    },
+    {
+        path: 'catalogos/atracciones',
+        component: CatalogoPlaceholderComponent,
+        data: {
+            catalogoKey: 'atracciones',
+            titulo: 'Catalogo de atracciones',
+            descripcion: 'Gestiona atracciones principales vinculadas a destinos.'
+        }
+    },
+    {
+        path: 'catalogos/atracciones/editar/:id',
+        component: AtraccionesDetalleComponent
     },
     {
         path: 'solicitudes-cotizacion',

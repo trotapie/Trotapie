@@ -1,0 +1,119 @@
+<div class="flex min-w-0 flex-auto flex-col bg-gray-50">
+    <div class="mx-auto flex w-full max-w-screen-xl flex-col px-6 py-8 sm:px-8">
+        <div class="flex items-start justify-between gap-4">
+            <div class="max-w-2xl">
+            <h1 class="text-3xl font-bold tracking-tight text-gray-900">
+                {{ titulo }}
+            </h1>
+            <p class="mt-2 text-base text-gray-500">
+                {{ descripcion }}
+            </p>
+            </div>
+
+            <div class="flex items-center gap-2">
+                @if (tieneOrden) {
+                <button mat-stroked-button color="primary" [disabled]="!hayCambiosOrden || guardandoOrden"
+                    (click)="actualizarOrden()">
+                    <mat-icon class="mr-2 icon-size-5" [svgIcon]="'heroicons_outline:arrow-path'"></mat-icon>
+                    @if (guardandoOrden) {
+                    Actualizando...
+                    } @else {
+                    Actualizar orden
+                    }
+                </button>
+                }
+
+                <button mat-stroked-button [routerLink]="['/admin/catalogos']">
+                    <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
+                    Volver
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="mx-auto w-full max-w-screen-xl px-6 pb-8 sm:px-8">
+        @if (error) {
+        <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+            {{ error }}
+        </div>
+        }
+
+        <div class="table-shell">
+            <div class="overflow-auto rounded-t-2xl border-x border-t border-gray-200 bg-white shadow-sm">
+            <table mat-table [dataSource]="pagedItems" cdkDropList [cdkDropListData]="pagedItems"
+                [cdkDropListDisabled]="!tieneOrden || editingId !== null"
+                (cdkDropListDropped)="drop($event)">
+                @for (columna of columnas; track columna.key) {
+                <ng-container [matColumnDef]="columna.key">
+                    <th mat-header-cell *matHeaderCellDef>{{ columna.label }}</th>
+                    <td mat-cell *matCellDef="let item; let i = index">
+                        @if (editingId === item.id && isEditableColumn(columna.key)) {
+                        @if (isBooleanColumn(columna.key)) {
+                        <mat-select [value]="!!editingDraft[columna.key]"
+                            (valueChange)="actualizarBooleanDraft(columna.key, $event)">
+                            <mat-option [value]="true">Si</mat-option>
+                            <mat-option [value]="false">No</mat-option>
+                        </mat-select>
+                        } @else {
+                        <input matInput [value]="editingDraft[columna.key] ?? ''"
+                            (input)="actualizarTextoDraft(columna.key, $any($event.target).value)" />
+                        }
+                        } @else {
+                        {{ getValor(item, columna.key, getGlobalIndex(i)) }}
+                        }
+                    </td>
+                </ng-container>
+                }
+
+                <ng-container matColumnDef="acciones">
+                    <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                    <td mat-cell *matCellDef="let item">
+                        <div class="flex items-center gap-1">
+                            @if (editingId === item.id) {
+                            <button mat-icon-button color="primary" [disabled]="guardandoEdicion"
+                                [matTooltip]="'Guardar'" (click)="guardarEdicion(item)">
+                                <mat-icon [svgIcon]="'heroicons_outline:check'"></mat-icon>
+                            </button>
+                            <button mat-icon-button [disabled]="guardandoEdicion" [matTooltip]="'Cancelar'"
+                                (click)="cancelarEdicion()">
+                                <mat-icon [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
+                            </button>
+                            } @else {
+                            <button mat-icon-button [matTooltip]="esCatalogoAtracciones ? 'Ver registros' : 'Editar'"
+                                (click)="iniciarEdicion(item)">
+                                <mat-icon [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
+                            </button>
+                            }
+
+                            @if (tieneOrden) {
+                            <button mat-icon-button [disabled]="editingId !== null" [matTooltip]="'Reordenar'"
+                                cdkDragHandle>
+                            <mat-icon class="cursor-move">drag_indicator</mat-icon>
+                        </button>
+                            }
+                        </div>
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row cdkDrag [cdkDragDisabled]="!tieneOrden || editingId !== null"
+                    *matRowDef="let row; columns: displayedColumns"></tr>
+            </table>
+
+            @if (!loading && items.length === 0) {
+            <div class="px-6 py-8 text-sm text-gray-500">
+                No hay registros en este catalogo.
+            </div>
+            }
+            </div>
+
+            <div class="table-footer border-x border-b border-gray-200 bg-white">
+                <mat-paginator [length]="items.length" [pageSize]="20" [pageSizeOptions]="[20]"
+                    [pageIndex]="pageIndex" (page)="onPageChange($event)" showFirstLastButtons
+                    aria-label="Seleccionar pagina">
+                </mat-paginator>
+            </div>
+        </div>
+
+    </div>
+</div>

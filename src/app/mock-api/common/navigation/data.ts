@@ -27,11 +27,11 @@ export const compactNavigation: FuseNavigationItem[] = [
         link : 'admin/hoteles'
     },
     {
-        id   : 'Actividades',
-        title: 'Actividades',
+        id   : 'catalogos',
+        title: 'Catalogos',
         type : 'basic',
-        icon : 'heroicons_outline:chart-pie',
-        link : 'admin/actividades'
+        icon : 'heroicons_outline:squares-2x2',
+        link : 'admin/catalogos'
     },
     {
         id   : 'example',
