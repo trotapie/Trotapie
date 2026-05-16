@@ -38,6 +38,13 @@ export interface IDetalleRapidoPreviewAdmin {
 export interface IActividadPreviewAdmin {
   id: number | null;
   imagen_fondo: string;
+  imagenes?: Array<{
+    id: number;
+    imagen_url: string;
+    activa: boolean;
+    orden: number | null;
+    created_at: string | null;
+  }>;
   traducciones: Record<number, { nombre: string; descripcion: string }>;
 }
 
@@ -581,6 +588,7 @@ export class SupabaseService {
     let detallesRapidosTraducciones: any[] = [];
     let actividades: any[] = [];
     let actividadesTraducciones: any[] = [];
+    let actividadesImagenes: any[] = [];
 
     if (detalleId) {
       const [traduccionesResponse, detallesRapidosResponse] = await Promise.all([
@@ -640,14 +648,30 @@ export class SupabaseService {
 
       const actividadIds = actividades.map((item: any) => item.id);
       if (actividadIds.length) {
-        const { data: actividadesTrData, error: actividadesTrError } = await this.client
-          .from('atracciones_principales_traducciones')
-          .select('atracciones_principales_id, idioma_id, nombre, descripcion')
-          .in('atracciones_principales_id', actividadIds)
-          .in('idioma_id', idiomaIds);
+        const [actividadesTrResponse, actividadesImagenesResponse] = await Promise.all([
+          this.client
+            .from('atracciones_principales_traducciones')
+            .select('atracciones_principales_id, idioma_id, nombre, descripcion')
+            .in('atracciones_principales_id', actividadIds)
+            .in('idioma_id', idiomaIds),
+          this.client
+            .from('atracciones_imagenes')
+            .select('id, atraccion_id, imagen_url, activa, orden, created_at')
+            .in('atraccion_id', actividadIds)
+        ]);
 
-        if (actividadesTrError) throw actividadesTrError;
-        actividadesTraducciones = actividadesTrData ?? [];
+        if (actividadesTrResponse.error) throw actividadesTrResponse.error;
+        actividadesTraducciones = actividadesTrResponse.data ?? [];
+
+        if (actividadesImagenesResponse.error) {
+          console.warn(
+            '[obtenerPreviewDestinoAdmin] No se pudieron cargar imagenes de actividades:',
+            actividadesImagenesResponse.error
+          );
+          actividadesImagenes = [];
+        } else {
+          actividadesImagenes = actividadesImagenesResponse.data ?? [];
+        }
       }
     } else {
       detallesRapidos = catalogoTipos.map((tipo: any, index: number) => ({
@@ -702,6 +726,15 @@ export class SupabaseService {
         });
     });
 
+    const imagenesActividadPorId = new Map<number, Array<any>>();
+    actividadesImagenes.forEach((item: any) => {
+      const actividadId = Number(item.atraccion_id);
+      if (!imagenesActividadPorId.has(actividadId)) {
+        imagenesActividadPorId.set(actividadId, []);
+      }
+      imagenesActividadPorId.get(actividadId)?.push(item);
+    });
+
     return {
       detalles_destinos_id: detalleId,
       destino_id: destinoId,
@@ -712,6 +745,18 @@ export class SupabaseService {
       catalogo_tipos_dato_rapido: catalogoTipos,
       actividades: (actividades ?? []).map((actividad: any) => {
         const traduccionesActividad = traduccionesActividadPorId.get(actividad.id) ?? new Map();
+        const imagenesOrdenadas = [...(imagenesActividadPorId.get(Number(actividad.id)) ?? [])].sort(
+          (a: any, b: any) => {
+            const ordenA = a?.orden ?? Number.MAX_SAFE_INTEGER;
+            const ordenB = b?.orden ?? Number.MAX_SAFE_INTEGER;
+            if (ordenA !== ordenB) {
+              return ordenA - ordenB;
+            }
+            return Number(a?.id ?? 0) - Number(b?.id ?? 0);
+          }
+        );
+        const imagenActiva = imagenesOrdenadas.find((imagen: any) => Boolean(imagen?.activa));
+        const imagenReferencia = imagenActiva ?? imagenesOrdenadas[0];
         const recordTraducciones: Record<number, { nombre: string; descripcion: string }> = {};
 
         idiomas.forEach((idioma) => {
@@ -723,7 +768,17 @@ export class SupabaseService {
 
         return {
           id: actividad.id,
-          imagen_fondo: actividad.imagen_fondo ?? '',
+          imagen_fondo:
+            imagenReferencia?.imagen_url ??
+            actividad.imagen_fondo ??
+            '',
+          imagenes: imagenesOrdenadas.map((imagen: any) => ({
+            id: Number(imagen.id),
+            imagen_url: imagen.imagen_url ?? '',
+            activa: Boolean(imagen.activa),
+            orden: imagen.orden ?? null,
+            created_at: imagen.created_at ?? null
+          })),
           traducciones: recordTraducciones
         } as IActividadPreviewAdmin;
       }),
@@ -1189,6 +1244,13 @@ export class SupabaseService {
         orden,
         activo,
         created_at,
+        imagenes:atracciones_imagenes (
+          id,
+          imagen_url,
+          activa,
+          orden,
+          created_at
+        ),
         traducciones:atracciones_traducciones (
           idioma_id,
           nombre,
@@ -1216,9 +1278,26 @@ export class SupabaseService {
       },
       atracciones: (atracciones ?? []).map((item: any) => {
         const traduccionEs = item?.traducciones?.find((x: any) => Number(x.idioma_id) === ES_ID);
+        const imagenesOrdenadas = [...(item?.imagenes ?? [])].sort((a: any, b: any) => {
+          const ordenA = a?.orden ?? Number.MAX_SAFE_INTEGER;
+          const ordenB = b?.orden ?? Number.MAX_SAFE_INTEGER;
+          if (ordenA !== ordenB) {
+            return ordenA - ordenB;
+          }
+          return Number(a?.id ?? 0) - Number(b?.id ?? 0);
+        });
+
+        const imagenActiva = imagenesOrdenadas.find((imagen: any) => Boolean(imagen?.activa));
         return {
           id: item.id,
-          imagen_fondo: item.imagen_fondo ?? '',
+          imagen_fondo: imagenActiva?.imagen_url ?? item.imagen_fondo ?? '',
+          imagenes: imagenesOrdenadas.map((imagen: any) => ({
+            id: imagen.id,
+            imagen_url: imagen.imagen_url ?? '',
+            activa: Boolean(imagen.activa),
+            orden: imagen.orden ?? null,
+            created_at: imagen.created_at ?? null
+          })),
           orden: item.orden ?? null,
           activo: Boolean(item.activo),
           created_at: item.created_at ?? null,
@@ -1233,14 +1312,12 @@ export class SupabaseService {
     atraccion_id: number;
     nombre: string | null;
     descripcion: string | null;
-    imagen_fondo: string | null;
     orden: number | null;
     activo: boolean;
   }) {
     const { data: updatedAtraccion, error: atraccionError } = await this.client
       .from('atracciones')
       .update({
-        imagen_fondo: payload.imagen_fondo,
         orden: payload.orden,
         activo: payload.activo
       })

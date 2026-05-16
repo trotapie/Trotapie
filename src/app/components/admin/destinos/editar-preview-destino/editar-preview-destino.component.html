@@ -155,6 +155,7 @@
               <thead class="bg-gray-50">
                 <tr>
                   <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Nombre (Español)</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Imagenes</th>
                   <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-600">Acciones</th>
                 </tr>
               </thead>
@@ -163,6 +164,31 @@
                   <tr class="border-t border-gray-100 bg-white" [formGroupName]="i">
                     <td class="px-4 py-3 text-sm text-gray-700">
                       {{ actividad.get(['traducciones', 'es', 'nombre'])?.value || 'Sin nombre' }}
+                    </td>
+                    <td class="px-4 py-3">
+                      @if (getImagenesActividad(i).length > 0) {
+                        <div class="flex flex-wrap items-center gap-2">
+                          @for (imagen of getImagenesActividad(i); track imagen.id) {
+                            <a [href]="imagen.imagen_url" target="_blank" rel="noopener noreferrer" class="block">
+                              <img
+                                [src]="imagen.imagen_url"
+                                alt="Imagen de actividad"
+                                class="h-10 w-14 rounded-md border border-gray-200 object-cover"
+                              />
+                            </a>
+                          }
+                        </div>
+                      } @else if (actividad.get('imagen_fondo')?.value) {
+                        <a [href]="actividad.get('imagen_fondo')?.value" target="_blank" rel="noopener noreferrer" class="block">
+                          <img
+                            [src]="actividad.get('imagen_fondo')?.value"
+                            alt="Imagen de actividad"
+                            class="h-10 w-14 rounded-md border border-gray-200 object-cover"
+                          />
+                        </a>
+                      } @else {
+                        <span class="text-sm text-gray-400">-</span>
+                      }
                     </td>
                     <td class="px-4 py-3">
                       <div class="flex items-center justify-end gap-2">
@@ -380,6 +406,23 @@
           @if (formActividad.get('imagen_fondo')?.value) {
             <div class="overflow-hidden rounded-xl border border-gray-200 bg-gray-50 p-2">
               <img [src]="formActividad.get('imagen_fondo')?.value" alt="Preview imagen fondo" class="h-48 w-full rounded-lg object-cover" />
+            </div>
+          }
+
+          @if (mostrarModalEditarActividad && getImagenesActividadEditando().length > 0) {
+            <div class="rounded-xl border border-gray-200 bg-gray-50 p-3">
+              <p class="mb-2 text-sm font-semibold text-gray-700">Imagenes registradas</p>
+              <div class="flex flex-wrap items-center gap-2">
+                @for (imagen of getImagenesActividadEditando(); track imagen.id) {
+                  <a [href]="imagen.imagen_url" target="_blank" rel="noopener noreferrer" class="block">
+                    <img
+                      [src]="imagen.imagen_url"
+                      alt="Imagen registrada"
+                      class="h-14 w-20 rounded-md border border-gray-200 object-cover"
+                    />
+                  </a>
+                }
+              </div>
             </div>
           }
 

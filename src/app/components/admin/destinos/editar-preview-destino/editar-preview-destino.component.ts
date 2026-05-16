@@ -137,6 +137,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
 
     try {
       const data = await this.supabase.obtenerPreviewDestinoAdmin(id);
+      this.logRespuestaPreviewDestino(data);
       this.inicializarFormulario(data);
       this.actualizarPreviewUbicacion();
     } catch (error: any) {
@@ -160,6 +161,41 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     this.ubicacionSub?.unsubscribe();
     this.destruirMapaUbicacion();
     this.bloquearScrollBody(false);
+  }
+
+  private logRespuestaPreviewDestino(data: IPreviewDestinoAdmin): void {
+    console.log('[Editar preview destino] Respuesta completa:', data);
+    console.log('[Editar preview destino] Resumen:', {
+      destino_id: data.destino_id,
+      destino_nombre: data.destino_nombre,
+      detalles_destinos_id: data.detalles_destinos_id,
+      total_idiomas: data.idiomas?.length ?? 0,
+      total_traducciones: data.traducciones?.length ?? 0,
+      total_detalles_rapidos: data.detalles_rapidos?.length ?? 0,
+      total_actividades: data.actividades?.length ?? 0,
+      total_imagenes_actividades: (data.actividades ?? []).reduce(
+        (acc, actividad) => acc + (actividad.imagenes?.length ?? 0),
+        0
+      )
+    });
+    console.table(
+      (data.idiomas ?? []).map((idioma) => ({
+        idioma_id: idioma.id,
+        codigo: idioma.codigo,
+        nombre: idioma.nombre
+      }))
+    );
+    console.table(
+      (data.actividades ?? []).map((actividad) => ({
+        actividad_id: actividad.id,
+        imagen_fondo: actividad.imagen_fondo,
+        total_imagenes: actividad.imagenes?.length ?? 0,
+        imagen_activa:
+          actividad.imagenes?.find((imagen) => imagen.activa)?.imagen_url ??
+          actividad.imagenes?.[0]?.imagen_url ??
+          ''
+      }))
+    );
   }
 
   async guardar() {
@@ -229,6 +265,36 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
 
   getControlDetalleRapido(index: number, codigoIdioma: string) {
     return this.detallesRapidosArray.at(index)?.get('valores')?.get(codigoIdioma);
+  }
+
+  getImagenesActividad(index: number): Array<{
+    id: number;
+    imagen_url: string;
+    activa: boolean;
+    orden: number | null;
+    created_at: string | null;
+  }> {
+    return (this.actividadesArray.at(index)?.get('imagenes')?.value ?? []) as Array<{
+      id: number;
+      imagen_url: string;
+      activa: boolean;
+      orden: number | null;
+      created_at: string | null;
+    }>;
+  }
+
+  getImagenesActividadEditando(): Array<{
+    id: number;
+    imagen_url: string;
+    activa: boolean;
+    orden: number | null;
+    created_at: string | null;
+  }> {
+    if (this.indiceActividadEditando === null) {
+      return [];
+    }
+
+    return this.getImagenesActividad(this.indiceActividadEditando);
   }
 
   getNombreIdioma(codigo: string): string {
@@ -792,6 +858,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     return this.fb.group({
       id: [this.parseNumber(item?.id)],
       imagen_fondo: [item?.imagen_fondo ?? '', [Validators.required]],
+      imagenes: [Array.isArray(item?.imagenes) ? item.imagenes : []],
       traducciones: this.fb.group(traducciones)
     });
   }
