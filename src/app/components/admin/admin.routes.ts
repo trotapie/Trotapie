@@ -1,9 +1,11 @@
 import { Routes } from '@angular/router';
 import { AdminComponent } from './admin.component';
 import { AdminHotelesComponent } from './hoteles/admin-hoteles.component';
+import { EditarHotelComponent } from './hoteles/editar-hotel/editar-hotel.component';
 import { AdminActividadesComponent } from './actividades/admin-actividades.component';
 import { SolicitudesCotizacionComponent } from './solicitudes-cotizacion/solicitudes-cotizacion.component';
 import { CotizacionComponent } from './solicitudes-cotizacion/cotizacion/cotizacion.component';
+import { CrearCotizacionComponent } from './solicitudes-cotizacion/crear-cotizacion/crear-cotizacion.component';
 import { DestinosComponent } from './destinos/destinos/destinos.component';
 import { ConfiguracionDestinosComponent } from './destinos/configuracion-destinos/configuracion-destinos.component';
 import { TipoDestinosComponent } from './destinos/tipo-destinos/tipo-destinos.component';
@@ -11,6 +13,7 @@ import { EditarDestinoComponent } from './destinos/editar-destino/editar-destino
 import { EditarPreviewDestinoComponent } from './destinos/editar-preview-destino/editar-preview-destino.component';
 import { CatalogoPlaceholderComponent } from './catalogos/catalogo-placeholder/catalogo-placeholder.component';
 import { AtraccionesDetalleComponent } from './catalogos/atracciones-detalle/atracciones-detalle.component';
+import { EmpleadosComponent } from './empleados/empleados.component';
 
 export default [
     {
@@ -20,6 +23,10 @@ export default [
     {
         path: 'hoteles',
         component: AdminHotelesComponent,
+    },
+    {
+        path: 'hoteles/editar/:id',
+        component: EditarHotelComponent,
     },
     {
         path: 'catalogos',
@@ -64,6 +71,24 @@ export default [
             catalogoKey: 'descuentos',
             titulo: 'Descuentos',
             descripcion: 'Administra los descuentos disponibles dentro del sistema.'
+        }
+    },
+    {
+        path: 'catalogos/estatus-empleado',
+        component: CatalogoPlaceholderComponent,
+        data: {
+            catalogoKey: 'estatus_empleado',
+            titulo: 'Estatus de empleado',
+            descripcion: 'Gestiona estatus disponibles para empleados del sistema.'
+        }
+    },
+    {
+        path: 'catalogos/estatus-cotizacion',
+        component: CatalogoPlaceholderComponent,
+        data: {
+            catalogoKey: 'estatus_cotizacion',
+            titulo: 'Estatus de cotizacion',
+            descripcion: 'Gestiona estatus disponibles para solicitudes de cotizacion.'
         }
     },
     {
@@ -136,6 +161,14 @@ export default [
     {
         path: 'solicitudes-cotizacion',
         component: SolicitudesCotizacionComponent,
+    },
+    {
+        path: 'empleados',
+        component: EmpleadosComponent,
+    },
+    {
+        path: 'solicitudes-cotizacion/nueva',
+        component: CrearCotizacionComponent,
     },
     {
         path: 'edicion-cotizacion/:id',
