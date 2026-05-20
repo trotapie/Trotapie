@@ -13,10 +13,10 @@ import { Estatus } from './estatus.enum';
 export class EstatusComponent {
     @Input() status: Estatus = 'Nuevo';
 
-    estatusSky: Estatus[] = [];
-    estatusYellow: Estatus[] = ['Pendiente'];
-    estatusGreen: Estatus[] = ['Cotizado'];
-    estatusPurple: Estatus[] = [];
+    estatusSky: Estatus[] = ['EN PROCESO', 'En proceso'];
+    estatusYellow: Estatus[] = ['Pendiente', 'Nuevo'];
+    estatusGreen: Estatus[] = ['Cotizado', 'Confirmada', 'CONFIRMADA', 'ACTIVO'];
+    estatusPurple: Estatus[] = ['Cerrado'];
     estatusBrown: Estatus[] = [];
     estatusRed: Estatus[] = ['Cancelado'];
     estatusOrange: Estatus[] = [];

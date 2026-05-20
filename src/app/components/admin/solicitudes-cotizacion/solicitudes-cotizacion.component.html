@@ -1,31 +1,40 @@
-<div #scrollContainer class="absolute inset-0 flex flex-col min-w-0 overflow-y-auto" cdkScrollable>
+<div #scrollContainer class="absolute inset-0 flex flex-col min-w-0 overflow-hidden" cdkScrollable>
 
-    <div class="flex min-w-0 flex-auto flex-col m-6">
-        <div
-            class="flex top-0 z-50 items-center justify-between w-full py-2 px-2 md:px-4 transition-all duration-300 backdrop-blur-md">
-            <div class="text-3xl font-semibold leading-tight">
-                Solicitudes de cotización
-            </div>
-            <!-- <div class="flex justify-end mt-4 mb-2 ml-2">
-                <button mat-fab color="warn" class="mr-2 rounded-full">
-                    <mat-icon class="icon-size-5 icon-thick" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
-                </button>
-            </div> -->
-        </div>
-        <article class="mt-5">
-            <div class="table-shell mat-elevation-z2">
-                <!-- <div class="table-toolbar"> -->
-                <div class="flex justify-end pt-4 px-4">
-                    <mat-form-field appearance="outline" class="w-128 search">
-                        <input matInput (keyup)="applyFilter($event)" placeholder="Escribe para filtrar..." />
-                        <mat-icon matSuffix >search</mat-icon>
-                    </mat-form-field>
+    <div class="flex min-w-0 flex-auto flex-col min-h-0">
+        <div class="sticky top-0 z-[2000] mx-6 mt-2 rounded-xl border border-transparent bg-transparent px-2 py-2 backdrop-blur-md transition-all duration-300 md:px-4">
+            <div class="w-full md:flex md:items-center md:justify-between">
+                <div class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">
+                    Solicitudes de cotización
                 </div>
-                <!-- </div> -->
 
+                <div class="my-2 flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3 md:my-0">
+                    <button mat-raised-button color="accent" class="w-full !text-white sm:w-auto filter-toggle-btn" type="button"
+                        (click)="toggleColumnFilters()">
+                        <mat-icon class="mr-2 icon-size-5 text-white">{{ showColumnFilters ? 'filter_alt_off' : 'filter_alt' }}</mat-icon>
+                        <span class="text-white">{{ showColumnFilters ? 'Ocultar filtros' : 'Mostrar filtros' }}</span>
+                    </button>
+
+                    @if (hasActiveFilters) {
+                    <button mat-raised-button color="warn" class="w-full text-white sm:w-auto" type="button" (click)="clearFilter()">
+                        <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                        Limpiar filtros
+                    </button>
+                    }
+
+                    <button mat-raised-button color="primary" class="w-full text-white sm:w-auto"
+                        [routerLink]="['/admin/solicitudes-cotizacion/nueva']">
+                        <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+                        Crear cotizacion
+                    </button>
+                </div>
+            </div>
+        </div>
+        <article class="m-3 flex-1 min-h-0">
+            <div class="table-shell mat-elevation-z2">
                 <!-- TABLE WRAPPER (SCROLL) -->
-                <div class="overflow-auto h-140 px-4">
-                    <table mat-table [dataSource]="dataSource" matSort class="pretty-table">
+                <div class="table-scroll px-4">
+                    <table mat-table [dataSource]="dataSource" matSort class="pretty-table"
+                        [class.filters-visible]="showColumnFilters">
 
                         <!-- ID -->
                         <ng-container matColumnDef="id">
@@ -118,8 +127,90 @@
                             </td>
                         </ng-container>
 
+                        <!-- Filtro ID -->
+                        <ng-container matColumnDef="idFilter">
+                            <th mat-header-cell *matHeaderCellDef>
+                                <mat-form-field appearance="outline" class="column-filter">
+                                    <input matInput [value]="columnFilters.id" (input)="applyColumnFilter('id', $event)" placeholder="Filtrar"
+                                        [disabled]="!showColumnFilters" [tabIndex]="showColumnFilters ? 0 : -1" />
+                                </mat-form-field>
+                            </th>
+                        </ng-container>
+
+                        <!-- Filtro Cliente -->
+                        <ng-container matColumnDef="clienteFilter">
+                            <th mat-header-cell *matHeaderCellDef>
+                                <mat-form-field appearance="outline" class="column-filter">
+                                    <input matInput [value]="columnFilters.cliente" (input)="applyColumnFilter('cliente', $event)" placeholder="Filtrar"
+                                        [disabled]="!showColumnFilters" [tabIndex]="showColumnFilters ? 0 : -1" />
+                                </mat-form-field>
+                            </th>
+                        </ng-container>
+
+                        <!-- Filtro Hotel -->
+                        <ng-container matColumnDef="hotelFilter">
+                            <th mat-header-cell *matHeaderCellDef>
+                                <mat-form-field appearance="outline" class="column-filter">
+                                    <input matInput [value]="columnFilters.hotel" (input)="applyColumnFilter('hotel', $event)" placeholder="Filtrar"
+                                        [disabled]="!showColumnFilters" [tabIndex]="showColumnFilters ? 0 : -1" />
+                                </mat-form-field>
+                            </th>
+                        </ng-container>
+
+                        <!-- Filtro Destino -->
+                        <ng-container matColumnDef="destinoFilter">
+                            <th mat-header-cell *matHeaderCellDef>
+                                <mat-form-field appearance="outline" class="column-filter">
+                                    <input matInput [value]="columnFilters.destino" (input)="applyColumnFilter('destino', $event)" placeholder="Filtrar"
+                                        [disabled]="!showColumnFilters" [tabIndex]="showColumnFilters ? 0 : -1" />
+                                </mat-form-field>
+                            </th>
+                        </ng-container>
+
+                        <!-- Filtro Tipo -->
+                        <ng-container matColumnDef="tipoDestinoFilter">
+                            <th mat-header-cell *matHeaderCellDef>
+                                <mat-form-field appearance="outline" class="column-filter">
+                                    <input matInput [value]="columnFilters.tipoDestino" (input)="applyColumnFilter('tipoDestino', $event)" placeholder="Filtrar"
+                                        [disabled]="!showColumnFilters" [tabIndex]="showColumnFilters ? 0 : -1" />
+                                </mat-form-field>
+                            </th>
+                        </ng-container>
+
+                        <!-- Filtro Empleado -->
+                        <ng-container matColumnDef="empleadoFilter">
+                            <th mat-header-cell *matHeaderCellDef>
+                                <mat-form-field appearance="outline" class="column-filter">
+                                    <input matInput [value]="columnFilters.empleado" (input)="applyColumnFilter('empleado', $event)" placeholder="Filtrar"
+                                        [disabled]="!showColumnFilters" [tabIndex]="showColumnFilters ? 0 : -1" />
+                                </mat-form-field>
+                            </th>
+                        </ng-container>
+
+                        <!-- Filtro Estatus -->
+                        <ng-container matColumnDef="estatusFilter">
+                            <th mat-header-cell *matHeaderCellDef>
+                                <mat-form-field appearance="outline" class="column-filter">
+                                    <mat-select [value]="columnFilters.estatus" (selectionChange)="setEstatusFilter($event.value)"
+                                        [disabled]="!showColumnFilters">
+                                        <mat-option value="">Todos</mat-option>
+                                        @for (estatus of estatusOptions; track estatus) {
+                                        <mat-option [value]="estatus">{{ estatus }}</mat-option>
+                                        }
+                                    </mat-select>
+                                </mat-form-field>
+                            </th>
+                        </ng-container>
+
+                        <!-- Columna vacia para acciones -->
+                        <ng-container matColumnDef="accionesFilter">
+                            <th mat-header-cell *matHeaderCellDef class="actions-col"></th>
+                        </ng-container>
+
                         <!-- Header / Rows -->
-                        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+                        <tr mat-header-row *matHeaderRowDef="filterColumns; sticky: true" class="filter-row"
+                            [class.hidden]="!showColumnFilters"></tr>
+                        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true" class="main-header-row"></tr>
                         <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="row"></tr>
 
                         <!-- Empty state -->
@@ -150,3 +241,6 @@
         </article>
     </div>
 </div>
+
+
+

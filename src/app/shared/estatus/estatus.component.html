@@ -23,7 +23,14 @@
         <ng-container [ngSwitch]="status">
             <mat-icon *ngSwitchCase="'Pendiente'" class="w-5 h-5 text-yellow-600 slow-spin"
                 [svgIcon]="'heroicons_outline:clock'"></mat-icon>
+            <mat-icon *ngSwitchCase="'Nuevo'" class="w-5 h-5 text-yellow-600 slow-spin"
+                [svgIcon]="'heroicons_outline:clock'"></mat-icon>
             <svg *ngSwitchCase="'EN PROCESO'" xmlns="http://www.w3.org/2000/svg" height="24px"
+                class="w-5 h-5 text-sky-400 slow-spin" viewBox="0 -960 960 960" width="24px" fill="currentColor">
+                <path
+                    d="M440-760v-160h80v160h-80Zm266 110-55-55 112-115 56 57-113 113Zm54 210v-80h160v80H760ZM440-40v-160h80v160h-80ZM254-652 140-763l57-56 113 113-56 54Zm508 512L651-255l54-54 114 110-57 59ZM40-440v-80h160v80H40Zm157 300-56-57 112-112 29 27 29 28-114 114Z" />
+            </svg>
+            <svg *ngSwitchCase="'En proceso'" xmlns="http://www.w3.org/2000/svg" height="24px"
                 class="w-5 h-5 text-sky-400 slow-spin" viewBox="0 -960 960 960" width="24px" fill="currentColor">
                 <path
                     d="M440-760v-160h80v160h-80Zm266 110-55-55 112-115 56 57-113 113Zm54 210v-80h160v80H760ZM440-40v-160h80v160h-80ZM254-652 140-763l57-56 113 113-56 54Zm508 512L651-255l54-54 114 110-57 59ZM40-440v-80h160v80H40Zm157 300-56-57 112-112 29 27 29 28-114 114Z" />
@@ -123,8 +130,17 @@
 
                 </svg>
 
-                <svg *ngIf="status === 'Cotizado'"
+                <svg *ngIf="status === 'Cotizado' || status === 'ACTIVO'"
                     xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-green-600" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M9 12l2 2l4 -4" stroke-dasharray="12" stroke-dashoffset="12">
+                        <animate attributeName="stroke-dashoffset" values="12;0;0;12" keyTimes="0;0.6;0.9;1" dur="2s"
+                        repeatCount="indefinite" />
+                    </path>
+                </svg>
+                <svg *ngIf="status === 'Confirmada' || status === 'CONFIRMADA' || status === 'Cerrado'"
+                    xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-purple-600" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10" />
                     <path d="M9 12l2 2l4 -4" stroke-dasharray="12" stroke-dashoffset="12">

@@ -71,6 +71,8 @@ export type CatalogoAdminKey =
   | 'conceptos'
   | 'continentes'
   | 'descuentos'
+  | 'estatus_empleado'
+  | 'estatus_cotizacion'
   | 'idiomas'
   | 'politicas'
   | 'regimen_hotel'
@@ -81,6 +83,8 @@ export type CatalogoAdminKey =
 
 @Injectable({ providedIn: 'root' })
 export class SupabaseService {
+  private readonly traduccionEndpoint =
+    'https://script.google.com/macros/s/AKfycbwJ64gxjQiSsfZzixzr0tIe1na6tM81oAAW9Cjt8uuI53DDSaaAn_UMl2zgU69ZYyg3/exec';
   private client: SupabaseClient;
   private transloco = inject(TranslocoService);
 
@@ -369,11 +373,54 @@ export class SupabaseService {
     return datos;
   }
 
-  empleados() {
-    return this.client
+  empleados(options?: { incluirInhabilitados?: boolean }) {
+    let query = this.client
       .from('empleados')
       .select('*')
       .order('id', { ascending: true });
+
+    if (!options?.incluirInhabilitados) {
+      query = query.or('estatus_id.is.null,estatus_id.eq.1');
+    }
+
+    return query;
+  }
+
+  async crearEmpleadoAdmin(payload: { nombre: string }) {
+    const nombre = String(payload.nombre ?? '').trim();
+    const { data, error } = await this.client
+      .from('empleados')
+      .insert({ nombre, estatus_id: 1 })
+      .select('id, nombre, estatus_id, created_at')
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async actualizarEmpleadoAdmin(id: number, payload: { nombre: string }) {
+    const nombre = String(payload.nombre ?? '').trim();
+    const { data, error } = await this.client
+      .from('empleados')
+      .update({ nombre })
+      .eq('id', id)
+      .select('id, nombre, estatus_id, created_at')
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async actualizarEstatusEmpleadoAdmin(id: number, estatusId: number) {
+    const { data, error } = await this.client
+      .from('empleados')
+      .update({ estatus_id: estatusId })
+      .eq('id', id)
+      .select('id, nombre, estatus_id, created_at')
+      .single();
+
+    if (error) throw error;
+    return data;
   }
 
   continentes() {
@@ -1386,11 +1433,50 @@ export class SupabaseService {
     const { data, error } = await this.client
       .from('solicitudes_cotizacion')
       .insert(payload)
-      .select('id')
+      .select('id, public_id')
       .single();
 
     if (error) throw error;
-    return data; // { id }
+    return data; // { id, public_id }
+  }
+
+  async enviarCorreoCotizacion(payload: {
+    to_email: string;
+    to_name?: string | null;
+    hotel_nombre?: string | null;
+    fecha_entrada?: string | Date | null;
+    fecha_salida?: string | Date | null;
+    noches?: number | null;
+    telefono?: string | null;
+    public_id?: string | null;
+  }) {
+    const toEmail = String(payload?.to_email ?? '').trim();
+    if (!toEmail) {
+      throw new Error('No hay email de destino.');
+    }
+
+    const { data, error } = await this.client.functions.invoke('enviar-correo', {
+      body: {
+        correo: toEmail,
+        nombre: payload?.to_name ?? '',
+        hotel: payload?.hotel_nombre ?? '',
+        fecha_entrada: payload?.fecha_entrada ?? null,
+        fecha_salida: payload?.fecha_salida ?? null,
+        noches: payload?.noches ?? null,
+        telefono: payload?.telefono ?? null,
+        public_id: payload?.public_id ?? null
+      }
+    });
+
+    if (error) {
+      throw new Error(error.message ?? 'No se pudo enviar la cotizacion por correo.');
+    }
+
+    if ((data as any)?.ok === false) {
+      throw new Error((data as any)?.message ?? 'No se pudo enviar la cotizacion por correo.');
+    }
+
+    return data;
   }
 
   addHotel(payload: { nombre: string; ciudad: string; descripcion?: string }) {
@@ -1781,6 +1867,270 @@ export class SupabaseService {
     if (errorTraduccion) throw errorTraduccion;
   }
 
+  async obtenerActividadesAdmin() {
+    const { data, error } = await this.client
+      .from('actividades')
+      .select('id, descripcion, activo, orden')
+      .order('orden', { ascending: true })
+      .order('id', { ascending: true });
+
+    if (error) throw error;
+
+    return (data ?? []).map((item: any) => ({
+      id: Number(item.id),
+      descripcion: item.descripcion ?? `Actividad ${item.id}`,
+      activo: item.activo ?? true,
+      orden: item.orden ?? null
+    }));
+  }
+
+  async obtenerDescuentosAdmin() {
+    const { data, error } = await this.client
+      .from('descuentos')
+      .select('id, tipo_descuento, icono')
+      .order('id', { ascending: true });
+
+    if (error) throw error;
+
+    return (data ?? []).map((item: any) => ({
+      id: Number(item.id),
+      tipo_descuento: item.tipo_descuento ?? `Descuento ${item.id}`,
+      icono: item.icono ?? null
+    }));
+  }
+
+  async obtenerTiposImagenAdmin() {
+    const { data, error } = await this.client
+      .from('tipos_imagen')
+      .select(`
+        id,
+        clave,
+        orden,
+        traducciones:tipos_imagen_traducciones!fk_tipo_imagen (
+          lang,
+          descripcion
+        )
+      `)
+      .order('orden', { ascending: true })
+      .order('id', { ascending: true });
+
+    if (error) throw error;
+
+    return (data ?? []).map((item: any) => {
+      const traduccionEs = item?.traducciones?.find((x: any) => String(x.lang).toLowerCase() === 'es');
+      return {
+        id: Number(item.id),
+        clave: item.clave ?? '',
+        descripcion: traduccionEs?.descripcion ?? item.clave ?? `Tipo ${item.id}`,
+        orden: item.orden ?? null
+      };
+    });
+  }
+
+  async traducirDesdeEspanol(payload: { title: string; description: string }) {
+    const response = await fetch(this.traduccionEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain;charset=utf-8'
+      },
+      body: JSON.stringify({
+        title: payload.title ?? '',
+        description: payload.description ?? ''
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('No se pudo traducir el contenido.');
+    }
+
+    const data = await response.json();
+    const traducciones = data?.data;
+    return traducciones && typeof traducciones === 'object' ? traducciones : {};
+  }
+
+  async crearHotelDetalleAdmin(payload: {
+    nombre_hotel: string;
+    descripcion: string | null;
+    orden: number | null;
+    estrellas: number | null;
+    fondo: string | null;
+    ubicacion: string | null;
+    destino_id: number;
+    descuento_id: number | null;
+    regimen_id: number | null;
+    regimen_ids: number[];
+    actividad_ids: number[];
+    imagenes: Array<{
+      url_imagen: string;
+      tipo_imagen_id: number | null;
+    }>;
+    traducciones?: Array<{
+      idioma_id: number;
+      nombre_hotel: string;
+      descripcion: string | null;
+    }>;
+  }) {
+    const descuentoIdNormalizado = payload.descuento_id === null || payload.descuento_id === undefined
+      ? null
+      : Number(payload.descuento_id);
+    const descuentoId = Number.isFinite(descuentoIdNormalizado) ? descuentoIdNormalizado : null;
+
+    const { data: hotelCreado, error: createError } = await this.client
+      .from('hoteles')
+      .insert({
+        destino_id: payload.destino_id,
+        descuento_id: descuentoId,
+        regimen_id: payload.regimen_id,
+        orden: payload.orden,
+        estrellas: payload.estrellas,
+        fondo: payload.fondo,
+        ubicacion: payload.ubicacion
+      })
+      .select('id')
+      .single();
+
+    if (createError) throw createError;
+
+    const hotelId = Number(hotelCreado?.id);
+    if (!Number.isFinite(hotelId)) {
+      throw new Error('No se pudo crear el hotel.');
+    }
+
+    await this.actualizarHotelDetalleAdmin({
+      hotelId,
+      ...payload
+    });
+
+    return hotelId;
+  }
+
+  async actualizarHotelDetalleAdmin(payload: {
+    hotelId: number;
+    nombre_hotel: string;
+    descripcion: string | null;
+    orden: number | null;
+    estrellas: number | null;
+    fondo: string | null;
+    ubicacion: string | null;
+    destino_id: number;
+    descuento_id: number | null;
+    regimen_id: number | null;
+    regimen_ids: number[];
+    actividad_ids: number[];
+    imagenes: Array<{
+      url_imagen: string;
+      tipo_imagen_id: number | null;
+    }>;
+    traducciones?: Array<{
+      idioma_id: number;
+      nombre_hotel: string;
+      descripcion: string | null;
+    }>;
+  }) {
+    const hotelId = Number(payload.hotelId);
+    if (!Number.isFinite(hotelId)) {
+      throw new Error('Hotel invalido para actualizar.');
+    }
+
+    const descuentoIdNormalizado = payload.descuento_id === null || payload.descuento_id === undefined
+      ? null
+      : Number(payload.descuento_id);
+    const descuentoId = Number.isFinite(descuentoIdNormalizado) ? descuentoIdNormalizado : null;
+
+    const regimenesIds = [...new Set((payload.regimen_ids ?? []).map((id) => Number(id)).filter((id) => Number.isFinite(id) && id > 0))];
+    const actividadesIds = [...new Set((payload.actividad_ids ?? []).map((id) => Number(id)).filter((id) => Number.isFinite(id) && id > 0))];
+    const imagenes = (payload.imagenes ?? [])
+      .map((item) => ({
+        url_imagen: (item.url_imagen ?? '').trim(),
+        tipo_imagen_id: item.tipo_imagen_id ? Number(item.tipo_imagen_id) : null
+      }))
+      .filter((item) => item.url_imagen.length > 0);
+
+    const { error: hotelError } = await this.client
+      .from('hoteles')
+      .update({
+        destino_id: payload.destino_id,
+        descuento_id: descuentoId,
+        regimen_id: payload.regimen_id,
+        orden: payload.orden,
+        estrellas: payload.estrellas,
+        fondo: payload.fondo,
+        ubicacion: payload.ubicacion
+      })
+      .eq('id', hotelId);
+
+    if (hotelError) throw hotelError;
+
+    const traduccionesPayload = (payload.traducciones?.length
+      ? payload.traducciones
+      : [
+          {
+            idioma_id: ES_ID,
+            nombre_hotel: payload.nombre_hotel,
+            descripcion: payload.descripcion
+          }
+        ]
+    )
+      .map((item) => ({
+        hotel_id: hotelId,
+        idioma_id: Number(item.idioma_id),
+        nombre_hotel: (item.nombre_hotel ?? '').trim(),
+        descripcion: item.descripcion
+      }))
+      .filter((item) => Number.isFinite(item.idioma_id) && item.idioma_id > 0 && item.nombre_hotel.length > 0);
+
+    const { error: traduccionError } = await this.client
+      .from('hotel_traducciones')
+      .upsert(traduccionesPayload, { onConflict: 'hotel_id,idioma_id' });
+
+    if (traduccionError) throw traduccionError;
+
+    const { error: deleteRegimenesError } = await this.client
+      .from('regimen_hotel')
+      .delete()
+      .eq('hotel_id', hotelId);
+    if (deleteRegimenesError) throw deleteRegimenesError;
+
+    if (regimenesIds.length > 0) {
+      const { error: insertRegimenesError } = await this.client
+        .from('regimen_hotel')
+        .insert(regimenesIds.map((regimenId) => ({ hotel_id: hotelId, regimen_id: regimenId })));
+      if (insertRegimenesError) throw insertRegimenesError;
+    }
+
+    const { error: deleteActividadesError } = await this.client
+      .from('actividades_hotel')
+      .delete()
+      .eq('hotel_id', hotelId);
+    if (deleteActividadesError) throw deleteActividadesError;
+
+    if (actividadesIds.length > 0) {
+      const { error: insertActividadesError } = await this.client
+        .from('actividades_hotel')
+        .insert(actividadesIds.map((actividadId) => ({ hotel_id: hotelId, actividad_id: actividadId })));
+      if (insertActividadesError) throw insertActividadesError;
+    }
+
+    const { error: deleteImagenesError } = await this.client
+      .from('imagenes_hoteles')
+      .delete()
+      .eq('hotel_id', hotelId);
+    if (deleteImagenesError) throw deleteImagenesError;
+
+    if (imagenes.length > 0) {
+      const payloadImagenes = imagenes.map((item) => ({
+        hotel_id: hotelId,
+        url_imagen: item.url_imagen,
+        tipo_imagen_id: item.tipo_imagen_id
+      }));
+
+      const { error: insertImagenesError } = await this.client
+        .from('imagenes_hoteles')
+        .insert(payloadImagenes);
+      if (insertImagenesError) throw insertImagenesError;
+    }
+  }
+
   async obtenerCatalogoAdmin(catalogo: CatalogoAdminKey): Promise<any[]> {
     switch (catalogo) {
       case 'actividades': {
@@ -1812,6 +2162,24 @@ export class SupabaseService {
         const { data, error } = await this.client
           .from('descuentos')
           .select('id, tipo_descuento, icono')
+          .order('id', { ascending: true });
+        if (error) throw error;
+        return data ?? [];
+      }
+      case 'estatus_empleado': {
+        const { data, error } = await this.client
+          .from('estatus_empleado')
+          .select('id, clave, nombre, activo, orden')
+          .order('orden', { ascending: true })
+          .order('id', { ascending: true });
+        if (error) throw error;
+        return data ?? [];
+      }
+      case 'estatus_cotizacion': {
+        const { data, error } = await this.client
+          .from('estatus_cotizacion')
+          .select('id, clave, nombre, activo, orden')
+          .order('orden', { ascending: true })
           .order('id', { ascending: true });
         if (error) throw error;
         return data ?? [];
@@ -1944,6 +2312,8 @@ export class SupabaseService {
       conceptos: null,
       continentes: null,
       descuentos: null,
+      estatus_empleado: 'estatus_empleado',
+      estatus_cotizacion: 'estatus_cotizacion',
       idiomas: 'idiomas',
       politicas: null,
       regimen_hotel: null,
@@ -2026,6 +2396,34 @@ export class SupabaseService {
           .update({
             tipo_descuento: payload.tipo_descuento ?? null,
             icono: payload.icono ?? null
+          })
+          .eq('id', id)
+          .select('id')
+          .maybeSingle();
+        if (error) throw error;
+        return data;
+      }
+      case 'estatus_empleado': {
+        const { data, error } = await this.client
+          .from('estatus_empleado')
+          .update({
+            clave: payload.clave ?? null,
+            nombre: payload.nombre ?? null,
+            activo: payload.activo ?? null
+          })
+          .eq('id', id)
+          .select('id')
+          .maybeSingle();
+        if (error) throw error;
+        return data;
+      }
+      case 'estatus_cotizacion': {
+        const { data, error } = await this.client
+          .from('estatus_cotizacion')
+          .update({
+            clave: payload.clave ?? null,
+            nombre: payload.nombre ?? null,
+            activo: payload.activo ?? null
           })
           .eq('id', id)
           .select('id')
@@ -2150,3 +2548,4 @@ export class SupabaseService {
   }
 
 }
+

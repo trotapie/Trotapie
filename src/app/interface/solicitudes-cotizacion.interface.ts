@@ -1,5 +1,7 @@
 export interface ISolicitudCotizacionListado {
   id: number;
+  public_id?: string;
+  fecha_creacion?: string | Date;
   cliente_nombre: string;
   cliente_email: string;
   cliente_telefono: number;

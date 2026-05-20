@@ -2,6 +2,20 @@
     border-radius: 16px;
     overflow: hidden;
     background: var(--mat-sys-surface, #fff);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+:host {
+    --filters-row-height: 88px;
+}
+
+.table-scroll {
+    overflow: auto;
+    flex: 1;
+    min-height: 0;
 }
 
 .table-toolbar {
@@ -62,6 +76,68 @@
 .mat-mdc-header-cell {
     font-size: 18px;
     font-weight: 700;
+}
+
+:host ::ng-deep .mat-mdc-button-base.mat-primary {
+    color: #fff !important;
+}
+
+:host ::ng-deep .filter-toggle-btn,
+:host ::ng-deep .filter-toggle-btn .mat-icon {
+    color: #fff !important;
+}
+
+.filter-row .mat-mdc-header-cell {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+    background: var(--mat-sys-surface, #fff);
+    height: var(--filters-row-height);
+    min-height: var(--filters-row-height);
+}
+
+:host ::ng-deep .filter-row {
+    position: sticky;
+    top: 0 !important;
+    z-index: 12 !important;
+}
+
+:host ::ng-deep .main-header-row {
+    position: sticky;
+    top: 0 !important;
+    z-index: 11 !important;
+}
+
+:host ::ng-deep .pretty-table.filters-visible .main-header-row {
+    top: var(--filters-row-height) !important;
+}
+
+:host ::ng-deep .main-header-row .mat-mdc-header-cell {
+    background: var(--mat-sys-surface, #fff);
+}
+
+.filter-row.hidden .column-filter {
+    opacity: 0;
+    pointer-events: none;
+}
+
+:host ::ng-deep .filter-row.hidden {
+    display: none !important;
+}
+
+.column-filter {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    margin: 0;
+}
+
+.column-filter .mat-mdc-form-field-subscript-wrapper {
+    display: none;
+}
+
+:host ::ng-deep .column-filter .mat-mdc-form-field-infix {
+    width: auto;
+    min-width: 0;
 }
 
 .row {
@@ -127,6 +203,7 @@
 
 .actions-col {
     width: 60px;
+    min-width: 60px;
     text-align: right;
 }
 

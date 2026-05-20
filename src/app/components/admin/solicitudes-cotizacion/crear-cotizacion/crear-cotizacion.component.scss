@@ -1,0 +1,111 @@
+.panel {
+    border-radius: 16px;
+    background: var(--mat-sys-surface, #fff);
+    padding: 20px;
+}
+
+.form-grid {
+    display: grid;
+    gap: 16px;
+}
+
+.card {
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 14px;
+    padding: 16px;
+    display: grid;
+    gap: 12px;
+}
+
+.section-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.rooms-shell {
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    padding: 12px;
+    display: grid;
+    gap: 12px;
+}
+
+.rooms-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 14px;
+}
+
+.rooms-list {
+    display: grid;
+    gap: 10px;
+}
+
+.room-card {
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    padding: 12px;
+    display: grid;
+    gap: 10px;
+}
+
+.room-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.room-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.label {
+    font-weight: 600;
+}
+
+.hint {
+    font-size: 12px;
+    opacity: 0.75;
+}
+
+.counter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ages-grid {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+
+.warn-text {
+    margin: 0;
+    color: #b91c1c;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.rooms-footer {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+:host ::ng-deep .mat-mdc-raised-button.mat-primary,
+:host ::ng-deep .mat-mdc-unelevated-button.mat-primary,
+:host ::ng-deep .mat-mdc-fab.mat-primary,
+:host ::ng-deep .mat-mdc-mini-fab.mat-primary {
+    color: #fff !important;
+}

@@ -1,0 +1,285 @@
+<div class="absolute inset-0 flex min-w-0 flex-col overflow-y-auto">
+    <div class="mx-6 my-6 flex min-w-0 flex-auto flex-col gap-4">
+        <div class="sticky top-0 z-[2000] mb-2 w-full rounded-xl border border-transparent bg-transparent px-2 py-2 backdrop-blur-md transition-all duration-300 md:px-4">
+            <div class="w-full md:flex md:items-center md:justify-between">
+                <div>
+                    <h1 class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">Crear cotizacion</h1>
+                    <p class="text-secondary">Completa los datos para generar una nueva solicitud.</p>
+                </div>
+
+                <div class="my-2 flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3 md:my-0">
+                    <button mat-raised-button color="warn" class="w-full text-white sm:w-auto" [routerLink]="['/admin/solicitudes-cotizacion']">
+                        <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
+                        Regresar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        @if (error) {
+        <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {{ error }}
+        </div>
+        }
+
+        <div class="panel mat-elevation-z2">
+            @if (cargando) {
+            <div class="flex h-40 items-center justify-center">
+                <mat-progress-spinner diameter="36" mode="indeterminate"></mat-progress-spinner>
+            </div>
+            } @else {
+            <form [formGroup]="form" class="form-grid">
+                <section class="card">
+                    <h2 class="section-title">Destino y Hotel</h2>
+
+                    <div class="mb-3 flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+                        <button mat-stroked-button class="w-full sm:w-auto" type="button"
+                            [color]="tipoBusqueda === 'NACIONAL' ? 'primary' : undefined"
+                            (click)="cambiarTipoBusqueda('NACIONAL')">
+                            Nacional
+                        </button>
+                        <button mat-stroked-button class="w-full sm:w-auto" type="button"
+                            [color]="tipoBusqueda === 'INTERNACIONAL' ? 'primary' : undefined"
+                            (click)="cambiarTipoBusqueda('INTERNACIONAL')">
+                            Internacional
+                        </button>
+                    </div>
+
+                    @if (tipoBusqueda === 'NACIONAL') {
+                    <mat-form-field class="w-full">
+                        <mat-label>Destino nacional</mat-label>
+                        <mat-select [value]="destinoNacionalId" (valueChange)="seleccionarDestinoNacional($event)">
+                            <mat-option [value]="null">Selecciona destino</mat-option>
+                            @for (destino of destinosNacionales; track destino.id) {
+                            <mat-option [value]="destino.id">{{ destino.nombre }}</mat-option>
+                            }
+                        </mat-select>
+                    </mat-form-field>
+                    } @else {
+                    <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+                        <mat-form-field class="w-full">
+                            <mat-label>Continente</mat-label>
+                            <mat-select [value]="continenteSeleccionadoId" (valueChange)="seleccionarContinente($event)">
+                                <mat-option [value]="null">Selecciona continente</mat-option>
+                                @for (continente of continentes; track continente.id) {
+                                <mat-option [value]="continente.id">{{ continente.nombre }}</mat-option>
+                                }
+                            </mat-select>
+                        </mat-form-field>
+
+                        <mat-form-field class="w-full">
+                            <mat-label>Destino</mat-label>
+                            <mat-select [value]="paisSeleccionadoId" (valueChange)="seleccionarPais($event)"
+                                [disabled]="!continenteSeleccionadoId">
+                                <mat-option [value]="null">Selecciona destino</mat-option>
+                                @for (pais of paisesInternacionales; track pais.id) {
+                                <mat-option [value]="pais.id">{{ pais.nombre }}</mat-option>
+                                }
+                            </mat-select>
+                        </mat-form-field>
+
+                        <mat-form-field class="w-full">
+                            <mat-label>Ciudad</mat-label>
+                            <mat-select [value]="ciudadInternacionalId" (valueChange)="seleccionarCiudadInternacional($event)"
+                                [disabled]="!paisSeleccionadoId">
+                                <mat-option [value]="null">Selecciona ciudad</mat-option>
+                                @for (ciudad of ciudadesInternacionales; track ciudad.id) {
+                                <mat-option [value]="ciudad.id">{{ ciudad.nombre }}</mat-option>
+                                }
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                    }
+
+                    <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                        <mat-form-field class="w-full">
+                            <mat-label>Hotel</mat-label>
+                            <mat-select formControlName="hotel_id" [disabled]="cargandoHoteles || !hoteles.length"
+                                (valueChange)="onHotelChange($event)">
+                                <mat-option [value]="null">Selecciona hotel</mat-option>
+                                @for (hotel of hoteles; track hotel.id) {
+                                <mat-option [value]="hotel.id">{{ hotel.nombre_hotel }}</mat-option>
+                                }
+                            </mat-select>
+                            @if (cargandoHoteles) {
+                            <mat-hint>Cargando hoteles...</mat-hint>
+                            } @else if (!hoteles.length) {
+                            <mat-hint>Selecciona destino para ver hoteles.</mat-hint>
+                            }
+                        </mat-form-field>
+
+                        <mat-form-field class="w-full">
+                            <mat-label>Regimen</mat-label>
+                            <mat-select formControlName="regimen_id"
+                                [disabled]="cargandoRegimenes || !regimenes.length || !form.get('hotel_id')?.value">
+                                <mat-option [value]="null">Selecciona regimen</mat-option>
+                                @for (regimen of regimenes; track regimen.id) {
+                                <mat-option [value]="regimen.id">{{ regimen.descripcion }}</mat-option>
+                                }
+                            </mat-select>
+                            @if (cargandoRegimenes) {
+                            <mat-hint>Cargando regimenes...</mat-hint>
+                            } @else if (form.get('hotel_id')?.value && !regimenes.length) {
+                            <mat-hint>Este hotel no tiene regimenes disponibles.</mat-hint>
+                            }
+                        </mat-form-field>
+                    </div>
+                </section>
+
+                <section class="card">
+                    <h2 class="section-title">Fechas y Personas</h2>
+
+                    <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                        <mat-form-field class="w-full" [formGroupName]="'rangoFechas'">
+                            <mat-label>Rango de fechas ({{ noches }} noches)</mat-label>
+                            <mat-date-range-input [rangePicker]="picker" [dateFilter]="dateFilter">
+                                <input matStartDate placeholder="Fecha entrada" formControlName="start" />
+                                <input matEndDate placeholder="Fecha salida" formControlName="end" />
+                            </mat-date-range-input>
+                            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+                            <mat-date-range-picker #picker></mat-date-range-picker>
+                        </mat-form-field>
+
+                        <mat-form-field class="w-full">
+                            <mat-label>Resumen</mat-label>
+                            <input matInput [value]="fechaSalida ? ('Salida: ' + fechaSalida) : 'Selecciona un rango'" disabled />
+                        </mat-form-field>
+                    </div>
+
+                    <div class="rooms-shell">
+                        <div class="rooms-head">
+                            <strong>Habitaciones y personas</strong>
+                            <span>{{ labelHabitaciones() }}</span>
+                        </div>
+
+                        <div class="rooms-list">
+                            @for (room of rooms(); track $index; let i = $index) {
+                            <div class="room-card">
+                                <div class="room-title">
+                                    <span>Habitacion {{ i + 1 }}</span>
+                                    <button mat-icon-button type="button" (click)="removeRoom(i)" [disabled]="rooms().length === 1">
+                                        <mat-icon>delete</mat-icon>
+                                    </button>
+                                </div>
+
+                                <div class="room-row">
+                                    <div>
+                                        <div class="label">Adultos</div>
+                                        <div class="hint">+18 anos</div>
+                                    </div>
+                                    <div class="counter">
+                                        <button mat-mini-fab type="button" (click)="decAdults(i)" [disabled]="room.adults <= MIN_ADULTS">
+                                            <mat-icon>remove</mat-icon>
+                                        </button>
+                                        <span>{{ room.adults }}</span>
+                                        <button mat-mini-fab type="button" (click)="incAdults(i)"
+                                            [disabled]="(room.adults + room.children) >= MAX_PER_ROOM">
+                                            <mat-icon>add</mat-icon>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="room-row">
+                                    <div>
+                                        <div class="label">Menores</div>
+                                        <div class="hint">-18 anos</div>
+                                    </div>
+                                    <div class="counter">
+                                        <button mat-mini-fab type="button" (click)="decChildren(i)" [disabled]="room.children <= 0">
+                                            <mat-icon>remove</mat-icon>
+                                        </button>
+                                        <span>{{ room.children }}</span>
+                                        <button mat-mini-fab type="button" (click)="incChildren(i)"
+                                            [disabled]="(room.adults + room.children) >= MAX_PER_ROOM">
+                                            <mat-icon>add</mat-icon>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                @if (room.children > 0) {
+                                <div class="ages-grid">
+                                    @for (age of room.childAges; track $index; let j = $index) {
+                                    <mat-form-field class="w-full" appearance="outline">
+                                        <mat-label>Edad menor {{ j + 1 }}</mat-label>
+                                        <mat-select [value]="age" (selectionChange)="setChildAge(i, j, $event.value)">
+                                            <mat-option [value]="null">Selecciona edad</mat-option>
+                                            @for (option of ageOptions; track option) {
+                                            <mat-option [value]="option">{{ option }}</mat-option>
+                                            }
+                                        </mat-select>
+                                    </mat-form-field>
+                                    }
+                                </div>
+                                }
+
+                                @if (roomNeedsAges(room)) {
+                                <p class="warn-text">Selecciona edad para todos los menores.</p>
+                                }
+                            </div>
+                            }
+                        </div>
+
+                        <div class="rooms-footer">
+                            <button mat-stroked-button class="w-full sm:w-auto" type="button" (click)="addRoom()"
+                                [disabled]="rooms().length >= MAX_ROOMS">
+                                <mat-icon class="mr-2 icon-size-5">add</mat-icon>
+                                Agregar habitacion
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="card">
+                    <h2 class="section-title">Datos del Cliente</h2>
+
+                    <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                        <mat-form-field class="w-full">
+                            <mat-label>Nombre</mat-label>
+                            <input matInput formControlName="nombre" />
+                        </mat-form-field>
+
+                        <mat-form-field class="w-full">
+                            <mat-label>Telefono</mat-label>
+                            <input matInput formControlName="telefono" (input)="onTelefonoInput($event)" />
+                        </mat-form-field>
+
+                        <mat-form-field class="w-full">
+                            <mat-label>Correo</mat-label>
+                            <input matInput formControlName="correo" />
+                        </mat-form-field>
+
+                        <mat-form-field class="w-full">
+                            <mat-label>Asesor</mat-label>
+                            <mat-select formControlName="asesor_id">
+                                <mat-option [value]="null">Selecciona asesor</mat-option>
+                                @for (asesor of asesores; track asesor.id) {
+                                <mat-option [value]="asesor.id">{{ asesor.nombre }}</mat-option>
+                                }
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+
+                    <mat-checkbox formControlName="ofertas">Recibir ofertas</mat-checkbox>
+
+                    <mat-form-field class="w-full">
+                        <mat-label>Peticiones especiales</mat-label>
+                        <textarea matInput rows="3" formControlName="especiales"></textarea>
+                    </mat-form-field>
+                </section>
+
+                <div class="actions">
+                    <button mat-raised-button color="primary" class="w-full text-white sm:w-auto" type="button"
+                        [disabled]="guardando || hasMissingAges() || form.invalid" (click)="crearCotizacion()">
+                        <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+                        @if (guardando) {
+                        Creando...
+                        } @else {
+                        Crear cotizacion
+                        }
+                    </button>
+                </div>
+            </form>
+            }
+        </div>
+    </div>
+</div>
