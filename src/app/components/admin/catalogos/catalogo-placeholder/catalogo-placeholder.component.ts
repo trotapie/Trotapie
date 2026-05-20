@@ -69,6 +69,30 @@ export class CatalogoPlaceholderComponent implements OnInit {
       tieneOrden: false,
       editableKeys: ['tipo_descuento', 'icono']
     },
+    estatus_empleado: {
+      columnas: [
+        { key: 'id', label: 'ID' },
+        { key: 'clave', label: 'Clave' },
+        { key: 'nombre', label: 'Nombre' },
+        { key: 'activo', label: 'Activo' },
+        { key: 'orden', label: 'Orden' }
+      ],
+      tieneOrden: true,
+      editableKeys: ['clave', 'nombre', 'activo'],
+      booleanKeys: ['activo']
+    },
+    estatus_cotizacion: {
+      columnas: [
+        { key: 'id', label: 'ID' },
+        { key: 'clave', label: 'Clave' },
+        { key: 'nombre', label: 'Nombre' },
+        { key: 'activo', label: 'Activo' },
+        { key: 'orden', label: 'Orden' }
+      ],
+      tieneOrden: true,
+      editableKeys: ['clave', 'nombre', 'activo'],
+      booleanKeys: ['activo']
+    },
     idiomas: {
       columnas: [
         { key: 'id', label: 'ID' },

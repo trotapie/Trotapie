@@ -1,9 +1,20 @@
 .table-shell {
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   border-radius: 16px;
   overflow: hidden;
 }
 
+.table-scroll {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: auto;
+}
+
 .table-footer {
+  flex: 0 0 auto;
   padding: 8px;
   border-top: 1px solid rgba(0, 0, 0, 0.06);
 }
