@@ -31,7 +31,7 @@ export class BotCotizadorComponent implements OnInit {
   otroId: number;
   asesores: IAsesores[] = [];
 
-  readonly MAX_ROOMS = 3;
+  readonly MAX_ROOMS = 5;
   readonly MAX_PER_ROOM = 6;
   readonly MIN_ADULTS = 1;
 

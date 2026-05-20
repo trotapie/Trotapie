@@ -70,7 +70,7 @@ export class CrearCotizacionComponent implements OnInit {
   error = '';
   noches = 0;
 
-  readonly MAX_ROOMS = 3;
+  readonly MAX_ROOMS = 10;
   readonly MAX_PER_ROOM = 6;
   readonly MIN_ADULTS = 1;
 

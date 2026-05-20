@@ -115,6 +115,7 @@
                                                     {{ t('precio_sin_seguro') }}
                                                 </p>
                                                 <input type="tel" formControlName="precio" inputmode="numeric" autofocus
+                                                    (focus)="setCampoPrecioActivo('precio')"
                                                     class="w-full h-12 px-4 border-2 rounded-xl
                                                             focus:outline-none transition-colors
                                                             dark:bg-slate-800 dark:text-white"
@@ -240,6 +241,7 @@
                                                                 : 'border-slate-200 dark:border-slate-700 focus-within:border-primary'">
 
                                                         <input type="tel" formControlName="precioConSeguro"
+                                                            (focus)="setCampoPrecioActivo('precioConSeguro')"
                                                             inputmode="numeric"
                                                             class="w-2/3 px-4 focus:outline-none bg-transparent"
                                                             importeMxnBlur />
@@ -479,6 +481,7 @@
                                                                 : 'border-slate-200 dark:border-slate-700 focus-within:border-primary'">
 
                                                         <input type="tel" formControlName="precioMeses"
+                                                            (focus)="setCampoPrecioActivo('precioMeses')"
                                                             inputmode="numeric"
                                                             class="w-2/3 px-4 focus:outline-none bg-transparent"
                                                             importeMxnBlur />
@@ -873,14 +876,14 @@
                                         {{informacionCotizacion.precios[0].precio | currency}}
                                     </p>
                                 </div>
-                                }@else if(preciosList.length <= 1 && esEdicion){ <div class="text-left sm:text-right">
+                                }@else if(esEdicion && preciosList.length === 1 && totalEstanciaEdicion !== null){ <div class="text-left sm:text-right">
                                     <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-0.5">
                                         {{ t('total_propuesta') }}
                                     </p>
                                     <p class="text-xl sm:text-2xl font-black
                                      text-slate-900 dark:text-white tracking-tight">
                                         MXN
-                                        {{edicionForm.get('precio').value}}
+                                        {{totalEstanciaEdicion}}
                                     </p>
                             </div>
 

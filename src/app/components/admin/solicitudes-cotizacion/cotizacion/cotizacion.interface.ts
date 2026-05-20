@@ -75,6 +75,8 @@ export enum Tipo {
 export interface PoliticasTarifas {
     apartado: PoliticaHotel[];
     noReembolsable: PoliticaHotel[];
+    apartadoMeses: PoliticaHotel[];
+    noReembolsableMeses: PoliticaHotel[];
 }
 
 export interface PoliticaHotel {

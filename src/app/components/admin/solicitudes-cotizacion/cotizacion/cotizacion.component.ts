@@ -49,6 +49,9 @@ export class CotizacionComponent implements OnInit {
   politicas: PoliticaHotel[] = []
   politicasApartado: PoliticaHotel[] = [];
   politicasNoReembolsable: PoliticaHotel[] = [];
+  politicasApartadoMeses: PoliticaHotel[] = [];
+  politicasNoReembolsableMeses: PoliticaHotel[] = [];
+  campoPrecioActivo: 'precio' | 'precioConSeguro' | 'precioMeses' = 'precio';
 
   telefonoForm = this.fb.group({
     telefono: [
@@ -134,6 +137,8 @@ export class CotizacionComponent implements OnInit {
       }
       this.politicasApartado = this.informacionCotizacion.politicas_tarifas.apartado
       this.politicasNoReembolsable = this.informacionCotizacion.politicas_tarifas.noReembolsable
+      this.politicasApartadoMeses = this.informacionCotizacion.politicas_tarifas.apartadoMeses
+      this.politicasNoReembolsableMeses = this.informacionCotizacion.politicas_tarifas.noReembolsableMeses
 
       const info = this.informacionCotizacion.precios.find(item => item.tipo === 'a_meses')
       this.edicionForm.patchValue({
@@ -156,7 +161,7 @@ export class CotizacionComponent implements OnInit {
         this.edicionForm.patchValue({
           condicionesPrecioMeses: []
         })
-        this.politicas = valor === 'apartado' ? this.politicasApartado : this.politicasNoReembolsable;
+        this.politicas = valor === 'apartado' ? this.politicasApartadoMeses : this.politicasNoReembolsableMeses;
         this.politicas.forEach(item => {
           item.tipoPoliticas = valor;
         })
@@ -244,6 +249,29 @@ export class CotizacionComponent implements OnInit {
   get precioInvalido(): boolean {
     const ctrl = this.precioCtrl;
     return !!(ctrl && ctrl.invalid && (ctrl.dirty || ctrl.touched));
+  }
+
+  setCampoPrecioActivo(campo: 'precio' | 'precioConSeguro' | 'precioMeses') {
+    this.campoPrecioActivo = campo;
+  }
+
+  get totalEstanciaEdicion(): string | number | null {
+    const precio = this.edicionForm.get('precio')?.value;
+    const precioConSeguro = this.edicionForm.get('precioConSeguro')?.value;
+    const precioMeses = this.edicionForm.get('precioMeses')?.value;
+
+    const valorActivo = ({
+      precio,
+      precioConSeguro,
+      precioMeses
+    } as const)[this.campoPrecioActivo];
+
+    if (valorActivo !== null && valorActivo !== undefined && valorActivo !== '') {
+      return valorActivo;
+    }
+
+    return [precio, precioConSeguro, precioMeses]
+      .find(valor => valor !== null && valor !== undefined && valor !== '') ?? null;
   }
 
   soloNumeros(event: Event) {
