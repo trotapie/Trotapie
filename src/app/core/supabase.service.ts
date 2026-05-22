@@ -1449,6 +1449,8 @@ export class SupabaseService {
     noches?: number | null;
     telefono?: string | null;
     public_id?: string | null;
+    pdf_base64?: string | null;
+    pdf_filename?: string | null;
   }) {
     const toEmail = String(payload?.to_email ?? '').trim();
     if (!toEmail) {
@@ -1464,7 +1466,9 @@ export class SupabaseService {
         fecha_salida: payload?.fecha_salida ?? null,
         noches: payload?.noches ?? null,
         telefono: payload?.telefono ?? null,
-        public_id: payload?.public_id ?? null
+        public_id: payload?.public_id ?? null,
+        pdf_base64: payload?.pdf_base64 ?? null,
+        pdf_filename: payload?.pdf_filename ?? null
       }
     });
 
