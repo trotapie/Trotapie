@@ -1,0 +1,544 @@
+<div class="flex min-w-0 flex-auto flex-col bg-gray-50">
+    <div class="mx-auto flex w-full max-w-screen-2xl flex-col px-6 py-6 sm:px-8">
+        <div class="sticky top-0 z-[2000] mb-4 w-full rounded-xl border border-transparent bg-transparent px-2 py-2 shadow-none backdrop-blur-md transition-all duration-300 md:px-4">
+            <div class="w-full md:flex md:items-center md:justify-between">
+                <div class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">
+                    {{ esCreacion ? 'Nuevo hotel' : 'Editar hotel' }}
+                </div>
+
+                <div class="my-2 flex items-center gap-3 md:my-0">
+                    <button mat-raised-button color="warn" type="button" class="text-white" (click)="solicitarRegresar()">
+                        <mat-icon class="icon-size-5 text-white" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
+                        Regresar
+                    </button>
+                    @if (esCreacion) {
+                    <button mat-raised-button color="accent" type="button" class="text-white inline-flex items-center gap-3"
+                        (click)="abrirModalCargaImagenesDriveCreacion()">
+                        <mat-icon class="icon-size-5 text-white">cloud_download</mat-icon>
+                        Cargar imagenes de drive
+                    </button>
+                    }
+                    <button mat-raised-button color="primary" type="submit" form="form-editar-hotel" class="text-white"
+                        [disabled]="guardando || !tieneCambiosPendientes">
+                        <mat-icon class="mr-2 icon-size-5 text-white">save</mat-icon>
+                        @if (guardando) {
+                        <span class="text-white">{{ esCreacion ? 'Creando...' : 'Guardando...' }}</span>
+                        } @else {
+                        <span class="text-white">{{ esCreacion ? 'Crear hotel' : 'Guardar cambios' }}</span>
+                        }
+                    </button>
+                </div>
+            </div>
+
+            <p class="mt-1 text-sm text-gray-500">
+                {{ esCreacion
+                ? 'Captura informacion general, relaciones, regimenes, actividades e imagenes.'
+                : 'Actualiza informacion general, relaciones, regimenes, actividades e imagenes.' }}
+            </p>
+        </div>
+
+        @if (cargando) {
+        <div class="rounded-2xl border border-gray-200 bg-white p-8 text-center">
+            <mat-progress-spinner class="mx-auto" diameter="36" mode="indeterminate"></mat-progress-spinner>
+            <p class="mt-4 text-sm text-gray-500">{{ esCreacion ? 'Preparando formulario de creacion...' : 'Cargando informacion del hotel...' }}</p>
+        </div>
+        } @else {
+        <form id="form-editar-hotel" [formGroup]="form" (ngSubmit)="guardar()"
+            class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
+            <div class="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+                <mat-form-field class="w-full">
+                    <mat-label>Nombre del hotel</mat-label>
+                    <input matInput formControlName="nombre_hotel" maxlength="160" (blur)="traducirHotelDesdeEspanol()" />
+                    @if (form.get('nombre_hotel')?.invalid && form.get('nombre_hotel')?.touched) {
+                    <mat-error>El nombre del hotel es requerido.</mat-error>
+                    }
+                </mat-form-field>
+
+                <mat-form-field class="w-full">
+                    <mat-label>Orden</mat-label>
+                    <input matInput type="number" min="0" formControlName="orden" />
+                    @if (form.get('orden')?.invalid && form.get('orden')?.touched) {
+                    <mat-error>El orden debe ser un numero mayor o igual a 0.</mat-error>
+                    }
+                </mat-form-field>
+
+                <mat-form-field class="w-full">
+                    <mat-label>Destino</mat-label>
+                    <mat-select formControlName="destino_id">
+                        @for (destino of destinos; track destino.id) {
+                        <mat-option [value]="destino.id">{{ destino.nombre }}</mat-option>
+                        }
+                    </mat-select>
+                    @if (form.get('destino_id')?.invalid && form.get('destino_id')?.touched) {
+                    <mat-error>El destino es requerido.</mat-error>
+                    }
+                </mat-form-field>
+
+                <mat-form-field class="w-full">
+                    <mat-label>Descuento</mat-label>
+                    <mat-select formControlName="descuento_id" (valueChange)="onDescuentoChange($event)">
+                        <mat-option [value]="null">Sin descuento</mat-option>
+                        @for (descuento of descuentos; track descuento.id) {
+                        <mat-option [value]="descuento.id">{{ descuento.tipo_descuento }}</mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field class="w-full">
+                    <mat-label>Regimen principal</mat-label>
+                    <mat-select formControlName="regimen_principal_id"
+                        (valueChange)="onRegimenPrincipalChange($event)">
+                        <mat-option [value]="null">Sin regimen principal</mat-option>
+                        @for (regimen of regimenes; track regimen.id) {
+                        <mat-option [value]="regimen.id">{{ regimen.descripcion }}</mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field class="w-full">
+                    <mat-label>Estrellas</mat-label>
+                    <input matInput type="number" min="0" max="5" formControlName="estrellas" />
+                    @if (form.get('estrellas')?.invalid && form.get('estrellas')?.touched) {
+                    <mat-error>Las estrellas deben estar entre 0 y 5.</mat-error>
+                    }
+                </mat-form-field>
+
+                
+                
+                <mat-form-field class="w-full md:col-span-2 lg:col-span-3">
+                    <mat-label>Descripcion</mat-label>
+                    <textarea matInput rows="5" formControlName="descripcion" (blur)="traducirHotelDesdeEspanol()"></textarea>
+                </mat-form-field>
+            </div>
+
+            <div class="mt-2 grid w-full grid-cols-1 gap-4 md:grid-cols-2">
+                <div class="space-y-2">
+                    <mat-form-field class="w-full">
+                        <mat-label>Ubicacion</mat-label>
+                        <input matInput formControlName="ubicacion" />
+                    </mat-form-field>
+
+                    @if (form.get('ubicacion')?.value) {
+                    <div class="rounded-xl border border-gray-200 bg-gray-50 p-3">
+                        <div class="mb-2 flex min-h-10 items-center justify-between gap-3">
+                            <p class="text-sm font-medium text-gray-700">Vista previa de ubicacion</p>
+                            <a mat-stroked-button color="primary" [href]="form.get('ubicacion')?.value" target="_blank"
+                                rel="noopener noreferrer">
+                                <mat-icon class="mr-2 icon-size-5" [svgIcon]="'heroicons_outline:arrow-top-right-on-square'"></mat-icon>
+                                Abrir ubicacion
+                            </a>
+                        </div>
+
+                        @if (coordenadasUbicacion) {
+                        <div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
+                            <div #ubicacionMapPreview class="h-72 w-full"></div>
+                        </div>
+                        } @else {
+                        <p class="text-xs text-gray-500">
+                            No se detectaron coordenadas en la URL. Puedes abrirla con el boton.
+                        </p>
+                        }
+                    </div>
+                    } @else {
+                    <div class="flex h-44 items-center justify-center rounded-xl border border-gray-200 bg-gray-100 text-sm text-gray-500">
+                        Sin ubicacion
+                    </div>
+                    }
+                </div>
+
+                <div class="space-y-2">
+                    <mat-form-field class="w-full">
+                        <mat-label>Imagen de fondo (URL)</mat-label>
+                        <input matInput formControlName="fondo" />
+                        <button
+                            mat-icon-button
+                            matSuffix
+                            type="button"
+                            color="accent"
+                            [matTooltip]="'Agregar fondo desde drive'"
+                            (click)="abrirModalAgregarFondoDesdeDrive()">
+                            <mat-icon class="icon-size-5">add_photo_alternate</mat-icon>
+                        </button>
+                    </mat-form-field>
+
+                    <div class="rounded-xl border border-gray-200 bg-gray-50 p-3">
+                        <div class="mb-2 flex min-h-10 items-center justify-between gap-3">
+                            <p class="text-sm font-medium text-gray-700">Vista previa de imagen</p>
+                        </div>
+
+                        @if (form.get('fondo')?.value) {
+                        <div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
+                            <img [src]="form.get('fondo')?.value" alt="Imagen de fondo del hotel"
+                                class="h-72 w-full object-cover object-center" />
+                        </div>
+                        } @else {
+                        <div class="flex h-72 items-center justify-center rounded-lg border border-gray-200 bg-white text-sm text-gray-500">
+                            Sin imagen de fondo
+                        </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            @if (traduciendoContenido) {
+            <div class="mt-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm text-blue-700">
+                Traduciendo nombre y descripcion a los idiomas configurados...
+            </div>
+            }
+
+            <section class="mt-5 rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <div class="mb-3 flex items-center justify-between">
+                    <h3 class="text-base font-semibold text-gray-900">Textos por idioma</h3>
+                    <span class="text-xs text-gray-500">Vista previa de nombre y descripcion</span>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    @for (idioma of idiomas; track idioma.id) {
+                    <article class="rounded-lg border border-gray-200 bg-white p-3">
+                        <div class="mb-2 flex items-center justify-between">
+                            <span class="text-sm font-semibold text-gray-800">{{ idioma.nombre }}</span>
+                            <span class="rounded bg-gray-100 px-2 py-0.5 text-xs uppercase text-gray-600">
+                                {{ idioma.codigo }}
+                            </span>
+                        </div>
+
+                        <div class="space-y-2">
+                            <div>
+                                <p class="text-xs font-medium text-gray-500">Nombre</p>
+                                <p class="text-sm text-gray-800">
+                                    {{ obtenerTraduccionHotelVista(idioma).nombre_hotel || 'Sin texto' }}
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-medium text-gray-500">Descripcion</p>
+                                <p class="line-clamp-4 whitespace-pre-line text-sm text-gray-800">
+                                    {{ obtenerTraduccionHotelVista(idioma).descripcion || 'Sin texto' }}
+                                </p>
+                            </div>
+                        </div>
+                    </article>
+                    }
+                </div>
+            </section>
+
+            <div class="mt-7 grid grid-cols-1 gap-5 xl:grid-cols-2">
+                <section class="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                    <div class="mb-3 flex items-center justify-between">
+                        <h3 class="text-base font-semibold text-gray-900">Regimenes del hotel</h3>
+                        <span class="text-xs text-gray-500">{{ totalRegimenesSeleccionados }} seleccionados</span>
+                    </div>
+
+                    <mat-form-field class="w-full">
+                        <mat-label>Filtrar regimenes</mat-label>
+                        <input matInput [(ngModel)]="filtroRegimenes" [ngModelOptions]="{ standalone: true }" />
+                    </mat-form-field>
+
+                    <div class="selector-list">
+                        @if (regimenesFiltrados.length) {
+                        @for (regimen of regimenesFiltrados; track regimen.id) {
+                        <mat-checkbox class="w-full" [checked]="esRegimenSeleccionado(regimen.id)"
+                            (change)="toggleRegimen(regimen.id, $event.checked)">
+                            {{ regimen.descripcion }}
+                        </mat-checkbox>
+                        }
+                        } @else {
+                        <p class="text-sm text-gray-500">No hay regimenes que coincidan con el filtro.</p>
+                        }
+                    </div>
+                </section>
+
+                <section class="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                    <div class="mb-3 flex items-center justify-between">
+                        <h3 class="text-base font-semibold text-gray-900">Actividades del hotel</h3>
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs text-gray-500">{{ totalActividadesSeleccionadas }} seleccionadas</span>
+                            <button mat-stroked-button type="button" (click)="abrirModalActividadesSeleccionadas()">
+                                Ver seleccionadas
+                            </button>
+                        </div>
+                    </div>
+
+                    <mat-form-field class="w-full">
+                        <mat-label>Filtrar actividades</mat-label>
+                        <input matInput [(ngModel)]="filtroActividades" [ngModelOptions]="{ standalone: true }" />
+                    </mat-form-field>
+
+                    <div class="selector-list">
+                        @if (actividadesFiltradas.length) {
+                        @for (actividad of actividadesFiltradas; track actividad.id) {
+                        <mat-checkbox class="w-full" [checked]="esActividadSeleccionada(actividad.id)"
+                            (change)="toggleActividad(actividad.id, $event.checked)">
+                            {{ actividad.descripcion }}
+                        </mat-checkbox>
+                        }
+                        } @else {
+                        <p class="text-sm text-gray-500">No hay actividades que coincidan con el filtro.</p>
+                        }
+                    </div>
+                </section>
+            </div>
+
+            <section class="mt-7 rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <div class="mb-4 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-base font-semibold text-gray-900">Imagenes del hotel</h3>
+                        <p class="text-xs text-gray-500">Miniatura clickeable para abrir imagen completa.</p>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <button mat-stroked-button type="button" (click)="abrirModalAgregarImagenes()">
+                            <mat-icon class="icon-size-5">add</mat-icon>
+                            Agregar imagen
+                        </button>
+                        <button mat-stroked-button color="accent" type="button" (click)="toggleSeleccionTodasImagenes()"
+                            [disabled]="!imagenes.length">
+                            {{ todasImagenesSeleccionadas ? 'Deseleccionar todas' : 'Seleccionar todas' }}
+                        </button>
+                        <button mat-flat-button color="warn" class="text-white" type="button"
+                            (click)="solicitarEliminarImagenesSeleccionadas()"
+                            [disabled]="!totalImagenesSeleccionadas">
+                            <mat-icon class="mr-2 icon-size-5 text-white">delete</mat-icon>
+                            Borrar ({{ totalImagenesSeleccionadas }})
+                        </button>
+                    </div>
+                </div>
+
+                @if (!imagenes.length) {
+                <p class="text-sm text-gray-500">Este hotel no tiene imagenes registradas.</p>
+                } @else {
+                <div class="space-y-4">
+                    @for (imagen of imagenes; track imagen.key; let i = $index) {
+                    <div class="grid grid-cols-1 gap-3 rounded-xl border border-gray-200 bg-white p-3 lg:grid-cols-[44px_140px_1fr_220px_auto]">
+                        <div class="flex items-center justify-center">
+                            <mat-checkbox [checked]="esImagenSeleccionada(imagen.key)"
+                                (change)="toggleSeleccionImagen(imagen.key, $event.checked)"></mat-checkbox>
+                        </div>
+                        <button type="button"
+                            class="miniatura border border-gray-200 bg-gray-100"
+                            [disabled]="!imagen.url_imagen"
+                            (click)="abrirImagen(imagen.url_imagen)">
+                            @if (imagen.url_imagen) {
+                            <img [src]="imagen.url_imagen" alt="Imagen hotel" class="h-full w-full object-cover" />
+                            } @else {
+                            <span class="text-xs text-gray-500">Sin vista previa</span>
+                            }
+                        </button>
+
+                        <mat-form-field class="w-full">
+                            <mat-label>URL de imagen</mat-label>
+                            <input matInput [value]="imagen.url_imagen"
+                                (input)="actualizarUrlImagen(i, $any($event.target).value)" />
+                        </mat-form-field>
+
+                        <mat-form-field class="w-full">
+                            <mat-label>Tipo de imagen</mat-label>
+                            <mat-select [value]="imagen.tipo_imagen_id"
+                                (valueChange)="actualizarTipoImagen(i, $event)">
+                                <mat-option [value]="null">Sin tipo</mat-option>
+                                @for (tipo of tiposImagen; track tipo.id) {
+                                <mat-option [value]="tipo.id">{{ tipo.descripcion }}</mat-option>
+                                }
+                            </mat-select>
+                        </mat-form-field>
+
+                        <div class="flex items-center justify-center">
+                            @if (!totalImagenesSeleccionadas) {
+                            <button mat-icon-button color="warn" type="button" [matTooltip]="'Eliminar imagen'"
+                                (click)="eliminarImagen(i)">
+                                <mat-icon class="icon-size-7">delete</mat-icon>
+                            </button>
+                            }
+                        </div>
+                    </div>
+                    }
+                </div>
+                }
+            </section>
+
+            @if (error) {
+            <div class="mt-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {{ error }}
+            </div>
+            }
+
+        </form>
+        }
+    </div>
+</div>
+
+@if (mostrarModalExito) {
+<div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
+    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+        <h3 class="text-xl font-semibold text-gray-900">Actualizacion completada</h3>
+        <p class="mt-2 text-sm text-gray-600">{{ mensajeModalExito }}</p>
+
+        <div class="mt-6 flex justify-end">
+            <button mat-flat-button color="primary" class="text-white" (click)="cerrarModalExito()">
+                Aceptar
+            </button>
+        </div>
+    </div>
+</div>
+}
+
+@if (mostrarModalAgregarImagenes) {
+<div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
+    <div class="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl">
+        <h3 class="text-xl font-semibold text-gray-900">
+            @if (esModalCargaDriveCreacion) {
+            Cargar imagenes de drive
+            } @else {
+            {{ esModalFondoDesdeDrive ? 'Agregar fondo desde Drive' : 'Agregar imagenes' }}
+            }
+        </h3>
+        <p class="mt-2 text-sm text-gray-600">
+            @if (esModalCargaDriveCreacion) {
+            Consulta una carpeta de Drive, revisa fondo e imagenes y presiona Aceptar para aplicar.
+            } @else if (esModalFondoDesdeDrive) {
+            Consulta una carpeta de Drive y usa una sola URL para el fondo.
+            } @else {
+            Pega URLs una por linea o un arreglo JSON (con corchetes, comillas y comas) para agregarlas todas al mismo tiempo.
+            }
+        </p>
+
+        <div class="mt-4 space-y-4">
+            <mat-form-field class="w-full">
+                <mat-label>URL Drive</mat-label>
+                <input matInput [value]="urlDriveLote" (input)="urlDriveLote = $any($event.target).value"
+                    placeholder="https://drive.google.com/drive/folders/ID_CARPETA" />
+                <mat-hint>Puedes pegar URL de carpeta o solo el ID de carpeta.</mat-hint>
+            </mat-form-field>
+            <div class="flex justify-end">
+                <button mat-raised-button color="accent" type="button" (click)="consultarImagenesDriveDesdeModal()"
+                    [disabled]="consultandoImagenesDrive || !urlDriveLote?.trim()">
+                    <mat-icon class="mr-2 icon-size-5">search</mat-icon>
+                    {{ consultandoImagenesDrive ? 'Consultando...' : (esModalFondoDesdeDrive ? 'Consultar fondo' : 'Consultar imagenes') }}
+                </button>
+            </div>
+            @if (esModalCargaDriveCreacion) {
+            <mat-form-field class="w-full">
+                <mat-label>Imagen fondo</mat-label>
+                <input matInput [value]="urlFondoLote" (input)="urlFondoLote = $any($event.target).value"
+                    placeholder="https://dominio.com/fondo.jpg" />
+            </mat-form-field>
+            }
+            <mat-form-field class="w-full">
+                <mat-label>
+                    {{ esModalFondoDesdeDrive ? 'URL de fondo' : (esModalCargaDriveCreacion ? 'Imagenes' : 'URLs de imagen') }}
+                </mat-label>
+                <textarea matInput rows="8" [value]="urlsImagenesLote"
+                    (input)="urlsImagenesLote = $any($event.target).value"
+                    placeholder="https://dominio.com/imagen-1.jpg&#10;https://dominio.com/imagen-2.jpg"></textarea>
+                @if (esModalFondoDesdeDrive) {
+                <mat-hint>Solo se permite una URL.</mat-hint>
+                }
+            </mat-form-field>
+        </div>
+
+        <div class="mt-6 flex justify-end gap-2">
+            <button mat-stroked-button type="button" (click)="cerrarModalAgregarImagenes()">Cancelar</button>
+            <button mat-flat-button color="primary" class="text-white" type="button" (click)="agregarImagenesDesdeModal()"
+                [disabled]="!puedeConfirmarModalAgregarImagenes || consultandoImagenesDrive">
+                <mat-icon class="mr-2 icon-size-5 text-white">add</mat-icon>
+                @if (esModalCargaDriveCreacion) {
+                Aceptar
+                } @else {
+                {{ esModalFondoDesdeDrive ? 'Asignar fondo' : 'Agregar imagenes' }}
+                }
+            </button>
+        </div>
+    </div>
+</div>
+}
+
+@if (mostrarModalEliminarImagenesSeleccionadas) {
+<div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
+    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+        <h3 class="text-xl font-semibold text-gray-900">Eliminar imagenes seleccionadas</h3>
+        <p class="mt-2 text-sm text-gray-600">
+            ¿Seguro que quieres eliminar {{ totalImagenesSeleccionadas }} imagen(es) seleccionada(s)?
+        </p>
+
+        <div class="mt-6 flex justify-end gap-2">
+            <button mat-stroked-button type="button" (click)="cerrarModalEliminarImagenesSeleccionadas()">
+                Cancelar
+            </button>
+            <button mat-flat-button color="warn" class="text-white" type="button"
+                (click)="confirmarEliminarImagenesSeleccionadas()">
+                Eliminar
+            </button>
+        </div>
+    </div>
+</div>
+}
+
+@if (mostrarModalCambiosPendientes) {
+<div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
+    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+        <h3 class="text-xl font-semibold text-gray-900">Cambios pendientes</h3>
+        <p class="mt-2 text-sm text-gray-600">Tienes cambios pendientes. ¿Quieres guardar cambios antes de regresar?</p>
+
+        <div class="mt-6 flex justify-end gap-2">
+            <button mat-stroked-button type="button" (click)="cerrarModalCambiosPendientes()">Cancelar</button>
+            <button mat-stroked-button type="button" (click)="descartarCambiosYRegresar()">Regresar sin guardar</button>
+            <button mat-flat-button color="primary" class="text-white" type="button"
+                [disabled]="guardando || !tieneCambiosPendientes"
+                (click)="guardarCambiosPendientesYRegresar()">
+                Guardar cambios
+            </button>
+        </div>
+    </div>
+</div>
+}
+
+@if (mostrarModalActividadesSeleccionadas) {
+<div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
+    <div class="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl">
+        <h3 class="text-xl font-semibold text-gray-900">Actividades seleccionadas</h3>
+        <p class="mt-2 text-sm text-gray-600">Estas son las actividades que has seleccionado hasta ahora.</p>
+
+        <div class="mt-4 max-h-[50vh] overflow-auto rounded-xl border border-gray-200 bg-gray-50 p-3">
+            @if (actividadesSeleccionadasDetalle.length) {
+            <ul class="space-y-2">
+                @for (actividad of actividadesSeleccionadasDetalle; track actividad.id) {
+                <li class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800">
+                    {{ actividad.descripcion }}
+                </li>
+                }
+            </ul>
+            } @else {
+            <p class="text-sm text-gray-500">Aun no has seleccionado actividades.</p>
+            }
+        </div>
+
+        <div class="mt-6 flex justify-end">
+            <button mat-flat-button color="primary" class="text-white" type="button"
+                (click)="cerrarModalActividadesSeleccionadas()">
+                Aceptar
+            </button>
+        </div>
+    </div>
+</div>
+}
+
+@if (guardando) {
+<div class="fixed inset-0 z-[3500] flex items-center justify-center bg-black/50 px-4 backdrop-blur-[2px]">
+    <div class="w-full max-w-xs rounded-2xl bg-white p-6 shadow-2xl">
+        <div class="flex flex-col items-center gap-3 text-center">
+            <mat-progress-spinner diameter="44" mode="indeterminate"></mat-progress-spinner>
+            <p class="text-sm font-medium text-gray-700">{{ esCreacion ? 'Creando hotel...' : 'Guardando cambios...' }}</p>
+        </div>
+    </div>
+</div>
+}
+
+@if (consultandoImagenesDrive) {
+<div class="fixed inset-0 z-[3600] flex items-center justify-center bg-black/50 px-4 backdrop-blur-[2px]">
+    <div class="w-full max-w-xs rounded-2xl bg-white p-6 shadow-2xl">
+        <div class="flex flex-col items-center gap-3 text-center">
+            <mat-progress-spinner diameter="44" mode="indeterminate"></mat-progress-spinner>
+            <p class="text-sm font-medium text-gray-700">Consultando imagenes de Drive...</p>
+        </div>
+    </div>
+</div>
+}

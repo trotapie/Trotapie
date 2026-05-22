@@ -1824,21 +1824,14 @@ export class SupabaseService {
       return [];
     }
 
-    const resultados = await Promise.all(
-      hoteles.map(({ id, orden }) =>
-        this.client
-          .from('hoteles')
-          .update({ orden })
-          .eq('id', id)
-          .select('id, orden')
-          .maybeSingle()
-      )
-    );
+    const payload = hoteles.map(({ id, orden }) => ({ id, orden }));
+    const { data, error } = await this.client
+      .from('hoteles')
+      .upsert(payload, { onConflict: 'id' })
+      .select('id, orden');
 
-    const error = resultados.find((r) => r.error)?.error;
     if (error) throw error;
-
-    return resultados.map((r) => r.data).filter(Boolean);
+    return data ?? [];
   }
 
   async actualizarHotelAdmin(payload: {
@@ -1965,8 +1958,10 @@ export class SupabaseService {
     regimen_ids: number[];
     actividad_ids: number[];
     imagenes: Array<{
+      id?: number | null;
       url_imagen: string;
       tipo_imagen_id: number | null;
+      eliminar?: boolean;
     }>;
     traducciones?: Array<{
       idioma_id: number;
@@ -1974,38 +1969,7 @@ export class SupabaseService {
       descripcion: string | null;
     }>;
   }) {
-    const descuentoIdNormalizado = payload.descuento_id === null || payload.descuento_id === undefined
-      ? null
-      : Number(payload.descuento_id);
-    const descuentoId = Number.isFinite(descuentoIdNormalizado) ? descuentoIdNormalizado : null;
-
-    const { data: hotelCreado, error: createError } = await this.client
-      .from('hoteles')
-      .insert({
-        destino_id: payload.destino_id,
-        descuento_id: descuentoId,
-        regimen_id: payload.regimen_id,
-        orden: payload.orden,
-        estrellas: payload.estrellas,
-        fondo: payload.fondo,
-        ubicacion: payload.ubicacion
-      })
-      .select('id')
-      .single();
-
-    if (createError) throw createError;
-
-    const hotelId = Number(hotelCreado?.id);
-    if (!Number.isFinite(hotelId)) {
-      throw new Error('No se pudo crear el hotel.');
-    }
-
-    await this.actualizarHotelDetalleAdmin({
-      hotelId,
-      ...payload
-    });
-
-    return hotelId;
+    return this.guardarHotelDetalleAdminRpc(null, payload);
   }
 
   async actualizarHotelDetalleAdmin(payload: {
@@ -2022,8 +1986,10 @@ export class SupabaseService {
     regimen_ids: number[];
     actividad_ids: number[];
     imagenes: Array<{
+      id?: number | null;
       url_imagen: string;
       tipo_imagen_id: number | null;
+      eliminar?: boolean;
     }>;
     traducciones?: Array<{
       idioma_id: number;
@@ -2035,37 +2001,72 @@ export class SupabaseService {
     if (!Number.isFinite(hotelId)) {
       throw new Error('Hotel invalido para actualizar.');
     }
+    await this.guardarHotelDetalleAdminRpc(hotelId, payload);
+  }
 
-    const descuentoIdNormalizado = payload.descuento_id === null || payload.descuento_id === undefined
-      ? null
-      : Number(payload.descuento_id);
+  private async guardarHotelDetalleAdminRpc(
+    hotelId: number | null,
+    payload: {
+      nombre_hotel: string;
+      descripcion: string | null;
+      orden: number | null;
+      estrellas: number | null;
+      fondo: string | null;
+      ubicacion: string | null;
+      destino_id: number;
+      descuento_id: number | null;
+      regimen_id: number | null;
+      regimen_ids: number[];
+      actividad_ids: number[];
+      imagenes: Array<{
+        id?: number | null;
+        url_imagen: string;
+        tipo_imagen_id: number | null;
+        eliminar?: boolean;
+      }>;
+      traducciones?: Array<{
+        idioma_id: number;
+        nombre_hotel: string;
+        descripcion: string | null;
+      }>;
+    }
+  ): Promise<number> {
+    const descuentoIdNormalizado =
+      payload.descuento_id === null || payload.descuento_id === undefined
+        ? null
+        : Number(payload.descuento_id);
     const descuentoId = Number.isFinite(descuentoIdNormalizado) ? descuentoIdNormalizado : null;
 
-    const regimenesIds = [...new Set((payload.regimen_ids ?? []).map((id) => Number(id)).filter((id) => Number.isFinite(id) && id > 0))];
-    const actividadesIds = [...new Set((payload.actividad_ids ?? []).map((id) => Number(id)).filter((id) => Number.isFinite(id) && id > 0))];
+    const regimenIdNormalizado =
+      payload.regimen_id === null || payload.regimen_id === undefined
+        ? null
+        : Number(payload.regimen_id);
+    const regimenId = Number.isFinite(regimenIdNormalizado) ? regimenIdNormalizado : null;
+
+    const regimenesIds = [
+      ...new Set(
+        (payload.regimen_ids ?? [])
+          .map((id) => Number(id))
+          .filter((id) => Number.isFinite(id) && id > 0)
+      )
+    ];
+    const actividadesIds = [
+      ...new Set(
+        (payload.actividad_ids ?? [])
+          .map((id) => Number(id))
+          .filter((id) => Number.isFinite(id) && id > 0)
+      )
+    ];
     const imagenes = (payload.imagenes ?? [])
       .map((item) => ({
+        id: item.id ? Number(item.id) : null,
         url_imagen: (item.url_imagen ?? '').trim(),
-        tipo_imagen_id: item.tipo_imagen_id ? Number(item.tipo_imagen_id) : null
+        tipo_imagen_id: item.tipo_imagen_id ? Number(item.tipo_imagen_id) : null,
+        eliminar: Boolean(item.eliminar)
       }))
       .filter((item) => item.url_imagen.length > 0);
 
-    const { error: hotelError } = await this.client
-      .from('hoteles')
-      .update({
-        destino_id: payload.destino_id,
-        descuento_id: descuentoId,
-        regimen_id: payload.regimen_id,
-        orden: payload.orden,
-        estrellas: payload.estrellas,
-        fondo: payload.fondo,
-        ubicacion: payload.ubicacion
-      })
-      .eq('id', hotelId);
-
-    if (hotelError) throw hotelError;
-
-    const traduccionesPayload = (payload.traducciones?.length
+    const traducciones = (payload.traducciones?.length
       ? payload.traducciones
       : [
           {
@@ -2076,63 +2077,40 @@ export class SupabaseService {
         ]
     )
       .map((item) => ({
-        hotel_id: hotelId,
         idioma_id: Number(item.idioma_id),
         nombre_hotel: (item.nombre_hotel ?? '').trim(),
         descripcion: item.descripcion
       }))
       .filter((item) => Number.isFinite(item.idioma_id) && item.idioma_id > 0 && item.nombre_hotel.length > 0);
 
-    const { error: traduccionError } = await this.client
-      .from('hotel_traducciones')
-      .upsert(traduccionesPayload, { onConflict: 'hotel_id,idioma_id' });
+    const rpcPayload = {
+      nombre_hotel: (payload.nombre_hotel ?? '').trim(),
+      descripcion: payload.descripcion,
+      orden: payload.orden,
+      estrellas: payload.estrellas,
+      fondo: payload.fondo,
+      ubicacion: payload.ubicacion,
+      destino_id: payload.destino_id,
+      descuento_id: descuentoId,
+      regimen_id: regimenId,
+      regimen_ids: regimenesIds,
+      actividad_ids: actividadesIds,
+      imagenes,
+      traducciones
+    };
 
-    if (traduccionError) throw traduccionError;
+    const { data, error } = await this.client.rpc('guardar_hotel_detalle_admin', {
+      p_hotel_id: hotelId,
+      p_payload: rpcPayload
+    });
 
-    const { error: deleteRegimenesError } = await this.client
-      .from('regimen_hotel')
-      .delete()
-      .eq('hotel_id', hotelId);
-    if (deleteRegimenesError) throw deleteRegimenesError;
-
-    if (regimenesIds.length > 0) {
-      const { error: insertRegimenesError } = await this.client
-        .from('regimen_hotel')
-        .insert(regimenesIds.map((regimenId) => ({ hotel_id: hotelId, regimen_id: regimenId })));
-      if (insertRegimenesError) throw insertRegimenesError;
+    if (error) throw error;    
+    const hotelIdGuardado = Number(data.hotel_id);
+    if (!Number.isFinite(hotelIdGuardado)) {
+      throw new Error('No se pudo guardar el hotel.');
     }
 
-    const { error: deleteActividadesError } = await this.client
-      .from('actividades_hotel')
-      .delete()
-      .eq('hotel_id', hotelId);
-    if (deleteActividadesError) throw deleteActividadesError;
-
-    if (actividadesIds.length > 0) {
-      const { error: insertActividadesError } = await this.client
-        .from('actividades_hotel')
-        .insert(actividadesIds.map((actividadId) => ({ hotel_id: hotelId, actividad_id: actividadId })));
-      if (insertActividadesError) throw insertActividadesError;
-    }
-
-    const { error: deleteImagenesError } = await this.client
-      .from('imagenes_hoteles')
-      .delete()
-      .eq('hotel_id', hotelId);
-    if (deleteImagenesError) throw deleteImagenesError;
-
-    if (imagenes.length > 0) {
-      const payloadImagenes = imagenes.map((item) => ({
-        hotel_id: hotelId,
-        url_imagen: item.url_imagen,
-        tipo_imagen_id: item.tipo_imagen_id
-      }));
-
-      const { error: insertImagenesError } = await this.client
-        .from('imagenes_hoteles')
-        .insert(payloadImagenes);
-      if (insertImagenesError) throw insertImagenesError;
-    }
+    return hotelIdGuardado;
   }
 
   async obtenerCatalogoAdmin(catalogo: CatalogoAdminKey): Promise<any[]> {

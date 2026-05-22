@@ -1,6 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-import { FormBuilder, Validators } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { SupabaseService } from 'app/core/supabase.service';
 import { MaterialModule } from 'app/shared/material.module';
@@ -41,8 +40,8 @@ interface IHotelAdmin {
 })
 export class AdminHotelesComponent implements OnInit {
   private supabase = inject(SupabaseService);
-  private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   displayedColumns = ['nombre_hotel', 'regimen', 'orden', 'acciones'];
 
@@ -63,16 +62,6 @@ export class AdminHotelesComponent implements OnInit {
   hayCambiosOrden = false;
   error = '';
   mostrarModalOrdenExito = false;
-
-  mostrarModalEdicion = false;
-  guardandoEdicion = false;
-  hotelEditando: IHotelAdmin | null = null;
-
-  formEditar = this.fb.group({
-    nombre_hotel: ['', [Validators.required]],
-    regimen_id: [null as number | null],
-    orden: [null as number | null]
-  });
 
   async ngOnInit() {
     try {
@@ -242,51 +231,36 @@ export class AdminHotelesComponent implements OnInit {
     this.mostrarModalOrdenExito = false;
   }
 
-  abrirModalEdicion(hotel: IHotelAdmin) {
-    this.hotelEditando = hotel;
-    this.formEditar.patchValue({
-      nombre_hotel: hotel.nombre_hotel ?? '',
-      regimen_id: hotel.regimen_id ?? null,
-      orden: hotel.orden ?? null
+  irAEdicion(hotel: IHotelAdmin) {
+    this.router.navigate(['/admin/hoteles/editar', hotel.id], {
+      queryParams: this.obtenerQueryParamsContexto()
     });
-    this.mostrarModalEdicion = true;
-    this.error = '';
   }
 
-  cerrarModalEdicion() {
-    this.mostrarModalEdicion = false;
-    this.hotelEditando = null;
-  }
-
-  async guardarEdicion() {
-    if (!this.hotelEditando || this.formEditar.invalid) {
-      this.formEditar.markAllAsTouched();
-      return;
-    }
-
-    this.guardandoEdicion = true;
-    this.error = '';
-
-    try {
-      const value = this.formEditar.getRawValue();
-      await this.supabase.actualizarHotelAdmin({
-        hotelId: this.hotelEditando.id,
-        nombre_hotel: (value.nombre_hotel ?? '').trim(),
-        regimen_id: value.regimen_id ?? null,
-        orden: value.orden ?? null
-      });
-
-      this.cerrarModalEdicion();
-      await this.seleccionarDestino(this.destinoSeleccionadoId);
-    } catch (error: any) {
-      this.error = error?.message ?? 'No se pudo actualizar el hotel.';
-    } finally {
-      this.guardandoEdicion = false;
-    }
+  irACreacion() {
+    this.router.navigate(['/admin/hoteles/editar', 'nuevo'], {
+      queryParams: this.obtenerQueryParamsContexto()
+    });
   }
 
   private tieneMismoOrden(): boolean {
     if (this.hoteles.length !== this.hotelesOriginalIds.length) return false;
     return this.hoteles.every((item, index) => item.id === this.hotelesOriginalIds[index]);
+  }
+
+  private obtenerQueryParamsContexto() {
+    if (this.tipoBusqueda === 'NACIONAL') {
+      return {
+        tipo: 'NACIONAL',
+        destinoId: this.destinoSeleccionadoId ?? null
+      };
+    }
+
+    return {
+      tipo: 'INTERNACIONAL',
+      continenteId: this.continenteSeleccionadoId ?? null,
+      paisId: this.paisSeleccionadoId ?? null,
+      destinoId: this.destinoInternacionalId ?? null
+    };
   }
 }

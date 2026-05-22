@@ -1,16 +1,27 @@
 <div class="flex min-w-0 flex-auto flex-col">
-    <div class="mt-2 flex h-16 shrink-0 items-center justify-between px-6">
-        <h2 class="text-3xl font-bold tracking-tight dark:text-white">Hoteles</h2>
+    <div class="sticky top-0 z-[2000] mx-6 mt-2 rounded-xl border border-transparent bg-transparent px-2 py-2 backdrop-blur-md transition-all duration-300 md:px-4">
+        <div class="w-full md:flex md:items-center md:justify-between">
+            <div class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">
+                Hoteles
+            </div>
 
-        <button mat-stroked-button color="primary" [disabled]="!hayCambiosOrden || actualizandoOrden"
-            (click)="actualizarOrden()">
-            <mat-icon class="mr-2 icon-size-5" [svgIcon]="'heroicons_outline:arrow-path'"></mat-icon>
-            @if (actualizandoOrden) {
-            Actualizando...
-            } @else {
-            Actualizar orden
-            }
-        </button>
+            <div class="my-2 flex items-center gap-3 md:my-0">
+                <button mat-raised-button color="accent" class="text-white" [disabled]="!hayCambiosOrden || actualizandoOrden"
+                    (click)="actualizarOrden()">
+                    <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:arrow-path'"></mat-icon>
+                    @if (actualizandoOrden) {
+                    Actualizando...
+                    } @else {
+                    Actualizar orden
+                    }
+                </button>
+                <button mat-raised-button color="primary" class="text-white" (click)="irACreacion()">
+                    <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+                    Crear hotel
+                </button>
+
+            </div>
+        </div>
     </div>
 
     <div class="mx-6 mt-2 rounded-2xl bg-card p-4">
@@ -118,7 +129,7 @@
                 <th mat-header-cell *matHeaderCellDef>Acciones</th>
                 <td mat-cell *matCellDef="let item">
                     <div class="flex items-center justify-center gap-2">
-                        <button mat-icon-button [matTooltip]="'Editar hotel'" (click)="abrirModalEdicion(item)">
+                        <button mat-icon-button [matTooltip]="'Editar hotel'" (click)="irAEdicion(item)">
                             <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
                         </button>
 
@@ -137,13 +148,13 @@
 </div>
 
 @if (mostrarModalOrdenExito) {
-<div class="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 px-4">
+<div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
     <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
         <h3 class="text-xl font-semibold text-gray-900">Actualizacion completada</h3>
         <p class="mt-2 text-sm text-gray-600">Orden de hoteles actualizado correctamente.</p>
 
         <div class="mt-6 flex justify-end">
-            <button mat-flat-button color="primary" (click)="cerrarModalOrdenExito()">
+            <button mat-flat-button color="primary" class="text-white" (click)="cerrarModalOrdenExito()">
                 Aceptar
             </button>
         </div>
@@ -151,46 +162,3 @@
 </div>
 }
 
-@if (mostrarModalEdicion) {
-<div class="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 px-4">
-    <div class="w-full max-w-xl rounded-2xl bg-white p-6 shadow-2xl">
-        <h3 class="text-xl font-semibold text-gray-900">Editar hotel</h3>
-
-        <form class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2" [formGroup]="formEditar">
-            <mat-form-field class="md:col-span-2">
-                <mat-label>Nombre hotel</mat-label>
-                <input matInput formControlName="nombre_hotel" />
-                @if (formEditar.get('nombre_hotel')?.invalid && formEditar.get('nombre_hotel')?.touched) {
-                <mat-error>El nombre del hotel es requerido.</mat-error>
-                }
-            </mat-form-field>
-
-            <mat-form-field>
-                <mat-label>Regimen</mat-label>
-                <mat-select formControlName="regimen_id">
-                    <mat-option [value]="null">Sin regimen</mat-option>
-                    @for (regimen of regimenes; track regimen.id) {
-                    <mat-option [value]="regimen.id">{{ regimen.descripcion }}</mat-option>
-                    }
-                </mat-select>
-            </mat-form-field>
-
-            <mat-form-field>
-                <mat-label>Orden</mat-label>
-                <input matInput type="number" min="0" formControlName="orden" />
-            </mat-form-field>
-        </form>
-
-        <div class="mt-6 flex justify-end gap-2">
-            <button mat-stroked-button (click)="cerrarModalEdicion()">Cancelar</button>
-            <button mat-flat-button color="primary" [disabled]="guardandoEdicion" (click)="guardarEdicion()">
-                @if (guardandoEdicion) {
-                Guardando...
-                } @else {
-                Guardar cambios
-                }
-            </button>
-        </div>
-    </div>
-</div>
-}
