@@ -4,16 +4,21 @@
         <ng-container *ngTemplateOutlet="skeletonCotizacion"></ng-container>
         }@else {
         @if(esEdicion){
-        <div class="flex min-w-0 flex-auto flex-col mx-6 mt-4">
+        <div class="no-print flex min-w-0 flex-auto flex-col mx-6 mt-4">
             <div
-                class="flex top-0 z-50 items-center justify-between w-full py-2 px-2 md:px-4 transition-all duration-300 backdrop-blur-md">
-                <div class="text-3xl font-semibold leading-tight">
+                class="sticky top-0 z-[2000] flex items-center justify-between w-full rounded-xl border border-transparent bg-transparent px-2 py-2 transition-all duration-300 backdrop-blur-md md:px-4">
+                <div class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">
                     Editar cotización
                 </div>
-                <div class="flex justify-end">
-                    <button mat-raised-button color="warn" class="gap-2 "
+                <div class="flex justify-end gap-2">
+                    <button mat-raised-button color="primary" class="gap-2 text-white" type="button"
+                        [disabled]="exportandoPdf" (click)="exportarCotizacionPdf()">
+                        <mat-icon class="icon-size-5 icon-thick text-white" [svgIcon]="'heroicons_outline:document-arrow-down'"></mat-icon>
+                        <span>{{ exportandoPdf ? 'Generando...' : 'Descargar PDF' }}</span>
+                    </button>
+                    <button mat-raised-button color="warn" class="gap-2 text-white"
                         [routerLink]="'/admin/solicitudes-cotizacion'">
-                        <mat-icon class="icon-size-5 icon-thick" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
+                        <mat-icon class="icon-size-5 icon-thick text-white" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
                         <span>Regresar</span>
                     </button>
                 </div>
@@ -36,7 +41,7 @@
             </div>
         </header>
         }
-        <section class="bg-card m-5 rounded-3xl shadow-xl">
+        <section class="print-area bg-card m-5 rounded-3xl shadow-xl">
             <form [formGroup]="edicionForm">
                 <div class="text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-200 px-5">
                     <main class="max-w-7xl mx-auto px-4 py-2 pb-32">
@@ -60,7 +65,7 @@
                                     <div class="flex items-center gap-4">
                                         <div
                                             class="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center">
-                                            <mat-icon class="icon-size-5 icon-thick"
+                                            <mat-icon class="icon-size-5 icon-thick text-white"
                                                 [svgIcon]="'heroicons_outline:calendar-days'"></mat-icon>
                                         </div>
                                         <div>
@@ -178,7 +183,7 @@
                                                     class="flex items-center justify-center sm:items-end sm:justify-end ">
                                                     @if(!esEdicion && precioSinSeguro){
                                                     <button (click)="contactarAgente('sin_seguro')"
-                                                        class="bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
+                                                        class="no-print bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
                                                         {{ t('contactar_agente') }}
                                                     </button>
                                                     }
@@ -193,7 +198,7 @@
                                         class="grid grid-cols-1  text-[10px] text-slate-400 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl font-medium space-y-2">
                                         @for (e of edicionForm.get('condicionesPrecioSinSeguro')?.value; track e.id) {
                                         <span class="flex items-center gap-2">
-                                            <mat-icon class="icon-size-5 icon-thick"
+                                            <mat-icon class="icon-size-5 icon-thick text-white"
                                                 [svgIcon]="'heroicons_outline:information-circle'"></mat-icon>
                                             <!-- {{ t('medios_pago') }} -->
                                             {{e.descripcion}}
@@ -209,7 +214,7 @@
                                         class="grid grid-cols-1  text-[10px] text-slate-400 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl font-medium space-y-2">
                                         @for (e of precioSinSeguro.condiciones; track e.id) {
                                         <span class="flex items-center gap-2">
-                                            <mat-icon class="icon-size-5 icon-thick"
+                                            <mat-icon class="icon-size-5 icon-thick text-white"
                                                 [svgIcon]="'heroicons_outline:information-circle'"></mat-icon>
                                             <!-- {{ t('medios_pago') }} -->
                                             {{e.descripcion}}
@@ -312,7 +317,7 @@
 
                                                     @if(!esEdicion && precioConSeguro){
                                                     <button (click)="contactarAgente('con_seguro')"
-                                                        class="bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
+                                                        class="no-print bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
                                                         {{ t('contactar_agente') }}
                                                     </button>
                                                     }
@@ -417,7 +422,7 @@
                                         class="grid grid-cols-1  text-[10px] text-slate-400 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl font-medium space-y-2">
                                         @for (e of edicionForm.get('condicionesPrecioConSeguro')?.value; track e.id) {
                                         <span class="flex items-center gap-2">
-                                            <mat-icon class="icon-size-5 icon-thick"
+                                            <mat-icon class="icon-size-5 icon-thick text-white"
                                                 [svgIcon]="'heroicons_outline:information-circle'"></mat-icon>
                                             {{e.descripcion}}
                                         </span>
@@ -432,7 +437,7 @@
                                         class="grid grid-cols-1  text-[10px] text-slate-400 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl font-medium space-y-2">
                                         @for (e of precioConSeguro.condiciones; track e.id) {
                                         <span class="flex items-center gap-2">
-                                            <mat-icon class="icon-size-5 icon-thick"
+                                            <mat-icon class="icon-size-5 icon-thick text-white"
                                                 [svgIcon]="'heroicons_outline:information-circle'"></mat-icon>
                                             {{e.descripcion}}
                                         </span>
@@ -551,7 +556,7 @@
                                                     class="flex items-center justify-center sm:items-end sm:justify-end ">
                                                     @if(!esEdicion && precioAMeses){
                                                     <button (click)="contactarAgente('a_meses')"
-                                                        class="bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
+                                                        class="no-print bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
                                                         {{ t('contactar_agente') }}
                                                     </button>
                                                     }
@@ -658,7 +663,7 @@
                                         class="grid grid-cols-1  text-[10px] text-slate-400 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl font-medium space-y-2">
                                         @for (e of edicionForm.get('condicionesPrecioMeses')?.value; track e.id) {
                                         <span class="flex items-center gap-2">
-                                            <mat-icon class="icon-size-5 icon-thick"
+                                            <mat-icon class="icon-size-5 icon-thick text-white"
                                                 [svgIcon]="'heroicons_outline:information-circle'"></mat-icon>
                                             {{e.descripcion}}
                                         </span>
@@ -670,7 +675,7 @@
                                         class="grid grid-cols-1  text-[10px] text-slate-400 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl font-medium space-y-2">
                                         @for (e of precioAMeses.condiciones; track e.id) {
                                         <span class="flex items-center gap-2">
-                                            <mat-icon class="icon-size-5 icon-thick"
+                                            <mat-icon class="icon-size-5 icon-thick text-white"
                                                 [svgIcon]="'heroicons_outline:information-circle'"></mat-icon>
                                             {{e.descripcion}}
                                         </span>
@@ -843,7 +848,7 @@
                         </div>
 
                     </main>
-                    <div class="sticky bottom-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl
+                    <div class="no-print sticky bottom-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl
                          border-t border-slate-100 dark:border-slate-800 z-50">
 
                         <div class="max-w-7xl mx-auto px-4 sm:px-10 py-4 sm:py-5
@@ -903,7 +908,7 @@
                             @if(!esEdicion){
                             <!-- TODO: MANDAR COTIZACION AL AGENTE  -->
 
-                            <button class="bg-[#1e3a5f] text-white
+                            <button class="no-print bg-[#1e3a5f] text-white
                                px-6 sm:px-12 py-3 sm:py-4
                                rounded-2xl font-black text-xs uppercase tracking-widest
                                hover:scale-[1.02] transition-all
@@ -1012,7 +1017,7 @@
     }
 
     <div *ngIf="mostrarMapa" [ubicacion]="informacionCotizacion.ubicacion"
-        class="fixed inset-0 z-[999] bg-black/50 backdrop-blur-sm flex items-end justify-center">
+        class="no-print fixed inset-0 z-[999] bg-black/50 backdrop-blur-sm flex items-end justify-center">
         <div
             class="bg-white dark:bg-gray-900 w-4/5 max-h-[75%] rounded-t-2xl shadow-xl p-4 overflow-hidden animate-slide-up relative">
 
