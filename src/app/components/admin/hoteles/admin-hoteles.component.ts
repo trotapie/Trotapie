@@ -59,9 +59,12 @@ export class AdminHotelesComponent implements OnInit {
   cargando = true;
   cargandoHoteles = false;
   actualizandoOrden = false;
+  eliminandoHotel = false;
   hayCambiosOrden = false;
   error = '';
   mostrarModalOrdenExito = false;
+  mostrarModalConfirmarEliminarHotel = false;
+  hotelAEliminar: IHotelAdmin | null = null;
 
   async ngOnInit() {
     try {
@@ -241,6 +244,37 @@ export class AdminHotelesComponent implements OnInit {
     this.router.navigate(['/admin/hoteles/editar', 'nuevo'], {
       queryParams: this.obtenerQueryParamsContexto()
     });
+  }
+
+  abrirModalConfirmarEliminarHotel(hotel: IHotelAdmin) {
+    this.hotelAEliminar = hotel;
+    this.mostrarModalConfirmarEliminarHotel = true;
+    this.error = '';
+  }
+
+  cerrarModalConfirmarEliminarHotel() {
+    this.mostrarModalConfirmarEliminarHotel = false;
+    this.hotelAEliminar = null;
+  }
+
+  async confirmarEliminarHotel() {
+    if (!this.hotelAEliminar || this.eliminandoHotel) return;
+
+    const hotelId = this.hotelAEliminar.id;
+    this.eliminandoHotel = true;
+    this.error = '';
+
+    try {
+      await this.supabase.eliminarHotelAdmin(hotelId);
+      this.hoteles = this.hoteles.filter((item) => item.id !== hotelId);
+      this.hotelesOriginalIds = this.hoteles.map((item) => item.id);
+      this.hayCambiosOrden = false;
+      this.cerrarModalConfirmarEliminarHotel();
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudo eliminar el hotel.';
+    } finally {
+      this.eliminandoHotel = false;
+    }
   }
 
   private tieneMismoOrden(): boolean {

@@ -133,6 +133,10 @@
                             <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
                         </button>
 
+                        <button mat-icon-button [matTooltip]="'Eliminar hotel'" (click)="abrirModalConfirmarEliminarHotel(item)">
+                            <mat-icon class="icon-size-5 text-red-600">delete</mat-icon>
+                        </button>
+
                         <button mat-icon-button [matTooltip]="'Reordenar'" cdkDragHandle>
                             <mat-icon class="cursor-move">drag_indicator</mat-icon>
                         </button>
@@ -156,6 +160,31 @@
         <div class="mt-6 flex justify-end">
             <button mat-flat-button color="primary" class="text-white" (click)="cerrarModalOrdenExito()">
                 Aceptar
+            </button>
+        </div>
+    </div>
+</div>
+}
+
+@if (mostrarModalConfirmarEliminarHotel) {
+<div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
+    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+        <h3 class="text-xl font-semibold text-gray-900">Confirmar eliminacion</h3>
+        <p class="mt-2 text-sm text-gray-600">
+            Seguro que quieres eliminar el hotel
+            <span class="font-semibold text-gray-900">{{ hotelAEliminar?.nombre_hotel }}</span>?
+        </p>
+
+        <div class="mt-6 flex justify-end gap-2">
+            <button mat-stroked-button type="button" (click)="cerrarModalConfirmarEliminarHotel()" [disabled]="eliminandoHotel">
+                Cancelar
+            </button>
+            <button mat-flat-button color="warn" type="button" (click)="confirmarEliminarHotel()" [disabled]="eliminandoHotel">
+                @if (eliminandoHotel) {
+                Eliminando...
+                } @else {
+                Eliminar
+                }
             </button>
         </div>
     </div>

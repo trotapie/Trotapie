@@ -1834,6 +1834,49 @@ export class SupabaseService {
     return data ?? [];
   }
 
+  async eliminarHotelAdmin(hotelId: number) {
+    if (!Number.isFinite(hotelId)) {
+      throw new Error('Hotel invalido para eliminar.');
+    }
+
+    const { error: errorRegimenes } = await this.client
+      .from('regimen_hotel')
+      .delete()
+      .eq('hotel_id', hotelId);
+
+    if (errorRegimenes) throw errorRegimenes;
+
+    const { error: errorActividades } = await this.client
+      .from('actividades_hotel')
+      .delete()
+      .eq('hotel_id', hotelId);
+
+    if (errorActividades) throw errorActividades;
+
+    const { error: errorImagenes } = await this.client
+      .from('imagenes_hoteles')
+      .delete()
+      .eq('hotel_id', hotelId);
+
+    if (errorImagenes) throw errorImagenes;
+
+    const { error: errorTraducciones } = await this.client
+      .from('hotel_traducciones')
+      .delete()
+      .eq('hotel_id', hotelId);
+
+    if (errorTraducciones) throw errorTraducciones;
+
+    const { error: errorHotel } = await this.client
+      .from('hoteles')
+      .delete()
+      .eq('id', hotelId);
+
+    if (errorHotel) throw errorHotel;
+
+    return { deleted: 1 };
+  }
+
   async actualizarHotelAdmin(payload: {
     hotelId: number;
     nombre_hotel: string;
