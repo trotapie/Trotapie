@@ -30,13 +30,10 @@ module.exports = async (req, res) => {
 
   const nombreHotel = normalizeText(cotizacion?.nombre_hotel);
   const destinoNombre = normalizeText(cotizacion?.destino_nombre);
+  const image = normalizeImageUrl(cotizacion?.fondo);
 
-  const title = nombreHotel
-    ? `${nombreHotel} | Cotizacion Trotapie`
-    : 'Cotizacion de viaje | Trotapie';
-
+  const title = buildTitle(nombreHotel, destinoNombre);
   const description = buildDescription(nombreHotel, destinoNombre);
-  const image = OG_IMAGE_URL;
 
   const html = `<!doctype html>
 <html lang="es">
@@ -52,7 +49,7 @@ module.exports = async (req, res) => {
   <meta property="og:image:secure_url" content="${escapeHtml(image)}" />
   <meta property="og:url" content="${escapeHtml(spaUrl)}" />
 
-  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${escapeHtml(title)}" />
   <meta name="twitter:description" content="${escapeHtml(description)}" />
   <meta name="twitter:image" content="${escapeHtml(image)}" />
@@ -116,14 +113,30 @@ async function ejecutarRpc(rpcName, publicId) {
 
 function buildDescription(nombreHotel, destinoNombre) {
   if (nombreHotel && destinoNombre) {
-    return `Cotizacion para ${nombreHotel} en ${destinoNombre} con Trotapie.`;
+    return `Cotizacion para ${destinoNombre}. Revisa la propuesta para ${nombreHotel} y contacta a tu agente Trotapie.`;
+  }
+
+  if (destinoNombre) {
+    return `Cotizacion para ${destinoNombre}. Revisa tu propuesta y contacta a tu agente Trotapie.`;
   }
 
   if (nombreHotel) {
-    return `Cotizacion para ${nombreHotel} con Trotapie.`;
+    return `Cotizacion para ${nombreHotel}. Revisa tu propuesta y contacta a tu agente Trotapie.`;
   }
 
   return 'Revisa tu cotizacion de viaje con Trotapie.';
+}
+
+function buildTitle(nombreHotel, destinoNombre) {
+  if (destinoNombre) {
+    return `Cotizacion para ${destinoNombre} | Trotapie`;
+  }
+
+  if (nombreHotel) {
+    return `Cotizacion para ${nombreHotel} | Trotapie`;
+  }
+
+  return 'Cotizacion de viaje | Trotapie';
 }
 
 function getQueryValue(value) {
@@ -145,6 +158,23 @@ function normalizeText(value) {
   }
 
   return String(value).replace(/\s+/g, ' ').trim();
+}
+
+function normalizeImageUrl(value) {
+  const image = normalizeText(value);
+  if (!image) {
+    return OG_IMAGE_URL;
+  }
+
+  if (/^https?:\/\//i.test(image)) {
+    return image;
+  }
+
+  if (image.startsWith('/')) {
+    return `${APP_BASE_URL}${image}`;
+  }
+
+  return `${APP_BASE_URL}/${image}`;
 }
 
 function escapeHtml(value) {

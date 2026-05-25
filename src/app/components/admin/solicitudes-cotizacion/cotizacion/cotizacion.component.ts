@@ -401,7 +401,7 @@ export class CotizacionComponent implements OnInit {
     const telefono = this.telefonoForm.get('telefono')?.value ?? '';
     const telefonoLimpio = String(telefono).replace(/\D/g, '');
     const lada = String(this.ladaCtrl?.value ?? this.defaultDialCode).replace(/\D/g, '');
-    const url = `https://app.trotapie.com/cotizacion/${this.informacionCotizacion.public_id}`
+    const url = `https://app.trotapie.com/share/cotizacion/${this.informacionCotizacion.public_id}`
 
     const mensaje = await this.buildMensajeCotizacionViaje(url);
     const mensajeCodificado = encodeURIComponent(mensaje);
@@ -1041,7 +1041,7 @@ export class CotizacionComponent implements OnInit {
       con_seguro: 'opcion-con-seguro',
       a_meses: 'opcion-a-meses',
     };
-    const url = `https://app.trotapie.com/cotizacion/${this.informacionCotizacion.public_id}`
+    const url = `https://app.trotapie.com/share/cotizacion/${this.informacionCotizacion.public_id}`
 
     const mensaje = await this.buildMensajeInteres(
       url,
