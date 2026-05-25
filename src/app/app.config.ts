@@ -16,6 +16,7 @@ import { provideAuth } from 'app/core/auth/auth.provider';
 import { provideIcons } from 'app/core/icons/icons.provider';
 import { MockApiService } from 'app/mock-api';
 import { firstValueFrom } from 'rxjs';
+import { provideServiceWorker } from '@angular/service-worker';
 import { TranslocoHttpLoader } from './core/transloco/transloco.http-loader';
 import { mockApiInterceptor } from '@fuse/lib/mock-api';
 import { getDefaultLang } from './lang.utils';
@@ -137,6 +138,10 @@ export const appConfig: ApplicationConfig = {
                     },
                 ],
             },
+        }),
+        provideServiceWorker('ngsw-worker.js', {
+            enabled: !isDevMode(),
+            registrationStrategy: 'registerWhenStable:30000',
         }),
     ],
 };
