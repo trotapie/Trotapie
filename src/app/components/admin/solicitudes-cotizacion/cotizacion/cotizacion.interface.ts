@@ -20,6 +20,7 @@ export interface ICotizacion {
     destino_nombre: string;
     tipo_destino: string;
     empleado_nombre: string;
+    regimen?: string | null;
     estatus: string;
     precios: PreciosYCondiciones[];
     politicas_tarifas: PoliticasTarifas;
@@ -27,6 +28,22 @@ export interface ICotizacion {
     porcentaje_seguro: number;
     fecha_limite_meses: string;
     fecha_limite_seguro: string;
+    cotizacion_multiple?: CotizacionMultipleItem[];
+}
+
+export interface CotizacionMultipleItem {
+    tipo_habitacion_id: number | null;
+    precio: number | null;
+    precio_con_seguro: number | null;
+    precio_a_meses: number | null;
+    condiciones_precio?: Condicione[];
+    condiciones_precio_seguro?: Condicione[];
+    condiciones_precio_meses?: Condicione[];
+    porcentaje_seguro?: number | null;
+    porcentaje_meses?: number | null;
+    fecha_limite_seguro?: string | null;
+    fecha_limite_meses?: string | null;
+    tipo_tarifa?: string | null;
 }
 
 export interface Habitaciones {

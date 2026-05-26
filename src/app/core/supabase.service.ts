@@ -1444,6 +1444,7 @@ export class SupabaseService {
     to_email: string;
     to_name?: string | null;
     hotel_nombre?: string | null;
+    asunto?: string | null;
     fecha_entrada?: string | Date | null;
     fecha_salida?: string | Date | null;
     noches?: number | null;
@@ -1462,6 +1463,7 @@ export class SupabaseService {
         correo: toEmail,
         nombre: payload?.to_name ?? '',
         hotel: payload?.hotel_nombre ?? '',
+        asunto: payload?.asunto ?? null,
         fecha_entrada: payload?.fecha_entrada ?? null,
         fecha_salida: payload?.fecha_salida ?? null,
         noches: payload?.noches ?? null,
@@ -1637,7 +1639,8 @@ export class SupabaseService {
       p_porcentaje_meses: formValue.porcentajeMeses,
 
       p_fecha_limite_seguro: formValue.fechaLimiteSeguro,
-      p_fecha_limite_meses: formValue.fechaLimiteMeses
+      p_fecha_limite_meses: formValue.fechaLimiteMeses,
+      p_cotizacion_multiple: formValue.cotizacionMultiple ?? null
 
     });
 

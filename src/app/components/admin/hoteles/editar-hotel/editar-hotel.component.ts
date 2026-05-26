@@ -832,7 +832,7 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
 
     try {
       const raw = this.form.getRawValue();
-      await this.traducirHotelDesdeEspanol(true);
+      await this.traducirHotelDesdeEspanol(false);
       const regimenPrincipalId = this.parseNumber(raw.regimen_principal_id);
       const descuentoId = this.parseNumber(raw.descuento_id);
       if (regimenPrincipalId) {
@@ -909,6 +909,7 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
 
       this.imagenesEliminadasPendientes = [];
       this.marcarEstadoGuardado();
+      this.error = '';
       this.mostrarModalExito = true;
     } catch (error: any) {
       this.error = error?.message ?? 'No se pudo guardar la informacion del hotel.';

@@ -59,6 +59,232 @@
                                     </p>
                                 </section>
 
+                                @if (!esEdicion && habitacionesCotizacionPublicaVista.length > 1) {
+                                <mat-tab-group [animationDuration]="'0ms'" class="tp-room-tabs">
+                                @for (habitacionCotizacion of habitacionesCotizacionPublicaVista; track $index) {
+                                <mat-tab>
+                                    <ng-template mat-tab-label>
+                                        <span class="text-[11px] uppercase tracking-widest font-bold">
+                                            Habitación {{ habitacionCotizacion.indice }}
+                                        </span>
+                                    </ng-template>
+                                    <div class="pt-4">
+                                <div
+                                    class="bg-white dark:bg-slate-800 p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-50 dark:border-slate-700 mb-6">
+                                    <div class="flex items-center justify-between mb-6">
+                                        <div>
+                                            <p class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500">
+                                                Habitación {{ habitacionCotizacion.indice }}
+                                            </p>
+                                            @if (habitacionCotizacion.tipoHabitacion) {
+                                            <p class="text-sm font-bold text-slate-700 dark:text-slate-200 mt-1">
+                                                {{ habitacionCotizacion.tipoHabitacion }}
+                                            </p>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    @if (habitacionCotizacion.precioSinSeguro !== null) {
+                                    <div class="pt-2 pb-4">
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                            <div>
+                                                <p class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
+                                                    {{ t('precio_sin_seguro') }}
+                                                </p>
+                                                <p class="text-3xl font-black text-[#1e3a5f] dark:text-white tracking-tight">
+                                                    MXN {{ habitacionCotizacion.precioSinSeguro | currency }}
+                                                </p>
+                                            </div>
+                                            <div class="flex items-center justify-center sm:items-end sm:justify-end ">
+                                                <button (click)="contactarAgente('sin_seguro')"
+                                                    class="no-print bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
+                                                    {{ t('contactar_agente') }}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-1 text-[10px] text-slate-400 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl font-medium space-y-2">
+                                        @for (e of habitacionCotizacion.condicionesSinSeguro; track e.id) {
+                                        <span class="flex items-center gap-2">
+                                            <mat-icon class="icon-size-5 icon-thick text-white"
+                                                [svgIcon]="'heroicons_outline:information-circle'"></mat-icon>
+                                            {{e.descripcion}}
+                                        </span>
+                                        }
+                                    </div>
+                                    }
+
+                                    @if (habitacionCotizacion.precioConSeguro !== null) {
+                                    <hr class="my-6 border-slate-200 dark:border-slate-700">
+                                    <div class=" border-t border-slate-50 dark:border-slate-700 pb-4">
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                            <div>
+                                                <p class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
+                                                    {{ t('precio_con_seguro') }}
+                                                </p>
+                                                <p class="text-3xl font-black text-[#1e3a5f] dark:text-white tracking-tight">
+                                                    MXN {{ habitacionCotizacion.precioConSeguro | currency }}
+                                                </p>
+                                            </div>
+                                            <div class="flex items-center justify-center sm:items-end sm:justify-end ">
+                                                <button (click)="contactarAgente('con_seguro')"
+                                                    class="no-print bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
+                                                    {{ t('contactar_agente') }}
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div class="p-2 -mt-2 mb-2">
+                                            <div class="rounded-xl p-8 relative overflow-hidden ">
+                                                <div class="absolute top-0 right-0 w-64 h-64 bg-[#EAB308]/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+                                                <div class="absolute bottom-0 left-0 w-64 h-64 bg-[#EAB308]/5 rounded-full -ml-32 -mb-32 blur-3xl"></div>
+                                                <div class="relative grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                                    <div class="flex flex-col gap-4 group">
+                                                        <div class="flex items-center gap-3">
+                                                            <div class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                                <span class="material-symbols-outlined text-2xl">confirmation_number</span>
+                                                            </div>
+                                                            <h3 class="text-xs font-bold uppercase tracking-widest">
+                                                                {{t('apartado')}}
+                                                            </h3>
+                                                        </div>
+                                                        <div class="flex flex-col">
+                                                            <span class="text-3xl font-extrabold tracking-tight">{{(habitacionCotizacion.apartadoSeguro ?? 0) | currency}} MXN</span>
+                                                            <span class="text-[#EAB308] text-xs font-medium mt-1">{{t('pagado')}}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex flex-col gap-4 group">
+                                                        <div class="flex items-center gap-3">
+                                                            <div class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                                <span class="material-symbols-outlined text-2xl">credit_score</span>
+                                                            </div>
+                                                            <h3 class="text-xs font-bold uppercase tracking-widest">
+                                                                {{t('pague_despues')}}
+                                                            </h3>
+                                                        </div>
+                                                        <div class="flex flex-col">
+                                                            <span class="text-3xl font-extrabold tracking-tight">{{(habitacionCotizacion.pagueDespuesSeguro ?? 0) | currency}} MXN</span>
+                                                            <span class="text-slate-500 text-xs font-medium mt-1">{{t('pendiente')}}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex flex-col gap-4 group">
+                                                        <div class="flex items-center gap-3">
+                                                            <div class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                                <span class="material-symbols-outlined text-2xl">event_upcoming</span>
+                                                            </div>
+                                                            <h3 class="text-xs font-bold uppercase tracking-widest">
+                                                                {{t('fecha_limite')}}
+                                                            </h3>
+                                                        </div>
+                                                        <div class="flex flex-col">
+                                                            <span class="text-[#EAB308] text-3xl font-extrabold tracking-tight">{{habitacionCotizacion.fechaLimiteSeguro | dateI18n:'dd MMM yyyy':informacionCotizacion.idioma}}</span>
+                                                            <span class="text-slate-500 text-xs font-medium mt-1">{{t('ultimo_dia_pago')}}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-1  text-[10px] text-slate-400 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl font-medium space-y-2">
+                                        @for (e of habitacionCotizacion.condicionesConSeguro; track e.id) {
+                                        <span class="flex items-center gap-2">
+                                            <mat-icon class="icon-size-5 icon-thick text-white"
+                                                [svgIcon]="'heroicons_outline:information-circle'"></mat-icon>
+                                            {{e.descripcion}}
+                                        </span>
+                                        }
+                                    </div>
+                                    }
+
+                                    @if (habitacionCotizacion.precioMeses !== null) {
+                                    <hr class="my-6 border-slate-200 dark:border-slate-700">
+                                    <div class=" border-t border-slate-50 dark:border-slate-700 pb-4">
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                            <div>
+                                                <p class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
+                                                    {{ t('precio_a_meses') }}
+                                                </p>
+                                                <p class="text-3xl font-black text-[#1e3a5f] dark:text-white tracking-tight">
+                                                    MXN {{ habitacionCotizacion.precioMeses | currency }}
+                                                </p>
+                                            </div>
+                                            <div class="flex items-center justify-center sm:items-end sm:justify-end ">
+                                                <button (click)="contactarAgente('a_meses')"
+                                                    class="no-print bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
+                                                    {{ t('contactar_agente') }}
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div class="p-2 -mt-2 mb-2">
+                                            <div class="rounded-xl p-8 relative overflow-hidden ">
+                                                <div class="absolute top-0 right-0 w-64 h-64 bg-[#EAB308]/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+                                                <div class="absolute bottom-0 left-0 w-64 h-64 bg-[#EAB308]/5 rounded-full -ml-32 -mb-32 blur-3xl"></div>
+                                                <div class="relative grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                                    <div class="flex flex-col gap-4 group">
+                                                        <div class="flex items-center gap-3">
+                                                            <div class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                                <span class="material-symbols-outlined text-2xl">confirmation_number</span>
+                                                            </div>
+                                                            <h3 class="text-xs font-bold uppercase tracking-widest">
+                                                                {{t('apartado')}}
+                                                            </h3>
+                                                        </div>
+                                                        <div class="flex flex-col">
+                                                            <span class="text-3xl font-extrabold tracking-tight">{{(habitacionCotizacion.apartadoMeses ?? 0) | currency}} MXN</span>
+                                                            <span class="text-[#EAB308] text-xs font-medium mt-1">{{t('pagado')}}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex flex-col gap-4 group">
+                                                        <div class="flex items-center gap-3">
+                                                            <div class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                                <span class="material-symbols-outlined text-2xl">credit_score</span>
+                                                            </div>
+                                                            <h3 class="text-xs font-bold uppercase tracking-widest">
+                                                                {{t('pague_despues')}}
+                                                            </h3>
+                                                        </div>
+                                                        <div class="flex flex-col">
+                                                            <span class="text-3xl font-extrabold tracking-tight">{{(habitacionCotizacion.pagueDespuesMeses ?? 0) | currency}} MXN</span>
+                                                            <span class="text-slate-500 text-xs font-medium mt-1">{{t('pendiente')}}</span>
+                                                        </div>
+                                                    </div>
+                                                    @if(habitacionCotizacion.tipoTarifaMeses === 'apartado') {
+                                                    <div class="flex flex-col gap-4 group">
+                                                        <div class="flex items-center gap-3">
+                                                            <div class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                                <span class="material-symbols-outlined text-2xl">event_upcoming</span>
+                                                            </div>
+                                                            <h3 class="text-xs font-bold uppercase tracking-widest">
+                                                                {{t('fecha_limite')}}
+                                                            </h3>
+                                                        </div>
+                                                        <div class="flex flex-col">
+                                                            <span class="text-[#EAB308] text-3xl font-extrabold tracking-tight">{{habitacionCotizacion.fechaLimiteMeses | dateI18n:'dd MMM yyyy':informacionCotizacion.idioma}}</span>
+                                                            <span class="text-slate-500 text-xs font-medium mt-1">{{t('ultimo_dia_pago')}}</span>
+                                                        </div>
+                                                    </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-1  text-[10px] text-slate-400 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl font-medium space-y-2">
+                                        @for (e of habitacionCotizacion.condicionesMeses; track e.id) {
+                                        <span class="flex items-center gap-2">
+                                            <mat-icon class="icon-size-5 icon-thick text-white"
+                                                [svgIcon]="'heroicons_outline:information-circle'"></mat-icon>
+                                            {{e.descripcion}}
+                                        </span>
+                                        }
+                                    </div>
+                                    }
+                                </div>
+                                    </div>
+                                </mat-tab>
+                                }
+                                </mat-tab-group>
+                                }@else {
                                 <div
                                     class="bg-white dark:bg-slate-800 p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-50 dark:border-slate-700">
 
@@ -109,6 +335,26 @@
                                         </select>
                                         }
                                     </div>
+
+                                    @if (esEdicion) {
+                                    <div class="mt-4">
+                                        <p
+                                            class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
+                                            {{ t('habitacion') }}
+                                        </p>
+                                        <mat-form-field class="w-full">
+                                            <input type="text" matInput placeholder="Selecciona tipo de habitación"
+                                                formControlName="tipoHabitacion" [matAutocomplete]="autoPrincipal" />
+
+                                            <mat-autocomplete #autoPrincipal="matAutocomplete"
+                                                [displayWith]="displayHabitacion">
+                                                <mat-option *ngFor="let option of filteredOptions$" [value]="option">
+                                                    {{ option.nombre_habitacion }}
+                                                </mat-option>
+                                            </mat-autocomplete>
+                                        </mat-form-field>
+                                    </div>
+                                    }
 
                                     <div class="pt-6 border-t border-slate-50 dark:border-slate-700 pb-4">
 
@@ -683,8 +929,267 @@
                                     </div>
                                     }
 
+                                    @if (esEdicion && habitacionesAdicionales.length > 0) {
+                                    <hr class="my-6 border-slate-200 dark:border-slate-700">
+                                    <div formArrayName="habitacionesAdicionales" class="space-y-10">
+                                        <p
+                                            class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500">
+                                            Cotizacion por habitacion adicional
+                                        </p>
+                                        @for (habitacion of habitacionesAdicionales.controls; track $index) {
+                                        <div [formGroupName]="$index"
+                                            class="rounded-2xl border border-slate-200 dark:border-slate-700 p-5">
+                                            <div class="mb-4">
+                                                <p
+                                                    class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500">
+                                                    HABITACIÓN {{ $index + 2 }}
+                                                </p>
+                                            </div>
+                                            <div class="mb-4">
+                                                <p
+                                                    class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
+                                                    {{ t('habitacion') }}
+                                                </p>
+                                                <mat-form-field class="w-full">
+                                                    <mat-select formControlName="tipoHabitacion"
+                                                        [compareWith]="compareTipoHabitacion"
+                                                        placeholder="Selecciona tipo de habitación">
+                                                        @for (option of tiposHabitacion; track option.id) {
+                                                        <mat-option [value]="option">{{ option.nombre_habitacion }}</mat-option>
+                                                        }
+                                                    </mat-select>
+                                                </mat-form-field>
+                                            </div>
+                                            <div class="pt-4 border-slate-200 dark:border-slate-700 pb-4">
+                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                    <div>
+                                                        <p
+                                                            class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
+                                                            {{ t('precio_sin_seguro') }}
+                                                        </p>
+                                                        <input type="tel" formControlName="precio" inputmode="numeric"
+                                                            class="w-full h-12 px-4 border-2 rounded-xl focus:outline-none transition-colors dark:bg-slate-800 dark:text-white border-slate-200 dark:border-slate-700 focus:border-primary"
+                                                            importeMxnBlur />
+                                                    </div>
+                                                    <div>
+                                                        <p
+                                                            class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
+                                                            Politicas de reservación
+                                                        </p>
+                                                        <mat-form-field appearance="fill" class="tp-select w-full"
+                                                            [ngClass]="estatusInvalido ? 'tp-invalid' : 'tp-valid'">
+                                                            <mat-select formControlName="condicionesPrecioSinSeguro" multiple
+                                                                panelClass="tp-select-panel" [compareWith]="comparePolitica">
+                                                                <mat-select-trigger>
+                                                                    {{
+                                                                    estatusLabelDesdeSeleccion(habitacion.get('condicionesPrecioSinSeguro')?.value,
+                                                                    politicasNoReembolsable)
+                                                                    }}
+                                                                    @if ((habitacion.get('condicionesPrecioSinSeguro')?.value?.length || 0)
+                                                                    > 1) {
+                                                                    <span class="ml-1 text-xs opacity-70">
+                                                                        (+{{ (habitacion.get('condicionesPrecioSinSeguro')?.value?.length
+                                                                        || 0) - 1 }} más)
+                                                                    </span>
+                                                                    }
+                                                                </mat-select-trigger>
+                                                                @for (e of politicasNoReembolsable; track e.id) {
+                                                                <mat-option [value]="e">{{ e.descripcion }}</mat-option>
+                                                                }
+                                                            </mat-select>
+                                                        </mat-form-field>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="grid grid-cols-1 text-[10px] text-slate-500 dark:text-slate-300 p-3 rounded-xl font-medium space-y-2 bg-slate-100 dark:bg-slate-800/70">
+                                                @for (e of habitacion.get('condicionesPrecioSinSeguro')?.value; track e.id) {
+                                                <span class="flex items-center gap-2">
+                                                    <mat-icon class="icon-size-5 icon-thick text-white"
+                                                        [svgIcon]="'heroicons_outline:information-circle'"></mat-icon>
+                                                    {{e.descripcion}}
+                                                </span>
+                                                }
+                                            </div>
+                                            <hr class="my-5 border-slate-200 dark:border-slate-700">
+
+                                            <div class="pt-4  border-slate-200 dark:border-slate-700 pb-4">
+                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                    <div>
+                                                        <p
+                                                            class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
+                                                            {{ t('precio_con_seguro') }}
+                                                        </p>
+                                                        <div class="w-full">
+                                                            <div class="flex w-full h-12 rounded-xl border-2 overflow-hidden dark:bg-slate-800 transition-colors border-slate-200 dark:border-slate-700 focus-within:border-primary">
+                                                                <input type="tel" formControlName="precioConSeguro"
+                                                                    inputmode="numeric"
+                                                                    class="w-2/3 px-4 focus:outline-none bg-transparent"
+                                                                    importeMxnBlur />
+                                                                <div class="w-px bg-slate-200 dark:bg-slate-700"></div>
+                                                                <input type="tel" formControlName="porcentajeSeguro"
+                                                                    inputmode="decimal"
+                                                                    class="w-1/3 px-4 text-right focus:outline-none bg-transparent"
+                                                                    porcentajeBlur placeholder="0%" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <p
+                                                            class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
+                                                            Politicas de reservación
+                                                        </p>
+                                                        <mat-form-field appearance="fill" class="tp-select w-full"
+                                                            [ngClass]="estatusInvalido ? 'tp-invalid' : 'tp-valid'">
+                                                            <mat-select formControlName="condicionesPrecioConSeguro" multiple
+                                                                panelClass="tp-select-panel" [compareWith]="comparePolitica">
+                                                                <mat-select-trigger>
+                                                                    {{
+                                                                    estatusLabelDesdeSeleccion(habitacion.get('condicionesPrecioConSeguro')?.value,
+                                                                    politicasApartado)
+                                                                    }}
+                                                                    @if ((habitacion.get('condicionesPrecioConSeguro')?.value?.length || 0)
+                                                                    > 1) {
+                                                                    <span class="ml-1 text-xs opacity-70">
+                                                                        (+{{ (habitacion.get('condicionesPrecioConSeguro')?.value?.length
+                                                                        || 0) - 1 }} más)
+                                                                    </span>
+                                                                    }
+                                                                </mat-select-trigger>
+                                                                @for (e of politicasApartado; track e.id) {
+                                                                <mat-option [value]="e">{{ e.descripcion }}</mat-option>
+                                                                }
+                                                            </mat-select>
+                                                        </mat-form-field>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="grid grid-cols-1 text-[10px] rounded-xl font-medium space-y-2 -mt-2">
+                                                <mat-form-field>
+                                                    <mat-label
+                                                        class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
+                                                        Fecha Límite
+                                                    </mat-label>
+                                                    <input matInput [matDatepicker]="pickerRoomSeguro" (click)="pickerRoomSeguro.open()"
+                                                        formControlName="fechaLimiteSeguro">
+                                                    <mat-datepicker-toggle matIconSuffix [for]="pickerRoomSeguro"></mat-datepicker-toggle>
+                                                    <mat-datepicker #pickerRoomSeguro></mat-datepicker>
+                                                </mat-form-field>
+                                            </div>
+                                            <div class="grid grid-cols-1 text-[10px] text-slate-500 dark:text-slate-300 p-3 rounded-xl font-medium space-y-2 bg-slate-100 dark:bg-slate-800/70">
+                                                @for (e of habitacion.get('condicionesPrecioConSeguro')?.value; track e.id) {
+                                                <span class="flex items-center gap-2">
+                                                    <mat-icon class="icon-size-5 icon-thick text-white"
+                                                        [svgIcon]="'heroicons_outline:information-circle'"></mat-icon>
+                                                    {{e.descripcion}}
+                                                </span>
+                                                }
+                                            </div>
+                                            <hr class="my-5 border-slate-200 dark:border-slate-700">
+
+                                            <div class="pt-4  border-slate-200 dark:border-slate-700 pb-4">
+                                                <section class="mb-6">
+                                                    <fieldset id="switch" class="radio">
+                                                        <input type="radio" [id]="'no_reembolsable_'+$index"
+                                                            [name]="'tipoTarifa_'+$index" value="no_reembolsable"
+                                                            formControlName="tipoTarifa">
+                                                        <label [for]="'no_reembolsable_'+$index">
+                                                            TARIFA NO REEMBOLSABLE
+                                                        </label>
+                                                        <input type="radio" [id]="'apartado_'+$index"
+                                                            [name]="'tipoTarifa_'+$index" value="apartado"
+                                                            formControlName="tipoTarifa">
+                                                        <label [for]="'apartado_'+$index">
+                                                            TARIFA DE APARTADO
+                                                        </label>
+                                                    </fieldset>
+                                                </section>
+                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                    <div>
+                                                        <p
+                                                            class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
+                                                            {{ t('precio_a_meses') }}
+                                                        </p>
+                                                        <div class="w-full">
+                                                            <div class="flex w-full h-12 rounded-xl border-2 overflow-hidden dark:bg-slate-800 transition-colors border-slate-200 dark:border-slate-700 focus-within:border-primary">
+                                                                <input type="tel" formControlName="precioMeses"
+                                                                    inputmode="numeric"
+                                                                    class="w-2/3 px-4 focus:outline-none bg-transparent"
+                                                                    importeMxnBlur />
+                                                                <div class="w-px bg-slate-200 dark:bg-slate-700"></div>
+                                                                <input type="tel" formControlName="porcentajeMeses"
+                                                                    inputmode="decimal"
+                                                                    class="w-1/3 px-4 text-right focus:outline-none bg-transparent"
+                                                                    porcentajeBlur placeholder="0%" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <p
+                                                            class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
+                                                            Politicas de reservación
+                                                        </p>
+                                                        <mat-form-field appearance="fill" class="tp-select w-full"
+                                                            [ngClass]="estatusInvalido ? 'tp-invalid' : 'tp-valid'">
+                                                            <mat-select formControlName="condicionesPrecioMeses" multiple
+                                                                panelClass="tp-select-panel" [compareWith]="comparePolitica">
+                                                                <mat-select-trigger>
+                                                                    {{
+                                                                    estatusLabelDesdeSeleccion(
+                                                                    habitacion.get('condicionesPrecioMeses')?.value,
+                                                                    obtenerPoliticasMesesPorTipo(habitacion.get('tipoTarifa')?.value)
+                                                                    )
+                                                                    }}
+                                                                    @if ((habitacion.get('condicionesPrecioMeses')?.value?.length || 0) > 1)
+                                                                    {
+                                                                    <span class="ml-1 text-xs opacity-70">
+                                                                        (+{{ (habitacion.get('condicionesPrecioMeses')?.value?.length
+                                                                        || 0) - 1 }} más)
+                                                                    </span>
+                                                                    }
+                                                                </mat-select-trigger>
+                                                                @for (e of obtenerPoliticasMesesPorTipo(habitacion.get('tipoTarifa')?.value);
+                                                                track e.id) {
+                                                                <mat-option [value]="e">{{ e.descripcion }}</mat-option>
+                                                                }
+                                                            </mat-select>
+                                                        </mat-form-field>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            @if(habitacion.get('tipoTarifa')?.value === 'apartado'){
+                                            <div class="grid grid-cols-1 text-[10px] rounded-xl font-medium space-y-2 -mt-2">
+                                                <mat-form-field>
+                                                    <mat-label
+                                                        class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
+                                                        {{t('fecha_limite')}}
+                                                    </mat-label>
+                                                    <input matInput [matDatepicker]="pickerRoomMeses" (click)="pickerRoomMeses.open()"
+                                                        formControlName="fechaLimiteMeses">
+                                                    <mat-datepicker-toggle matIconSuffix [for]="pickerRoomMeses"></mat-datepicker-toggle>
+                                                    <mat-datepicker #pickerRoomMeses></mat-datepicker>
+                                                </mat-form-field>
+                                            </div>
+                                            }
+                                            <div class="grid grid-cols-1 text-[10px] text-slate-500 dark:text-slate-300 p-3 rounded-xl font-medium space-y-2 bg-slate-100 dark:bg-slate-800/70">
+                                                @for (e of habitacion.get('condicionesPrecioMeses')?.value; track e.id) {
+                                                <span class="flex items-center gap-2">
+                                                    <mat-icon class="icon-size-5 icon-thick text-white"
+                                                        [svgIcon]="'heroicons_outline:information-circle'"></mat-icon>
+                                                    {{e.descripcion}}
+                                                </span>
+                                                }
+                                            </div>
+                                        
+                                        </div>
+                                        }
+                                    </div>
+                                    }
 
                                 </div>
+                                }
                             </div>
 
                             <!-- IMAGEN HERO -->
@@ -757,7 +1262,8 @@
                                                 {{informacionCotizacion.regimen}}
                                             </div>
                                         </div>
-                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+                                        <div class="grid grid-cols-1 gap-10"
+                                            [ngClass]="esEdicion ? 'md:grid-cols-2' : 'md:grid-cols-3'">
                                             <div>
                                                 <p
                                                     class="text-[10px] text-slate-400 uppercase tracking-widest font-black mb-2">
@@ -780,33 +1286,6 @@
                                                     yyyy':informacionCotizacion.idioma}}</p>
                                                 <p class="text-xs text-slate-500 mt-0.5">{{ t('desde_hora', { hora:
                                                     '12:00 h' }) }} </p>
-                                            </div>
-                                            <div class="relative">
-                                                <p
-                                                    class="text-[10px] text-slate-400 uppercase tracking-widest font-black mb-2">
-                                                    {{ t('habitacion') }}</p>
-                                                @if(esEdicion && filteredOptions$){
-                                                <mat-form-field class="w-full">
-                                                    <input type="text" matInput
-                                                        placeholder="Selecciona tipo de habitación"
-                                                        formControlName="tipoHabitacion" [matAutocomplete]="auto" />
-
-                                                    <mat-autocomplete #auto="matAutocomplete"
-                                                        [displayWith]="displayHabitacion">
-                                                        <mat-option *ngFor="let option of filteredOptions$"
-                                                            [value]="option">
-                                                            {{ option.nombre_habitacion }}
-                                                        </mat-option>
-                                                    </mat-autocomplete>
-                                                </mat-form-field>
-                                                }
-                                                @if(!esEdicion){
-                                                <p class="font-bold text-slate-900 dark:text-white">
-                                                    {{informacionCotizacion.habitacion}}</p>
-                                                <p
-                                                    class="text-xs text-emerald-600 dark:text-emerald-400 font-bold mt-0.5">
-                                                    {{ t('confirmacion_inmediata') }}</p>
-                                                }
                                             </div>
                                         </div>
                                     </div>
@@ -881,14 +1360,14 @@
                                         {{informacionCotizacion.precios[0].precio | currency}}
                                     </p>
                                 </div>
-                                }@else if(esEdicion && preciosList.length === 1 && totalEstanciaEdicion !== null){ <div class="text-left sm:text-right">
+                                }@else if(esEdicion && mostrarTotalEstanciaEdicion && totalEstanciaEdicion !== null){ <div class="text-left sm:text-right">
                                     <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-0.5">
                                         {{ t('total_propuesta') }}
                                     </p>
                                     <p class="text-xl sm:text-2xl font-black
                                      text-slate-900 dark:text-white tracking-tight">
                                         MXN
-                                        {{totalEstanciaEdicion}}
+                                        {{totalEstanciaEdicion | currency}}
                                     </p>
                             </div>
 
@@ -931,17 +1410,13 @@
     </div>
 
     @if(enviarCotizacion){
-    <div class="fixed inset-0 z-[100] flex items-center justify-center p-4" id="whatsapp-modal">
+    <div class="no-print fixed inset-0 z-[3000] flex items-center justify-center p-4" id="whatsapp-modal">
         <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
         <div
             class="relative bg-white dark:bg-slate-900 w-full max-w-md rounded-[2rem] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
-            <button (click)="enviarCotizacion = false"
-                class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
-                <mat-icon class="icon-size-5 icon-thick">close</mat-icon>
-
-            </button>
             <div class="p-8">
-                <div class="flex items-center gap-3 mb-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center gap-3">
                     <div class="w-12 h-12 bg-[#25D366]/10 rounded-2xl flex items-center justify-center">
                         <svg class="w-7 h-7 text-[#56dd88]" fill="currentColor" viewBox="0 0 24 24"
                             xmlns="http://www.w3.org/2000/svg">
@@ -951,11 +1426,15 @@
                         </svg>
                     </div>
                     <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Contactar al cliente</h2>
+                    </div>
+                    <button (click)="enviarCotizacion = false"
+                        class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                        <mat-icon class="icon-size-5 icon-thick text-slate-600 dark:text-slate-200">close</mat-icon>
+                    </button>
                 </div>
                 <p class="text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
-                    Ingrese el número del cliente para iniciar una conversación por WhatsApp y mandar una cotizacion de
-                    forma
-                    personalizada.
+                    Ingresa el telefono y/o correo del cliente para enviar la cotizacion por WhatsApp o por correo de
+                    forma personalizada.
                 </p>
                 <form [formGroup]="telefonoForm" class="space-y-6">
 
@@ -966,21 +1445,20 @@
                             Número de teléfono
                         </label>
 
-                        <div class="relative flex">
-                            <!-- Prefijo -->
-                            <div class="flex items-center gap-2 px-3 h-12
-               border border-r-0 rounded-l-xl
-               bg-slate-50 dark:bg-slate-800/50" [ngClass]="telefonoInvalido
+                        <div class="relative grid grid-cols-[10.5rem_minmax(0,1fr)] items-center gap-2">
+                            <select formControlName="lada"
+                                class="h-12 w-full px-3 border-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-sm leading-tight text-slate-700 dark:text-slate-200"
+                                [ngClass]="telefonoInvalido
           ? 'border-red-500'
-          : 'border-slate-200 dark:border-slate-700'">
-                                <span class="text-lg">🇲🇽</span>
-                                <span class="text-sm font-medium text-slate-600 dark:text-slate-400">+52</span>
-                                <mat-icon>expand_more</mat-icon>
-                            </div>
+          : 'border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-primary'">
+                                <option *ngFor="let item of countryDialCodes" [value]="item.dialCode">
+                                    {{ item.country }} (+{{ item.dialCode }})
+                                </option>
+                            </select>
 
                             <!-- Input -->
-                            <input type="tel" formControlName="telefono" inputmode="numeric" maxlength="10"
-                                (input)="soloNumeros($event)" placeholder="55 0000 0000" class="flex-1 h-12 px-4 border-2 rounded-r-xl
+                            <input type="tel" formControlName="telefono" inputmode="numeric" maxlength="15"
+                                (input)="soloNumeros($event)" placeholder="Numero de telefono" class="h-12 w-full px-4 border-2 rounded-xl
                focus:outline-none transition-colors
                dark:bg-slate-800 dark:text-white" [ngClass]="telefonoInvalido
           ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
@@ -989,11 +1467,11 @@
 
                         <!-- Mensajes de error -->
                         <p *ngIf="telefonoInvalido" class="mt-2 text-xs text-red-600 font-medium">
-                            <span *ngIf="telefonoCtrl?.errors?.['required']">
-                                El número es obligatorio
+                            <span *ngIf="telefonoCtrl?.errors?.['minlength']">
+                                Minimo 6 digitos
                             </span>
                             <span *ngIf="telefonoCtrl?.errors?.['maxlength']">
-                                Máximo 10 dígitos
+                                Máximo 15 dígitos
                             </span>
                             <span *ngIf="telefonoCtrl?.errors?.['pattern']">
                                 Solo se permiten números
@@ -1002,11 +1480,42 @@
                     </div>
 
                     <!-- Botón -->
-                    <button (click)="sendCotizacion()" [disabled]="telefonoForm.invalid" class="w-full bg-[#56dd88] text-white py-4 rounded-xl font-bold
-           transition-all shadow-lg shadow-whatsapp/20
-           disabled:opacity-50 disabled:cursor-not-allowed">
-                        Enviar cotizacion por WhatsApp
+                    <div>
+                        <label class="block text-sm font-semibold mb-2" [ngClass]="correoInvalido
+        ? 'text-red-600'
+        : 'text-slate-700 dark:text-slate-300'">
+                            Correo
+                        </label>
+
+                        <input type="email" formControlName="correo" placeholder="cliente@correo.com" class="w-full h-12 px-4 border-2 rounded-xl
+               focus:outline-none transition-colors
+               dark:bg-slate-800 dark:text-white" [ngClass]="correoInvalido
+          ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+          : 'border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-primary'" />
+
+                        <p *ngIf="correoInvalido" class="mt-2 text-xs text-red-600 font-medium">
+                            Ingresa un correo valido
+                        </p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">
+                            Asunto
+                        </label>
+                        <input type="text" formControlName="asunto" placeholder="Cotizacion de viaje" class="w-full h-12 px-4 border-2 rounded-xl
+               focus:outline-none transition-colors
+               dark:bg-slate-800 dark:text-white border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-primary" />
+                    </div>
+
+                    <button type="button" (click)="enviarCotizacionCliente()" [disabled]="!puedeEnviarCotizacion"
+                        class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                        {{ enviandoCorreoCotizacion ? 'Enviando...' : textoBotonEnvioCotizacion }}
                     </button>
+                    <p *ngIf="mensajeCorreoCotizacion"
+                        class="text-sm text-center"
+                        [ngClass]="mensajeCorreoCotizacion.includes('enviada') ? 'text-green-600' : 'text-red-600'">
+                        {{ mensajeCorreoCotizacion }}
+                    </p>
                     <!-- <p class="text-[10px] text-center text-slate-400 uppercase tracking-widest font-medium">
                     Respuesta promedio: &lt; 5 minutos
                 </p> -->

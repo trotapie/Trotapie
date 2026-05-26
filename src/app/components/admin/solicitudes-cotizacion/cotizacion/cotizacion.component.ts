@@ -3,9 +3,9 @@ import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { SupabaseService } from 'app/core/supabase.service';
 import { MaterialModule } from 'app/shared/material.module';
-import { Condicione, ICotizacion, IEstatusCotizacion, PoliticaHotel, PreciosYCondiciones } from './cotizacion.interface';
+import { Condicione, CotizacionMultipleItem, ICotizacion, IEstatusCotizacion, PoliticaHotel, PreciosYCondiciones } from './cotizacion.interface';
 import { DateI18nPipe } from 'app/core/i18n/date-i18n.pipe';
-import { FormBuilder, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, Validators } from '@angular/forms';
 import { firstValueFrom, map, Observable, startWith, subscribeOn } from 'rxjs';
 import { MapaComponent } from 'app/components/hoteles/mapa/mapa.component';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
@@ -23,6 +23,41 @@ interface TipoHabitacion {
   id: number;
   nombre_habitacion: string;
   descripcion: string;
+}
+
+interface CotizacionHabitacionForm {
+  tipoHabitacion: TipoHabitacion | null;
+  precio: number | string | null;
+  precioConSeguro: number | string | null;
+  precioMeses: number | string | null;
+  condicionesPrecioSinSeguro: Condicione[];
+  condicionesPrecioConSeguro: Condicione[];
+  condicionesPrecioMeses: Condicione[];
+  porcentajeSeguro: number | string | null;
+  porcentajeMeses: number | string | null;
+  fechaLimiteSeguro: Date | string | null;
+  fechaLimiteMeses: Date | string | null;
+  tipoTarifa: string | null;
+}
+
+interface HabitacionCotizacionPublicaVista {
+  indice: number;
+  tipoHabitacion: string | null;
+  precioSinSeguro: number | null;
+  precioConSeguro: number | null;
+  precioMeses: number | null;
+  porcentajeSeguro: number | null;
+  porcentajeMeses: number | null;
+  fechaLimiteSeguro: string | null;
+  fechaLimiteMeses: string | null;
+  tipoTarifaMeses: string | null;
+  condicionesSinSeguro: Condicione[];
+  condicionesConSeguro: Condicione[];
+  condicionesMeses: Condicione[];
+  apartadoSeguro: number | null;
+  pagueDespuesSeguro: number | null;
+  apartadoMeses: number | null;
+  pagueDespuesMeses: number | null;
 }
 
 interface CountryDialCode {
@@ -113,13 +148,13 @@ export class CotizacionComponent implements OnInit {
     telefono: [
       '',
       [
-        Validators.required,
         Validators.minLength(6),
         Validators.maxLength(15),
-        Validators.pattern(/^[0-9]+$/) // solo números
+        Validators.pattern(/^[0-9]+$/) // solo numeros
       ]
     ],
-    correo: ['', [Validators.email]]
+    correo: ['', [Validators.email]],
+    asunto: ['']
   });
   enviandoCorreoCotizacion = false;
   mensajeCorreoCotizacion = '';
@@ -141,7 +176,8 @@ export class CotizacionComponent implements OnInit {
     pagueDespuesApartado: [null],
     cantidadApartado: [null],
     pagueDespuesMeses: [null],
-    cantidadMeses: [null]
+    cantidadMeses: [null],
+    habitacionesAdicionales: this.fb.array([])
   });
 
   tiposHabitacion: TipoHabitacion[] = [];
@@ -152,6 +188,123 @@ export class CotizacionComponent implements OnInit {
   precioAMeses: PreciosYCondiciones;
 
   comparePolitica = (a: any, b: any) => a?.id === b?.id;
+  compareTipoHabitacion = (a: TipoHabitacion | null, b: TipoHabitacion | null) => a?.id === b?.id;
+
+  get habitacionesAdicionales(): FormArray {
+    return this.edicionForm.get('habitacionesAdicionales') as FormArray;
+  }
+
+  get tieneMultiplesHabitacionesPublicas(): boolean {
+    return !this.esEdicion && this.cotizacionMultipleRespuesta.length > 0;
+  }
+
+  get habitacionesAlojamientoVista(): Array<{ indice: number; tipoHabitacion: string | null }> {
+    if (this.esEdicion) {
+      return [{ indice: 1, tipoHabitacion: null }];
+    }
+
+    const multiples = this.cotizacionMultipleRespuesta;
+    if (multiples.length) {
+      return multiples.map((item, idx) => ({
+        indice: idx + 1,
+        tipoHabitacion: this.obtenerNombreTipoHabitacion(item?.tipo_habitacion_id)
+      }));
+    }
+
+    const totalHabitaciones = this.obtenerTotalHabitacionesVistaPublica();
+    const tipoPrincipal =
+      this.obtenerNombreTipoHabitacion(this.informacionCotizacion?.tipo_habitacion as number | null) ??
+      null;
+
+    return Array.from({ length: totalHabitaciones }, (_, idx) => ({
+      indice: idx + 1,
+      tipoHabitacion: tipoPrincipal
+    }));
+  }
+
+  get habitacionesCotizacionPublicaVista(): HabitacionCotizacionPublicaVista[] {
+    if (this.esEdicion) return [];
+
+    return this.construirHabitacionesCotizacionVista();
+  }
+
+  private construirHabitacionesCotizacionVista(): HabitacionCotizacionPublicaVista[] {
+    const porcentajeSeguroGlobal =
+      this.obtenerNumeroLimpio(this.precioConSeguro?.porcentaje) ??
+      this.obtenerNumeroLimpio(this.informacionCotizacion?.porcentaje_seguro);
+    const porcentajeMesesGlobal =
+      this.obtenerNumeroLimpio(this.precioAMeses?.porcentaje) ??
+      this.obtenerNumeroLimpio(this.informacionCotizacion?.porcentaje_meses);
+
+    return this.cotizacionMultipleRespuesta.map((item, idx) => {
+      const precioSinSeguro =
+        this.obtenerNumeroLimpio(item?.precio) ??
+        this.obtenerNumeroLimpio((item as any)?.precioSinSeguro);
+      const precioConSeguro =
+        this.obtenerNumeroLimpio(item?.precio_con_seguro) ??
+        this.obtenerNumeroLimpio((item as any)?.precioConSeguro);
+      const precioMeses =
+        this.obtenerNumeroLimpio(item?.precio_a_meses) ??
+        this.obtenerNumeroLimpio((item as any)?.precioMeses);
+      const porcentajeSeguro =
+        this.obtenerNumeroLimpio(item?.porcentaje_seguro) ??
+        this.obtenerNumeroLimpio((item as any)?.porcentajeSeguro) ??
+        porcentajeSeguroGlobal;
+      const porcentajeMeses =
+        this.obtenerNumeroLimpio(item?.porcentaje_meses) ??
+        this.obtenerNumeroLimpio((item as any)?.porcentajeMeses) ??
+        porcentajeMesesGlobal;
+      const tipoTarifaMeses =
+        item?.tipo_tarifa ??
+        (item as any)?.tipoTarifa ??
+        item?.condiciones_precio_meses?.[0]?.tipoPoliticas ??
+        null;
+
+      const condicionesSinSeguro = this.normalizarCondicionesPublicas(
+        item?.condiciones_precio ?? (item as any)?.condicionesPrecioSinSeguro,
+        this.politicasNoReembolsable
+      );
+      const condicionesConSeguro = this.normalizarCondicionesPublicas(
+        item?.condiciones_precio_seguro ?? (item as any)?.condicionesPrecioConSeguro,
+        this.politicasApartado
+      );
+      const condicionesMeses = this.normalizarCondicionesPublicas(
+        item?.condiciones_precio_meses ?? (item as any)?.condicionesPrecioMeses,
+        tipoTarifaMeses === 'apartado' ? this.politicasApartadoMeses : this.politicasNoReembolsableMeses
+      );
+
+      const apartadoSeguro = this.calcularMontoApartado(precioConSeguro, porcentajeSeguro);
+      const apartadoMeses = this.calcularMontoApartado(precioMeses, porcentajeMeses);
+
+      return {
+        indice: idx + 1,
+        tipoHabitacion: this.obtenerNombreTipoHabitacion(item?.tipo_habitacion_id),
+        precioSinSeguro,
+        precioConSeguro,
+        precioMeses,
+        porcentajeSeguro,
+        porcentajeMeses,
+        fechaLimiteSeguro:
+          item?.fecha_limite_seguro ??
+          (item as any)?.fechaLimiteSeguro ??
+          this.informacionCotizacion?.fecha_limite_seguro ??
+          null,
+        fechaLimiteMeses:
+          item?.fecha_limite_meses ??
+          (item as any)?.fechaLimiteMeses ??
+          this.informacionCotizacion?.fecha_limite_meses ??
+          null,
+        tipoTarifaMeses,
+        condicionesSinSeguro,
+        condicionesConSeguro,
+        condicionesMeses,
+        apartadoSeguro,
+        pagueDespuesSeguro: this.calcularMontoPendiente(precioConSeguro, apartadoSeguro),
+        apartadoMeses,
+        pagueDespuesMeses: this.calcularMontoPendiente(precioMeses, apartadoMeses)
+      };
+    });
+  }
 
   async ngOnInit() {
     try {
@@ -164,8 +317,9 @@ export class CotizacionComponent implements OnInit {
 
 
       if (this.esEdicion) {
-        this.obtenerInformacionCatalogosEdicion()
         this.informacionCotizacion = await this.supabase.obtenerCotizacionPorPublicId(id);
+        await this.obtenerInformacionCatalogosEdicion();
+        this.validacionesPreciosGuardados();
         datosHotel = {
           ubicacion: this.informacionCotizacion.ubicacion,
           nombre_hotel: this.informacionCotizacion.nombre_hotel
@@ -174,6 +328,7 @@ export class CotizacionComponent implements OnInit {
 
       } else {
         this.informacionCotizacion = await this.supabase.obtenerCotizacionPorPublicIdCliente(id);
+        await this.cargarCatalogoTiposHabitacion();
         datosHotel = {
           ubicacion: this.informacionCotizacion.ubicacion,
           nombre_hotel: this.informacionCotizacion.nombre_hotel
@@ -201,11 +356,12 @@ export class CotizacionComponent implements OnInit {
 
       const info = this.informacionCotizacion.precios.find(item => item.tipo === 'a_meses')
       this.edicionForm.patchValue({
-        tipoTarifa: info?.condiciones[0].tipoPoliticas
+        tipoTarifa: info?.condiciones?.[0]?.tipoPoliticas
       })
-      this.politicas = info?.condiciones[0].tipoPoliticas === 'apartado' ? this.politicasApartado : this.politicasNoReembolsable;
+      this.politicas = info?.condiciones?.[0]?.tipoPoliticas === 'apartado' ? this.politicasApartado : this.politicasNoReembolsable;
 
       sessionStorage.setItem('hotel', JSON.stringify(datosHotel))
+
     } finally {
       this.cargando = false;
       this.edicionForm.get('tipoHabitacion')?.valueChanges.subscribe(valor => {
@@ -231,6 +387,12 @@ export class CotizacionComponent implements OnInit {
         if (valor.precio) precios.push(valor.precio);
         if (valor.precioConSeguro) precios.push(valor.precioConSeguro);
         if (valor.precioMeses) precios.push(valor.precioMeses);
+        this.habitacionesAdicionales.controls.forEach((control) => {
+          const roomValue = control.value as CotizacionHabitacionForm;
+          if (roomValue?.precio) precios.push(roomValue.precio);
+          if (roomValue?.precioConSeguro) precios.push(roomValue.precioConSeguro);
+          if (roomValue?.precioMeses) precios.push(roomValue.precioMeses);
+        });
         this.preciosList = precios;
 
       })
@@ -243,8 +405,14 @@ export class CotizacionComponent implements OnInit {
     this.estatusOpciones = estatus.data
 
     this.filteredOptions$ = this.tiposHabitacion = data;
-    this.validacionesPreciosGuardados()
 
+  }
+
+  private async cargarCatalogoTiposHabitacion() {
+    if (this.tiposHabitacion?.length) return;
+    const { data } = await this.supabase.tipoHabitaciones();
+    this.tiposHabitacion = data ?? [];
+    this.filteredOptions$ = this.tiposHabitacion;
   }
 
   private _filter(value: string): TipoHabitacion[] {
@@ -254,8 +422,14 @@ export class CotizacionComponent implements OnInit {
     );
   }
 
-  displayHabitacion = (option: TipoHabitacion | null): string =>
-    option ? option.nombre_habitacion : '';
+  displayHabitacion = (option: TipoHabitacion | string | number | null): string => {
+    if (!option && option !== 0) return '';
+    if (typeof option === 'object') {
+      return option.nombre_habitacion ?? '';
+    }
+    const resolved = this.normalizarTipoHabitacion(option);
+    return resolved?.nombre_habitacion ?? '';
+  };
 
   get fotos(): string[] {
     return (this.informacionCotizacion?.imagenes ?? [])
@@ -289,7 +463,10 @@ export class CotizacionComponent implements OnInit {
 
   modalCotizacion() {
     this.enviarCotizacion = true;
-    this.supabase.actualizarCotizacionPublicaCompleta(this.informacionCotizacion.public_id, this.edicionForm.value);
+    this.supabase.actualizarCotizacionPublicaCompleta(
+      this.informacionCotizacion.public_id,
+      this.obtenerPayloadEdicion()
+    );
   }
 
 
@@ -327,7 +504,7 @@ export class CotizacionComponent implements OnInit {
 
     await this.supabase.actualizarCotizacionPublicaCompleta(
       this.informacionCotizacion.public_id,
-      this.edicionForm.value
+      this.obtenerPayloadEdicion()
     );
 
     this.informacionCotizacion = await this.supabase.obtenerCotizacionPorPublicId(
@@ -359,6 +536,39 @@ export class CotizacionComponent implements OnInit {
     return !!(ctrl && ctrl.invalid && (ctrl.dirty || ctrl.touched));
   }
 
+  get asuntoCtrl() {
+    return this.telefonoForm.get('asunto');
+  }
+
+  get tieneTelefonoCapturado(): boolean {
+    const telefono = String(this.telefonoCtrl?.value ?? '').replace(/\D/g, '');
+    return telefono.length > 0;
+  }
+
+  get tieneCorreoCapturado(): boolean {
+    return String(this.correoCtrl?.value ?? '').trim().length > 0;
+  }
+
+  get textoBotonEnvioCotizacion(): string {
+    if (this.tieneTelefonoCapturado && this.tieneCorreoCapturado) {
+      return 'Enviar cotizacion por WhatsApp y correo';
+    }
+    if (this.tieneTelefonoCapturado) {
+      return 'Enviar cotizacion por WhatsApp';
+    }
+    if (this.tieneCorreoCapturado) {
+      return 'Enviar cotizacion por correo';
+    }
+    return 'Enviar cotizacion';
+  }
+
+  get puedeEnviarCotizacion(): boolean {
+    if (!this.tieneTelefonoCapturado && !this.tieneCorreoCapturado) return false;
+    if (this.tieneTelefonoCapturado && !!this.telefonoCtrl?.invalid) return false;
+    if (this.tieneCorreoCapturado && !!this.correoCtrl?.invalid) return false;
+    return !this.enviandoCorreoCotizacion;
+  }
+
   get precioCtrl() {
     return this.edicionForm.get('precio');
   }
@@ -373,22 +583,49 @@ export class CotizacionComponent implements OnInit {
   }
 
   get totalEstanciaEdicion(): string | number | null {
-    const precio = this.edicionForm.get('precio')?.value;
-    const precioConSeguro = this.edicionForm.get('precioConSeguro')?.value;
-    const precioMeses = this.edicionForm.get('precioMeses')?.value;
+    const camposActivos = this.obtenerCamposTarifaActivos();
+    if (camposActivos.length !== 1) return null;
+    return this.totalPorCampo(camposActivos[0]);
+  }
 
-    const valorActivo = ({
-      precio,
-      precioConSeguro,
-      precioMeses
-    } as const)[this.campoPrecioActivo];
+  get mostrarTotalEstanciaEdicion(): boolean {
+    return this.obtenerCamposTarifaActivos().length === 1;
+  }
 
-    if (valorActivo !== null && valorActivo !== undefined && valorActivo !== '') {
-      return valorActivo;
-    }
+  private obtenerPayloadEdicion(): any {
+    const cotizacionMultiple = this.habitacionesAdicionales.length > 0
+      ? this.obtenerCotizacionMultiple()
+      : null;
 
-    return [precio, precioConSeguro, precioMeses]
-      .find(valor => valor !== null && valor !== undefined && valor !== '') ?? null;
+    return {
+      ...this.edicionForm.value,
+      cotizacionMultiple
+    };
+  }
+
+  private totalPorCampo(campo: 'precio' | 'precioConSeguro' | 'precioMeses'): number | null {
+    const valores: number[] = [];
+
+    const principal = this.obtenerNumeroLimpio(this.edicionForm.get(campo)?.value);
+    if (principal !== null) valores.push(principal);
+
+    this.habitacionesAdicionales.controls.forEach((control) => {
+      const value = this.obtenerNumeroLimpio(control.get(campo)?.value);
+      if (value !== null) valores.push(value);
+    });
+
+    if (!valores.length) return null;
+    return valores.reduce((acc, current) => acc + current, 0);
+  }
+
+  private obtenerCamposTarifaActivos(): Array<'precio' | 'precioConSeguro' | 'precioMeses'> {
+    const campos: Array<'precio' | 'precioConSeguro' | 'precioMeses'> = [
+      'precio',
+      'precioConSeguro',
+      'precioMeses'
+    ];
+
+    return campos.filter((campo) => this.totalPorCampo(campo) !== null);
   }
 
   soloNumeros(event: Event) {
@@ -398,23 +635,27 @@ export class CotizacionComponent implements OnInit {
   }
 
   async sendCotizacion() {
-    const telefono = this.telefonoForm.get('telefono')?.value ?? '';
-    const telefonoLimpio = String(telefono).replace(/\D/g, '');
-    const lada = String(this.ladaCtrl?.value ?? this.defaultDialCode).replace(/\D/g, '');
-    const url = `https://app.trotapie.com/share/cotizacion/${this.informacionCotizacion.public_id}`
-
-    const mensaje = await this.buildMensajeCotizacionViaje(url);
-    const mensajeCodificado = encodeURIComponent(mensaje);
-
-    const whatsappUrl = `https://wa.me/${lada}${telefonoLimpio}?text=${mensajeCodificado}`;
-
-    window.open(whatsappUrl, '_blank');
-    this.enviarCotizacion = false;
+    await this.enviarCotizacionCliente();
   }
 
   async enviarCotizacionCorreo() {
+    await this.enviarCotizacionCliente();
+  }
+
+  async enviarCotizacionCliente() {
+    const telefonoValido = this.tieneTelefonoCapturado && !this.telefonoCtrl?.invalid;
     const correo = String(this.correoCtrl?.value ?? '').trim();
-    if (!correo || this.correoCtrl?.invalid) {
+    const correoValido = this.tieneCorreoCapturado && !this.correoCtrl?.invalid;
+
+    if (!this.tieneTelefonoCapturado && !this.tieneCorreoCapturado) {
+      this.mensajeCorreoCotizacion = 'Captura un telefono y/o correo para enviar la cotizacion.';
+      return;
+    }
+    if (this.tieneTelefonoCapturado && !telefonoValido) {
+      this.telefonoCtrl?.markAsTouched();
+      return;
+    }
+    if (this.tieneCorreoCapturado && !correoValido) {
       this.correoCtrl?.markAsTouched();
       return;
     }
@@ -424,41 +665,76 @@ export class CotizacionComponent implements OnInit {
     this.mensajeCorreoCotizacion = '';
 
     try {
-      await this.guardarCambiosAntesDeSalida();
-
-      const pdf = await this.descargarPdfProformaCotizacion(this.informacionCotizacion.public_id, {
-        descargar: false
-      });
-      const pdfDataUri = pdf.output('datauristring');
-      const pdfBase64 = pdfDataUri.includes(',') ? pdfDataUri.split(',')[1] : '';
-
-      if (!pdfBase64) {
-        throw new Error('No se pudo generar el PDF para adjuntar al correo.');
+      if (telefonoValido) {
+        await this.enviarCotizacionWhatsapp();
       }
 
-      await this.supabase.enviarCorreoCotizacion({
-        to_email: correo,
-        to_name: this.informacionCotizacion?.cliente_nombre ?? '',
-        hotel_nombre: this.informacionCotizacion?.nombre_hotel ?? '',
-        fecha_entrada: this.informacionCotizacion?.fecha_entrada ?? null,
-        fecha_salida: this.informacionCotizacion?.fecha_salida ?? null,
-        noches: this.informacionCotizacion?.noches ?? null,
-        telefono: this.telefonoCompleto(),
-        public_id: this.informacionCotizacion?.public_id ?? null,
-        pdf_base64: pdfBase64,
-        pdf_filename: `cotizacion-${this.informacionCotizacion.public_id}.pdf`
-      });
+      if (correoValido) {
+        await this.enviarCotizacionCorreoInterno(
+          correo,
+          String(this.asuntoCtrl?.value ?? '').trim()
+        );
+      }
 
-      this.mensajeCorreoCotizacion = `Cotizacion enviada por correo a ${correo}.`;
+      if (telefonoValido && correoValido) {
+        this.mensajeCorreoCotizacion = `Cotizacion enviada por WhatsApp y correo a ${correo}.`;
+      } else if (telefonoValido) {
+        this.mensajeCorreoCotizacion = 'Cotizacion enviada por WhatsApp.';
+      } else {
+        this.mensajeCorreoCotizacion = `Cotizacion enviada por correo a ${correo}.`;
+      }
+
+      this.enviarCotizacion = false;
     } catch (error: any) {
       if (error?.message === 'COTIZACION_INVALIDA') {
         this.mensajeCorreoCotizacion = 'Completa los campos requeridos para guardar la cotizacion antes de enviar.';
         return;
       }
-      this.mensajeCorreoCotizacion = error?.message ?? 'No se pudo enviar la cotizacion por correo.';
+      this.mensajeCorreoCotizacion = error?.message ?? 'No se pudo enviar la cotizacion.';
     } finally {
       this.enviandoCorreoCotizacion = false;
     }
+  }
+
+  private async enviarCotizacionWhatsapp(): Promise<void> {
+    const telefono = this.telefonoForm.get('telefono')?.value ?? '';
+    const telefonoLimpio = String(telefono).replace(/\D/g, '');
+    const lada = String(this.ladaCtrl?.value ?? this.defaultDialCode).replace(/\D/g, '');
+    const url = `https://app.trotapie.com/cotizacion/${this.informacionCotizacion.public_id}`;
+
+    const mensaje = await this.buildMensajeCotizacionViaje(url);
+    const mensajeCodificado = encodeURIComponent(mensaje);
+    const whatsappUrl = `https://wa.me/${lada}${telefonoLimpio}?text=${mensajeCodificado}`;
+
+    window.open(whatsappUrl, '_blank');
+  }
+
+  private async enviarCotizacionCorreoInterno(correo: string, asunto: string): Promise<void> {
+    await this.guardarCambiosAntesDeSalida();
+
+    const pdf = await this.descargarPdfProformaCotizacion(this.informacionCotizacion.public_id, {
+      descargar: false
+    });
+    const pdfDataUri = pdf.output('datauristring');
+    const pdfBase64 = pdfDataUri.includes(',') ? pdfDataUri.split(',')[1] : '';
+
+    if (!pdfBase64) {
+      throw new Error('No se pudo generar el PDF para adjuntar al correo.');
+    }
+
+    await this.supabase.enviarCorreoCotizacion({
+      to_email: correo,
+      to_name: this.informacionCotizacion?.cliente_nombre ?? '',
+      hotel_nombre: this.informacionCotizacion?.nombre_hotel ?? '',
+      fecha_entrada: this.informacionCotizacion?.fecha_entrada ?? null,
+      fecha_salida: this.informacionCotizacion?.fecha_salida ?? null,
+      noches: this.informacionCotizacion?.noches ?? null,
+      telefono: this.telefonoCompleto(),
+      public_id: this.informacionCotizacion?.public_id ?? null,
+      asunto: asunto || undefined,
+      pdf_base64: pdfBase64,
+      pdf_filename: `cotizacion-${this.informacionCotizacion.public_id}.pdf`
+    });
   }
 
   telefonoCompleto(): string {
@@ -604,6 +880,8 @@ export class CotizacionComponent implements OnInit {
       limpiar(cotizacion?.habitaciones?.es) ||
       limpiar(cotizacion?.habitaciones?.traduccion);
     const detalleHabitaciones = this.obtenerDetalleHabitacionesPdf(habitacionesFuente);
+    const habitacionesCotizacion = this.construirHabitacionesCotizacionVista();
+    const regimenCotizacion = limpiar(cotizacion?.regimen) || '-';
 
     pdf.setFillColor(...mainBoxColor);
     pdf.roundedRect(margin, y, pageWidth - margin * 2, 26, 2.5, 2.5, 'F');
@@ -715,17 +993,140 @@ export class CotizacionComponent implements OnInit {
     );
     y += Math.max(entradaH, salidaH, nochesH) + 6 + sectionContentPadY;
 
-    drawBlockTitle('Detalle por habitacion');
-    if (!detalleHabitaciones.length) {
+        drawBlockTitle('Detalle por habitacion');
+    if (!detalleHabitaciones.length && !habitacionesCotizacion.length) {
       ensureSpace(8);
       pdf.setFont('helvetica', 'normal');
       pdf.setTextColor(...mutedColor);
       pdf.setFontSize(9.2);
       pdf.text('- Sin detalle de habitaciones', margin + 3, y + 4);
       y += 10;
+    } else if (habitacionesCotizacion.length) {
+      for (let i = 0; i < habitacionesCotizacion.length; i++) {
+        const habitacion = habitacionesCotizacion[i];
+        const detalleViajeros = detalleHabitaciones[i];
+
+        const precioSinSeguroHabitacion =
+          habitacion.precioSinSeguro ??
+          (i === 0 ? this.obtenerNumeroLimpio(precioSinSeguro?.precio) : null);
+        const precioConSeguroHabitacion =
+          habitacion.precioConSeguro ??
+          (i === 0 ? this.obtenerNumeroLimpio(precioConSeguro?.precio) : null);
+        const precioMesesHabitacion =
+          habitacion.precioMeses ??
+          (i === 0 ? this.obtenerNumeroLimpio(precioMeses?.precio) : null);
+
+        const viajeros = `${detalleViajeros?.adultos ?? 0} adulto(s), ${detalleViajeros?.ninos ?? 0} nino(s)`;
+        const edades = limpiar(detalleViajeros?.extra);
+        const tipoHabitacionTexto = limpiar(habitacion.tipoHabitacion) || '-';
+
+        const opcionesHabitacion = [
+          {
+            nombre: 'Tarifa sin seguro',
+            precio: precioSinSeguroHabitacion,
+            condiciones: habitacion.condicionesSinSeguro,
+            extra: ''
+          },
+          {
+            nombre: 'Tarifa con seguro',
+            precio: precioConSeguroHabitacion,
+            condiciones: habitacion.condicionesConSeguro,
+            extra:
+              habitacion.apartadoSeguro !== null || habitacion.pagueDespuesSeguro !== null
+                ? `Anticipo: ${moneda(habitacion.apartadoSeguro)} | Pendiente: ${moneda(habitacion.pagueDespuesSeguro)}`
+                : ''
+          },
+          {
+            nombre: 'Tarifa a meses',
+            precio: precioMesesHabitacion,
+            condiciones: habitacion.condicionesMeses,
+            extra:
+              habitacion.apartadoMeses !== null || habitacion.pagueDespuesMeses !== null
+                ? `Anticipo: ${moneda(habitacion.apartadoMeses)} | Pendiente: ${moneda(habitacion.pagueDespuesMeses)}`
+                : ''
+          }
+        ].filter((item) => item.precio !== null);
+
+        const alturaOpcionesBase = opcionesHabitacion.reduce((acc, opcion) => {
+          const lineasDescripcion = pdf.splitTextToSize(
+            opcion.extra || '',
+            pageWidth - margin * 2 - 20
+          ).length;
+          const totalCondiciones = opcion.condiciones?.length ?? 0;
+          return acc + 6 + (lineasDescripcion > 1 ? (lineasDescripcion - 1) * 3.7 : 0) + totalCondiciones * 3.7;
+        }, 0);
+        const alturaBloque = 30 + Math.max(alturaOpcionesBase, 4);
+        ensureSpace(alturaBloque + 4);
+
+        pdf.setDrawColor(218, 226, 236);
+        pdf.setFillColor(250, 252, 255);
+        pdf.roundedRect(margin, y, pageWidth - margin * 2, alturaBloque, 2, 2, 'FD');
+
+        let yBloque = y + 5;
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(...primaryColor);
+        pdf.setFontSize(10);
+        pdf.text(`Habitacion ${habitacion.indice}`, margin + 3, yBloque);
+
+        const metaY = yBloque + 4.2;
+        const colGapHabitacion = 5;
+        const colWHabitacion = (pageWidth - margin * 2 - 6 - colGapHabitacion * 2) / 3;
+        const tipoH = drawKeyValueWrapped('Tipo de habitacion', tipoHabitacionTexto, margin + 3, metaY, colWHabitacion);
+        const regimenH = drawKeyValueWrapped(
+          'Regimen',
+          regimenCotizacion,
+          margin + 3 + colWHabitacion + colGapHabitacion,
+          metaY,
+          colWHabitacion
+        );
+        const viajerosH = drawKeyValueWrapped(
+          'Viajeros',
+          edades ? `${viajeros} (${edades})` : viajeros,
+          margin + 3 + (colWHabitacion + colGapHabitacion) * 2,
+          metaY,
+          colWHabitacion
+        );
+        const metaBottom = metaY + Math.max(tipoH, regimenH, viajerosH);
+        pdf.setDrawColor(226, 232, 240);
+        pdf.line(margin + 3, metaBottom + 1.4, pageWidth - margin - 3, metaBottom + 1.4);
+        yBloque = metaBottom + 6;
+
+        for (const opcion of opcionesHabitacion) {
+          pdf.setFont('helvetica', 'bold');
+          pdf.setTextColor(...textColor);
+          pdf.setFontSize(9.2);
+          pdf.text(opcion.nombre, margin + 3, yBloque);
+          pdf.text(moneda(opcion.precio), pageWidth - margin - 3, yBloque, { align: 'right' });
+          yBloque += 4.4;
+
+          if (opcion.extra) {
+            const extraLineas = pdf.splitTextToSize(opcion.extra, pageWidth - margin * 2 - 20);
+            pdf.setFont('helvetica', 'normal');
+            pdf.setTextColor(...mutedColor);
+            pdf.setFontSize(8.5);
+            pdf.text(extraLineas, margin + 7, yBloque);
+            yBloque += extraLineas.length * 3.7;
+          }
+
+          for (const condicion of opcion.condiciones ?? []) {
+            const textoCondicion = limpiar(condicion?.descripcion);
+            if (!textoCondicion) continue;
+            const condLineas = pdf.splitTextToSize(`- ${textoCondicion}`, pageWidth - margin * 2 - 20);
+            pdf.setFont('helvetica', 'normal');
+            pdf.setTextColor(...mutedColor);
+            pdf.setFontSize(8.5);
+            pdf.text(condLineas, margin + 7, yBloque);
+            yBloque += condLineas.length * 3.7;
+          }
+
+          yBloque += 1;
+        }
+
+        y += alturaBloque + 3;
+      }
     } else {
       for (const detalle of detalleHabitaciones) {
-        const bloque = `${detalle.habitacion}: ${detalle.adultos} adulto(s) · ${detalle.ninos} nino(s)`;
+        const bloque = `${detalle.habitacion}: ${detalle.adultos} adulto(s) - ${detalle.ninos} nino(s)`;
         const lineas = pdf.splitTextToSize(bloque, pageWidth - margin * 2 - 6);
         const alto = lineas.length * 4.6 + 2;
         ensureSpace(alto + 2);
@@ -750,40 +1151,41 @@ export class CotizacionComponent implements OnInit {
       }
     }
 
-    drawBlockTitle('Opciones de tarifa');
-    ensureSpace(14);
-    const tableX = margin;
-    const tableW = pageWidth - margin * 2;
-    const rowH = 8.5;
-    const colTypeW = 108;
-    const colPriceW = tableW - colTypeW;
+    if (!habitacionesCotizacion.length) {
+      drawBlockTitle('Opciones de tarifa');
+      ensureSpace(14);
+      const tableX = margin;
+      const tableW = pageWidth - margin * 2;
+      const rowH = 8.5;
+      const colTypeW = 108;
 
-    pdf.setFillColor(...primaryColor);
-    pdf.rect(tableX, y, tableW, rowH, 'F');
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(9.3);
-    pdf.text('Concepto', tableX + 3, y + 5.5);
-    pdf.text('Precio', tableX + colTypeW + 3, y + 5.5);
-    y += rowH;
-
-    pdf.setFont('helvetica', 'normal');
-    pdf.setTextColor(...textColor);
-    opcionesPrecio.forEach((opcion, index) => {
-      ensureSpace(rowH + 1);
-      if (index % 2 === 0) {
-      pdf.setFillColor(246, 248, 252);
-        pdf.rect(tableX, y, tableW, rowH, 'F');
-      }
-      pdf.text(opcion.tipo, tableX + 3, y + 5.5);
-      pdf.text(opcion.precio, tableX + colTypeW + 3, y + 5.5);
+      pdf.setFillColor(...primaryColor);
+      pdf.rect(tableX, y, tableW, rowH, 'F');
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(9.3);
+      pdf.text('Concepto', tableX + 3, y + 5.5);
+      pdf.text('Precio', tableX + colTypeW + 3, y + 5.5);
       y += rowH;
-    });
 
-    pdf.setDrawColor(208, 217, 230);
-    pdf.rect(tableX, y - (rowH * (opcionesPrecio.length + 1)), tableW, rowH * (opcionesPrecio.length + 1));
-    pdf.line(tableX + colTypeW, y - (rowH * (opcionesPrecio.length + 1)), tableX + colTypeW, y);
-    y += 8;
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(...textColor);
+      opcionesPrecio.forEach((opcion, index) => {
+        ensureSpace(rowH + 1);
+        if (index % 2 === 0) {
+          pdf.setFillColor(246, 248, 252);
+          pdf.rect(tableX, y, tableW, rowH, 'F');
+        }
+        pdf.text(opcion.tipo, tableX + 3, y + 5.5);
+        pdf.text(opcion.precio, tableX + colTypeW + 3, y + 5.5);
+        y += rowH;
+      });
+
+      pdf.setDrawColor(208, 217, 230);
+      pdf.rect(tableX, y - (rowH * (opcionesPrecio.length + 1)), tableW, rowH * (opcionesPrecio.length + 1));
+      pdf.line(tableX + colTypeW, y - (rowH * (opcionesPrecio.length + 1)), tableX + colTypeW, y);
+      y += 8;
+    }
 
     drawBlockTitle('Politicas y condiciones');
     if (!politicas.length) {
@@ -991,6 +1393,306 @@ export class CotizacionComponent implements OnInit {
     return first?.descripcion ?? 'Selecciona condicion';
   }
 
+  estatusLabelDesdeSeleccion(selected: Condicione[] = [], datos: PoliticaHotel[] = []): string {
+    if (!selected.length) return 'Selecciona condicion';
+    const first = datos.find(e => e.id === selected[0].id);
+    return first?.descripcion ?? 'Selecciona condicion';
+  }
+
+  obtenerPoliticasMesesPorTipo(tipoTarifa: string | null | undefined): PoliticaHotel[] {
+    return tipoTarifa === 'apartado' ? this.politicasApartadoMeses : this.politicasNoReembolsableMeses;
+  }
+
+  private crearHabitacionAdicionalForm(value?: Partial<CotizacionHabitacionForm>) {
+    const form = this.fb.group({
+      tipoHabitacion: [value?.tipoHabitacion ?? null, [Validators.required]],
+      precio: [value?.precio ?? null],
+      precioConSeguro: [value?.precioConSeguro ?? null],
+      precioMeses: [value?.precioMeses ?? null],
+      condicionesPrecioSinSeguro: this.fb.control<Condicione[]>(value?.condicionesPrecioSinSeguro ?? []),
+      condicionesPrecioConSeguro: this.fb.control<Condicione[]>(value?.condicionesPrecioConSeguro ?? []),
+      condicionesPrecioMeses: this.fb.control<Condicione[]>(value?.condicionesPrecioMeses ?? []),
+      porcentajeSeguro: [value?.porcentajeSeguro ?? null],
+      porcentajeMeses: [value?.porcentajeMeses ?? null],
+      fechaLimiteSeguro: [value?.fechaLimiteSeguro ?? null],
+      fechaLimiteMeses: [value?.fechaLimiteMeses ?? null],
+      tipoTarifa: [value?.tipoTarifa ?? null]
+    });
+
+    form.get('tipoTarifa')?.valueChanges.subscribe(() => {
+      form.patchValue({ condicionesPrecioMeses: [] }, { emitEvent: false });
+    });
+
+    return form;
+  }
+
+  private obtenerNumeroLimpio(value: unknown): number | null {
+    if (value === null || value === undefined || value === '') return null;
+    const cleaned = Number(String(value).replace(/[^0-9.-]/g, ''));
+    return Number.isFinite(cleaned) ? cleaned : null;
+  }
+
+  private normalizarCondicionesPublicas(
+    condiciones: Condicione[] | undefined,
+    catalogo: PoliticaHotel[]
+  ): Condicione[] {
+    return (condiciones ?? []).map((condicion) => {
+      const descripcionCatalogo = catalogo.find((item) => item.id === condicion.id)?.descripcion;
+      return {
+        ...condicion,
+        descripcion: descripcionCatalogo ?? condicion.descripcion
+      };
+    });
+  }
+
+  private calcularMontoApartado(total: number | null, porcentaje: number | null): number | null {
+    if (total === null) return null;
+    if (porcentaje === null) return 0;
+    return total * (porcentaje / 100);
+  }
+
+  private calcularMontoPendiente(total: number | null, apartado: number | null): number | null {
+    if (total === null) return null;
+    if (apartado === null) return total;
+    return total - apartado;
+  }
+
+  private get cotizacionMultipleRespuesta(): CotizacionMultipleItem[] {
+    const raw = this.informacionCotizacion?.cotizacion_multiple as any;
+    if (!raw) return [];
+
+    let parsed = raw;
+    if (typeof parsed === 'string') {
+      try {
+        parsed = JSON.parse(parsed);
+      } catch {
+        return [];
+      }
+    }
+
+    return Array.isArray(parsed) ? parsed : [];
+  }
+
+  private obtenerNombreTipoHabitacion(tipoHabitacionId: number | null | undefined): string | null {
+    if (tipoHabitacionId === null || tipoHabitacionId === undefined) return null;
+    const tipo = this.tiposHabitacion.find((item) => Number(item.id) === Number(tipoHabitacionId));
+    return tipo?.nombre_habitacion ?? null;
+  }
+
+  private normalizarTipoHabitacion(value: unknown): TipoHabitacion | null {
+    if (!value) return null;
+
+    if (typeof value === 'object' && value !== null) {
+      const candidate = value as Partial<TipoHabitacion> & { tipo_habitacion_id?: number | string | null };
+      const id = candidate.id ?? candidate.tipo_habitacion_id ?? null;
+      if (id !== null && id !== undefined && id !== '') {
+        const byId = this.tiposHabitacion.find((tipo) => Number(tipo.id) === Number(id));
+        if (byId) return byId;
+      }
+
+      const nombre = (candidate.nombre_habitacion ?? '').toString().trim();
+      if (nombre) {
+        const byNombre = this.tiposHabitacion.find(
+          (tipo) => tipo.nombre_habitacion.trim().toLowerCase() === nombre.toLowerCase()
+        );
+        if (byNombre) return byNombre;
+      }
+      return null;
+    }
+
+    const raw = String(value).trim();
+    if (!raw) return null;
+
+    const numericId = Number(raw);
+    if (Number.isFinite(numericId)) {
+      const byId = this.tiposHabitacion.find((tipo) => Number(tipo.id) === numericId);
+      if (byId) return byId;
+    }
+
+    return this.tiposHabitacion.find(
+      (tipo) => tipo.nombre_habitacion.trim().toLowerCase() === raw.toLowerCase()
+    ) ?? null;
+  }
+
+  private obtenerTotalHabitacionesCotizacion(): number {
+    const habitacionesFuente =
+      (this.informacionCotizacion?.habitaciones?.es ?? '').trim() ||
+      (this.informacionCotizacion?.habitaciones?.traduccion ?? '').trim();
+    const habitacionesDetectadas = this.obtenerDetalleHabitacionesPdf(habitacionesFuente);
+    return Math.max(habitacionesDetectadas.length, 1);
+  }
+
+  private obtenerTotalHabitacionesVistaPublica(): number {
+    const habitacionesFuente =
+      (this.informacionCotizacion?.habitaciones?.es ?? '').trim() ||
+      (this.informacionCotizacion?.habitaciones?.traduccion ?? '').trim();
+
+    const habitacionesDetectadas = this.obtenerTotalHabitacionesCotizacion();
+    const matchTotal = habitacionesFuente.match(/(\d+)\s*habitaci(?:o|ó)n(?:es)?/i);
+    const totalTexto = matchTotal ? Number(matchTotal[1]) : 0;
+
+    return Math.max(habitacionesDetectadas, Number.isFinite(totalTexto) ? totalTexto : 0, 1);
+  }
+
+  private normalizarCotizacionMultiple(raw: any): CotizacionHabitacionForm[] {
+    let source = raw;
+    if (typeof source === 'string') {
+      try {
+        source = JSON.parse(source);
+      } catch {
+        source = [];
+      }
+    }
+    if (!Array.isArray(source)) return [];
+
+    return source.map((item: any) => {
+      const tipoHabitacionId =
+        item?.tipo_habitacion_id ??
+        item?.tipoHabitacionId ??
+        item?.tipo_habitacion ??
+        item?.tipoHabitacion?.id ??
+        item?.tipoHabitacion ??
+        null;
+
+      return {
+        tipoHabitacion: this.normalizarTipoHabitacion(tipoHabitacionId),
+        precio: this.obtenerNumeroLimpio(item?.precio),
+        precioConSeguro: this.obtenerNumeroLimpio(item?.precio_con_seguro ?? item?.precioConSeguro),
+        precioMeses: this.obtenerNumeroLimpio(item?.precio_a_meses ?? item?.precioMeses),
+        condicionesPrecioSinSeguro: item?.condiciones_precio ?? item?.condicionesPrecioSinSeguro ?? [],
+        condicionesPrecioConSeguro: item?.condiciones_precio_seguro ?? item?.condicionesPrecioConSeguro ?? [],
+        condicionesPrecioMeses: item?.condiciones_precio_meses ?? item?.condicionesPrecioMeses ?? [],
+        porcentajeSeguro: this.obtenerNumeroLimpio(item?.porcentaje_seguro ?? item?.porcentajeSeguro),
+        porcentajeMeses: this.obtenerNumeroLimpio(item?.porcentaje_meses ?? item?.porcentajeMeses),
+        fechaLimiteSeguro: this.parseLocalDate(item?.fecha_limite_seguro ?? item?.fechaLimiteSeguro),
+        fechaLimiteMeses: this.parseLocalDate(item?.fecha_limite_meses ?? item?.fechaLimiteMeses),
+        tipoTarifa: item?.tipo_tarifa ?? item?.tipoTarifa ?? null
+      };
+    });
+  }
+
+  private construirCotizacionMultipleEdicion(): void {
+    const habitacionesEsperadas = this.obtenerTotalHabitacionesCotizacion();
+    const desdeDb = this.normalizarCotizacionMultiple(this.informacionCotizacion?.cotizacion_multiple);
+
+    const primeraHabitacion: CotizacionHabitacionForm = desdeDb[0] ?? {
+      tipoHabitacion: this.tiposHabitacion.find(
+        item => item.id === this.informacionCotizacion.tipo_habitacion
+      ) ?? null,
+      precio: this.precioSinSeguro ? this.precioSinSeguro.precio : null,
+      precioConSeguro: this.precioConSeguro ? this.precioConSeguro.precio : null,
+      precioMeses: this.precioAMeses ? this.precioAMeses.precio : null,
+      condicionesPrecioSinSeguro: this.precioSinSeguro ? this.precioSinSeguro.condiciones : [],
+      condicionesPrecioConSeguro: this.precioConSeguro ? this.precioConSeguro.condiciones : [],
+      condicionesPrecioMeses: this.precioAMeses ? this.precioAMeses.condiciones : [],
+      porcentajeSeguro: this.informacionCotizacion.porcentaje_seguro,
+      porcentajeMeses: this.informacionCotizacion.porcentaje_meses,
+      fechaLimiteSeguro: this.parseLocalDate(this.informacionCotizacion.fecha_limite_seguro),
+      fechaLimiteMeses: this.parseLocalDate(this.informacionCotizacion.fecha_limite_meses),
+      tipoTarifa: this.edicionForm.get('tipoTarifa')?.value ?? null
+    };
+
+    this.edicionForm.patchValue({
+      precio: primeraHabitacion.precio,
+      precioConSeguro: primeraHabitacion.precioConSeguro,
+      precioMeses: primeraHabitacion.precioMeses,
+      tipoHabitacion: primeraHabitacion.tipoHabitacion,
+      condicionesPrecioSinSeguro: primeraHabitacion.condicionesPrecioSinSeguro,
+      condicionesPrecioConSeguro: primeraHabitacion.condicionesPrecioConSeguro,
+      condicionesPrecioMeses: primeraHabitacion.condicionesPrecioMeses,
+      porcentajeSeguro: primeraHabitacion.porcentajeSeguro,
+      porcentajeMeses: primeraHabitacion.porcentajeMeses,
+      fechaLimiteSeguro: primeraHabitacion.fechaLimiteSeguro,
+      fechaLimiteMeses: primeraHabitacion.fechaLimiteMeses,
+      tipoTarifa: primeraHabitacion.tipoTarifa
+    }, { emitEvent: false });
+
+    this.habitacionesAdicionales.clear();
+
+    const habitacionesAdicionalesDb = desdeDb.slice(1);
+    const faltantes = Math.max(habitacionesEsperadas - 1, habitacionesAdicionalesDb.length);
+
+    for (let i = 0; i < faltantes; i++) {
+      const value = habitacionesAdicionalesDb[i] ?? {
+        tipoHabitacion: null,
+        precio: null,
+        precioConSeguro: null,
+        precioMeses: null,
+        condicionesPrecioSinSeguro: [],
+        condicionesPrecioConSeguro: [],
+        condicionesPrecioMeses: [],
+        porcentajeSeguro: null,
+        porcentajeMeses: null,
+        fechaLimiteSeguro: null,
+        fechaLimiteMeses: null,
+        tipoTarifa: null
+      };
+      this.habitacionesAdicionales.push(this.crearHabitacionAdicionalForm(value));
+    }
+
+    // Garantiza que cada control quede con objeto de tipo habitacion para que
+    // el autocomplete muestre correctamente la seleccion guardada.
+    this.habitacionesAdicionales.controls.forEach((control) => {
+      const current = control.get('tipoHabitacion')?.value;
+      const resolved = this.normalizarTipoHabitacion(current);
+      if (resolved) {
+        control.patchValue({ tipoHabitacion: resolved }, { emitEvent: false });
+      }
+    });
+  }
+
+  private obtenerCotizacionMultiple(): CotizacionMultipleItem[] {
+    const tipoHabitacionPrincipal = this.normalizarTipoHabitacion(this.edicionForm.get('tipoHabitacion')?.value);
+
+    const primeraHabitacion = {
+      tipoHabitacion: tipoHabitacionPrincipal,
+      precio: this.edicionForm.get('precio')?.value,
+      precioConSeguro: this.edicionForm.get('precioConSeguro')?.value,
+      precioMeses: this.edicionForm.get('precioMeses')?.value,
+      condicionesPrecioSinSeguro: this.edicionForm.get('condicionesPrecioSinSeguro')?.value ?? [],
+      condicionesPrecioConSeguro: this.edicionForm.get('condicionesPrecioConSeguro')?.value ?? [],
+      condicionesPrecioMeses: this.edicionForm.get('condicionesPrecioMeses')?.value ?? [],
+      porcentajeSeguro: this.edicionForm.get('porcentajeSeguro')?.value,
+      porcentajeMeses: this.edicionForm.get('porcentajeMeses')?.value,
+      fechaLimiteSeguro: this.edicionForm.get('fechaLimiteSeguro')?.value,
+      fechaLimiteMeses: this.edicionForm.get('fechaLimiteMeses')?.value,
+      tipoTarifa: this.edicionForm.get('tipoTarifa')?.value
+    };
+
+    const habitaciones = [
+      primeraHabitacion,
+      ...this.habitacionesAdicionales.controls.map((control) => ({
+        ...(control.value as CotizacionHabitacionForm),
+        tipoHabitacion: this.normalizarTipoHabitacion(control.get('tipoHabitacion')?.value)
+      }))
+    ];
+
+    return habitaciones
+      .map((item) => ({
+        tipo_habitacion_id: item?.tipoHabitacion?.id ?? null,
+        precio: this.obtenerNumeroLimpio(item?.precio),
+        precio_con_seguro: this.obtenerNumeroLimpio(item?.precioConSeguro),
+        precio_a_meses: this.obtenerNumeroLimpio(item?.precioMeses),
+        condiciones_precio: item?.condicionesPrecioSinSeguro ?? [],
+        condiciones_precio_seguro: item?.condicionesPrecioConSeguro ?? [],
+        condiciones_precio_meses: (item?.condicionesPrecioMeses ?? []).map((condicion: Condicione) => ({
+          ...condicion,
+          tipoPoliticas: item?.tipoTarifa
+        })),
+        porcentaje_seguro: this.obtenerNumeroLimpio(item?.porcentajeSeguro),
+        porcentaje_meses: this.obtenerNumeroLimpio(item?.porcentajeMeses),
+        fecha_limite_seguro: this.formatearFechaParaDb(item?.fechaLimiteSeguro),
+        fecha_limite_meses: this.formatearFechaParaDb(item?.fechaLimiteMeses),
+        tipo_tarifa: item?.tipoTarifa ?? null
+      }))
+      .filter((item) =>
+        item.tipo_habitacion_id !== null ||
+        item.precio !== null ||
+        item.precio_con_seguro !== null ||
+        item.precio_a_meses !== null
+      );
+  }
+
   validacionesPreciosGuardados() {
     const { precios } = this.informacionCotizacion;
     this.precioSinSeguro = precios.find(o => o.tipo === 'sin_seguro') ?? null;
@@ -1013,12 +1715,6 @@ export class CotizacionComponent implements OnInit {
 
     if (this.esEdicion) {
       this.edicionForm.patchValue({
-        precio: this.precioSinSeguro ? this.precioSinSeguro.precio : null,
-        precioConSeguro: this.precioConSeguro ? this.precioConSeguro.precio : null,
-        precioMeses: this.precioAMeses ? this.precioAMeses.precio : null,
-        tipoHabitacion: this.tiposHabitacion.find(
-          item => item.id === this.informacionCotizacion.tipo_habitacion
-        ),
         estatus: this.estatusOpciones.find(
           item => item.nombre === this.informacionCotizacion.estatus
         )?.clave ?? '',
@@ -1031,6 +1727,7 @@ export class CotizacionComponent implements OnInit {
         fechaLimiteMeses: this.parseLocalDate(this.informacionCotizacion.fecha_limite_meses),
 
       });
+      this.construirCotizacionMultipleEdicion();
     }
   }
 
@@ -1070,11 +1767,23 @@ export class CotizacionComponent implements OnInit {
     }
   }
 
-  private parseLocalDate(dateStr: string | null | undefined): Date | null {
+  private parseLocalDate(dateStr: string | Date | null | undefined): Date | null {
     if (!dateStr) return null;
+    if (dateStr instanceof Date) return dateStr;
 
     const [year, month, day] = dateStr.split('-').map(Number);
     return new Date(year, month - 1, day);
+  }
+
+  private formatearFechaParaDb(value: unknown): string | null {
+    if (!value) return null;
+    if (typeof value === 'string') return value;
+    if (!(value instanceof Date) || Number.isNaN(value.getTime())) return null;
+
+    const year = value.getFullYear();
+    const month = String(value.getMonth() + 1).padStart(2, '0');
+    const day = String(value.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
 
