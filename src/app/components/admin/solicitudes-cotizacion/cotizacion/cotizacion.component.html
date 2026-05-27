@@ -1486,26 +1486,43 @@
         : 'text-slate-700 dark:text-slate-300'">
                             Correo
                         </label>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mb-2">
+                            Puedes incluir mas de una direccion de email, separandolas por comas (,) o punto y coma (;)
+                        </p>
 
-                        <input type="email" formControlName="correo" placeholder="cliente@correo.com" class="w-full h-12 px-4 border-2 rounded-xl
+                        <input type="text" formControlName="correo" placeholder="cliente@correo.com, otro@correo.com" class="w-full h-12 px-4 border-2 rounded-xl
                focus:outline-none transition-colors
                dark:bg-slate-800 dark:text-white" [ngClass]="correoInvalido
           ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
           : 'border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-primary'" />
 
                         <p *ngIf="correoInvalido" class="mt-2 text-xs text-red-600 font-medium">
-                            Ingresa un correo valido
+                            Ingresa uno o varios correos validos separados por coma o punto y coma
                         </p>
                     </div>
 
-                    <div>
+                    <div *ngIf="tieneCorreoCapturado">
                         <label class="block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">
                             Asunto
                         </label>
-                        <input type="text" formControlName="asunto" placeholder="Cotizacion de viaje" class="w-full h-12 px-4 border-2 rounded-xl
+                        <input type="text" formControlName="asunto" [placeholder]="asuntoPredeterminado" class="w-full h-12 px-4 border-2 rounded-xl
                focus:outline-none transition-colors
                dark:bg-slate-800 dark:text-white border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-primary" />
                     </div>
+
+                    <div *ngIf="tieneCorreoCapturado">
+                        <label class="block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">
+                            Descripcion (Opcional)
+                        </label>
+                        <textarea formControlName="descripcionCorreo" rows="3" placeholder="Adjunto encontrarás el PDF con el detalle completo de tu solicitud de cotización."
+                            class="w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-colors dark:bg-slate-800 dark:text-white border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-primary"></textarea>
+                    </div>
+
+                    <!-- <label *ngIf="tieneCorreoCapturado" class="inline-flex items-center gap-2 cursor-pointer text-sm font-semibold text-slate-700 dark:text-slate-300">
+                        <input type="checkbox" formControlName="incluirPreciosPdf"
+                            class="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary">
+                        Incluir precios en archivo PDF
+                    </label> -->
 
                     <button type="button" (click)="enviarCotizacionCliente()" [disabled]="!puedeEnviarCotizacion"
                         class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed">

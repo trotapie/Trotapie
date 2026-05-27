@@ -1445,6 +1445,7 @@ export class SupabaseService {
     to_name?: string | null;
     hotel_nombre?: string | null;
     asunto?: string | null;
+    mensaje?: string | null;
     fecha_entrada?: string | Date | null;
     fecha_salida?: string | Date | null;
     noches?: number | null;
@@ -1464,6 +1465,7 @@ export class SupabaseService {
         nombre: payload?.to_name ?? '',
         hotel: payload?.hotel_nombre ?? '',
         asunto: payload?.asunto ?? null,
+        mensaje: payload?.mensaje ?? null,
         fecha_entrada: payload?.fecha_entrada ?? null,
         fecha_salida: payload?.fecha_salida ?? null,
         noches: payload?.noches ?? null,

@@ -5,7 +5,7 @@ import { SupabaseService } from 'app/core/supabase.service';
 import { MaterialModule } from 'app/shared/material.module';
 import { Condicione, CotizacionMultipleItem, ICotizacion, IEstatusCotizacion, PoliticaHotel, PreciosYCondiciones } from './cotizacion.interface';
 import { DateI18nPipe } from 'app/core/i18n/date-i18n.pipe';
-import { FormArray, FormBuilder, Validators } from '@angular/forms';
+import { AbstractControl, FormArray, FormBuilder, ValidationErrors, Validators } from '@angular/forms';
 import { firstValueFrom, map, Observable, startWith, subscribeOn } from 'rxjs';
 import { MapaComponent } from 'app/components/hoteles/mapa/mapa.component';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
@@ -17,6 +17,23 @@ import { jsPDF } from 'jspdf';
 import { find } from 'lodash';
 
 type Tile = { key: string; url: string; alt: string; class: string };
+
+function validarListaCorreos(control: AbstractControl): ValidationErrors | null {
+  const valor = String(control.value ?? '').trim();
+  if (!valor) return null;
+
+  const correos = valor
+    .split(/[;,]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  if (!correos.length) return null;
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const todosValidos = correos.every((correo) => emailRegex.test(correo));
+
+  return todosValidos ? null : { emailList: true };
+}
 
 
 interface TipoHabitacion {
@@ -153,8 +170,10 @@ export class CotizacionComponent implements OnInit {
         Validators.pattern(/^[0-9]+$/) // solo numeros
       ]
     ],
-    correo: ['', [Validators.email]],
-    asunto: ['']
+    correo: ['', [validarListaCorreos]],
+    asunto: [''],
+    descripcionCorreo: ['Adjunto encontrarás el PDF con el detalle completo de tu solicitud de cotización.'],
+    incluirPreciosPdf: [true]
   });
   enviandoCorreoCotizacion = false;
   mensajeCorreoCotizacion = '';
@@ -540,13 +559,21 @@ export class CotizacionComponent implements OnInit {
     return this.telefonoForm.get('asunto');
   }
 
+  get descripcionCorreoCtrl() {
+    return this.telefonoForm.get('descripcionCorreo');
+  }
+
+  get incluirPreciosPdfCtrl() {
+    return this.telefonoForm.get('incluirPreciosPdf');
+  }
+
   get tieneTelefonoCapturado(): boolean {
     const telefono = String(this.telefonoCtrl?.value ?? '').replace(/\D/g, '');
     return telefono.length > 0;
   }
 
   get tieneCorreoCapturado(): boolean {
-    return String(this.correoCtrl?.value ?? '').trim().length > 0;
+    return this.obtenerCorreosCapturados().length > 0;
   }
 
   get textoBotonEnvioCotizacion(): string {
@@ -644,10 +671,15 @@ export class CotizacionComponent implements OnInit {
 
   async enviarCotizacionCliente() {
     const telefonoValido = this.tieneTelefonoCapturado && !this.telefonoCtrl?.invalid;
-    const correo = String(this.correoCtrl?.value ?? '').trim();
+    const correos = this.obtenerCorreosCapturados();
+    const correoTexto = correos.join(', ');
+    const tieneCorreos = correos.length > 0;
     const correoValido = this.tieneCorreoCapturado && !this.correoCtrl?.invalid;
+    const asuntoCapturado = String(this.asuntoCtrl?.value ?? '').trim();
+    const descripcion = String(this.descripcionCorreoCtrl?.value ?? '').trim();
+    const incluirPreciosPdf = Boolean(this.incluirPreciosPdfCtrl?.value);
 
-    if (!this.tieneTelefonoCapturado && !this.tieneCorreoCapturado) {
+    if (!this.tieneTelefonoCapturado && !tieneCorreos) {
       this.mensajeCorreoCotizacion = 'Captura un telefono y/o correo para enviar la cotizacion.';
       return;
     }
@@ -671,17 +703,19 @@ export class CotizacionComponent implements OnInit {
 
       if (correoValido) {
         await this.enviarCotizacionCorreoInterno(
-          correo,
-          String(this.asuntoCtrl?.value ?? '').trim()
+          correos,
+          asuntoCapturado,
+          descripcion,
+          incluirPreciosPdf
         );
       }
 
       if (telefonoValido && correoValido) {
-        this.mensajeCorreoCotizacion = `Cotizacion enviada por WhatsApp y correo a ${correo}.`;
+        this.mensajeCorreoCotizacion = `Cotizacion enviada por WhatsApp y correo a ${correoTexto}.`;
       } else if (telefonoValido) {
         this.mensajeCorreoCotizacion = 'Cotizacion enviada por WhatsApp.';
       } else {
-        this.mensajeCorreoCotizacion = `Cotizacion enviada por correo a ${correo}.`;
+        this.mensajeCorreoCotizacion = `Cotizacion enviada por correo a ${correoTexto}.`;
       }
 
       this.enviarCotizacion = false;
@@ -709,21 +743,32 @@ export class CotizacionComponent implements OnInit {
     window.open(whatsappUrl, '_blank');
   }
 
-  private async enviarCotizacionCorreoInterno(correo: string, asunto: string): Promise<void> {
+  private async enviarCotizacionCorreoInterno(
+    correos: string[],
+    asunto: string,
+    descripcion: string,
+    incluirPreciosPdf: boolean
+  ): Promise<void> {
     await this.guardarCambiosAntesDeSalida();
 
-    const pdf = await this.descargarPdfProformaCotizacion(this.informacionCotizacion.public_id, {
-      descargar: false
-    });
-    const pdfDataUri = pdf.output('datauristring');
-    const pdfBase64 = pdfDataUri.includes(',') ? pdfDataUri.split(',')[1] : '';
+    let pdfBase64: string | null = null;
+    if (incluirPreciosPdf) {
+      const pdf = await this.descargarPdfProformaCotizacion(this.informacionCotizacion.public_id, {
+        descargar: false
+      });
+      const pdfDataUri = pdf.output('datauristring');
+      pdfBase64 = pdfDataUri.includes(',') ? pdfDataUri.split(',')[1] : '';
 
-    if (!pdfBase64) {
-      throw new Error('No se pudo generar el PDF para adjuntar al correo.');
+      if (!pdfBase64) {
+        throw new Error('No se pudo generar el PDF para adjuntar al correo.');
+      }
     }
 
+    const asuntoPredeterminado = this.asuntoPredeterminado;
+    const asuntoFinal = asunto || asuntoPredeterminado;
+
     await this.supabase.enviarCorreoCotizacion({
-      to_email: correo,
+      to_email: correos.join(', '),
       to_name: this.informacionCotizacion?.cliente_nombre ?? '',
       hotel_nombre: this.informacionCotizacion?.nombre_hotel ?? '',
       fecha_entrada: this.informacionCotizacion?.fecha_entrada ?? null,
@@ -731,10 +776,38 @@ export class CotizacionComponent implements OnInit {
       noches: this.informacionCotizacion?.noches ?? null,
       telefono: this.telefonoCompleto(),
       public_id: this.informacionCotizacion?.public_id ?? null,
-      asunto: asunto || undefined,
+      asunto: asuntoFinal,
+      mensaje: descripcion || null,
       pdf_base64: pdfBase64,
-      pdf_filename: `cotizacion-${this.informacionCotizacion.public_id}.pdf`
+      pdf_filename: pdfBase64 ? `cotizacion-${this.informacionCotizacion.public_id}.pdf` : null
     });
+  }
+
+  get asuntoPredeterminado(): string {
+    const clienteNombre = String(this.informacionCotizacion?.cliente_nombre ?? '').trim();
+    if (clienteNombre) {
+      return `Cotizacion para ${clienteNombre}`;
+    }
+
+    const hotelNombre = String(this.informacionCotizacion?.nombre_hotel ?? '').trim();
+    if (hotelNombre) {
+      return `Cotizacion de viaje para ${hotelNombre}`;
+    }
+
+    const publicId = String(this.informacionCotizacion?.public_id ?? '').trim();
+    if (publicId) {
+      return `Cotizacion de viaje ${publicId}`;
+    }
+
+    return 'Cotizacion de viaje';
+  }
+
+  private obtenerCorreosCapturados(): string[] {
+    const valor = String(this.correoCtrl?.value ?? '');
+    return valor
+      .split(/[;,]/)
+      .map((item) => item.trim())
+      .filter(Boolean);
   }
 
   telefonoCompleto(): string {
