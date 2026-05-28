@@ -3,12 +3,13 @@ import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CatalogosAdminService } from 'app/core/catalogos-admin.service';
+import { EstatusComponent } from 'app/shared/estatus/estatus.component';
 import { MaterialModule } from 'app/shared/material.module';
 
 @Component({
   selector: 'app-atracciones-detalle',
   standalone: true,
-  imports: [CommonModule, MaterialModule, RouterLink, FormsModule],
+  imports: [CommonModule, MaterialModule, RouterLink, FormsModule, EstatusComponent],
   templateUrl: './atracciones-detalle.component.html',
   styleUrl: './atracciones-detalle.component.scss'
 })

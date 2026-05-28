@@ -386,6 +386,33 @@ export class CatalogosAdminService {
         if (error) throw error;
         return data;
       }
+      case 'idiomas': {
+        const { data: ultimoRegistro, error: ultimoError } = await this.client
+          .from('idiomas')
+          .select('orden')
+          .order('orden', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (ultimoError) throw ultimoError;
+
+        const ordenMaximo = Number(ultimoRegistro?.orden);
+        const siguienteOrden = Number.isFinite(ordenMaximo) ? ordenMaximo + 1 : 1;
+
+        const { data, error } = await this.client
+          .from('idiomas')
+          .insert({
+            codigo: payload.codigo ?? null,
+            nombre: payload.nombre ?? null,
+            activo: payload.activo ?? true,
+            orden: siguienteOrden
+          })
+          .select('id, codigo, nombre, activo, orden')
+          .single();
+
+        if (error) throw error;
+        return data;
+      }
       default:
         throw new Error('Este catalogo no admite creacion desde esta pantalla.');
     }
@@ -396,6 +423,14 @@ export class CatalogosAdminService {
       case 'continentes': {
         const { error } = await this.client
           .from('continentes')
+          .delete()
+          .eq('id', id);
+        if (error) throw error;
+        return { deleted: 1 };
+      }
+      case 'idiomas': {
+        const { error } = await this.client
+          .from('idiomas')
           .delete()
           .eq('id', id);
         if (error) throw error;

@@ -4,6 +4,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { PageEvent } from '@angular/material/paginator';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CatalogoAdminKey, CatalogosAdminService } from 'app/core/catalogos-admin.service';
+import { EstatusComponent } from 'app/shared/estatus/estatus.component';
 import { MaterialModule } from 'app/shared/material.module';
 
 interface CatalogoColumna {
@@ -21,7 +22,7 @@ interface CatalogoVistaConfig {
 @Component({
   selector: 'app-catalogo-placeholder',
   standalone: true,
-  imports: [CommonModule, MaterialModule, RouterLink, DragDropModule],
+  imports: [CommonModule, MaterialModule, RouterLink, DragDropModule, EstatusComponent],
   templateUrl: './catalogo-placeholder.component.html',
   styleUrl: './catalogo-placeholder.component.scss'
 })
@@ -98,7 +99,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
         { key: 'id', label: 'ID' },
         { key: 'codigo', label: 'Codigo' },
         { key: 'nombre', label: 'Nombre' },
-        { key: 'activo', label: 'Activo' },
+        { key: 'activo', label: 'Estatus' },
         { key: 'orden', label: 'Orden' }
       ],
       tieneOrden: true,
@@ -208,16 +209,20 @@ export class CatalogoPlaceholderComponent implements OnInit {
     return this.catalogoKey === 'atracciones';
   }
 
+  get esCatalogoIdiomas(): boolean {
+    return this.catalogoKey === 'idiomas';
+  }
+
   get puedeCrearRegistro(): boolean {
-    return this.catalogoKey === 'continentes';
+    return this.catalogoKey === 'continentes' || this.catalogoKey === 'idiomas';
   }
 
   get usaModalEdicion(): boolean {
-    return this.catalogoKey === 'continentes';
+    return this.catalogoKey === 'continentes' || this.catalogoKey === 'idiomas';
   }
 
   get puedeEliminarRegistro(): boolean {
-    return this.catalogoKey === 'continentes';
+    return this.catalogoKey === 'continentes' || this.catalogoKey === 'idiomas';
   }
 
   get pagedItems(): any[] {
@@ -326,23 +331,49 @@ export class CatalogoPlaceholderComponent implements OnInit {
       return;
     }
 
-    const nombre = String(this.editingDraft['nombre'] ?? '').trim();
-    if (!nombre) {
-      this.errorModalEdicion = 'El nombre del continente es obligatorio.';
-      return;
-    }
-
     this.guardandoEdicion = true;
     this.error = '';
     this.errorModalEdicion = '';
 
     try {
-      await this.catalogosAdmin.actualizarCatalogoAdmin('continentes', this.editingId, { nombre });
-      this.items = this.items.map((current) =>
-        Number(current.id) === this.editingId
-          ? { ...current, nombre }
-          : current
-      );
+      if (this.esCatalogoIdiomas) {
+        const codigo = String(this.editingDraft['codigo'] ?? '').trim().toLowerCase();
+        const nombre = String(this.editingDraft['nombre'] ?? '').trim();
+
+        if (!codigo || !nombre) {
+          this.errorModalEdicion = 'Codigo y nombre son obligatorios para editar un idioma.';
+          this.guardandoEdicion = false;
+          return;
+        }
+
+        const payload = {
+          codigo,
+          nombre,
+          activo: Boolean(this.editingDraft['activo'])
+        };
+
+        await this.catalogosAdmin.actualizarCatalogoAdmin('idiomas', this.editingId, payload);
+        this.items = this.items.map((current) =>
+          Number(current.id) === this.editingId
+            ? { ...current, ...payload }
+            : current
+        );
+      } else {
+        const nombre = String(this.editingDraft['nombre'] ?? '').trim();
+        if (!nombre) {
+          this.errorModalEdicion = 'El nombre del continente es obligatorio.';
+          this.guardandoEdicion = false;
+          return;
+        }
+
+        await this.catalogosAdmin.actualizarCatalogoAdmin('continentes', this.editingId, { nombre });
+        this.items = this.items.map((current) =>
+          Number(current.id) === this.editingId
+            ? { ...current, nombre }
+            : current
+        );
+      }
+
       this.cerrarModalEdicion();
     } catch (error: any) {
       this.errorModalEdicion = error?.message ?? 'No se pudo guardar la edicion.';
@@ -360,6 +391,16 @@ export class CatalogoPlaceholderComponent implements OnInit {
       acc[key] = null;
       return acc;
     }, {} as Record<string, any>);
+
+    if (this.esCatalogoIdiomas) {
+      this.nuevoRegistroDraft = {
+        ...this.nuevoRegistroDraft,
+        codigo: '',
+        nombre: '',
+        activo: true
+      };
+    }
+
     this.modalCrearAbierto = true;
   }
 
@@ -400,7 +441,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
     this.errorModalEliminar = '';
 
     try {
-      await this.catalogosAdmin.eliminarCatalogoAdmin('continentes', this.itemAEliminar.id);
+      await this.catalogosAdmin.eliminarCatalogoAdmin(this.catalogoKey, this.itemAEliminar.id);
       this.items = this.items.filter((item) => Number(item.id) !== this.itemAEliminar?.id);
 
       const totalPaginas = Math.ceil(this.items.length / this.pageSize);
@@ -419,14 +460,12 @@ export class CatalogoPlaceholderComponent implements OnInit {
     this.nuevoRegistroDraft = { ...this.nuevoRegistroDraft, [key]: value };
   }
 
+  actualizarBooleanCreacion(key: string, value: boolean) {
+    this.nuevoRegistroDraft = { ...this.nuevoRegistroDraft, [key]: value };
+  }
+
   async crearRegistro() {
     if (!this.puedeCrearRegistro || this.guardandoCreacion) {
-      return;
-    }
-
-    const nombre = String(this.nuevoRegistroDraft['nombre'] ?? '').trim();
-    if (!nombre) {
-      this.error = 'El nombre del continente es obligatorio.';
       return;
     }
 
@@ -434,7 +473,32 @@ export class CatalogoPlaceholderComponent implements OnInit {
     this.error = '';
 
     try {
-      await this.catalogosAdmin.crearCatalogoAdmin(this.catalogoKey, { nombre });
+      if (this.esCatalogoIdiomas) {
+        const codigo = String(this.nuevoRegistroDraft['codigo'] ?? '').trim().toLowerCase();
+        const nombre = String(this.nuevoRegistroDraft['nombre'] ?? '').trim();
+
+        if (!codigo || !nombre) {
+          this.error = 'Codigo y nombre son obligatorios para crear un idioma.';
+          this.guardandoCreacion = false;
+          return;
+        }
+
+        await this.catalogosAdmin.crearCatalogoAdmin(this.catalogoKey, {
+          codigo,
+          nombre,
+          activo: Boolean(this.nuevoRegistroDraft['activo'])
+        });
+      } else {
+        const nombre = String(this.nuevoRegistroDraft['nombre'] ?? '').trim();
+        if (!nombre) {
+          this.error = 'El nombre del continente es obligatorio.';
+          this.guardandoCreacion = false;
+          return;
+        }
+
+        await this.catalogosAdmin.crearCatalogoAdmin(this.catalogoKey, { nombre });
+      }
+
       this.cerrarModalCrear();
       await this.cargar();
     } catch (error: any) {
