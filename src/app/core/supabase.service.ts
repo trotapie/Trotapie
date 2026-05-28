@@ -2375,6 +2375,39 @@ export class SupabaseService {
     return resultados.map((r) => r.data).filter(Boolean);
   }
 
+  async crearCatalogoAdmin(catalogo: CatalogoAdminKey, payload: Record<string, any>) {
+    switch (catalogo) {
+      case 'continentes': {
+        const { data, error } = await this.client
+          .from('continentes')
+          .insert({
+            nombre: payload.nombre ?? null
+          })
+          .select('id, nombre')
+          .single();
+        if (error) throw error;
+        return data;
+      }
+      default:
+        throw new Error('Este catalogo no admite creacion desde esta pantalla.');
+    }
+  }
+
+  async eliminarCatalogoAdmin(catalogo: CatalogoAdminKey, id: number) {
+    switch (catalogo) {
+      case 'continentes': {
+        const { error } = await this.client
+          .from('continentes')
+          .delete()
+          .eq('id', id);
+        if (error) throw error;
+        return { deleted: 1 };
+      }
+      default:
+        throw new Error('Este catalogo no admite eliminacion desde esta pantalla.');
+    }
+  }
+
   async actualizarCatalogoAdmin(
     catalogo: CatalogoAdminKey,
     id: number,

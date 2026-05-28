@@ -185,8 +185,17 @@ export class CatalogoPlaceholderComponent implements OnInit {
   guardandoOrden = false;
   hayCambiosOrden = false;
   guardandoEdicion = false;
+  guardandoCreacion = false;
+  eliminandoRegistro = false;
   editingId: number | null = null;
   editingDraft: Record<string, any> = {};
+  errorModalEdicion = '';
+  errorModalEliminar = '';
+  modalEdicionAbierto = false;
+  modalCrearAbierto = false;
+  modalEliminarAbierto = false;
+  itemAEliminar: { id: number; nombre: string } | null = null;
+  nuevoRegistroDraft: Record<string, any> = {};
   pageSize = 20;
   pageIndex = 0;
   private ordenOriginalIds: number[] = [];
@@ -197,6 +206,18 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
   get esCatalogoAtracciones(): boolean {
     return this.catalogoKey === 'atracciones';
+  }
+
+  get puedeCrearRegistro(): boolean {
+    return this.catalogoKey === 'continentes';
+  }
+
+  get usaModalEdicion(): boolean {
+    return this.catalogoKey === 'continentes';
+  }
+
+  get puedeEliminarRegistro(): boolean {
+    return this.catalogoKey === 'continentes';
   }
 
   get pagedItems(): any[] {
@@ -275,18 +296,151 @@ export class CatalogoPlaceholderComponent implements OnInit {
     }
 
     this.error = '';
+    this.errorModalEdicion = '';
     this.editingId = Number(item.id);
     const editableKeys = this.getEditableKeys();
     this.editingDraft = editableKeys.reduce((acc, key) => {
       acc[key] = item?.[key] ?? null;
       return acc;
     }, {} as Record<string, any>);
+
+    if (this.usaModalEdicion) {
+      this.modalEdicionAbierto = true;
+    }
   }
 
   cancelarEdicion() {
     this.editingId = null;
     this.editingDraft = {};
     this.guardandoEdicion = false;
+  }
+
+  cerrarModalEdicion() {
+    this.errorModalEdicion = '';
+    this.modalEdicionAbierto = false;
+    this.cancelarEdicion();
+  }
+
+  async guardarEdicionDesdeModal() {
+    if (!this.usaModalEdicion || this.editingId === null) {
+      return;
+    }
+
+    const nombre = String(this.editingDraft['nombre'] ?? '').trim();
+    if (!nombre) {
+      this.errorModalEdicion = 'El nombre del continente es obligatorio.';
+      return;
+    }
+
+    this.guardandoEdicion = true;
+    this.error = '';
+    this.errorModalEdicion = '';
+
+    try {
+      await this.supabase.actualizarCatalogoAdmin('continentes', this.editingId, { nombre });
+      this.items = this.items.map((current) =>
+        Number(current.id) === this.editingId
+          ? { ...current, nombre }
+          : current
+      );
+      this.cerrarModalEdicion();
+    } catch (error: any) {
+      this.errorModalEdicion = error?.message ?? 'No se pudo guardar la edicion.';
+      this.guardandoEdicion = false;
+    }
+  }
+
+  abrirModalCrear() {
+    if (!this.puedeCrearRegistro) {
+      return;
+    }
+
+    this.error = '';
+    this.nuevoRegistroDraft = this.getEditableKeys().reduce((acc, key) => {
+      acc[key] = null;
+      return acc;
+    }, {} as Record<string, any>);
+    this.modalCrearAbierto = true;
+  }
+
+  cerrarModalCrear() {
+    this.modalCrearAbierto = false;
+    this.nuevoRegistroDraft = {};
+    this.guardandoCreacion = false;
+  }
+
+  abrirModalEliminar(item: any) {
+    if (!this.puedeEliminarRegistro) {
+      return;
+    }
+
+    this.error = '';
+    this.errorModalEliminar = '';
+    this.itemAEliminar = {
+      id: Number(item.id),
+      nombre: String(item?.nombre ?? `ID ${item?.id ?? ''}`)
+    };
+    this.modalEliminarAbierto = true;
+  }
+
+  cerrarModalEliminar() {
+    this.modalEliminarAbierto = false;
+    this.itemAEliminar = null;
+    this.errorModalEliminar = '';
+    this.eliminandoRegistro = false;
+  }
+
+  async confirmarEliminarRegistro() {
+    if (!this.puedeEliminarRegistro || !this.itemAEliminar || this.eliminandoRegistro) {
+      return;
+    }
+
+    this.eliminandoRegistro = true;
+    this.error = '';
+    this.errorModalEliminar = '';
+
+    try {
+      await this.supabase.eliminarCatalogoAdmin('continentes', this.itemAEliminar.id);
+      this.items = this.items.filter((item) => Number(item.id) !== this.itemAEliminar?.id);
+
+      const totalPaginas = Math.ceil(this.items.length / this.pageSize);
+      if (this.pageIndex >= totalPaginas && this.pageIndex > 0) {
+        this.pageIndex = Math.max(totalPaginas - 1, 0);
+      }
+
+      this.cerrarModalEliminar();
+    } catch (error: any) {
+      this.errorModalEliminar = error?.message ?? 'No se pudo eliminar el registro.';
+      this.eliminandoRegistro = false;
+    }
+  }
+
+  actualizarTextoCreacion(key: string, value: string) {
+    this.nuevoRegistroDraft = { ...this.nuevoRegistroDraft, [key]: value };
+  }
+
+  async crearRegistro() {
+    if (!this.puedeCrearRegistro || this.guardandoCreacion) {
+      return;
+    }
+
+    const nombre = String(this.nuevoRegistroDraft['nombre'] ?? '').trim();
+    if (!nombre) {
+      this.error = 'El nombre del continente es obligatorio.';
+      return;
+    }
+
+    this.guardandoCreacion = true;
+    this.error = '';
+
+    try {
+      await this.supabase.crearCatalogoAdmin(this.catalogoKey, { nombre });
+      this.cerrarModalCrear();
+      await this.cargar();
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudo crear el registro.';
+      this.guardandoCreacion = false;
+    }
   }
 
   async guardarEdicion(item: any) {
