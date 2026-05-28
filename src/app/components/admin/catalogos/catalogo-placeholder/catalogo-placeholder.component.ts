@@ -3,7 +3,7 @@ import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-
 import { Component, inject, OnInit } from '@angular/core';
 import { PageEvent } from '@angular/material/paginator';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { CatalogoAdminKey, SupabaseService } from 'app/core/supabase.service';
+import { CatalogoAdminKey, CatalogosAdminService } from 'app/core/catalogos-admin.service';
 import { MaterialModule } from 'app/shared/material.module';
 
 interface CatalogoColumna {
@@ -28,7 +28,7 @@ interface CatalogoVistaConfig {
 export class CatalogoPlaceholderComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly supabase = inject(SupabaseService);
+  private readonly catalogosAdmin = inject(CatalogosAdminService);
 
   private readonly configuraciones: Record<CatalogoAdminKey, CatalogoVistaConfig> = {
     actividades: {
@@ -239,7 +239,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
     this.error = '';
 
     try {
-      const info = await this.supabase.obtenerCatalogoAdmin(this.catalogoKey);
+      const info = await this.catalogosAdmin.obtenerCatalogoAdmin(this.catalogoKey);
       this.items = [...(info ?? [])];
       this.ordenOriginalIds = this.items.map((item) => Number(item.id));
       this.pageIndex = 0;
@@ -279,7 +279,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
         id: Number(item.id),
         orden: index + 1
       }));
-      await this.supabase.actualizarOrdenCatalogoAdmin(this.catalogoKey, payload);
+      await this.catalogosAdmin.actualizarOrdenCatalogoAdmin(this.catalogoKey, payload);
       this.ordenOriginalIds = this.items.map((item) => Number(item.id));
       this.actualizarEstadoOrden();
     } catch (error: any) {
@@ -337,7 +337,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
     this.errorModalEdicion = '';
 
     try {
-      await this.supabase.actualizarCatalogoAdmin('continentes', this.editingId, { nombre });
+      await this.catalogosAdmin.actualizarCatalogoAdmin('continentes', this.editingId, { nombre });
       this.items = this.items.map((current) =>
         Number(current.id) === this.editingId
           ? { ...current, nombre }
@@ -400,7 +400,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
     this.errorModalEliminar = '';
 
     try {
-      await this.supabase.eliminarCatalogoAdmin('continentes', this.itemAEliminar.id);
+      await this.catalogosAdmin.eliminarCatalogoAdmin('continentes', this.itemAEliminar.id);
       this.items = this.items.filter((item) => Number(item.id) !== this.itemAEliminar?.id);
 
       const totalPaginas = Math.ceil(this.items.length / this.pageSize);
@@ -434,7 +434,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
     this.error = '';
 
     try {
-      await this.supabase.crearCatalogoAdmin(this.catalogoKey, { nombre });
+      await this.catalogosAdmin.crearCatalogoAdmin(this.catalogoKey, { nombre });
       this.cerrarModalCrear();
       await this.cargar();
     } catch (error: any) {
@@ -463,7 +463,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
         return acc;
       }, {} as Record<string, any>);
 
-      await this.supabase.actualizarCatalogoAdmin(this.catalogoKey, Number(item.id), payload);
+      await this.catalogosAdmin.actualizarCatalogoAdmin(this.catalogoKey, Number(item.id), payload);
 
       this.items = this.items.map((current) =>
         Number(current.id) === Number(item.id)
