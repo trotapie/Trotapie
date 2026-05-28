@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { SupabaseService } from 'app/core/supabase.service';
+import { CatalogosAdminService } from 'app/core/catalogos-admin.service';
 import { MaterialModule } from 'app/shared/material.module';
 
 @Component({
@@ -14,7 +14,7 @@ import { MaterialModule } from 'app/shared/material.module';
 })
 export class AtraccionesDetalleComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
-  private readonly supabase = inject(SupabaseService);
+  private readonly catalogosAdmin = inject(CatalogosAdminService);
 
   loading = false;
   guardando = false;
@@ -70,7 +70,7 @@ export class AtraccionesDetalleComponent implements OnInit {
     this.guardando = true;
     this.error = '';
     try {
-      await this.supabase.actualizarRegistroCatalogoAtraccionAdmin({
+      await this.catalogosAdmin.actualizarRegistroCatalogoAtraccionAdmin({
         atraccion_id: Number(item.id),
         nombre: this.cleanText(this.editingDraft['nombre']),
         descripcion: this.cleanText(this.editingDraft['descripcion']),
@@ -98,7 +98,7 @@ export class AtraccionesDetalleComponent implements OnInit {
   }
 
   private async cargarDetalle(catalogoId: number) {
-    const detalle = await this.supabase.obtenerDetalleCatalogoAtraccionesAdmin(catalogoId);
+    const detalle = await this.catalogosAdmin.obtenerDetalleCatalogoAtraccionesAdmin(catalogoId);
     this.catalogo = detalle.catalogo;
     this.atracciones = detalle.atracciones ?? [];
   }
