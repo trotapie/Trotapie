@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+﻿import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { FuseSplashScreenService } from '@fuse/services/splash-screen';
@@ -429,7 +429,7 @@ export class CrearCotizacionComponent implements OnInit {
       parts.push(`${room.adults} ${room.adults === 1 ? 'adulto' : 'adultos'}`);
 
       if (room.children > 0) {
-        const childrenText = `${room.children} ${room.children === 1 ? 'nino' : 'ninos'}`;
+        const childrenText = `${room.children} ${room.children === 1 ? 'niño' : 'niños'}`;
         if (room.childAges?.length) {
           parts.push(`${childrenText} · edades: ${room.childAges.join(', ')}`);
         } else {
@@ -437,7 +437,7 @@ export class CrearCotizacionComponent implements OnInit {
         }
       }
 
-      return `Habitacion ${index + 1}: ${parts.join(' · ')}`;
+      return `Habitación ${index + 1}: ${parts.join(' · ')}`;
     });
 
     return {
@@ -471,3 +471,4 @@ export class CrearCotizacionComponent implements OnInit {
     return `${year}-${month}-${day}`;
   }
 }
+

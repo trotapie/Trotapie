@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+﻿import { Component, inject, OnInit } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { SupabaseService } from 'app/core/supabase.service';
@@ -60,6 +60,7 @@ interface CotizacionHabitacionForm {
 interface HabitacionCotizacionPublicaVista {
   indice: number;
   tipoHabitacion: string | null;
+  detalleHabitacion: string | null;
   precioSinSeguro: number | null;
   precioConSeguro: number | null;
   precioMeses: number | null;
@@ -76,6 +77,16 @@ interface HabitacionCotizacionPublicaVista {
   apartadoMeses: number | null;
   pagueDespuesMeses: number | null;
 }
+
+interface DetalleHabitacionCotizacion {
+  indice: number;
+  habitacion: string;
+  adultos: number;
+  ninos: number;
+  extra?: string;
+}
+
+type TarifaPublica = 'sin_seguro' | 'con_seguro' | 'a_meses';
 
 interface CountryDialCode {
   country: string;
@@ -254,6 +265,7 @@ export class CotizacionComponent implements OnInit {
     const porcentajeMesesGlobal =
       this.obtenerNumeroLimpio(this.precioAMeses?.porcentaje) ??
       this.obtenerNumeroLimpio(this.informacionCotizacion?.porcentaje_meses);
+    const detalleHabitaciones = this.obtenerDetalleHabitacionesPdf(this.obtenerTextoHabitacionesCotizacion());
 
     return this.cotizacionMultipleRespuesta.map((item, idx) => {
       const precioSinSeguro =
@@ -294,10 +306,14 @@ export class CotizacionComponent implements OnInit {
 
       const apartadoSeguro = this.calcularMontoApartado(precioConSeguro, porcentajeSeguro);
       const apartadoMeses = this.calcularMontoApartado(precioMeses, porcentajeMeses);
+      const detalleHabitacion = this.formatearDetalleHabitacionTexto(
+        detalleHabitaciones.find((detalle) => detalle.indice === idx + 1)
+      );
 
       return {
         indice: idx + 1,
         tipoHabitacion: this.obtenerNombreTipoHabitacion(item?.tipo_habitacion_id),
+        detalleHabitacion,
         precioSinSeguro,
         precioConSeguro,
         precioMeses,
@@ -323,6 +339,33 @@ export class CotizacionComponent implements OnInit {
         pagueDespuesMeses: this.calcularMontoPendiente(precioMeses, apartadoMeses)
       };
     });
+  }
+
+  private obtenerTextoHabitacionesCotizacion(): string {
+    const habitaciones = this.informacionCotizacion?.habitaciones;
+    if (!habitaciones) return '';
+    const texto = (habitaciones.es ?? '').trim() || (habitaciones.traduccion ?? '').trim();
+    return texto
+      .replace(/\bninos\b/gi, 'niños')
+      .replace(/\bnino\b/gi, 'niño')
+      .replace(/\bhabitacion\b/gi, 'habitación');
+  }
+
+  private formatearDetalleHabitacionTexto(detalle?: DetalleHabitacionCotizacion): string | null {
+    if (!detalle) return null;
+
+    const partes: string[] = [];
+    if (detalle.adultos > 0) {
+      partes.push(`${detalle.adultos} adulto${detalle.adultos === 1 ? '' : 's'}`);
+    }
+    if (detalle.ninos > 0) {
+      partes.push(`${detalle.ninos} niño${detalle.ninos === 1 ? '' : 's'}`);
+    }
+    if (detalle.extra) {
+      partes.push(detalle.extra);
+    }
+
+    return partes.length ? partes.join(' · ') : null;
   }
 
   async ngOnInit() {
@@ -615,6 +658,17 @@ export class CotizacionComponent implements OnInit {
     return this.totalPorCampo(camposActivos[0]);
   }
 
+  get totalEstanciaPublica(): number | null {
+    if (this.esEdicion) return null;
+    const tiposActivos = this.obtenerTiposTarifaPublicaActivos();
+    if (tiposActivos.length !== 1) return null;
+    return this.totalPublicoPorTarifa(tiposActivos[0]);
+  }
+
+  get mostrarTotalEstanciaPublica(): boolean {
+    return !this.esEdicion && this.obtenerTiposTarifaPublicaActivos().length === 1;
+  }
+
   get mostrarTotalEstanciaEdicion(): boolean {
     return this.obtenerCamposTarifaActivos().length === 1;
   }
@@ -653,6 +707,31 @@ export class CotizacionComponent implements OnInit {
     ];
 
     return campos.filter((campo) => this.totalPorCampo(campo) !== null);
+  }
+
+  private obtenerTiposTarifaPublicaActivos(): TarifaPublica[] {
+    const tipos: TarifaPublica[] = ['sin_seguro', 'con_seguro', 'a_meses'];
+    return tipos.filter((tipo) => this.totalPublicoPorTarifa(tipo) !== null);
+  }
+
+  private totalPublicoPorTarifa(tipo: TarifaPublica): number | null {
+    const habitaciones = this.habitacionesCotizacionPublicaVista;
+
+    if (habitaciones.length) {
+      const valores = habitaciones
+        .map((habitacion) => {
+          if (tipo === 'sin_seguro') return habitacion.precioSinSeguro;
+          if (tipo === 'con_seguro') return habitacion.precioConSeguro;
+          return habitacion.precioMeses;
+        })
+        .filter((valor): valor is number => valor !== null);
+
+      if (!valores.length) return null;
+      return valores.reduce((acc, current) => acc + current, 0);
+    }
+
+    const precioBase = this.informacionCotizacion?.precios?.find((precio) => precio.tipo === tipo);
+    return this.obtenerNumeroLimpio(precioBase?.precio);
   }
 
   soloNumeros(event: Event) {
@@ -1296,14 +1375,39 @@ export class CotizacionComponent implements OnInit {
 
     return pdf;
   }
-
-  private obtenerDetalleHabitacionesPdf(texto: string): Array<{
-    habitacion: string;
-    adultos: number;
-    ninos: number;
-    extra?: string;
-  }> {
+  private obtenerDetalleHabitacionesPdf(texto: string): DetalleHabitacionCotizacion[] {
     if (!texto) return [];
+
+    const normalizado = texto
+      .replace(/\r?\n/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const segmentos: Array<{ indice: number; detalle: string }> = [];
+    const regexHabitacion = /habitaci[oó]n\s*(\d+)\s*:\s*(.*?)(?=habitaci[oó]n\s*\d+\s*:|$)/gi;
+    let match: RegExpExecArray | null;
+
+    while ((match = regexHabitacion.exec(normalizado)) !== null) {
+      const indice = Number(match[1]);
+      const detalle = (match[2] ?? '').trim();
+      if (!Number.isFinite(indice)) continue;
+      segmentos.push({ indice, detalle });
+    }
+
+    if (segmentos.length) {
+      return segmentos.map(({ indice, detalle }) => {
+        const adultosMatch = detalle.match(/(\d+)\s*adult(?:o|os)/i);
+        const ninosMatch = detalle.match(/(\d+)\s*ni(?:n|ñ)(?:o|os)/i);
+        const extra = this.limpiarDetalleExtraHabitacion(detalle);
+
+        return {
+          indice,
+          habitacion: `Habitacion ${indice}`,
+          adultos: adultosMatch ? Number(adultosMatch[1]) : 0,
+          ninos: ninosMatch ? Number(ninosMatch[1]) : 0,
+          extra: extra || undefined,
+        };
+      });
+    }
 
     const lineas = texto
       .split(/\r?\n/)
@@ -1314,15 +1418,31 @@ export class CotizacionComponent implements OnInit {
       const habitacionMatch = linea.match(/habitaci[oó]n\s*(\d+)/i);
       const adultosMatch = linea.match(/(\d+)\s*adult(?:o|os)/i);
       const ninosMatch = linea.match(/(\d+)\s*ni(?:n|ñ)(?:o|os)/i);
-      const extra = linea.includes(':') ? linea.split(':').slice(1).join(':').trim() : '';
+      const extra = this.limpiarDetalleExtraHabitacion(
+        linea.includes(':') ? linea.split(':').slice(1).join(':').trim() : linea
+      );
+      const indice = habitacionMatch ? Number(habitacionMatch[1]) : index + 1;
 
       return {
-        habitacion: habitacionMatch ? `Habitacion ${habitacionMatch[1]}` : `Habitacion ${index + 1}`,
+        indice,
+        habitacion: `Habitacion ${indice}`,
         adultos: adultosMatch ? Number(adultosMatch[1]) : 0,
         ninos: ninosMatch ? Number(ninosMatch[1]) : 0,
         extra: extra || undefined,
       };
     });
+  }
+
+  private limpiarDetalleExtraHabitacion(texto: string): string {
+    return texto
+      .replace(/\b\d+\s*adult(?:o|os)\b/gi, '')
+      .replace(/\b\d+\s*ni(?:n|ñ)(?:o|os)\b/gi, '')
+      .replace(/\s*[-\u00B7]+\s*/g, ' · ')
+      .replace(/(?:\s*·\s*){2,}/g, ' · ')
+      .replace(/\s*,\s*/g, ', ')
+      .replace(/\s+/g, ' ')
+      .replace(/^[\s·,\-:]+|[\s·,\-:]+$/g, '')
+      .trim();
   }
 
   private async obtenerImagenComoDataURL(src: string): Promise<string | null> {
@@ -1588,20 +1708,16 @@ export class CotizacionComponent implements OnInit {
   }
 
   private obtenerTotalHabitacionesCotizacion(): number {
-    const habitacionesFuente =
-      (this.informacionCotizacion?.habitaciones?.es ?? '').trim() ||
-      (this.informacionCotizacion?.habitaciones?.traduccion ?? '').trim();
+    const habitacionesFuente = this.obtenerTextoHabitacionesCotizacion();
     const habitacionesDetectadas = this.obtenerDetalleHabitacionesPdf(habitacionesFuente);
     return Math.max(habitacionesDetectadas.length, 1);
   }
 
   private obtenerTotalHabitacionesVistaPublica(): number {
-    const habitacionesFuente =
-      (this.informacionCotizacion?.habitaciones?.es ?? '').trim() ||
-      (this.informacionCotizacion?.habitaciones?.traduccion ?? '').trim();
+    const habitacionesFuente = this.obtenerTextoHabitacionesCotizacion();
 
     const habitacionesDetectadas = this.obtenerTotalHabitacionesCotizacion();
-    const matchTotal = habitacionesFuente.match(/(\d+)\s*habitaci(?:o|ó)n(?:es)?/i);
+    const matchTotal = habitacionesFuente.match(/(\d+)\s*habitaci[oó]n(?:es)?/i);
     const totalTexto = matchTotal ? Number(matchTotal[1]) : 0;
 
     return Math.max(habitacionesDetectadas, Number.isFinite(totalTexto) ? totalTexto : 0, 1);
@@ -1974,3 +2090,4 @@ export class CotizacionComponent implements OnInit {
     return mensaje;
   }
 }
+

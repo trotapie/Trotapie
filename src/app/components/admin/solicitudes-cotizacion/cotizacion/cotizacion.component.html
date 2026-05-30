@@ -59,6 +59,35 @@
                                     </p>
                                 </section>
 
+                                @if (!esEdicion) {
+                                <div
+                                    class="bg-white dark:bg-slate-800 p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-50 dark:border-slate-700 mb-6">
+                                    <div class="flex items-center gap-4">
+                                        <div
+                                            class="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center">
+                                            <mat-icon class="icon-size-5 icon-thick text-white"
+                                                [svgIcon]="'heroicons_outline:calendar-days'"></mat-icon>
+                                        </div>
+                                        <div>
+                                            <p
+                                                class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500">
+                                                {{ t('fechas_viaje') }}
+                                            </p>
+                                            <p class="font-bold text-slate-900 dark:text-white text-base">
+                                                {{ informacionCotizacion.fecha_entrada | dateI18n:'dd MMM
+                                                yyyy':informacionCotizacion.idioma }} -
+                                                {{informacionCotizacion.fecha_salida
+                                                |
+                                                dateI18n:'dd MMM yyyy':informacionCotizacion.idioma}}
+                                            </p>
+                                            <p class="text-xs text-slate-500">
+                                                {{ t('noches-s', { noches: informacionCotizacion.noches }) }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                }
+
                                 @if (!esEdicion && habitacionesCotizacionPublicaVista.length > 1) {
                                 <mat-tab-group [animationDuration]="'0ms'" class="tp-room-tabs">
                                 @for (habitacionCotizacion of habitacionesCotizacionPublicaVista; track $index) {
@@ -79,6 +108,11 @@
                                             @if (habitacionCotizacion.tipoHabitacion) {
                                             <p class="text-sm font-bold text-slate-700 dark:text-slate-200 mt-1">
                                                 {{ habitacionCotizacion.tipoHabitacion }}
+                                            </p>
+                                            }
+                                            @if (habitacionCotizacion.detalleHabitacion) {
+                                            <p class="text-xs font-medium text-slate-500 dark:text-slate-300 mt-2">
+                                                {{ habitacionCotizacion.detalleHabitacion }}
                                             </p>
                                             }
                                         </div>
@@ -288,6 +322,7 @@
                                 <div
                                     class="bg-white dark:bg-slate-800 p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-50 dark:border-slate-700">
 
+                                    @if (esEdicion) {
                                     <div class="flex items-center gap-4">
                                         <div
                                             class="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center">
@@ -314,6 +349,7 @@
                                             </p>
                                         </div>
                                     </div>
+                                    }
                                     <div class="mt-6">
                                         @if (esEdicion) {
                                         <p
@@ -1349,7 +1385,7 @@
                              flex items-center justify-between sm:justify-end
                              gap-4 sm:gap-12">
 
-                                @if(!esEdicion && informacionCotizacion.precios.length === 1){
+                                @if(!esEdicion && mostrarTotalEstanciaPublica && totalEstanciaPublica !== null){
                                 <div class="text-left sm:text-right">
                                     <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-0.5">
                                         {{ t('total_propuesta') }}
@@ -1357,7 +1393,7 @@
                                     <p class="text-xl sm:text-2xl font-black
                                  text-slate-900 dark:text-white tracking-tight">
                                         MXN
-                                        {{informacionCotizacion.precios[0].precio | currency}}
+                                        {{totalEstanciaPublica | currency}}
                                     </p>
                                 </div>
                                 }@else if(esEdicion && mostrarTotalEstanciaEdicion && totalEstanciaEdicion !== null){ <div class="text-left sm:text-right">
