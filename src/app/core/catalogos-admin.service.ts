@@ -413,6 +413,20 @@ export class CatalogosAdminService {
         if (error) throw error;
         return data;
       }
+      case 'politicas': {
+        const { data, error } = await this.client
+          .from('politicas')
+          .insert({
+            codigo: payload.codigo ?? null,
+            categoria: payload.categoria ?? null,
+            activo: payload.activo ?? true
+          })
+          .select('id, codigo, categoria, activo, created_at')
+          .single();
+
+        if (error) throw error;
+        return data;
+      }
       default:
         throw new Error('Este catalogo no admite creacion desde esta pantalla.');
     }
@@ -431,6 +445,14 @@ export class CatalogosAdminService {
       case 'idiomas': {
         const { error } = await this.client
           .from('idiomas')
+          .delete()
+          .eq('id', id);
+        if (error) throw error;
+        return { deleted: 1 };
+      }
+      case 'politicas': {
+        const { error } = await this.client
+          .from('politicas')
           .delete()
           .eq('id', id);
         if (error) throw error;

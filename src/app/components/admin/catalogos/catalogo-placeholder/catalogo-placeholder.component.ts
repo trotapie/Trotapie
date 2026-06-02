@@ -191,11 +191,14 @@ export class CatalogoPlaceholderComponent implements OnInit {
   editingId: number | null = null;
   editingDraft: Record<string, any> = {};
   errorModalEdicion = '';
+  errorModalCreacion = '';
   errorModalEliminar = '';
+  mostrarModalExito = false;
+  mensajeModalExito = '';
   modalEdicionAbierto = false;
   modalCrearAbierto = false;
   modalEliminarAbierto = false;
-  itemAEliminar: { id: number; nombre: string } | null = null;
+  itemAEliminar: { id: number; nombre: string; codigo: string } | null = null;
   nuevoRegistroDraft: Record<string, any> = {};
   pageSize = 20;
   pageIndex = 0;
@@ -213,21 +216,133 @@ export class CatalogoPlaceholderComponent implements OnInit {
     return this.catalogoKey === 'idiomas';
   }
 
+  get esCatalogoPoliticas(): boolean {
+    return this.catalogoKey === 'politicas';
+  }
+
   get puedeCrearRegistro(): boolean {
-    return this.catalogoKey === 'continentes' || this.catalogoKey === 'idiomas';
+    return this.catalogoKey === 'continentes' || this.catalogoKey === 'idiomas' || this.catalogoKey === 'politicas';
   }
 
   get usaModalEdicion(): boolean {
-    return this.catalogoKey === 'continentes' || this.catalogoKey === 'idiomas';
+    return this.catalogoKey === 'continentes' || this.catalogoKey === 'idiomas' || this.catalogoKey === 'politicas';
   }
 
   get puedeEliminarRegistro(): boolean {
-    return this.catalogoKey === 'continentes' || this.catalogoKey === 'idiomas';
+    return this.catalogoKey === 'continentes' || this.catalogoKey === 'idiomas' || this.catalogoKey === 'politicas';
   }
 
   get pagedItems(): any[] {
     const start = this.pageIndex * this.pageSize;
     return this.items.slice(start, start + this.pageSize);
+  }
+
+  get tituloModalCrear(): string {
+    if (this.esCatalogoIdiomas) {
+      return 'Nuevo idioma';
+    }
+
+    if (this.esCatalogoPoliticas) {
+      return 'Nueva politica';
+    }
+
+    return 'Nuevo continente';
+  }
+
+  get descripcionModalCrear(): string {
+    if (this.esCatalogoIdiomas) {
+      return 'Captura codigo y nombre para crear el nuevo idioma.';
+    }
+
+    if (this.esCatalogoPoliticas) {
+      return 'Captura codigo, categoria y estatus para crear la nueva politica.';
+    }
+
+    return 'Captura el nombre para crear el nuevo continente.';
+  }
+
+  get tituloModalEdicion(): string {
+    if (this.esCatalogoIdiomas) {
+      return 'Editar idioma';
+    }
+
+    if (this.esCatalogoPoliticas) {
+      return 'Editar politica';
+    }
+
+    return 'Editar continente';
+  }
+
+  get descripcionModalEdicion(): string {
+    if (this.esCatalogoIdiomas) {
+      return 'Actualiza codigo, nombre y estatus del idioma.';
+    }
+
+    if (this.esCatalogoPoliticas) {
+      return 'Actualiza codigo, categoria y estatus de la politica.';
+    }
+
+    return 'Actualiza el nombre del continente y guarda cambios.';
+  }
+
+  get textoBotonCrear(): string {
+    if (this.esCatalogoIdiomas) {
+      return 'Nuevo idioma';
+    }
+
+    if (this.esCatalogoPoliticas) {
+      return 'Crear nueva politica';
+    }
+
+    return 'Nuevo continente';
+  }
+
+  get textoBotonConfirmarCrear(): string {
+    if (this.esCatalogoIdiomas) {
+      return 'Crear idioma';
+    }
+
+    if (this.esCatalogoPoliticas) {
+      return 'Crear politica';
+    }
+
+    return 'Crear continente';
+  }
+
+  get mensajeExitoEdicion(): string {
+    if (this.esCatalogoIdiomas) {
+      return 'Idioma guardado correctamente.';
+    }
+
+    if (this.esCatalogoPoliticas) {
+      return 'Politica guardada correctamente.';
+    }
+
+    return 'Registro guardado correctamente.';
+  }
+
+  get mensajeExitoCreacion(): string {
+    if (this.esCatalogoIdiomas) {
+      return 'Idioma creado correctamente.';
+    }
+
+    if (this.esCatalogoPoliticas) {
+      return 'Politica creada correctamente.';
+    }
+
+    return 'Registro creado correctamente.';
+  }
+
+  get mensajeExitoEliminacion(): string {
+    if (this.esCatalogoIdiomas) {
+      return 'Idioma eliminado correctamente.';
+    }
+
+    if (this.esCatalogoPoliticas) {
+      return 'Politica eliminada correctamente.';
+    }
+
+    return 'Registro eliminado correctamente.';
   }
 
   async ngOnInit() {
@@ -358,6 +473,28 @@ export class CatalogoPlaceholderComponent implements OnInit {
             ? { ...current, ...payload }
             : current
         );
+      } else if (this.esCatalogoPoliticas) {
+        const codigo = String(this.editingDraft['codigo'] ?? '').trim();
+        const categoria = String(this.editingDraft['categoria'] ?? '').trim();
+
+        if (!codigo || !categoria) {
+          this.errorModalEdicion = 'Codigo y categoria son obligatorios para editar una politica.';
+          this.guardandoEdicion = false;
+          return;
+        }
+
+        const payload = {
+          codigo,
+          categoria,
+          activo: Boolean(this.editingDraft['activo'])
+        };
+
+        await this.catalogosAdmin.actualizarCatalogoAdmin('politicas', this.editingId, payload);
+        this.items = this.items.map((current) =>
+          Number(current.id) === this.editingId
+            ? { ...current, ...payload }
+            : current
+        );
       } else {
         const nombre = String(this.editingDraft['nombre'] ?? '').trim();
         if (!nombre) {
@@ -375,6 +512,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
       }
 
       this.cerrarModalEdicion();
+      this.mostrarModalExitoConMensaje(this.mensajeExitoEdicion);
     } catch (error: any) {
       this.errorModalEdicion = error?.message ?? 'No se pudo guardar la edicion.';
       this.guardandoEdicion = false;
@@ -387,6 +525,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
     }
 
     this.error = '';
+    this.errorModalCreacion = '';
     this.nuevoRegistroDraft = this.getEditableKeys().reduce((acc, key) => {
       acc[key] = null;
       return acc;
@@ -399,6 +538,13 @@ export class CatalogoPlaceholderComponent implements OnInit {
         nombre: '',
         activo: true
       };
+    } else if (this.esCatalogoPoliticas) {
+      this.nuevoRegistroDraft = {
+        ...this.nuevoRegistroDraft,
+        codigo: '',
+        categoria: '',
+        activo: true
+      };
     }
 
     this.modalCrearAbierto = true;
@@ -408,6 +554,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
     this.modalCrearAbierto = false;
     this.nuevoRegistroDraft = {};
     this.guardandoCreacion = false;
+    this.errorModalCreacion = '';
   }
 
   abrirModalEliminar(item: any) {
@@ -417,9 +564,11 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
     this.error = '';
     this.errorModalEliminar = '';
+    const codigo = String(item?.codigo ?? item?.clave ?? item?.nombre ?? `ID ${item?.id ?? ''}`);
     this.itemAEliminar = {
       id: Number(item.id),
-      nombre: String(item?.nombre ?? `ID ${item?.id ?? ''}`)
+      nombre: codigo,
+      codigo
     };
     this.modalEliminarAbierto = true;
   }
@@ -450,6 +599,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
       }
 
       this.cerrarModalEliminar();
+      this.mostrarModalExitoConMensaje(this.mensajeExitoEliminacion);
     } catch (error: any) {
       this.errorModalEliminar = error?.message ?? 'No se pudo eliminar el registro.';
       this.eliminandoRegistro = false;
@@ -471,6 +621,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
     this.guardandoCreacion = true;
     this.error = '';
+    this.errorModalCreacion = '';
 
     try {
       if (this.esCatalogoIdiomas) {
@@ -478,7 +629,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
         const nombre = String(this.nuevoRegistroDraft['nombre'] ?? '').trim();
 
         if (!codigo || !nombre) {
-          this.error = 'Codigo y nombre son obligatorios para crear un idioma.';
+          this.errorModalCreacion = 'Codigo y nombre son obligatorios para crear un idioma.';
           this.guardandoCreacion = false;
           return;
         }
@@ -488,10 +639,25 @@ export class CatalogoPlaceholderComponent implements OnInit {
           nombre,
           activo: Boolean(this.nuevoRegistroDraft['activo'])
         });
+      } else if (this.esCatalogoPoliticas) {
+        const codigo = String(this.nuevoRegistroDraft['codigo'] ?? '').trim();
+        const categoria = String(this.nuevoRegistroDraft['categoria'] ?? '').trim();
+
+        if (!codigo || !categoria) {
+          this.errorModalCreacion = 'Codigo y categoria son obligatorios para crear una politica.';
+          this.guardandoCreacion = false;
+          return;
+        }
+
+        await this.catalogosAdmin.crearCatalogoAdmin(this.catalogoKey, {
+          codigo,
+          categoria,
+          activo: Boolean(this.nuevoRegistroDraft['activo'])
+        });
       } else {
         const nombre = String(this.nuevoRegistroDraft['nombre'] ?? '').trim();
         if (!nombre) {
-          this.error = 'El nombre del continente es obligatorio.';
+          this.errorModalCreacion = 'El nombre del continente es obligatorio.';
           this.guardandoCreacion = false;
           return;
         }
@@ -501,8 +667,9 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
       this.cerrarModalCrear();
       await this.cargar();
+      this.mostrarModalExitoConMensaje(this.mensajeExitoCreacion);
     } catch (error: any) {
-      this.error = error?.message ?? 'No se pudo crear el registro.';
+      this.errorModalCreacion = error?.message ?? 'No se pudo crear el registro.';
       this.guardandoCreacion = false;
     }
   }
@@ -608,6 +775,17 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
   private getEditableKeys(): string[] {
     return this.configuraciones[this.catalogoKey]?.editableKeys ?? [];
+  }
+
+  cerrarModalExito() {
+    this.mostrarModalExito = false;
+    this.mensajeModalExito = '';
+    this.router.navigate(['/admin/catalogos/politicas']);
+  }
+
+  private mostrarModalExitoConMensaje(message: string) {
+    this.mensajeModalExito = message;
+    this.mostrarModalExito = true;
   }
 
   irEditarAtracciones(item: any) {

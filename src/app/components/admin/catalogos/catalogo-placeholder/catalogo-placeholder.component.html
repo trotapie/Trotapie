@@ -52,7 +52,7 @@
                     <button mat-raised-button color="primary" class="text-white"
                         [disabled]="loading || guardandoCreacion || editingId !== null" (click)="abrirModalCrear()">
                         <mat-icon class="mr-2 icon-size-5 text-white">add</mat-icon>
-                        {{ esCatalogoIdiomas ? 'Nuevo idioma' : 'Nuevo continente' }}
+                        {{ textoBotonCrear }}
                     </button>
                     }
                 </div>
@@ -165,14 +165,10 @@
 <div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 p-4">
     <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900">
         <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
-            {{ esCatalogoIdiomas ? 'Editar idioma' : 'Editar continente' }}
+            {{ tituloModalEdicion }}
         </h2>
         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            @if (esCatalogoIdiomas) {
-            Actualiza codigo, nombre y estatus del idioma.
-            } @else {
-            Actualiza el nombre del continente y guarda cambios.
-            }
+            {{ descripcionModalEdicion }}
         </p>
 
         <div class="mt-4 space-y-4">
@@ -184,13 +180,29 @@
             </mat-form-field>
             }
 
+            @if (esCatalogoPoliticas) {
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Codigo</mat-label>
+                <input matInput [value]="editingDraft['codigo'] ?? ''"
+                    (input)="actualizarTextoDraft('codigo', $any($event.target).value)" maxlength="60" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Categoria</mat-label>
+                <input matInput [value]="editingDraft['categoria'] ?? ''"
+                    (input)="actualizarTextoDraft('categoria', $any($event.target).value)" maxlength="120" />
+            </mat-form-field>
+            }
+
+            @if (!esCatalogoPoliticas) {
             <mat-form-field appearance="outline" class="w-full">
                 <mat-label>Nombre</mat-label>
                 <input matInput [value]="editingDraft['nombre'] ?? ''"
                     (input)="actualizarTextoDraft('nombre', $any($event.target).value)" maxlength="120" />
             </mat-form-field>
+            }
 
-            @if (esCatalogoIdiomas) {
+            @if (esCatalogoIdiomas || esCatalogoPoliticas) {
             <div class="switch-row">
                 <span class="switch-label">{{ !!editingDraft['activo'] ? 'Activo' : 'Inactivo' }}</span>
                 <label class="switch">
@@ -252,11 +264,11 @@
 <div class="fixed inset-0 z-[3010] flex items-center justify-center bg-black/60 p-4">
     <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900">
         <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
-            {{ esCatalogoIdiomas ? 'Eliminar idioma' : 'Eliminar continente' }}
+            {{ esCatalogoIdiomas ? 'Eliminar idioma' : (esCatalogoPoliticas ? 'Eliminar politica' : 'Eliminar continente') }}
         </h3>
         <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
             Seguro que quieres eliminar
-            <span class="font-semibold text-gray-900 dark:text-white">{{ itemAEliminar.nombre }}</span>?
+            <span class="font-semibold text-gray-900 dark:text-white">{{ itemAEliminar.codigo }}</span>?
         </p>
 
         @if (errorModalEliminar) {
@@ -286,14 +298,10 @@
 <div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 p-4">
     <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900">
         <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
-            {{ esCatalogoIdiomas ? 'Nuevo idioma' : 'Nuevo continente' }}
+            {{ tituloModalCrear }}
         </h2>
         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            @if (esCatalogoIdiomas) {
-            Captura codigo y nombre para crear el nuevo idioma.
-            } @else {
-            Captura el nombre para crear el nuevo continente.
-            }
+            {{ descripcionModalCrear }}
         </p>
 
         <div class="mt-4 space-y-4">
@@ -305,13 +313,29 @@
             </mat-form-field>
             }
 
+            @if (esCatalogoPoliticas) {
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Codigo</mat-label>
+                <input matInput [value]="nuevoRegistroDraft['codigo'] ?? ''"
+                    (input)="actualizarTextoCreacion('codigo', $any($event.target).value)" maxlength="60" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Categoria</mat-label>
+                <input matInput [value]="nuevoRegistroDraft['categoria'] ?? ''"
+                    (input)="actualizarTextoCreacion('categoria', $any($event.target).value)" maxlength="120" />
+            </mat-form-field>
+            }
+
+            @if (!esCatalogoPoliticas) {
             <mat-form-field appearance="outline" class="w-full">
                 <mat-label>Nombre</mat-label>
                 <input matInput [value]="nuevoRegistroDraft['nombre'] ?? ''"
                     (input)="actualizarTextoCreacion('nombre', $any($event.target).value)" maxlength="120" />
             </mat-form-field>
+            }
 
-            @if (esCatalogoIdiomas) {
+            @if (esCatalogoIdiomas || esCatalogoPoliticas) {
             <div class="switch-row">
                 <span class="switch-label">{{ !!nuevoRegistroDraft['activo'] ? 'Activo' : 'Inactivo' }}</span>
                 <label class="switch">
@@ -345,6 +369,12 @@
             </div>
             }
 
+            @if (errorModalCreacion) {
+            <div class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {{ errorModalCreacion }}
+            </div>
+            }
+
             <div class="flex flex-wrap justify-end gap-2">
                 <button type="button" mat-stroked-button (click)="cerrarModalCrear()" [disabled]="guardandoCreacion">
                     Cancelar
@@ -354,10 +384,27 @@
                     @if (guardandoCreacion) {
                     Creando...
                     } @else {
-                    {{ esCatalogoIdiomas ? 'Crear idioma' : 'Crear continente' }}
+                    {{ textoBotonConfirmarCrear }}
                     }
                 </button>
             </div>
+        </div>
+    </div>
+</div>
+}
+
+@if (mostrarModalExito) {
+<div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
+    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+        <h3 class="text-xl font-semibold text-gray-900">Actualizacion completada</h3>
+        <p class="mt-2 text-sm text-gray-600">
+            {{ mensajeModalExito }}
+        </p>
+
+        <div class="mt-6 flex justify-end">
+            <button mat-flat-button color="primary" (click)="cerrarModalExito()">
+                Aceptar
+            </button>
         </div>
     </div>
 </div>

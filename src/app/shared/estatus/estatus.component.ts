@@ -14,7 +14,7 @@ export class EstatusComponent {
     @Input() status: Estatus = 'Nuevo';
 
     estatusSky: Estatus[] = ['EN PROCESO', 'En proceso'];
-    estatusYellow: Estatus[] = ['Pendiente', 'Nuevo'];
+    estatusYellow: Estatus[] = ['Pendiente', 'Nuevo', 'INACTIVO'];
     estatusGreen: Estatus[] = ['Cotizado', 'Confirmada', 'CONFIRMADA', 'ACTIVO'];
     estatusPurple: Estatus[] = ['Cerrado'];
     estatusBrown: Estatus[] = [];
