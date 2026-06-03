@@ -34,6 +34,7 @@
   align-items: center;
   justify-content: flex-start;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .switch-label {
@@ -148,4 +149,22 @@
 .switch input:checked + .slider .circle {
   left: calc(100% - var(--circle-diameter) - var(--switch-offset));
   box-shadow: var(--circle-checked-shadow);
+}
+
+.selector-list {
+  max-height: min(40vh, 320px);
+  overflow-y: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(229, 231, 235, 1);
+  background: #fff;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+@media (max-width: 640px) {
+  .selector-list {
+    max-height: 32vh;
+  }
 }

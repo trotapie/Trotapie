@@ -44,33 +44,31 @@
 <div class="flex min-w-0 flex-auto flex-col ">
 
     <!-- Header -->
-    <div class="mt-2 flex shrink-0 flex-col gap-3 px-6 sm:h-16 sm:flex-row sm:items-center sm:justify-between">
-
-        <div class="flex items-center gap-4">
-            <h2 class="text-3xl font-bold tracking-tight dark:text-white">
+    <div class="sticky top-0 z-[2000] mx-6 mt-2 rounded-xl border border-transparent bg-transparent px-2 py-2 backdrop-blur-md transition-all duration-300 md:px-4">
+        <div class="w-full md:flex md:items-center md:justify-between">
+            <div class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">
                 Destinos
-            </h2>
+            </div>
 
-        </div>
+            <div class="my-2 flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3 md:my-0">
+                <button mat-raised-button color="primary" class="w-full text-white sm:w-auto"
+                    [disabled]="!hayCambiosOrden || actualizandoOrden"
+                    (click)="actualizarOrden()">
+                    <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:arrow-path'"></mat-icon>
+                    @if (actualizandoOrden) {
+                    Actualizando...
+                    } @else {
+                    Actualizar orden
+                    }
+                </button>
 
-        <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
-            <button mat-stroked-button color="primary" class="w-full sm:w-auto"
-                [disabled]="!hayCambiosOrden || actualizandoOrden"
-                (click)="actualizarOrden()">
-                <mat-icon class="mr-2 icon-size-5" [svgIcon]="'heroicons_outline:arrow-path'"></mat-icon>
-                @if (actualizandoOrden) {
-                Actualizando...
-                } @else {
-                Actualizar orden
-                }
-            </button>
-
-            <button mat-raised-button color="primary" class="w-full text-white sm:w-auto"
-                [routerLink]="['/admin/destinos/configurar-destinos/nuevo']">
-                <mat-icon class="mr-2 icon-size-5 text-whie" [svgIcon]="'heroicons_outline:plus'">
-                </mat-icon>
-                Nuevo destino
-            </button>
+                <button mat-raised-button color="primary" class="w-full text-white sm:w-auto"
+                    [routerLink]="['/admin/destinos/configurar-destinos/nuevo']">
+                    <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:plus'">
+                    </mat-icon>
+                    Nuevo destino
+                </button>
+            </div>
         </div>
     </div>
 
@@ -430,7 +428,7 @@
 </div>
 
 @if (mostrarModalOrdenExito) {
-<div class="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 px-4">
+<div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
     <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
         <h3 class="text-xl font-semibold text-gray-900">Actualizacion completada</h3>
         <p class="mt-2 text-sm text-gray-600">

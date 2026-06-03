@@ -1275,6 +1275,24 @@ export class SupabaseService {
     return data; // { id, public_id }
   }
 
+  async guardarHotelesComparativaSolicitud(payload: Array<{
+    solicitud_id: number;
+    hotel_id: number;
+    regimen_id: number | null;
+    es_principal: boolean;
+    orden: number;
+  }>) {
+    if (!payload?.length) return [];
+
+    const { data, error } = await this.client
+      .from('solicitud_cotizacion_hoteles')
+      .insert(payload)
+      .select('id, solicitud_id, hotel_id, regimen_id, es_principal, orden');
+
+    if (error) throw error;
+    return data ?? [];
+  }
+
   async enviarCorreoCotizacion(payload: {
     to_email: string;
     to_name?: string | null;
@@ -1826,6 +1844,10 @@ export class SupabaseService {
     const data = await response.json();
     const traducciones = data?.data;
     return traducciones && typeof traducciones === 'object' ? traducciones : {};
+  }
+
+  async traducirPoliticaDesdeEspanol(payload: { title: string; description: string }) {
+    return this.traducirDesdeEspanol(payload);
   }
 
   async crearHotelDetalleAdmin(payload: {

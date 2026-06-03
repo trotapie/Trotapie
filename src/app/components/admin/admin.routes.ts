@@ -38,12 +38,22 @@ export default [
         pathMatch: 'full',
     },
     {
+        path: 'amenidades',
+        redirectTo: 'catalogos',
+        pathMatch: 'full',
+    },
+    {
         path: 'catalogos/actividades',
+        redirectTo: 'catalogos/amenidades',
+        pathMatch: 'full',
+    },
+    {
+        path: 'catalogos/amenidades',
         component: CatalogoPlaceholderComponent,
         data: {
             catalogoKey: 'actividades',
-            titulo: 'Catalogo de actividades',
-            descripcion: 'Gestiona el catalogo de actividades disponible para la operacion.'
+            titulo: 'Catalogo de amenidades',
+            descripcion: 'Gestiona el catalogo de amenidades disponible para la operacion.'
         }
     },
     {

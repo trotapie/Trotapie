@@ -18,6 +18,14 @@ export type CatalogoAdminKey =
   | 'tipos_habitacion'
   | 'atracciones';
 
+export interface IPoliticaTarifaAdmin {
+  id: number;
+  codigo: string;
+  titulo: string;
+  descripcion: string;
+  activo: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class CatalogosAdminService {
   private readonly supabase = inject(SupabaseService);
@@ -164,11 +172,30 @@ export class CatalogosAdminService {
       case 'actividades': {
         const { data, error } = await this.client
           .from('actividades')
-          .select('id, descripcion, clave, activo, orden')
+          .select(`
+            id,
+            descripcion,
+            clave,
+            activo,
+            orden,
+            traducciones:actividades_traducciones (
+              idioma:idiomas(codigo),
+              descripcion
+            )
+          `)
           .order('orden', { ascending: true })
           .order('id', { ascending: true });
         if (error) throw error;
-        return data ?? [];
+        return (data ?? []).map((item: any) => ({
+          ...item,
+          traducciones_preview: (item.traducciones ?? []).reduce((acc: any, t: any) => {
+            const code = t.idioma?.codigo;
+            if (code) {
+              acc[code] = { descripcion: t.descripcion };
+            }
+            return acc;
+          }, {})
+        }));
       }
       case 'conceptos': {
         const { data, error } = await this.client
@@ -224,10 +251,47 @@ export class CatalogosAdminService {
       case 'politicas': {
         const { data, error } = await this.client
           .from('politicas')
-          .select('id, codigo, categoria, activo, created_at')
+          .select(`
+            id,
+            codigo,
+            categoria,
+            activo,
+            created_at,
+            traducciones:politicas_traducciones (
+              idioma,
+              titulo,
+              descripcion
+            )
+          `)
           .order('id', { ascending: true });
         if (error) throw error;
-        return data ?? [];
+        return (data ?? []).map((item: any) => {
+          const traduccionEs = item?.traducciones?.find((x: any) => String(x.idioma ?? '').toLowerCase() === 'es');
+          const traduccionesPreview = (item?.traducciones ?? []).reduce((acc: Record<string, any>, traduccion: any) => {
+            const idioma = String(traduccion?.idioma ?? '').toLowerCase();
+            if (!idioma) {
+              return acc;
+            }
+
+            acc[idioma] = {
+              titulo: traduccion?.titulo ?? '',
+              descripcion: traduccion?.descripcion ?? ''
+            };
+
+            return acc;
+          }, {});
+
+          return {
+            id: item.id,
+            codigo: item.codigo,
+            categoria: item.categoria,
+            activo: item.activo,
+            created_at: item.created_at,
+            titulo_es: traduccionEs?.titulo ?? traduccionEs?.nombre ?? traduccionEs?.title ?? '',
+            descripcion_es: traduccionEs?.descripcion ?? '',
+            traducciones_preview: traduccionesPreview
+          };
+        });
       }
       case 'regimen_hotel': {
         const { data, error } = await this.client
@@ -254,10 +318,57 @@ export class CatalogosAdminService {
       case 'tarifas': {
         const { data, error } = await this.client
           .from('tarifas')
-          .select('id, clave, nombre, activo, created_at')
+          .select(`
+            id,
+            clave,
+            nombre,
+            activo,
+            created_at,
+            politicas:tarifas_politicas (
+              id,
+              orden,
+              politica:politicas (
+                id,
+                codigo,
+                categoria,
+                activo,
+                traducciones:politicas_traducciones (
+                  idioma,
+                  titulo,
+                  descripcion
+                )
+              )
+            )
+          `)
           .order('id', { ascending: true });
         if (error) throw error;
-        return data ?? [];
+        return (data ?? []).map((item: any) => ({
+          id: item.id,
+          clave: item.clave,
+          nombre: item.nombre,
+          activo: item.activo,
+          created_at: item.created_at,
+          politicas: (item?.politicas ?? [])
+            .map((relacion: any) => {
+              const politica = relacion?.politica;
+              const traduccionEs = politica?.traducciones?.find(
+                (traduccion: any) => String(traduccion?.idioma ?? '').toLowerCase() === 'es'
+              );
+
+              return {
+                id: politica?.id,
+                relacion_id: relacion?.id,
+                orden: relacion?.orden ?? null,
+                codigo: politica?.codigo ?? '',
+                categoria: politica?.categoria ?? '',
+                activo: Boolean(politica?.activo),
+                titulo: traduccionEs?.titulo ?? '',
+                descripcion: traduccionEs?.descripcion ?? ''
+              };
+            })
+            .filter((politica: any) => Number.isFinite(Number(politica.id)))
+            .sort((a: any, b: any) => Number(a.orden ?? 0) - Number(b.orden ?? 0))
+        }));
       }
       case 'tipo_imagen': {
         const { data, error } = await this.client
@@ -375,6 +486,34 @@ export class CatalogosAdminService {
 
   async crearCatalogoAdmin(catalogo: CatalogoAdminKey, payload: Record<string, any>) {
     switch (catalogo) {
+      case 'actividades': {
+        const { data: ultimoRegistro, error: ultimoError } = await this.client
+          .from('actividades')
+          .select('orden')
+          .order('orden', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (ultimoError) throw ultimoError;
+
+        const ordenMaximo = Number((ultimoRegistro as any)?.orden);
+        const siguienteOrden = Number.isFinite(ordenMaximo) ? ordenMaximo + 1 : 1;
+
+        const { data, error } = await this.client
+          .from('actividades')
+          .insert({
+            descripcion: payload.descripcion ?? null,
+            clave: payload.clave ?? null,
+            activo: payload.activo ?? true,
+            orden: siguienteOrden
+          })
+          .select('id, descripcion, clave, activo, orden')
+          .single();
+
+        if (error) throw error;
+        await this.guardarTraduccionesActividad(Number((data as any).id), payload.descripcion ?? '');
+        return data;
+      }
       case 'continentes': {
         const { data, error } = await this.client
           .from('continentes')
@@ -425,6 +564,41 @@ export class CatalogosAdminService {
           .single();
 
         if (error) throw error;
+        await this.guardarTraduccionesPolitica(Number(data.id), {
+          titulo: String(payload.titulo_es ?? '').trim(),
+          descripcion: String(payload.descripcion_es ?? '').trim()
+        });
+        return data;
+      }
+      case 'tarifas': {
+        const { data, error } = await this.client
+          .from('tarifas')
+          .insert({
+            clave: payload.clave ?? null,
+            nombre: payload.nombre ?? null,
+            activo: payload.activo ?? true
+          })
+          .select('id, clave, nombre, activo, created_at')
+          .single();
+
+        if (error) throw error;
+        await this.guardarRelacionesTarifaPoliticas(
+          Number(data.id),
+          Array.isArray(payload.politica_ids) ? payload.politica_ids : []
+        );
+        return data;
+      }
+      case 'tipos_habitacion': {
+        const { data, error } = await this.client
+          .from('tipos_habitacion')
+          .insert({
+            nombre_habitacion: payload.nombre_habitacion ?? null,
+            descripcion: payload.descripcion ?? null
+          })
+          .select('id, nombre_habitacion, descripcion')
+          .single();
+
+        if (error) throw error;
         return data;
       }
       default:
@@ -432,8 +606,49 @@ export class CatalogosAdminService {
     }
   }
 
+  async obtenerPoliticasDisponiblesTarifa(): Promise<IPoliticaTarifaAdmin[]> {
+    const { data, error } = await this.client
+      .from('politicas')
+      .select(`
+        id,
+        codigo,
+        activo,
+        traducciones:politicas_traducciones (
+          idioma,
+          titulo,
+          descripcion
+        )
+      `)
+      .eq('activo', true)
+      .order('id', { ascending: true });
+
+    if (error) throw error;
+
+    return (data ?? []).map((item: any) => {
+      const traduccionEs = (item?.traducciones ?? []).find(
+        (traduccion: any) => String(traduccion?.idioma ?? '').toLowerCase() === 'es'
+      );
+
+      return {
+        id: Number(item.id),
+        codigo: item.codigo ?? '',
+        titulo: traduccionEs?.titulo ?? item.codigo ?? '',
+        descripcion: traduccionEs?.descripcion ?? '',
+        activo: Boolean(item.activo)
+      };
+    });
+  }
+
   async eliminarCatalogoAdmin(catalogo: CatalogoAdminKey, id: number) {
     switch (catalogo) {
+      case 'actividades': {
+        const { error } = await this.client
+          .from('actividades')
+          .delete()
+          .eq('id', id);
+        if (error) throw error;
+        return { deleted: 1 };
+      }
       case 'continentes': {
         const { error } = await this.client
           .from('continentes')
@@ -453,6 +668,28 @@ export class CatalogosAdminService {
       case 'politicas': {
         const { error } = await this.client
           .from('politicas')
+          .delete()
+          .eq('id', id);
+        if (error) throw error;
+        return { deleted: 1 };
+      }
+      case 'tarifas': {
+        const { error: deleteRelacionError } = await this.client
+          .from('tarifas_politicas')
+          .delete()
+          .eq('tarifa_id', id);
+        if (deleteRelacionError) throw deleteRelacionError;
+
+        const { error } = await this.client
+          .from('tarifas')
+          .delete()
+          .eq('id', id);
+        if (error) throw error;
+        return { deleted: 1 };
+      }
+      case 'tipos_habitacion': {
+        const { error } = await this.client
+          .from('tipos_habitacion')
           .delete()
           .eq('id', id);
         if (error) throw error;
@@ -481,6 +718,7 @@ export class CatalogosAdminService {
           .select('id')
           .maybeSingle();
         if (error) throw error;
+        await this.guardarTraduccionesActividad(id, payload.descripcion ?? '');
         return data;
       }
       case 'conceptos': {
@@ -575,6 +813,10 @@ export class CatalogosAdminService {
           .select('id')
           .maybeSingle();
         if (error) throw error;
+        await this.guardarTraduccionesPolitica(id, {
+          titulo: String(payload.titulo_es ?? '').trim(),
+          descripcion: String(payload.descripcion_es ?? '').trim()
+        });
         return data;
       }
       case 'regimen_hotel': {
@@ -605,6 +847,10 @@ export class CatalogosAdminService {
           .select('id')
           .maybeSingle();
         if (error) throw error;
+        await this.guardarRelacionesTarifaPoliticas(
+          id,
+          Array.isArray(payload.politica_ids) ? payload.politica_ids : []
+        );
         return data;
       }
       case 'tipo_imagen': {
@@ -663,5 +909,142 @@ export class CatalogosAdminService {
       default:
         return null;
     }
+  }
+
+  private async guardarTraduccionesPolitica(
+    politicaId: number,
+    payload: { titulo: string; descripcion: string }
+  ) {
+    const titulo = String(payload.titulo ?? '').trim();
+    const descripcion = String(payload.descripcion ?? '').trim();
+
+    if (!titulo) {
+      return;
+    }
+
+    const traducciones = await this.supabase.traducirPoliticaDesdeEspanol({
+      title: titulo,
+      description: descripcion
+    });
+
+    const traduccionesPayload = Object.entries(traducciones ?? {})
+      .map(([idioma, valor]: [string, any]) => ({
+        politica_id: politicaId,
+        idioma: String(idioma).toLowerCase(),
+        titulo:
+          String(idioma).toLowerCase() === 'es'
+            ? titulo
+            : typeof valor?.title === 'string'
+              ? valor.title
+              : '',
+        descripcion:
+          String(idioma).toLowerCase() === 'es'
+            ? descripcion
+            : typeof valor?.description === 'string'
+              ? valor.description
+              : ''
+      }))
+      .filter((item) => item.idioma.length > 0);
+
+    if (!traduccionesPayload.some((item) => item.idioma === 'es')) {
+      traduccionesPayload.push({
+        politica_id: politicaId,
+        idioma: 'es',
+        titulo,
+        descripcion
+      });
+    }
+
+    if (!traduccionesPayload.length) {
+      traduccionesPayload.push({
+        politica_id: politicaId,
+        idioma: 'es',
+        titulo,
+        descripcion
+      });
+    }
+
+    const { error } = await this.client
+      .from('politicas_traducciones')
+      .upsert(traduccionesPayload, { onConflict: 'politica_id,idioma' });
+
+    if (error) throw error;
+  }
+
+  private async guardarRelacionesTarifaPoliticas(tarifaId: number, politicaIds: number[]) {
+    const ids = [...new Set(
+      (politicaIds ?? [])
+        .map((id) => Number(id))
+        .filter((id) => Number.isFinite(id) && id > 0)
+    )];
+
+    const { error: deleteError } = await this.client
+      .from('tarifas_politicas')
+      .delete()
+      .eq('tarifa_id', tarifaId);
+
+    if (deleteError) throw deleteError;
+
+    if (!ids.length) {
+      return;
+    }
+
+    const payload = ids.map((politicaId, index) => ({
+      tarifa_id: tarifaId,
+      politica_id: politicaId,
+      orden: index + 1
+    }));
+
+    const { error: insertError } = await this.client
+      .from('tarifas_politicas')
+      .insert(payload);
+
+    if (insertError) throw insertError;
+  }
+
+  private async guardarTraduccionesActividad(actividadId: number, descripcion: string) {
+    const desc = String(descripcion ?? '').trim();
+    if (!desc) {
+      return;
+    }
+
+    const traducciones = await this.supabase.traducirDesdeEspanol({
+      title: '',
+      description: desc
+    });
+
+    const idiomasDisponibles = await this.supabase.obtenerIdiomasPreviewAdmin();
+    const mapaIdiomas = new Map(idiomasDisponibles.map((i) => [i.codigo.toLowerCase(), i.id]));
+
+    const traduccionesPayload = Object.entries(traducciones ?? {})
+      .map(([idioma, valor]: [string, any]) => {
+        const idiomaId = mapaIdiomas.get(idioma.toLowerCase());
+        if (!idiomaId) {
+          return null;
+        }
+
+        return {
+          actividad_id: actividadId,
+          idioma_id: idiomaId,
+          descripcion: typeof valor?.description === 'string' ? valor.description : ''
+        };
+      })
+      .filter((item) => item !== null);
+
+    // Asegurar que el espanol este presente
+    const esId = mapaIdiomas.get('es') || ES_ID;
+    if (!traduccionesPayload.some((item) => item!.idioma_id === esId)) {
+      traduccionesPayload.push({
+        actividad_id: actividadId,
+        idioma_id: esId,
+        descripcion: desc
+      });
+    }
+
+    const { error } = await this.client
+      .from('actividades_traducciones')
+      .upsert(traduccionesPayload, { onConflict: 'actividad_id,idioma_id' });
+
+    if (error) throw error;
   }
 }

@@ -1,23 +1,25 @@
 <div class="flex min-w-0 flex-auto flex-col bg-gray-50">
   <div class="mx-auto flex w-full max-w-screen-xl flex-col px-6 py-8 sm:px-8">
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-      <div class="max-w-2xl">
-        <h1 class="text-3xl font-bold tracking-tight text-gray-900">
-          Concentrado de tipos de destino
-        </h1>
-      </div>
+    <div class="sticky top-0 z-[2000] mb-2 w-full rounded-xl border border-transparent bg-transparent px-2 py-2 backdrop-blur-md transition-all duration-300 md:px-4">
+      <div class="w-full md:flex md:items-center md:justify-between">
+        <div class="max-w-2xl">
+          <h1 class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">
+            Concentrado de tipos de destino
+          </h1>
+        </div>
 
-      <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-        <button mat-stroked-button color="primary" (click)="cargarConcentrado()" [disabled]="cargando"
-          class="w-full sm:w-auto">
-          <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:arrow-path'"></mat-icon>
-          Recargar
-        </button>
+        <div class="my-2 flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center md:my-0">
+          <button mat-raised-button color="primary" (click)="cargarConcentrado()" [disabled]="cargando"
+            class="w-full text-white sm:w-auto">
+            <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:arrow-path'"></mat-icon>
+            Recargar
+          </button>
 
-        <button mat-stroked-button [routerLink]="['/admin/destinos']" class="w-full sm:w-auto">
-          <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
-          Volver
-        </button>
+          <button mat-raised-button color="warn" [routerLink]="['/admin/destinos']" class="w-full text-white sm:w-auto">
+            <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
+            Regresar
+          </button>
+        </div>
       </div>
     </div>
   </div>
