@@ -216,10 +216,32 @@ export class CatalogosAdminService {
       case 'descuentos': {
         const { data, error } = await this.client
           .from('descuentos')
-          .select('id, tipo_descuento, icono')
+          .select(`
+            id,
+            tipo_descuento,
+            icono,
+            traducciones:descuentos_traducciones (
+              idioma:idiomas(codigo),
+              descripcion
+            )
+          `)
           .order('id', { ascending: true });
         if (error) throw error;
-        return data ?? [];
+        return (data ?? []).map((item: any) => ({
+          ...item,
+          traducciones_preview: (item?.traducciones ?? []).reduce((acc: Record<string, any>, traduccion: any) => {
+            const code = String(traduccion?.idioma?.codigo ?? '').toLowerCase();
+            if (!code) {
+              return acc;
+            }
+
+            acc[code] = {
+              descripcion: traduccion?.descripcion ?? ''
+            };
+
+            return acc;
+          }, {})
+        }));
       }
       case 'estatus_empleado': {
         const { data, error } = await this.client
@@ -525,6 +547,19 @@ export class CatalogosAdminService {
         if (error) throw error;
         return data;
       }
+      case 'descuentos': {
+        const { data, error } = await this.client
+          .from('descuentos')
+          .insert({
+            tipo_descuento: payload.tipo_descuento ?? null,
+            icono: payload.icono ?? null
+          })
+          .select('id, tipo_descuento, icono')
+          .single();
+        if (error) throw error;
+        await this.guardarTraduccionesDescuento(Number((data as any).id), payload.tipo_descuento ?? '');
+        return data;
+      }
       case 'idiomas': {
         const { data: ultimoRegistro, error: ultimoError } = await this.client
           .from('idiomas')
@@ -657,6 +692,20 @@ export class CatalogosAdminService {
         if (error) throw error;
         return { deleted: 1 };
       }
+      case 'descuentos': {
+        const { error: deleteTraduccionesError } = await this.client
+          .from('descuentos_traducciones')
+          .delete()
+          .eq('descuento_id', id);
+        if (deleteTraduccionesError) throw deleteTraduccionesError;
+
+        const { error } = await this.client
+          .from('descuentos')
+          .delete()
+          .eq('id', id);
+        if (error) throw error;
+        return { deleted: 1 };
+      }
       case 'idiomas': {
         const { error } = await this.client
           .from('idiomas')
@@ -757,6 +806,7 @@ export class CatalogosAdminService {
           .select('id')
           .maybeSingle();
         if (error) throw error;
+        await this.guardarTraduccionesDescuento(id, payload.tipo_descuento ?? '');
         return data;
       }
       case 'estatus_empleado': {
@@ -1044,6 +1094,51 @@ export class CatalogosAdminService {
     const { error } = await this.client
       .from('actividades_traducciones')
       .upsert(traduccionesPayload, { onConflict: 'actividad_id,idioma_id' });
+
+    if (error) throw error;
+  }
+
+  private async guardarTraduccionesDescuento(descuentoId: number, tipoDescuento: string) {
+    const texto = String(tipoDescuento ?? '').trim();
+    if (!texto) {
+      return;
+    }
+
+    const traducciones = await this.supabase.traducirDesdeEspanol({
+      title: '',
+      description: texto
+    });
+
+    const idiomasDisponibles = await this.supabase.obtenerIdiomasPreviewAdmin();
+    const mapaIdiomas = new Map(idiomasDisponibles.map((i) => [i.codigo.toLowerCase(), i.id]));
+
+    const traduccionesPayload = Object.entries(traducciones ?? {})
+      .map(([idioma, valor]: [string, any]) => {
+        const idiomaId = mapaIdiomas.get(idioma.toLowerCase());
+        if (!idiomaId) {
+          return null;
+        }
+
+        return {
+          descuento_id: descuentoId,
+          idioma_id: idiomaId,
+          descripcion: typeof valor?.description === 'string' ? valor.description : ''
+        };
+      })
+      .filter((item) => item !== null);
+
+    const esId = mapaIdiomas.get('es') || ES_ID;
+    if (!traduccionesPayload.some((item) => item!.idioma_id === esId)) {
+      traduccionesPayload.push({
+        descuento_id: descuentoId,
+        idioma_id: esId,
+        descripcion: texto
+      });
+    }
+
+    const { error } = await this.client
+      .from('descuentos_traducciones')
+      .upsert(traduccionesPayload, { onConflict: 'descuento_id,idioma_id' });
 
     if (error) throw error;
   }

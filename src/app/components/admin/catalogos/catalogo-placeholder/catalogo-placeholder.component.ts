@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Component, inject, OnInit } from '@angular/core';
 import { PageEvent } from '@angular/material/paginator';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CatalogoAdminKey, CatalogosAdminService, IPoliticaTarifaAdmin } from 'app/core/catalogos-admin.service';
 import { SupabaseService } from 'app/core/supabase.service';
@@ -10,6 +11,10 @@ import { MaterialModule } from 'app/shared/material.module';
 
 interface IPoliticaTraduccionPreview {
   titulo: string;
+  descripcion: string;
+}
+
+interface IDescuentoTraduccionPreview {
   descripcion: string;
 }
 
@@ -37,6 +42,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly catalogosAdmin = inject(CatalogosAdminService);
   private readonly supabase = inject(SupabaseService);
+  private readonly sanitizer = inject(DomSanitizer);
 
   private readonly configuraciones: Record<CatalogoAdminKey, CatalogoVistaConfig> = {
     actividades: {
@@ -208,14 +214,24 @@ export class CatalogoPlaceholderComponent implements OnInit {
   traduciendoPolitica = false;
   traduccionesAmenidadPreview: Record<string, { descripcion: string }> = {};
   traduciendoAmenidad = false;
+  traduccionesDescuentoPreview: Record<string, IDescuentoTraduccionPreview> = {};
+  traduciendoDescuento = false;
   politicasDisponiblesTarifa: IPoliticaTarifaAdmin[] = [];
   filtroPoliticasTarifa = '';
+  mostrarFiltrosAmenidades = false;
+  filtrosAmenidades = {
+    id: '',
+    descripcion: '',
+    clave: '',
+    activo: ''
+  };
   politicasTarifaSeleccionadas = new Set<number>();
   pageSize = 20;
   pageIndex = 0;
   private ordenOriginalIds: number[] = [];
   private ultimaLlaveTraduccionPolitica = '';
   private ultimaLlaveTraduccionAmenidad = '';
+  private ultimaLlaveTraduccionDescuento = '';
   readonly idiomasVistaPolitica = [
     { code: 'es', label: 'Español' },
     { code: 'en', label: 'Inglés' },
@@ -240,6 +256,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
     return this.catalogoKey === 'politicas';
   }
 
+  get esCatalogoDescuentos(): boolean {
+    return this.catalogoKey === 'descuentos';
+  }
+
   get esCatalogoAmenidades(): boolean {
     return this.catalogoKey === 'actividades';
   }
@@ -256,6 +276,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
     return (
       this.catalogoKey === 'actividades' ||
       this.catalogoKey === 'continentes' ||
+      this.catalogoKey === 'descuentos' ||
       this.catalogoKey === 'idiomas' ||
       this.catalogoKey === 'politicas' ||
       this.catalogoKey === 'tarifas' ||
@@ -267,6 +288,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
     return (
       this.catalogoKey === 'actividades' ||
       this.catalogoKey === 'continentes' ||
+      this.catalogoKey === 'descuentos' ||
       this.catalogoKey === 'idiomas' ||
       this.catalogoKey === 'politicas' ||
       this.catalogoKey === 'tarifas' ||
@@ -278,6 +300,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
     return (
       this.catalogoKey === 'actividades' ||
       this.catalogoKey === 'continentes' ||
+      this.catalogoKey === 'descuentos' ||
       this.catalogoKey === 'idiomas' ||
       this.catalogoKey === 'politicas' ||
       this.catalogoKey === 'tarifas' ||
@@ -287,7 +310,34 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
   get pagedItems(): any[] {
     const start = this.pageIndex * this.pageSize;
-    return this.items.slice(start, start + this.pageSize);
+    return this.filteredItems.slice(start, start + this.pageSize);
+  }
+
+  get filteredItems(): any[] {
+    if (!this.esCatalogoAmenidades) {
+      return this.items;
+    }
+
+    return this.items.filter((item) => {
+      const filtros = this.filtrosAmenidades;
+      const coincideId = this.coincideFiltro(String(item?.id ?? ''), filtros.id);
+      const coincideDescripcion = this.coincideFiltro(String(item?.descripcion ?? ''), filtros.descripcion);
+      const coincideClave = this.coincideFiltro(String(item?.clave ?? ''), filtros.clave);
+      const coincideActivo =
+        !this.limpiarTexto(filtros.activo) ||
+        (filtros.activo === 'activo' && Boolean(item?.activo)) ||
+        (filtros.activo === 'inactivo' && !Boolean(item?.activo));
+
+      return coincideId && coincideDescripcion && coincideClave && coincideActivo;
+    });
+  }
+
+  get hayFiltrosAmenidades(): boolean {
+    return Object.values(this.filtrosAmenidades).some((value) => Boolean(this.limpiarTexto(value)));
+  }
+
+  get textoBotonFiltrosAmenidades(): string {
+    return this.mostrarFiltrosAmenidades ? 'Ocultar filtros' : 'Mostrar filtros';
   }
 
   get tieneTraduccionesPoliticaPreview(): boolean {
@@ -296,6 +346,30 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
   get tieneTraduccionesAmenidadPreview(): boolean {
     return Object.keys(this.traduccionesAmenidadPreview ?? {}).length > 0;
+  }
+
+  get tieneTraduccionesDescuentoPreview(): boolean {
+    return Object.keys(this.traduccionesDescuentoPreview ?? {}).length > 0;
+  }
+
+  get descuentoListoParaGuardar(): boolean {
+    if (!this.esCatalogoDescuentos) {
+      return true;
+    }
+
+    const fuente = this.modalEdicionAbierto ? this.editingDraft : this.modalCrearAbierto ? this.nuevoRegistroDraft : null;
+    if (!fuente) {
+      return false;
+    }
+
+    const tipoDescuento = this.limpiarTexto(String(fuente['tipo_descuento'] ?? ''));
+    if (!tipoDescuento) {
+      return false;
+    }
+
+    return !this.traduciendoDescuento &&
+      this.ultimaLlaveTraduccionDescuento === tipoDescuento &&
+      Object.keys(this.traduccionesDescuentoPreview ?? {}).length > 0;
   }
 
   get politicasTarifaFiltradas(): IPoliticaTarifaAdmin[] {
@@ -337,6 +411,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
       return 'Nueva politica';
     }
 
+    if (this.esCatalogoDescuentos) {
+      return 'Nuevo descuento';
+    }
+
     if (this.esCatalogoTarifas) {
       return 'Nueva tarifa';
     }
@@ -359,6 +437,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
     if (this.esCatalogoPoliticas) {
       return 'Captura codigo, categoria y el texto en espanol para crear la nueva politica.';
+    }
+
+    if (this.esCatalogoDescuentos) {
+      return 'Captura el tipo de descuento y el icono para crear un nuevo descuento.';
     }
 
     if (this.esCatalogoTarifas) {
@@ -385,6 +467,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
       return 'Editar politica';
     }
 
+    if (this.esCatalogoDescuentos) {
+      return 'Editar descuento';
+    }
+
     if (this.esCatalogoTarifas) {
       return 'Editar tarifa';
     }
@@ -407,6 +493,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
     if (this.esCatalogoPoliticas) {
       return 'Actualiza codigo, categoria y el texto en espanol.';
+    }
+
+    if (this.esCatalogoDescuentos) {
+      return 'Actualiza el tipo de descuento y el icono.';
     }
 
     if (this.esCatalogoTarifas) {
@@ -433,6 +523,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
       return 'Crear nueva politica';
     }
 
+    if (this.esCatalogoDescuentos) {
+      return 'Nuevo descuento';
+    }
+
     if (this.esCatalogoTarifas) {
       return 'Nueva tarifa';
     }
@@ -455,6 +549,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
     if (this.esCatalogoPoliticas) {
       return 'Crear politica';
+    }
+
+    if (this.esCatalogoDescuentos) {
+      return 'Crear descuento';
     }
 
     if (this.esCatalogoTarifas) {
@@ -503,6 +601,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
     if (this.esCatalogoPoliticas) {
       return 'Politica creada correctamente.';
+    }
+
+    if (this.esCatalogoDescuentos) {
+      return 'Descuento creado correctamente.';
     }
 
     if (this.esCatalogoTarifas) {
@@ -654,6 +756,9 @@ export class CatalogoPlaceholderComponent implements OnInit {
       };
       this.traduccionesAmenidadPreview = item?.traducciones_preview ?? {};
       this.ultimaLlaveTraduccionAmenidad = this.limpiarTexto(item?.descripcion);
+    } else if (this.esCatalogoDescuentos) {
+      this.traduccionesDescuentoPreview = this.normalizarTraduccionesDescuento(item?.traducciones_preview);
+      this.ultimaLlaveTraduccionDescuento = this.limpiarTexto(item?.tipo_descuento);
     }
 
     if (this.usaModalEdicion) {
@@ -673,6 +778,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
     this.cancelarEdicion();
     this.limpiarVistaPreviaPolitica();
     this.limpiarVistaPreviaAmenidad();
+    this.limpiarVistaPreviaDescuento();
     this.filtroPoliticasTarifa = '';
     this.politicasTarifaSeleccionadas.clear();
   }
@@ -680,6 +786,12 @@ export class CatalogoPlaceholderComponent implements OnInit {
   private limpiarVistaPreviaAmenidad() {
     this.traduccionesAmenidadPreview = {};
     this.ultimaLlaveTraduccionAmenidad = '';
+  }
+
+  private limpiarVistaPreviaDescuento() {
+    this.traduccionesDescuentoPreview = {};
+    this.ultimaLlaveTraduccionDescuento = '';
+    this.traduciendoDescuento = false;
   }
 
   async traducirAmenidadAlSalirDelCampo(event?: Event) {
@@ -892,6 +1004,36 @@ export class CatalogoPlaceholderComponent implements OnInit {
         this.items = this.items.map((current) =>
           Number(current.id) === this.editingId
             ? { ...current, ...payload }
+              : current
+        );
+      } else if (this.esCatalogoDescuentos) {
+        const tipoDescuento = String(this.editingDraft['tipo_descuento'] ?? '').trim();
+        const icono = String(this.editingDraft['icono'] ?? '').trim();
+
+        if (!tipoDescuento) {
+          this.errorModalEdicion = 'El tipo de descuento es obligatorio para editar.';
+          this.guardandoEdicion = false;
+          return;
+        }
+
+        if (!this.descuentoListoParaGuardar) {
+          this.errorModalEdicion = 'Espera a que las traducciones esten listas antes de guardar.';
+          this.guardandoEdicion = false;
+          return;
+        }
+
+        const payload = {
+          tipo_descuento: tipoDescuento,
+          icono
+        };
+
+        await this.catalogosAdmin.actualizarCatalogoAdmin(this.catalogoKey, this.editingId, payload);
+        this.items = this.items.map((current) =>
+          Number(current.id) === this.editingId
+            ? {
+              ...current,
+              ...payload
+            }
             : current
         );
       } else {
@@ -955,6 +1097,13 @@ export class CatalogoPlaceholderComponent implements OnInit {
       };
       this.traduccionesPoliticaPreview = {};
       this.ultimaLlaveTraduccionPolitica = '';
+    } else if (this.esCatalogoDescuentos) {
+      this.nuevoRegistroDraft = {
+        ...this.nuevoRegistroDraft,
+        tipo_descuento: '',
+        icono: ''
+      };
+      this.limpiarVistaPreviaDescuento();
     } else if (this.esCatalogoTarifas) {
       this.nuevoRegistroDraft = {
         ...this.nuevoRegistroDraft,
@@ -983,6 +1132,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
     this.limpiarVistaPreviaPolitica();
     this.filtroPoliticasTarifa = '';
     this.politicasTarifaSeleccionadas.clear();
+    this.limpiarVistaPreviaDescuento();
   }
 
   abrirModalEliminar(item: any) {
@@ -993,6 +1143,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
     this.error = '';
     this.errorModalEliminar = '';
     const codigo = String(
+      item?.tipo_descuento ??
       item?.codigo ??
       item?.clave ??
       item?.descripcion ??
@@ -1092,6 +1243,26 @@ export class CatalogoPlaceholderComponent implements OnInit {
           activo: Boolean(this.nuevoRegistroDraft['activo']),
           titulo_es: tituloEs,
           descripcion_es: descripcionEs
+        });
+      } else if (this.esCatalogoDescuentos) {
+        const tipoDescuento = String(this.nuevoRegistroDraft['tipo_descuento'] ?? '').trim();
+        const icono = String(this.nuevoRegistroDraft['icono'] ?? '').trim();
+
+        if (!tipoDescuento) {
+          this.errorModalCreacion = 'El tipo de descuento es obligatorio para crear un descuento.';
+          this.guardandoCreacion = false;
+          return;
+        }
+
+        if (!this.descuentoListoParaGuardar) {
+          this.errorModalCreacion = 'Espera a que las traducciones esten listas antes de guardar.';
+          this.guardandoCreacion = false;
+          return;
+        }
+
+        await this.catalogosAdmin.crearCatalogoAdmin(this.catalogoKey, {
+          tipo_descuento: tipoDescuento,
+          icono
         });
       } else if (this.esCatalogoAmenidades) {
         const descripcion = String(this.nuevoRegistroDraft['descripcion'] ?? '').trim();
@@ -1212,6 +1383,27 @@ export class CatalogoPlaceholderComponent implements OnInit {
     this.editingDraft = { ...this.editingDraft, [key]: value };
   }
 
+  getIconoPreview(icono: string | null | undefined): string {
+    return String(icono ?? '').trim();
+  }
+
+  puedePrevisualizarIcono(icono: string | null | undefined): boolean {
+    return Boolean(this.getIconoPreview(icono));
+  }
+
+  esSvgIcono(icono: string | null | undefined): boolean {
+    return this.getIconoPreview(icono).toLowerCase().includes('<svg');
+  }
+
+  getIconoPreviewSeguro(icono: string | null | undefined): SafeHtml | null {
+    const contenido = this.getIconoPreview(icono);
+    if (!contenido || !this.esSvgIcono(contenido)) {
+      return null;
+    }
+
+    return this.sanitizer.bypassSecurityTrustHtml(contenido);
+  }
+
   esPoliticaTarifaSeleccionada(politicaId: number): boolean {
     return this.politicasTarifaSeleccionadas.has(Number(politicaId));
   }
@@ -1264,6 +1456,28 @@ export class CatalogoPlaceholderComponent implements OnInit {
     if (this.editingId !== null) {
       this.cancelarEdicion();
     }
+  }
+
+  onFiltrosAmenidadesChange() {
+    if (!this.esCatalogoAmenidades) {
+      return;
+    }
+
+    this.pageIndex = 0;
+  }
+
+  toggleFiltrosAmenidades() {
+    this.mostrarFiltrosAmenidades = !this.mostrarFiltrosAmenidades;
+  }
+
+  limpiarFiltrosAmenidades() {
+    this.filtrosAmenidades = {
+      id: '',
+      descripcion: '',
+      clave: '',
+      activo: ''
+    };
+    this.pageIndex = 0;
   }
 
   getGlobalIndex(localIndex: number): number {
@@ -1344,6 +1558,35 @@ export class CatalogoPlaceholderComponent implements OnInit {
     return concentrado;
   }
 
+  private normalizarTraduccionesDescuento(
+    traducciones: Record<string, IDescuentoTraduccionPreview> | null | undefined
+  ): Record<string, IDescuentoTraduccionPreview> {
+    return Object.entries(traducciones ?? {}).reduce((acc, [idioma, valor]) => {
+      const codigoIdioma = String(idioma ?? '').toLowerCase();
+      if (!codigoIdioma) {
+        return acc;
+      }
+
+      acc[codigoIdioma] = {
+        descripcion: String(valor?.descripcion ?? '').trim()
+      };
+
+      return acc;
+    }, {} as Record<string, IDescuentoTraduccionPreview>);
+  }
+
+  async traducirDescuentoAlSalirDelCampo(event?: Event) {
+    if (!this.esCatalogoDescuentos) {
+      return;
+    }
+
+    if (event instanceof KeyboardEvent && event.key === 'Enter') {
+      event.preventDefault();
+    }
+
+    await this.actualizarVistaPreviaDescuento();
+  }
+
   private obtenerLlaveTraduccionPolitica(
     titulo: string | null | undefined,
     descripcion: string | null | undefined
@@ -1411,6 +1654,68 @@ export class CatalogoPlaceholderComponent implements OnInit {
     }
   }
 
+  private obtenerLlaveTraduccionDescuento(tipoDescuento: string | null | undefined): string {
+    return this.limpiarTexto(tipoDescuento);
+  }
+
+  private async actualizarVistaPreviaDescuento(): Promise<boolean> {
+    if (!this.esCatalogoDescuentos || this.traduciendoDescuento || this.guardandoEdicion || this.guardandoCreacion) {
+      return true;
+    }
+
+    const fuente = this.modalEdicionAbierto ? this.editingDraft : this.modalCrearAbierto ? this.nuevoRegistroDraft : null;
+    if (!fuente) {
+      return true;
+    }
+
+    const tipoDescuento = this.limpiarTexto(String(fuente['tipo_descuento'] ?? ''));
+    if (!tipoDescuento) {
+      this.traduccionesDescuentoPreview = {};
+      this.ultimaLlaveTraduccionDescuento = '';
+      return true;
+    }
+
+    const llaveActual = this.obtenerLlaveTraduccionDescuento(tipoDescuento);
+    if (llaveActual === this.ultimaLlaveTraduccionDescuento && Object.keys(this.traduccionesDescuentoPreview).length > 0) {
+      return true;
+    }
+
+    this.traduciendoDescuento = true;
+
+    try {
+      const traducciones = await this.supabase.traducirDesdeEspanol({
+        title: '',
+        description: tipoDescuento
+      });
+
+      const concentrado = this.idiomasVistaPolitica.reduce((acc, idioma) => {
+        const traduccionIdioma = traducciones?.[idioma.code];
+        if (!traduccionIdioma) {
+          return acc;
+        }
+
+        acc[idioma.code] = {
+          descripcion: typeof traduccionIdioma.description === 'string' ? traduccionIdioma.description : ''
+        };
+
+        return acc;
+      }, {} as Record<string, IDescuentoTraduccionPreview>);
+
+      concentrado['es'] = {
+        descripcion: tipoDescuento
+      };
+
+      this.traduccionesDescuentoPreview = concentrado;
+      this.ultimaLlaveTraduccionDescuento = llaveActual;
+      return true;
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudo traducir el descuento.';
+      return false;
+    } finally {
+      this.traduciendoDescuento = false;
+    }
+  }
+
   cerrarModalExito() {
     this.mostrarModalExito = false;
     this.mensajeModalExito = '';
@@ -1424,6 +1729,15 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
   private limpiarTexto(value: string | null | undefined): string {
     return String(value ?? '').trim();
+  }
+
+  private coincideFiltro(valor: string, filtro: string): boolean {
+    const normalizadoFiltro = this.limpiarTexto(filtro).toLowerCase();
+    if (!normalizadoFiltro) {
+      return true;
+    }
+
+    return this.limpiarTexto(valor).toLowerCase().includes(normalizadoFiltro);
   }
 
   irEditarAtracciones(item: any) {
