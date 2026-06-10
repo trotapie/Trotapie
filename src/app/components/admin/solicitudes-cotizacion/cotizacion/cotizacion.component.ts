@@ -220,6 +220,8 @@ export class CotizacionComponent implements OnInit {
 
   comparePolitica = (a: any, b: any) => a?.id === b?.id;
   compareTipoHabitacion = (a: TipoHabitacion | null, b: TipoHabitacion | null) => a?.id === b?.id;
+  habitacionesPanelAbierto: boolean[] = [true];
+  private habitacionesPanelCompletasPrevias: boolean[] = [false];
 
   get habitacionesAdicionales(): FormArray {
     return this.edicionForm.get('habitacionesAdicionales') as FormArray;
@@ -457,6 +459,7 @@ export class CotizacionComponent implements OnInit {
           if (roomValue?.precioMeses) precios.push(roomValue.precioMeses);
         });
         this.preciosList = precios;
+        this.sincronizarAperturaSecuencialHabitaciones();
 
       })
     }
@@ -526,6 +529,8 @@ export class CotizacionComponent implements OnInit {
   }
 
   modalCotizacion() {
+    if (!this.validarHabitacionesAntesDeGuardar()) return;
+
     this.enviarCotizacion = true;
     this.supabase.actualizarCotizacionPublicaCompleta(
       this.informacionCotizacion.public_id,
@@ -560,6 +565,10 @@ export class CotizacionComponent implements OnInit {
 
   private async guardarCambiosAntesDeSalida(): Promise<void> {
     if (!this.esEdicion || !this.informacionCotizacion?.public_id) return;
+
+    if (!this.validarHabitacionesAntesDeGuardar()) {
+      throw new Error('COTIZACION_INVALIDA');
+    }
 
     if (this.edicionForm.invalid) {
       this.edicionForm.markAllAsTouched();
@@ -648,6 +657,14 @@ export class CotizacionComponent implements OnInit {
   get precioInvalido(): boolean {
     const ctrl = this.precioCtrl;
     return !!(ctrl && ctrl.invalid && (ctrl.dirty || ctrl.touched));
+  }
+
+  get puedeGuardarCotizacion(): boolean {
+    return this.edicionForm.valid && this.habitacionesCompletas() && !this.exportandoPdf;
+  }
+
+  get puedeDescargarPdf(): boolean {
+    return this.puedeGuardarCotizacion;
   }
 
   setCampoPrecioActivo(campo: 'precio' | 'precioConSeguro' | 'precioMeses') {
@@ -1598,6 +1615,65 @@ export class CotizacionComponent implements OnInit {
     return tipoTarifa === 'apartado' ? this.politicasApartadoMeses : this.politicasNoReembolsableMeses;
   }
 
+  habitacionCompleta(control: AbstractControl | null | undefined): boolean {
+    if (!control) return false;
+
+    const tipoHabitacion = this.normalizarTipoHabitacion(control.get('tipoHabitacion')?.value);
+    if (!tipoHabitacion) return false;
+
+    const secciones = [
+      this.estadoSeccionNoReembolsable(control),
+      this.estadoSeccionConSeguro(control),
+      this.estadoSeccionMeses(control)
+    ];
+
+    const seccionesActivas = secciones.filter((seccion) => seccion.tieneDatos);
+    if (!seccionesActivas.length) return false;
+
+    return seccionesActivas.every((seccion) => seccion.completa);
+  }
+
+  estadoHabitacionTexto(control: AbstractControl | null | undefined): string {
+    return this.habitacionCompleta(control) ? 'Completa' : 'X Incompleta';
+  }
+
+  habitacionesCompletas(): boolean {
+    const habitaciones = [
+      this.edicionForm,
+      ...this.habitacionesAdicionales.controls
+    ];
+
+    return habitaciones.every((control) => this.habitacionCompleta(control));
+  }
+
+  private validarHabitacionesAntesDeGuardar(): boolean {
+    if (this.habitacionesCompletas()) return true;
+
+    this.edicionForm.markAllAsTouched();
+    this.habitacionesAdicionales.controls.forEach((control) => control.markAllAsTouched());
+
+    const indiceIncompleto = [
+      this.edicionForm,
+      ...this.habitacionesAdicionales.controls
+    ].findIndex((control) => !this.habitacionCompleta(control));
+
+    if (indiceIncompleto >= 0) {
+      this.habitacionesPanelAbierto[indiceIncompleto] = true;
+    }
+
+    window.alert('Completa todas las habitaciones antes de guardar la cotización.');
+    return false;
+  }
+
+  habitacionPanelAbierto(indice: number): boolean {
+    return this.habitacionesPanelAbierto[indice] ?? indice === 0;
+  }
+
+  onHabitacionPanelToggle(indice: number, event: Event): void {
+    const details = event.target as HTMLDetailsElement | null;
+    this.habitacionesPanelAbierto[indice] = !!details?.open;
+  }
+
   private crearHabitacionAdicionalForm(value?: Partial<CotizacionHabitacionForm>) {
     const form = this.fb.group({
       tipoHabitacion: [value?.tipoHabitacion ?? null, [Validators.required]],
@@ -1619,6 +1695,88 @@ export class CotizacionComponent implements OnInit {
     });
 
     return form;
+  }
+
+  private estadoSeccionNoReembolsable(control: AbstractControl) {
+    const precio = this.obtenerNumeroLimpio(control.get('precio')?.value);
+    const politicas = control.get('condicionesPrecioSinSeguro')?.value ?? [];
+    const tieneDatos = precio !== null || politicas.length > 0;
+    return {
+      tieneDatos,
+      completa: precio !== null && politicas.length > 0
+    };
+  }
+
+  private estadoSeccionConSeguro(control: AbstractControl) {
+    const precio = this.obtenerNumeroLimpio(control.get('precioConSeguro')?.value);
+    const politicas = control.get('condicionesPrecioConSeguro')?.value ?? [];
+    const fecha = control.get('fechaLimiteSeguro')?.value ?? null;
+    const tieneDatos = precio !== null || politicas.length > 0 || !!fecha;
+    return {
+      tieneDatos,
+      completa: precio !== null && politicas.length > 0 && !!fecha
+    };
+  }
+
+  private estadoSeccionMeses(control: AbstractControl) {
+    const precio = this.obtenerNumeroLimpio(control.get('precioMeses')?.value);
+    const politicas = control.get('condicionesPrecioMeses')?.value ?? [];
+    const fecha = control.get('fechaLimiteMeses')?.value ?? null;
+    const tipoTarifa = String(control.get('tipoTarifa')?.value ?? '').trim();
+    const requiereFecha = tipoTarifa === 'apartado';
+    const tieneDatos = precio !== null || politicas.length > 0 || !!fecha;
+    return {
+      tieneDatos,
+      completa: precio !== null && politicas.length > 0 && (!requiereFecha || !!fecha)
+    };
+  }
+
+  private inicializarPanelesHabitaciones(): void {
+    const totalHabitaciones = 1 + this.habitacionesAdicionales.length;
+    this.habitacionesPanelAbierto = Array.from({ length: totalHabitaciones }, (_, indice) => indice === 0);
+    this.habitacionesPanelCompletasPrevias = Array.from({ length: totalHabitaciones }, (_, indice) =>
+      this.habitacionCompleta(this.obtenerControlHabitacion(indice))
+    );
+  }
+
+  private sincronizarAperturaSecuencialHabitaciones(): void {
+    const totalHabitaciones = 1 + this.habitacionesAdicionales.length;
+    if (!totalHabitaciones) return;
+
+    if (this.habitacionesPanelAbierto.length !== totalHabitaciones) {
+      const estadosPrevios = [...this.habitacionesPanelAbierto];
+      this.habitacionesPanelAbierto = Array.from({ length: totalHabitaciones }, (_, indice) =>
+        estadosPrevios[indice] ?? indice === 0
+      );
+    }
+
+    if (this.habitacionesPanelCompletasPrevias.length !== totalHabitaciones) {
+      const estadosPrevios = [...this.habitacionesPanelCompletasPrevias];
+      this.habitacionesPanelCompletasPrevias = Array.from({ length: totalHabitaciones }, (_, indice) =>
+        estadosPrevios[indice] ?? false
+      );
+    }
+
+    for (let indice = 0; indice < totalHabitaciones; indice++) {
+      const controlActual = this.obtenerControlHabitacion(indice);
+      const completaActual = this.habitacionCompleta(controlActual);
+      const completaAnterior = this.habitacionesPanelCompletasPrevias[indice] ?? false;
+
+      if (!completaAnterior && completaActual) {
+        const siguiente = indice + 1;
+        if (siguiente < totalHabitaciones && !this.habitacionesPanelAbierto[siguiente]) {
+          this.habitacionesPanelAbierto[siguiente] = true;
+        }
+      }
+    }
+
+    this.habitacionesPanelCompletasPrevias = Array.from({ length: totalHabitaciones }, (_, indice) =>
+      this.habitacionCompleta(this.obtenerControlHabitacion(indice))
+    );
+  }
+
+  private obtenerControlHabitacion(indice: number): AbstractControl | null {
+    return indice === 0 ? this.edicionForm : this.habitacionesAdicionales.at(indice - 1);
   }
 
   private obtenerNumeroLimpio(value: unknown): number | null {
@@ -1842,6 +2000,8 @@ export class CotizacionComponent implements OnInit {
         control.patchValue({ tipoHabitacion: resolved }, { emitEvent: false });
       }
     });
+
+    this.inicializarPanelesHabitaciones();
   }
 
   private obtenerTipoHabitacionAutomatica(

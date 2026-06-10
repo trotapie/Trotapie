@@ -1483,7 +1483,7 @@ export class SupabaseService {
 
     const { data: detalleHabitaciones, error: errorHabitaciones } = await this.client
       .from('solicitudes_cotizacion')
-      .select('id, habitaciones')
+      .select('id, habitaciones, created_at')
       .in('id', ids);
 
     if (errorHabitaciones) throw errorHabitaciones;
@@ -1491,9 +1491,18 @@ export class SupabaseService {
     const habitacionesPorId = new Map<number, any>(
       (detalleHabitaciones ?? []).map((item: any) => [Number(item.id), item.habitaciones ?? null])
     );
+    const fechasPorId = new Map<number, string | Date | null>(
+      (detalleHabitaciones ?? []).map((item: any) => [Number(item.id), item.created_at ?? null])
+    );
 
     return solicitudes.map((item) => ({
       ...item,
+      created_at: fechasPorId.get(Number(item.id)) ?? (item as any).created_at ?? null,
+      fecha_creacion:
+        (item as any).fecha_creacion ??
+        fechasPorId.get(Number(item.id)) ??
+        (item as any).created_at ??
+        null,
       habitaciones: habitacionesPorId.get(Number(item.id)) ?? item.habitaciones ?? null
     }));
   }

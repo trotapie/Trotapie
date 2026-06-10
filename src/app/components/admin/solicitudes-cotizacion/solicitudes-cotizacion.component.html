@@ -29,6 +29,7 @@
 
                 </div>
             </div>
+
         </div>
 
         <article class="m-3 flex-1 min-h-0">
@@ -42,6 +43,16 @@
                         <ng-container matColumnDef="id">
                             <th mat-header-cell *matHeaderCellDef mat-sort-header> No. </th>
                             <td mat-cell *matCellDef="let row" class="mono"> {{ row.id }} </td>
+                        </ng-container>
+
+                        <!-- Fecha cotizacion -->
+                        <ng-container matColumnDef="fecha">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header> Fecha cotización </th>
+                            <td mat-cell *matCellDef="let row">
+                                <span class="cell-title">
+                                    {{ fechaCotizacionVisual(row) }}
+                                </span>
+                            </td>
                         </ng-container>
 
                         <!-- Cliente -->
@@ -147,6 +158,27 @@
                                 <mat-form-field appearance="outline" class="column-filter">
                                     <input matInput [value]="columnFilters.id" (input)="applyColumnFilter('id', $event)" placeholder="Filtrar"
                                         [disabled]="!showColumnFilters" [tabIndex]="showColumnFilters ? 0 : -1" />
+                                </mat-form-field>
+                            </th>
+                        </ng-container>
+
+                        <!-- Filtro Fecha -->
+                        <ng-container matColumnDef="fechaFilter">
+                            <th mat-header-cell *matHeaderCellDef>
+                                <mat-form-field appearance="outline" class="column-filter">
+                                    <input
+                                        matInput
+                                        [matDatepicker]="fechaPicker"
+                                        [value]="fechaFiltroDate"
+                                        [max]="fechaMaximaFiltro"
+                                        (dateChange)="setFechaFiltroDesdeDate($event.value)"
+                                        placeholder="Fecha cotización"
+                                        [disabled]="!showColumnFilters"
+                                        [tabIndex]="showColumnFilters ? 0 : -1"
+                                        readonly
+                                    />
+                                    <mat-datepicker-toggle matSuffix [for]="fechaPicker" [disabled]="!showColumnFilters"></mat-datepicker-toggle>
+                                    <mat-datepicker #fechaPicker></mat-datepicker>
                                 </mat-form-field>
                             </th>
                         </ng-container>

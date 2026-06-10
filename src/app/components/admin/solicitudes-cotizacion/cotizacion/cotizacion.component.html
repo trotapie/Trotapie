@@ -16,7 +16,7 @@
                             <span>Regresar</span>
                         </button>
                     <button mat-raised-button color="primary" class="gap-2 text-white" type="button"
-                        [disabled]="exportandoPdf" (click)="exportarCotizacionPdf()">
+                        [disabled]="!puedeDescargarPdf" (click)="exportarCotizacionPdf()">
                         <mat-icon class="icon-size-5 icon-thick text-white" [svgIcon]="'heroicons_outline:document-arrow-down'"></mat-icon>
                         <span>{{ exportandoPdf ? 'Generando...' : 'Descargar PDF' }}</span>
                     </button>
@@ -44,10 +44,11 @@
             <form [formGroup]="edicionForm">
                 <div class="text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-200 px-5">
                     <main class="max-w-7xl mx-auto px-4 py-2 pb-32">
-                        <section class="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16 items-start">
-                            <div>
+                        <section class="grid grid-cols-1 gap-12 mb-16 items-start"
+                            [ngClass]="esEdicion ? 'lg:grid-cols-1' : 'lg:grid-cols-2'">
+                            <div [ngClass]="esEdicion ? 'w-full' : ''">
 
-                                <section class="space-y-6 pt-4">
+                                <section class="space-y-6 pt-4" [ngClass]="esEdicion ? 'max-w-4xl' : 'max-w-md'">
                                     <h1
                                         class="text-5xl lg:text-6xl font-black text-[#1e3a5f] dark:text-white leading-tight">
                                         {{ t('reserva_viaje', { destino: informacionCotizacion.destino_nombre }) }}
@@ -84,6 +85,281 @@
                                             </p>
                                         </div>
                                     </div>
+                                </div>
+                                }
+
+                                @if (!esEdicion && habitacionesCotizacionPublicaVista.length > 1) {
+                                <div class="space-y-4">
+                                    @for (habitacionCotizacion of habitacionesCotizacionPublicaVista; track $index) {
+                                    <details class="room-panel">
+                                        <summary class="room-panel-summary">
+                                            <span class="room-panel-title">
+                                                HABITACION {{ habitacionCotizacion.indice }}
+                                            </span>
+                                            @if (habitacionCotizacion.tipoHabitacion) {
+                                            <span class="text-xs font-semibold text-slate-500 dark:text-slate-300">
+                                                {{ habitacionCotizacion.tipoHabitacion }}
+                                            </span>
+                                            }
+                                        </summary>
+                                        <div class="p-4">
+                                            <div
+                                                class="bg-white dark:bg-slate-800 p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-50 dark:border-slate-700">
+                                                <div class="flex items-center justify-between mb-6">
+                                                    <div>
+                                                        <p class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mt-2">
+                                                            Personas en la habitación
+                                                        </p>
+                                                        @if (habitacionCotizacion.detalleHabitacion) {
+                                                        <p class="text-xs font-medium text-slate-500 dark:text-slate-300 mt-2">
+                                                            {{ habitacionCotizacion.detalleHabitacion }}
+                                                        </p>
+                                                        }
+                                                    </div>
+                                                </div>
+
+                                                @if (habitacionCotizacion.precioSinSeguro !== null) {
+                                                <div class="pt-2 pb-4">
+                                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                        <div>
+                                                            <p
+                                                                class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
+                                                                {{ t('precio_sin_seguro') }}
+                                                            </p>
+                                                            <p
+                                                                class="text-3xl font-black text-[#1e3a5f] dark:text-white tracking-tight">
+                                                                MXN {{ habitacionCotizacion.precioSinSeguro | currency }}
+                                                            </p>
+                                                        </div>
+                                                        <div class="flex items-center justify-center sm:items-end sm:justify-end ">
+                                                            <button (click)="contactarAgente('sin_seguro')"
+                                                                class="no-print bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
+                                                                {{ t('contactar_agente') }}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div
+                                                    class="grid grid-cols-1 text-[10px] text-slate-400 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl font-medium space-y-2">
+                                                    @for (e of habitacionCotizacion.condicionesSinSeguro; track e.id) {
+                                                    <span class="flex items-center gap-2">
+                                                        <mat-icon class="icon-size-5 icon-thick text-white"
+                                                            [svgIcon]="'heroicons_outline:information-circle'"></mat-icon>
+                                                        {{e.descripcion}}
+                                                    </span>
+                                                    }
+                                                </div>
+                                                }
+
+                                                @if (habitacionCotizacion.precioConSeguro !== null) {
+                                                <hr class="my-6 border-slate-200 dark:border-slate-700">
+                                                <div class=" border-t border-slate-50 dark:border-slate-700 pb-4">
+                                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                        <div>
+                                                            <p
+                                                                class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
+                                                                {{ t('precio_con_seguro') }}
+                                                            </p>
+                                                            <p
+                                                                class="text-3xl font-black text-[#1e3a5f] dark:text-white tracking-tight">
+                                                                MXN {{ habitacionCotizacion.precioConSeguro | currency }}
+                                                            </p>
+                                                        </div>
+                                                        <div class="flex items-center justify-center sm:items-end sm:justify-end ">
+                                                            <button (click)="contactarAgente('con_seguro')"
+                                                                class="no-print bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
+                                                                {{ t('contactar_agente') }}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="p-2 -mt-2 mb-2">
+                                                        <div class="rounded-xl p-8 relative overflow-hidden ">
+                                                            <div
+                                                                class="absolute top-0 right-0 w-64 h-64 bg-[#EAB308]/10 rounded-full -mr-32 -mt-32 blur-3xl">
+                                                            </div>
+                                                            <div
+                                                                class="absolute bottom-0 left-0 w-64 h-64 bg-[#EAB308]/5 rounded-full -ml-32 -mb-32 blur-3xl">
+                                                            </div>
+                                                            <div
+                                                                class="relative grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                                                <div class="flex flex-col gap-4 group">
+                                                                    <div class="flex items-center gap-3">
+                                                                        <div
+                                                                            class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                                            <span
+                                                                                class="material-symbols-outlined text-2xl">confirmation_number</span>
+                                                                        </div>
+                                                                        <h3 class="text-xs font-bold uppercase tracking-widest">
+                                                                            {{t('apartado')}}
+                                                                        </h3>
+                                                                    </div>
+                                                                    <div class="flex flex-col">
+                                                                        <span
+                                                                            class="text-3xl font-extrabold tracking-tight">{{(habitacionCotizacion.apartadoSeguro ?? 0) | currency}} MXN</span>
+                                                                        <span
+                                                                            class="text-[#EAB308] text-xs font-medium mt-1">{{t('pagado')}}</span>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="flex flex-col gap-4 group">
+                                                                    <div class="flex items-center gap-3">
+                                                                        <div
+                                                                            class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                                            <span
+                                                                                class="material-symbols-outlined text-2xl">credit_score</span>
+                                                                        </div>
+                                                                        <h3 class="text-xs font-bold uppercase tracking-widest">
+                                                                            {{t('pague_despues')}}
+                                                                        </h3>
+                                                                    </div>
+                                                                    <div class="flex flex-col">
+                                                                        <span
+                                                                            class="text-3xl font-extrabold tracking-tight">{{(habitacionCotizacion.pagueDespuesSeguro ?? 0) | currency}} MXN</span>
+                                                                        <span
+                                                                            class="text-slate-500 text-xs font-medium mt-1">{{t('pendiente')}}</span>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="flex flex-col gap-4 group">
+                                                                    <div class="flex items-center gap-3">
+                                                                        <div
+                                                                            class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                                            <span
+                                                                                class="material-symbols-outlined text-2xl">event_upcoming</span>
+                                                                        </div>
+                                                                        <h3 class="text-xs font-bold uppercase tracking-widest">
+                                                                            {{t('fecha_limite')}}
+                                                                        </h3>
+                                                                    </div>
+                                                                    <div class="flex flex-col">
+                                                                        <span
+                                                                            class="text-[#EAB308] text-3xl font-extrabold tracking-tight">{{habitacionCotizacion.fechaLimiteSeguro | dateI18n:'dd MMM yyyy':informacionCotizacion.idioma}}</span>
+                                                                        <span
+                                                                            class="text-slate-500 text-xs font-medium mt-1">{{t('ultimo_dia_pago')}}</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div
+                                                    class="grid grid-cols-1  text-[10px] text-slate-400 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl font-medium space-y-2">
+                                                    @for (e of habitacionCotizacion.condicionesConSeguro; track e.id) {
+                                                    <span class="flex items-center gap-2">
+                                                        <mat-icon class="icon-size-5 icon-thick text-white"
+                                                            [svgIcon]="'heroicons_outline:information-circle'"></mat-icon>
+                                                        {{e.descripcion}}
+                                                    </span>
+                                                    }
+                                                </div>
+                                                }
+
+                                                @if (habitacionCotizacion.precioMeses !== null) {
+                                                <hr class="my-6 border-slate-200 dark:border-slate-700">
+                                                <div class=" border-t border-slate-50 dark:border-slate-700 pb-4">
+                                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                        <div>
+                                                            <p
+                                                                class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
+                                                                {{ t('precio_a_meses') }}
+                                                            </p>
+                                                            <p
+                                                                class="text-3xl font-black text-[#1e3a5f] dark:text-white tracking-tight">
+                                                                MXN {{ habitacionCotizacion.precioMeses | currency }}
+                                                            </p>
+                                                        </div>
+                                                        <div class="flex items-center justify-center sm:items-end sm:justify-end ">
+                                                            <button (click)="contactarAgente('a_meses')"
+                                                                class="no-print bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
+                                                                {{ t('contactar_agente') }}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="p-2 -mt-2 mb-2">
+                                                        <div class="rounded-xl p-8 relative overflow-hidden ">
+                                                            <div
+                                                                class="absolute top-0 right-0 w-64 h-64 bg-[#EAB308]/10 rounded-full -mr-32 -mt-32 blur-3xl">
+                                                            </div>
+                                                            <div
+                                                                class="absolute bottom-0 left-0 w-64 h-64 bg-[#EAB308]/5 rounded-full -ml-32 -mb-32 blur-3xl">
+                                                            </div>
+                                                            <div
+                                                                class="relative grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                                                <div class="flex flex-col gap-4 group">
+                                                                    <div class="flex items-center gap-3">
+                                                                        <div
+                                                                            class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                                            <span
+                                                                                class="material-symbols-outlined text-2xl">confirmation_number</span>
+                                                                        </div>
+                                                                        <h3 class="text-xs font-bold uppercase tracking-widest">
+                                                                            {{t('apartado')}}
+                                                                        </h3>
+                                                                    </div>
+                                                                    <div class="flex flex-col">
+                                                                        <span
+                                                                            class="text-3xl font-extrabold tracking-tight">{{(habitacionCotizacion.apartadoMeses ?? 0) | currency}} MXN</span>
+                                                                        <span
+                                                                            class="text-[#EAB308] text-xs font-medium mt-1">{{t('pagado')}}</span>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="flex flex-col gap-4 group">
+                                                                    <div class="flex items-center gap-3">
+                                                                        <div
+                                                                            class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                                            <span
+                                                                                class="material-symbols-outlined text-2xl">credit_score</span>
+                                                                        </div>
+                                                                        <h3 class="text-xs font-bold uppercase tracking-widest">
+                                                                            {{t('pague_despues')}}
+                                                                        </h3>
+                                                                    </div>
+                                                                    <div class="flex flex-col">
+                                                                        <span
+                                                                            class="text-3xl font-extrabold tracking-tight">{{(habitacionCotizacion.pagueDespuesMeses ?? 0) | currency}} MXN</span>
+                                                                        <span
+                                                                            class="text-slate-500 text-xs font-medium mt-1">{{t('pendiente')}}</span>
+                                                                    </div>
+                                                                </div>
+                                                                @if(habitacionCotizacion.tipoTarifaMeses === 'apartado') {
+                                                                <div class="flex flex-col gap-4 group">
+                                                                    <div class="flex items-center gap-3">
+                                                                        <div
+                                                                            class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                                            <span
+                                                                                class="material-symbols-outlined text-2xl">event_upcoming</span>
+                                                                        </div>
+                                                                        <h3 class="text-xs font-bold uppercase tracking-widest">
+                                                                            {{t('fecha_limite')}}
+                                                                        </h3>
+                                                                    </div>
+                                                                    <div class="flex flex-col">
+                                                                        <span
+                                                                            class="text-[#EAB308] text-3xl font-extrabold tracking-tight">{{habitacionCotizacion.fechaLimiteMeses | dateI18n:'dd MMM yyyy':informacionCotizacion.idioma}}</span>
+                                                                        <span
+                                                                            class="text-slate-500 text-xs font-medium mt-1">{{t('ultimo_dia_pago')}}</span>
+                                                                    </div>
+                                                                </div>
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div
+                                                    class="grid grid-cols-1  text-[10px] text-slate-400 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl font-medium space-y-2">
+                                                    @for (e of habitacionCotizacion.condicionesMeses; track e.id) {
+                                                    <span class="flex items-center gap-2">
+                                                        <mat-icon class="icon-size-5 icon-thick text-white"
+                                                            [svgIcon]="'heroicons_outline:information-circle'"></mat-icon>
+                                                        {{e.descripcion}}
+                                                    </span>
+                                                    }
+                                                </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    </details>
+                                    }
                                 </div>
                                 }
 
@@ -349,7 +625,7 @@
                                         </div>
                                     </div>
                                     }
-                                    <div class="mt-6">
+                                    <div class="mt-6 mb-4">
                                         @if (esEdicion) {
                                         <p
                                             class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
@@ -370,8 +646,18 @@
                                         </select>
                                         }
                                     </div>
-
-                                    @if (esEdicion) {
+                                    <details class="room-panel mb-4" [open]="habitacionPanelAbierto(0)"
+                                        (toggle)="onHabitacionPanelToggle(0, $event)">
+                                        <summary class="room-panel-summary">
+                                            <span class="room-panel-title">
+                                                HABITACION 1
+                                            </span>
+                                            <span class="room-panel-status" [ngClass]="habitacionCompleta(edicionForm) ? 'is-ok' : 'is-bad'">
+                                                {{ estadoHabitacionTexto(edicionForm) }}
+                                            </span>
+                                        </summary>
+                                        <div class="p-4">
+                                        @if (esEdicion) {
                                     <div class="mt-4">
                                         <p
                                             class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
@@ -954,6 +1240,8 @@
                                         }
                                     </div>
                                     }
+                                        </div>
+                                    </details>
                                     @if(!esEdicion && precioAMeses){
                                     <div
                                         class="grid grid-cols-1  text-[10px] text-slate-400 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl font-medium space-y-2">
@@ -968,15 +1256,20 @@
                                     }
 
                                     @if (esEdicion && habitacionesAdicionales.length > 0) {
-                                    <hr class="my-6 border-slate-200 dark:border-slate-700">
-                                    <div formArrayName="habitacionesAdicionales" class="space-y-10">
-                                        <p
-                                            class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500">
-                                            Cotizacion por habitacion adicional
-                                        </p>
+                                    <div formArrayName="habitacionesAdicionales" class="space-y-4">
                                         @for (habitacion of habitacionesAdicionales.controls; track $index) {
-                                        <div [formGroupName]="$index"
-                                            class="rounded-2xl border border-slate-200 dark:border-slate-700 p-5">
+                                        <details [formGroupName]="$index" class="room-panel room-panel-additional"
+                                            [open]="habitacionPanelAbierto($index + 1)"
+                                            (toggle)="onHabitacionPanelToggle($index + 1, $event)">
+                                            <summary class="room-panel-summary">
+                                                <span class="room-panel-title">
+                                                    HABITACION {{ $index + 2 }}
+                                                </span>
+                                                <span class="room-panel-status" [ngClass]="habitacionCompleta(habitacion) ? 'is-ok' : 'is-bad'">
+                                                    {{ estadoHabitacionTexto(habitacion) }}
+                                                </span>
+                                            </summary>
+                                            <div class="p-4">
                                             <div class="mb-4">
                                                 <p
                                                     class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500">
@@ -1223,8 +1516,8 @@
                                                 </span>
                                                 }
                                             </div>
-                                        
-                                        </div>
+                                            </div>
+                                        </details>
                                         }
                                     </div>
                                     }
@@ -1233,6 +1526,7 @@
                                 }
                             </div>
 
+                            @if (!esEdicion) {
                             <!-- IMAGEN HERO -->
                             <div class="relative h-[550px] rounded-[2.5rem] overflow-hidden shadow-2xl">
                                 <img alt="Imagen destino" class="w-full h-full object-cover"
@@ -1248,6 +1542,7 @@
                                     </p>
                                 </div>
                             </div>
+                            }
                         </section>
 
                         <div class="flex items-center gap-4 mb-8">
@@ -1415,7 +1710,7 @@
                             }
 
                             @if(esEdicion){
-                            <button type="button" [disabled]="edicionForm.invalid" class="bg-primary text-white
+                            <button type="button" [disabled]="!puedeGuardarCotizacion" class="bg-primary text-white
                      px-6 sm:px-12 py-3 sm:py-4
                      rounded-2xl font-black text-xs uppercase tracking-widest
                      transition-all shadow-xl shadow-blue-900/20 whitespace-nowrap

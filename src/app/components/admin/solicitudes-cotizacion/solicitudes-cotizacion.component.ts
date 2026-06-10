@@ -2,7 +2,7 @@ import { AfterViewInit, Component, inject, OnInit, ViewChild } from '@angular/co
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FuseSplashScreenService } from '@fuse/services/splash-screen';
 import { SupabaseService } from 'app/core/supabase.service';
 import { ISolicitudCotizacionListado } from 'app/interface/solicitudes-cotizacion.interface';
@@ -29,9 +29,12 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
   private splashScreen = inject(FuseSplashScreenService);
   private supabase = inject(SupabaseService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  readonly fechaMaximaFiltro = new Date();
 
   displayedColumns: string[] = [
     'id',
+    'fecha',
     'cliente',
     'hotel',
     'habitaciones',
@@ -44,6 +47,7 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
 
   readonly filterColumns: string[] = [
     'idFilter',
+    'fechaFilter',
     'clienteFilter',
     'hotelFilter',
     'habitacionesFilter',
@@ -59,6 +63,7 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
 
   quickFilter: '' | 'pendiente' | 'confirmada' | 'cancelada' = '';
   showColumnFilters = false;
+  fechaFiltro = '';
   columnFilters: Record<ColumnFilterKey, string> = {
     id: '',
     cliente: '',
@@ -99,6 +104,8 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
       switch (sortHeaderId) {
         case 'id':
           return data.id;
+        case 'fecha':
+          return this._obtenerFechaSolicitud(data)?.getTime() ?? 0;
         case 'cliente':
           return data.cliente_nombre ?? '';
         case 'hotel':
@@ -124,6 +131,7 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
     ) => {
       const normalized = this.parseFilter(filter);
       const idFilter = this.normalize(normalized.id ?? '');
+      const fechaFilter = this.normalize(normalized.fecha ?? '');
       const clienteFilter = this.normalize(normalized.cliente ?? '');
       const hotelFilter = this.normalize(normalized.hotel ?? '');
       const habitacionesFilter = this.normalize(normalized.habitaciones ?? '');
@@ -131,9 +139,12 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
       const tipoDestinoFilter = this.normalize(normalized.tipoDestino ?? '');
       const empleadoFilter = this.normalize(normalized.empleado ?? '');
       const estatusFilter = this.normalize(normalized.estatus ?? '');
+      const fechaSolicitud = this._obtenerFechaSolicitud(data);
+      const fechaSolicitudNormalizada = fechaSolicitud ? this._formatearFechaClaveLocal(fechaSolicitud) : '';
 
       const byColumn =
         this.normalize(data.id).includes(idFilter) &&
+        (!fechaFilter || fechaSolicitudNormalizada === fechaFilter) &&
         this.normalize(data.cliente_nombre).includes(clienteFilter) &&
         this.normalize(data.hotel_nombre).includes(hotelFilter) &&
         this.normalize(this.obtenerResumenHabitaciones(data)).includes(habitacionesFilter) &&
@@ -190,7 +201,19 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
       empleado: '',
       estatus: '',
     };
+    this.fechaFiltro = '';
+    this.quickFilter = '';
     this.applyCombinedFilters();
+
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        estatus: null,
+        fecha: null,
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   toggleColumnFilters(): void {
@@ -203,12 +226,33 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
   }
 
   get hasActiveFilters(): boolean {
-    return Object.values(this.columnFilters).some((value) => this.normalize(value).length > 0);
+    return (
+      Object.values(this.columnFilters).some((value) => this.normalize(value).length > 0) ||
+      this.normalize(this.fechaFiltro).length > 0
+    );
+  }
+
+  get fechaFiltroEtiqueta(): string {
+    if (!this.fechaFiltro) return '';
+
+    const fecha = this._parseFechaSoloFechaLocal(this.fechaFiltro);
+    if (!fecha) return this.fechaFiltro;
+
+    return new Intl.DateTimeFormat('es-MX', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }).format(fecha);
+  }
+
+  get fechaFiltroDate(): Date | null {
+    return this._parseFechaSoloFechaLocal(this.fechaFiltro);
   }
 
   private applyCombinedFilters(): void {
     this.dataSource.filter = JSON.stringify({
       ...this.columnFilters,
+      fecha: this.fechaFiltro,
     });
     this.dataSource.paginator?.firstPage();
   }
@@ -230,11 +274,38 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
 
   private aplicarFiltroInicialDesdeRuta(): void {
     const estatus = (this.route.snapshot.queryParamMap.get('estatus') ?? '').trim();
-    if (!estatus) return;
+    const fecha = (this.route.snapshot.queryParamMap.get('fecha') ?? '').trim();
+
+    if (!estatus && !fecha) return;
 
     this.quickFilter = '';
     this.showColumnFilters = true;
-    this.setEstatusFilter(estatus);
+
+    if (estatus) {
+      this.setEstatusFilter(estatus);
+    }
+
+    if (fecha) {
+      const fechaNormalizada = this._normalizarFechaFiltro(fecha);
+      this.fechaFiltro = fechaNormalizada;
+      this.applyCombinedFilters();
+    }
+  }
+
+  quitarFiltroFecha(): void {
+    this.fechaFiltro = '';
+    this.applyCombinedFilters();
+
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { fecha: null },
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  setFechaFiltroDesdeDate(valor: Date | null): void {
+    this.fechaFiltro = valor ? this._normalizarFechaFiltro(this._formatearFechaClaveLocal(valor)) : '';
+    this.applyCombinedFilters();
   }
 
   private obtenerOpcionesEstatus(data: ISolicitudCotizacionListado[]): string[] {
@@ -299,5 +370,108 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
     }
 
     return '';
+  }
+
+  private _obtenerFechaSolicitud(solicitud: ISolicitudCotizacionListado): Date | null {
+    const fecha =
+      solicitud.fecha_creacion ??
+      solicitud.created_at ??
+      (solicitud as any).createdAt ??
+      null;
+
+    return this._parseFecha(fecha);
+  }
+
+  private _parseFecha(fecha: string | Date | null | undefined): Date | null {
+    if (!fecha) return null;
+    if (fecha instanceof Date) {
+      return Number.isNaN(fecha.getTime()) ? null : fecha;
+    }
+
+    const normalizada = this._normalizarTimestamp(fecha);
+    const parsed = new Date(normalizada);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  private _normalizarTimestamp(fecha: string): string {
+    const pgTimestamp = fecha.trim();
+    const regex = /^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})(?:\.(\d+))?(?:([+-])(\d{2})(?::?(\d{2}))?)?$/;
+    const match = pgTimestamp.match(regex);
+
+    if (!match) {
+      return pgTimestamp.replace(' ', 'T');
+    }
+
+    const [, fechaParte, horaParte, fraccion = '000', signo, horasOffset = '00', minutosOffset = '00'] = match;
+    const milisegundos = fraccion.padEnd(3, '0').slice(0, 3);
+
+    if (!signo) {
+      return `${fechaParte}T${horaParte}.${milisegundos}`;
+    }
+
+    const offset = `${signo}${horasOffset}:${minutosOffset}`;
+    return `${fechaParte}T${horaParte}.${milisegundos}${offset}`;
+  }
+
+  private _formatearFechaLocal(fecha: Date): string {
+    const year = fecha.getFullYear();
+    const month = String(fecha.getMonth() + 1).padStart(2, '0');
+    const day = String(fecha.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  private _formatearFechaClaveLocal(fecha: Date): string {
+    const year = fecha.getFullYear();
+    const month = String(fecha.getMonth() + 1).padStart(2, '0');
+    const day = String(fecha.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  private _parseFechaSoloFechaLocal(fecha: string | null | undefined): Date | null {
+    if (!fecha) return null;
+
+    const match = fecha.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (match) {
+      const [, year, month, day] = match;
+      const localDate = new Date(Number(year), Number(month) - 1, Number(day));
+      return Number.isNaN(localDate.getTime()) ? null : localDate;
+    }
+
+    return this._parseFecha(fecha);
+  }
+
+  fechaCotizacionVisual(item: ISolicitudCotizacionListado): string {
+    const fecha = this._obtenerFechaSolicitud(item);
+    if (!fecha) return 'Sin fecha';
+
+    return new Intl.DateTimeFormat('es-MX', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(fecha);
+  }
+
+  setFechaFiltro(value: string | null): void {
+    this.fechaFiltro = this._normalizarFechaFiltro((value ?? '').trim());
+    this.applyCombinedFilters();
+  }
+
+  private _normalizarFechaFiltro(valor: string): string {
+    const fecha = this._parseFechaSoloFechaLocal(valor);
+    if (!fecha) return '';
+
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    const fechaComparada = new Date(fecha);
+    fechaComparada.setHours(0, 0, 0, 0);
+
+    if (fechaComparada > hoy) {
+      return this._formatearFechaClaveLocal(hoy);
+    }
+
+    return this._formatearFechaClaveLocal(fecha);
   }
 }

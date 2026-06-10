@@ -7,6 +7,7 @@ import { ISolicitudCotizacionListado } from 'app/interface/solicitudes-cotizacio
 import { MaterialModule } from 'app/shared/material.module';
 
 type RankingItem = { nombre: string; total: number };
+type SerieUltimosDias = { labels: string[]; series: number[]; fechas: string[] };
 
 @Component({
   selector: 'app-admin',
@@ -59,6 +60,7 @@ export class AdminComponent implements OnInit {
   chartTopHoteles: ApexOptions = {};
   chartTopDestinos: ApexOptions = {};
   chartTopEmpleados: ApexOptions = {};
+  private fechasTendencia30Dias: string[] = [];
 
   ngOnInit(): void {
     void this.recargarDashboard();
@@ -126,7 +128,6 @@ export class AdminComponent implements OnInit {
 
       this.updatedAt = new Date();
     } catch (error) {
-      console.error('Error al cargar dashboard de admin:', error);
       this.errorMessage = 'No se pudo cargar el dashboard completo. Intenta recargar.';
     } finally {
       this.isLoading = false;
@@ -140,13 +141,14 @@ export class AdminComponent implements OnInit {
     let canceladas = 0;
     let ultimos30Dias = 0;
 
-    const fechaLimite = new Date();
+    const fechaReferencia = this._obtenerFechaReferencia30Dias(solicitudes);
+    const fechaLimite = new Date(fechaReferencia);
     fechaLimite.setDate(fechaLimite.getDate() - 30);
     fechaLimite.setHours(0, 0, 0, 0);
 
     solicitudes.forEach((solicitud) => {
       const estatus = this._normalizarTexto(solicitud.estatus_nombre);
-      const fechaSolicitud = this._parseFecha(solicitud.fecha_creacion);
+      const fechaSolicitud = this._obtenerFechaSolicitud(solicitud);
 
       if (estatus.includes('cotiz') || estatus.includes('confirm')) cotizadas += 1;
       else if (estatus.includes('pend')) pendientes += 1;
@@ -190,6 +192,7 @@ export class AdminComponent implements OnInit {
     const conteoEstatus = this._contarPorCampo(solicitudes, 'estatus_nombre');
     const conteoTipoDestino = this._contarPorCampo(solicitudes, 'tipo_destino');
     const tendencia30 = this._serieUltimosDias(solicitudes, 30);
+    this.fechasTendencia30Dias = tendencia30.fechas;
 
     this.chartResumen = {
       chart: {
@@ -283,11 +286,26 @@ export class AdminComponent implements OnInit {
         height: 340,
         toolbar: { show: false },
         zoom: { enabled: false },
+        events: {
+          click: (_event: unknown, _chartContext: unknown, config: any) => {
+            this._navegarASolicitudesPorIndiceTendencia(config);
+          },
+          markerClick: (_event: unknown, _chartContext: unknown, config: any) => {
+            this._navegarASolicitudesPorIndiceTendencia(config);
+          },
+          dataPointSelection: (_event: unknown, _chartContext: unknown, config: any) => {
+            this._navegarASolicitudesPorIndiceTendencia(config);
+          },
+        },
       },
       colors: ['#0EA5E9'],
       dataLabels: { enabled: false },
       stroke: { curve: 'smooth', width: 3 },
-      markers: { size: 3 },
+      markers: {
+        size: 5,
+        strokeWidth: 2,
+        hover: { size: 7, sizeOffset: 2 },
+      },
       grid: { borderColor: '#E2E8F0' },
       series: [
         {
@@ -299,7 +317,11 @@ export class AdminComponent implements OnInit {
         categories: tendencia30.labels,
       },
       yaxis: { min: 0, forceNiceScale: true },
-      tooltip: { theme: 'light' },
+      tooltip: {
+        theme: 'light',
+        intersect: true,
+        shared: false,
+      },
     };
 
     this.chartTopHoteles = this._crearGraficaTop('Hoteles', this.topHotelesCotizados, '#10B981');
@@ -392,8 +414,8 @@ export class AdminComponent implements OnInit {
   private _serieUltimosDias(
     solicitudes: ISolicitudCotizacionListado[],
     dias: number
-  ): { labels: string[]; series: number[] } {
-    const hoy = new Date();
+  ): SerieUltimosDias {
+    const hoy = this._obtenerFechaReferencia30Dias(solicitudes);
     hoy.setHours(0, 0, 0, 0);
 
     const inicio = new Date(hoy);
@@ -401,10 +423,11 @@ export class AdminComponent implements OnInit {
 
     const labels: string[] = [];
     const series: number[] = [];
+    const fechas: string[] = [];
     const conteo = new Map<string, number>();
 
     solicitudes.forEach((solicitud) => {
-      const fecha = this._parseFecha(solicitud.fecha_creacion);
+      const fecha = this._obtenerFechaSolicitud(solicitud);
       if (!fecha) return;
 
       const limpia = new Date(fecha);
@@ -422,10 +445,11 @@ export class AdminComponent implements OnInit {
 
       const key = this._keyDate(dia);
       labels.push(this._labelDate(dia));
+      fechas.push(key);
       series.push(conteo.get(key) ?? 0);
     }
 
-    return { labels, series };
+    return { labels, series, fechas };
   }
 
   private _keyDate(fecha: Date): string {
@@ -446,8 +470,46 @@ export class AdminComponent implements OnInit {
 
   private _parseFecha(fecha: string | Date | null | undefined): Date | null {
     if (!fecha) return null;
-    const parsed = fecha instanceof Date ? fecha : new Date(fecha);
+    const parsed = fecha instanceof Date ? fecha : new Date(this._normalizarTimestamp(fecha));
     return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  private _normalizarTimestamp(fecha: string): string {
+    const valor = fecha.trim();
+    const pgTimestamp = valor.match(
+      /^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2})(?:\.(\d+))?([+-]\d{2})(?::?(\d{2}))?$/
+    );
+
+    if (!pgTimestamp) {
+      return valor;
+    }
+
+    const [, fechaParte, horaParte, fraccion = '000', offsetHora, offsetMinuto = '00'] = pgTimestamp;
+    const milisegundos = fraccion.padEnd(3, '0').slice(0, 3);
+    const offset = `${offsetHora}:${offsetMinuto}`;
+    return `${fechaParte}T${horaParte}.${milisegundos}${offset}`;
+  }
+
+  private _obtenerFechaSolicitud(solicitud: ISolicitudCotizacionListado): Date | null {
+    const fecha =
+      solicitud.fecha_creacion ??
+      (solicitud as any).created_at ??
+      (solicitud as any).createdAt ??
+      null;
+
+    return this._parseFecha(fecha);
+  }
+
+  private _obtenerFechaReferencia30Dias(solicitudes: ISolicitudCotizacionListado[]): Date {
+    const fechas = solicitudes
+      .map((solicitud) => this._obtenerFechaSolicitud(solicitud))
+      .filter((fecha): fecha is Date => !!fecha);
+
+    if (!fechas.length) {
+      return new Date();
+    }
+
+    return fechas.reduce((maxima, fechaActual) => (fechaActual > maxima ? fechaActual : maxima));
   }
 
   private async _safeCall<T>(
@@ -458,7 +520,6 @@ export class AdminComponent implements OnInit {
     try {
       return await task();
     } catch (error) {
-      console.warn(`[dashboard] No se pudo cargar ${label}:`, error);
       this.warnings.push(`No se pudo cargar ${label}`);
       return fallback;
     }
@@ -468,5 +529,21 @@ export class AdminComponent implements OnInit {
     await this._router.navigate(['/admin/solicitudes-cotizacion'], {
       queryParams: { estatus }
     });
+  }
+
+  private async _navegarASolicitudesPorFecha(fecha: string): Promise<void> {
+    await this._router.navigate(['/admin/solicitudes-cotizacion'], {
+      queryParams: { fecha }
+    });
+  }
+
+  private async _navegarASolicitudesPorIndiceTendencia(config: any): Promise<void> {
+    const index = Number(config?.dataPointIndex ?? -1);
+    if (!Number.isInteger(index) || index < 0) return;
+
+    const fecha = this.fechasTendencia30Dias[index];
+    if (!fecha) return;
+
+    await this._navegarASolicitudesPorFecha(fecha);
   }
 }
