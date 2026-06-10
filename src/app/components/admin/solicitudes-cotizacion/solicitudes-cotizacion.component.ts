@@ -13,6 +13,7 @@ type ColumnFilterKey =
   | 'id'
   | 'cliente'
   | 'hotel'
+  | 'habitaciones'
   | 'destino'
   | 'tipoDestino'
   | 'empleado'
@@ -33,6 +34,7 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
     'id',
     'cliente',
     'hotel',
+    'habitaciones',
     'destino',
     'tipoDestino',
     'empleado',
@@ -44,6 +46,7 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
     'idFilter',
     'clienteFilter',
     'hotelFilter',
+    'habitacionesFilter',
     'destinoFilter',
     'tipoDestinoFilter',
     'empleadoFilter',
@@ -60,6 +63,7 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
     id: '',
     cliente: '',
     hotel: '',
+    habitaciones: '',
     destino: '',
     tipoDestino: '',
     empleado: '',
@@ -99,6 +103,8 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
           return data.cliente_nombre ?? '';
         case 'hotel':
           return data.hotel_nombre ?? '';
+        case 'habitaciones':
+          return this.obtenerResumenHabitaciones(data);
         case 'destino':
           return data.destino_nombre ?? '';
         case 'tipoDestino':
@@ -120,6 +126,7 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
       const idFilter = this.normalize(normalized.id ?? '');
       const clienteFilter = this.normalize(normalized.cliente ?? '');
       const hotelFilter = this.normalize(normalized.hotel ?? '');
+      const habitacionesFilter = this.normalize(normalized.habitaciones ?? '');
       const destinoFilter = this.normalize(normalized.destino ?? '');
       const tipoDestinoFilter = this.normalize(normalized.tipoDestino ?? '');
       const empleadoFilter = this.normalize(normalized.empleado ?? '');
@@ -129,6 +136,7 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
         this.normalize(data.id).includes(idFilter) &&
         this.normalize(data.cliente_nombre).includes(clienteFilter) &&
         this.normalize(data.hotel_nombre).includes(hotelFilter) &&
+        this.normalize(this.obtenerResumenHabitaciones(data)).includes(habitacionesFilter) &&
         this.normalize(data.destino_nombre).includes(destinoFilter) &&
         this.normalize(data.tipo_destino).includes(tipoDestinoFilter) &&
         this.normalize(data.empleado_nombre).includes(empleadoFilter) &&
@@ -176,6 +184,7 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
       id: '',
       cliente: '',
       hotel: '',
+      habitaciones: '',
       destino: '',
       tipoDestino: '',
       empleado: '',
@@ -239,5 +248,56 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
     }
 
     return Array.from(unicos).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+  }
+
+  obtenerResumenHabitaciones(item: ISolicitudCotizacionListado): string {
+    const texto = this.obtenerTextoHabitaciones(item);
+    if (!texto) return 'Sin habitaciones';
+
+    const total = this.obtenerTotalHabitaciones(item);
+    return total === 1 ? '1 habitacion' : `${total} habitaciones`;
+  }
+
+  obtenerDetalleHabitaciones(item: ISolicitudCotizacionListado): string {
+    const texto = this.obtenerTextoHabitaciones(item);
+    if (!texto) return 'Sin detalle';
+
+    return texto
+      .split(/\r?\n+/)
+      .map((linea) => linea.trim())
+      .filter(Boolean)
+      .join(' | ');
+  }
+
+  private obtenerTotalHabitaciones(item: ISolicitudCotizacionListado): number {
+    const texto = this.obtenerTextoHabitaciones(item);
+    if (!texto) return 0;
+
+    const coincidenciasHabitacion = texto.match(/habitaci[oó]n\s+\d+/gi);
+    if (coincidenciasHabitacion?.length) {
+      return coincidenciasHabitacion.length;
+    }
+
+    const totalTexto = texto.match(/(\d+)\s*habitaci[oó]n(?:es)?/i);
+    if (totalTexto) {
+      const total = Number(totalTexto[1]);
+      if (Number.isFinite(total) && total > 0) return total;
+    }
+
+    return 1;
+  }
+
+  private obtenerTextoHabitaciones(item: ISolicitudCotizacionListado): string {
+    const habitaciones = item?.habitaciones;
+
+    if (typeof habitaciones === 'string') {
+      return habitaciones.trim();
+    }
+
+    if (habitaciones && typeof habitaciones === 'object') {
+      return String(habitaciones.es ?? habitaciones.traduccion ?? '').trim();
+    }
+
+    return '';
   }
 }

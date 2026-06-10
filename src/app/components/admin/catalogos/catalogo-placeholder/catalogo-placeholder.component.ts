@@ -166,10 +166,11 @@ export class CatalogoPlaceholderComponent implements OnInit {
       columnas: [
         { key: 'id', label: 'ID' },
         { key: 'nombre_habitacion', label: 'Nombre habitacion' },
+        { key: 'capacidad_maxima', label: 'Capacidad maxima' },
         { key: 'descripcion', label: 'Descripcion' }
       ],
       tieneOrden: false,
-      editableKeys: ['nombre_habitacion', 'descripcion']
+      editableKeys: ['nombre_habitacion', 'capacidad_maxima', 'descripcion']
     },
     atracciones: {
       columnas: [
@@ -576,7 +577,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
     }
 
     if (this.esCatalogoTiposHabitacion) {
-      return 'Captura el nombre de la habitacion y su descripcion.';
+      return 'Captura el nombre, capacidad maxima y descripcion de la habitacion.';
     }
 
     return 'Captura el nombre para crear el nuevo continente.';
@@ -656,7 +657,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
     }
 
     if (this.esCatalogoTiposHabitacion) {
-      return 'Actualiza el nombre de la habitacion y su descripcion.';
+      return 'Actualiza el nombre, capacidad maxima y descripcion de la habitacion.';
     }
 
     return 'Actualiza el nombre del continente y guarda cambios.';
@@ -1495,6 +1496,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
         );
       } else if (this.esCatalogoTiposHabitacion) {
         const nombreHabitacion = String(this.editingDraft['nombre_habitacion'] ?? '').trim();
+        const capacidadMaxima = this.parseNumber(this.editingDraft['capacidad_maxima']);
         const descripcion = String(this.editingDraft['descripcion'] ?? '').trim();
 
         if (!nombreHabitacion) {
@@ -1505,6 +1507,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
         const payload = {
           nombre_habitacion: nombreHabitacion,
+          capacidad_maxima: capacidadMaxima,
           descripcion
         };
 
@@ -1685,6 +1688,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
       this.nuevoRegistroDraft = {
         ...this.nuevoRegistroDraft,
         nombre_habitacion: '',
+        capacidad_maxima: null,
         descripcion: ''
       };
     }
@@ -1926,6 +1930,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
         });
       } else if (this.esCatalogoTiposHabitacion) {
         const nombreHabitacion = String(this.nuevoRegistroDraft['nombre_habitacion'] ?? '').trim();
+        const capacidadMaxima = this.parseNumber(this.nuevoRegistroDraft['capacidad_maxima']);
         const descripcion = String(this.nuevoRegistroDraft['descripcion'] ?? '').trim();
 
         if (!nombreHabitacion) {
@@ -1936,6 +1941,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
         await this.catalogosAdmin.crearCatalogoAdmin(this.catalogoKey, {
           nombre_habitacion: nombreHabitacion,
+          capacidad_maxima: capacidadMaxima,
           descripcion
         });
       } else {

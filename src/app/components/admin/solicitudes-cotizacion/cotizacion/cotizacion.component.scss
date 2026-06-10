@@ -55,11 +55,6 @@
   border-color: rgb(239 68 68);
 }
 
-/* Panel (dropdown) redondeado como tu estilo */
-:host ::ng-deep .tp-select-panel.mat-mdc-select-panel {
-  border-radius: 0.75rem;
-}
-
 /* El panel de mat-select vive fuera del componente (cdk-overlay). 
    Subimos z-index para que quede encima del modal. */
 :host ::ng-deep .cdk-overlay-container,

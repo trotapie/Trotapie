@@ -1245,6 +1245,36 @@ export class SupabaseService {
       .select('*')
   }
 
+  async buscarClientes(filtros: {
+    nombre?: string | null;
+    email?: string | null;
+    telefono?: string | null;
+  }) {
+    let query = this.client
+      .from('clientes')
+      .select('id, nombre, email, telefono, recibir_ofertas')
+      .order('nombre', { ascending: true })
+      .limit(100);
+
+    const nombre = String(filtros?.nombre ?? '').trim();
+    const email = String(filtros?.email ?? '').trim();
+    const telefono = String(filtros?.telefono ?? '').trim();
+
+    if (nombre) {
+      query = query.ilike('nombre', `%${nombre}%`);
+    }
+    if (email) {
+      query = query.ilike('email', `%${email}%`);
+    }
+    if (telefono) {
+      query = query.ilike('telefono', `%${telefono}%`);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data ?? [];
+  }
+
   async upsertCliente(cliente: {
     nombre: string;
     email: string | null;
@@ -1437,7 +1467,35 @@ export class SupabaseService {
       .rpc('obtener_solicitudes_cotizacion');
 
     if (error) throw error;
-    return data as ISolicitudCotizacionListado[];
+
+    const solicitudes = (data ?? []) as ISolicitudCotizacionListado[];
+    if (!solicitudes.length) {
+      return solicitudes;
+    }
+
+    const ids = solicitudes
+      .map((item) => Number(item.id))
+      .filter((id) => Number.isFinite(id) && id > 0);
+
+    if (!ids.length) {
+      return solicitudes;
+    }
+
+    const { data: detalleHabitaciones, error: errorHabitaciones } = await this.client
+      .from('solicitudes_cotizacion')
+      .select('id, habitaciones')
+      .in('id', ids);
+
+    if (errorHabitaciones) throw errorHabitaciones;
+
+    const habitacionesPorId = new Map<number, any>(
+      (detalleHabitaciones ?? []).map((item: any) => [Number(item.id), item.habitaciones ?? null])
+    );
+
+    return solicitudes.map((item) => ({
+      ...item,
+      habitaciones: habitacionesPorId.get(Number(item.id)) ?? item.habitaciones ?? null
+    }));
   }
 
   async obtenerCotizacionPorPublicId(publicId: string) {

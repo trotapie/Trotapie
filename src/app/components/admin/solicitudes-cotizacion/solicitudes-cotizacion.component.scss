@@ -181,6 +181,15 @@
     }
 }
 
+.cell-subtitle-clamp {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    max-width: 260px;
+    overflow-wrap: anywhere;
+}
+
 .pill {
     display: inline-flex;
     align-items: center;

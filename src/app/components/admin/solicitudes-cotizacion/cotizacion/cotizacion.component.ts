@@ -40,6 +40,7 @@ interface TipoHabitacion {
   id: number;
   nombre_habitacion: string;
   descripcion: string;
+  capacidad_maxima?: number | null;
 }
 
 interface CotizacionHabitacionForm {
@@ -429,7 +430,7 @@ export class CotizacionComponent implements OnInit {
       this.edicionForm.get('tipoHabitacion')?.valueChanges.subscribe(valor => {
 
         const texto = typeof valor === 'string' ? valor : valor.nombre_habitacion || '';
-        this.filteredOptions$ = this.tiposHabitacion.filter(m =>
+        this.filteredOptions$ = this.obtenerTiposHabitacionDisponibles(0).filter(m =>
           m.nombre_habitacion.toUpperCase().includes(texto.toUpperCase())
         );
       });
@@ -466,7 +467,8 @@ export class CotizacionComponent implements OnInit {
     const estatus = await this.supabase.estatusCotizaciones();
     this.estatusOpciones = estatus.data
 
-    this.filteredOptions$ = this.tiposHabitacion = data;
+    this.tiposHabitacion = data ?? [];
+    this.filteredOptions$ = this.obtenerTiposHabitacionDisponibles(0);
 
   }
 
@@ -474,12 +476,12 @@ export class CotizacionComponent implements OnInit {
     if (this.tiposHabitacion?.length) return;
     const { data } = await this.supabase.tipoHabitaciones();
     this.tiposHabitacion = data ?? [];
-    this.filteredOptions$ = this.tiposHabitacion;
+    this.filteredOptions$ = this.obtenerTiposHabitacionDisponibles(0);
   }
 
   private _filter(value: string): TipoHabitacion[] {
     const filterValue = value.toLowerCase().trim();
-    return this.tiposHabitacion.filter(option =>
+    return this.obtenerTiposHabitacionDisponibles(0).filter(option =>
       option.nombre_habitacion.toLowerCase().includes(filterValue)
     );
   }
@@ -1763,11 +1765,18 @@ export class CotizacionComponent implements OnInit {
   private construirCotizacionMultipleEdicion(): void {
     const habitacionesEsperadas = this.obtenerTotalHabitacionesCotizacion();
     const desdeDb = this.normalizarCotizacionMultiple(this.informacionCotizacion?.cotizacion_multiple);
+    const detalleHabitaciones = this.obtenerDetalleHabitacionesPdf(this.obtenerTextoHabitacionesCotizacion());
+    const tipoHabitacionPrincipalAuto =
+      this.obtenerTipoHabitacionAutomatica(detalleHabitaciones[0]) ??
+      this.tiposHabitacion.find(item => item.id === this.informacionCotizacion.tipo_habitacion) ??
+      null;
 
-    const primeraHabitacion: CotizacionHabitacionForm = desdeDb[0] ?? {
-      tipoHabitacion: this.tiposHabitacion.find(
-        item => item.id === this.informacionCotizacion.tipo_habitacion
-      ) ?? null,
+    const primeraHabitacionDb = desdeDb[0];
+    const primeraHabitacion: CotizacionHabitacionForm = primeraHabitacionDb ? {
+      ...primeraHabitacionDb,
+      tipoHabitacion: primeraHabitacionDb.tipoHabitacion ?? tipoHabitacionPrincipalAuto
+    } : {
+      tipoHabitacion: tipoHabitacionPrincipalAuto,
       precio: this.precioSinSeguro ? this.precioSinSeguro.precio : null,
       precioConSeguro: this.precioConSeguro ? this.precioConSeguro.precio : null,
       precioMeses: this.precioAMeses ? this.precioAMeses.precio : null,
@@ -1802,8 +1811,13 @@ export class CotizacionComponent implements OnInit {
     const faltantes = Math.max(habitacionesEsperadas - 1, habitacionesAdicionalesDb.length);
 
     for (let i = 0; i < faltantes; i++) {
-      const value = habitacionesAdicionalesDb[i] ?? {
-        tipoHabitacion: null,
+      const detalleHabitacion = detalleHabitaciones[i + 1];
+      const valueDb = habitacionesAdicionalesDb[i];
+      const value = valueDb ? {
+        ...valueDb,
+        tipoHabitacion: valueDb.tipoHabitacion ?? this.obtenerTipoHabitacionAutomatica(detalleHabitacion)
+      } : {
+        tipoHabitacion: this.obtenerTipoHabitacionAutomatica(detalleHabitacion),
         precio: null,
         precioConSeguro: null,
         precioMeses: null,
@@ -1828,6 +1842,63 @@ export class CotizacionComponent implements OnInit {
         control.patchValue({ tipoHabitacion: resolved }, { emitEvent: false });
       }
     });
+  }
+
+  private obtenerTipoHabitacionAutomatica(
+    detalle?: DetalleHabitacionCotizacion
+  ): TipoHabitacion | null {
+    if (!detalle) return null;
+
+    const capacidadRequerida = Number(detalle.adultos ?? 0) + Number(detalle.ninos ?? 0);
+    if (!Number.isFinite(capacidadRequerida) || capacidadRequerida <= 0) return null;
+
+    const tiposOrdenados = [...this.tiposHabitacion]
+      .filter((item) => {
+        const capacidad = Number(item.capacidad_maxima);
+        return Number.isFinite(capacidad) && capacidad > 0;
+      })
+      .sort((a, b) => Number(a.capacidad_maxima) - Number(b.capacidad_maxima));
+
+    if (!tiposOrdenados.length) return null;
+
+    return (
+      tiposOrdenados.find((item) => this.esTipoHabitacionCompatible(item, capacidadRequerida)) ??
+      tiposOrdenados[tiposOrdenados.length - 1] ??
+      null
+    );
+  }
+
+  obtenerTiposHabitacionDisponibles(indiceHabitacion: number): TipoHabitacion[] {
+    const detalle = this.obtenerDetalleHabitacionesEdicion()[indiceHabitacion];
+    const capacidadRequerida = detalle
+      ? Number(detalle.adultos ?? 0) + Number(detalle.ninos ?? 0)
+      : 0;
+
+    const tiposConCapacidad = this.tiposHabitacion.filter((item) => {
+      const capacidad = Number(item.capacidad_maxima);
+      return Number.isFinite(capacidad) && capacidad > 0;
+    });
+
+    if (!tiposConCapacidad.length || capacidadRequerida <= 0) {
+      return this.tiposHabitacion;
+    }
+
+    return tiposConCapacidad
+      .filter((item) => this.esTipoHabitacionCompatible(item, capacidadRequerida))
+      .sort((a, b) => Number(a.capacidad_maxima) - Number(b.capacidad_maxima));
+  }
+
+  private obtenerDetalleHabitacionesEdicion(): DetalleHabitacionCotizacion[] {
+    return this.obtenerDetalleHabitacionesPdf(this.obtenerTextoHabitacionesCotizacion());
+  }
+
+  private esTipoHabitacionCompatible(
+    tipo: TipoHabitacion | null | undefined,
+    capacidadRequerida: number
+  ): boolean {
+    if (!tipo) return false;
+    const capacidad = Number(tipo.capacidad_maxima);
+    return Number.isFinite(capacidad) && capacidad >= capacidadRequerida;
   }
 
   private obtenerCotizacionMultiple(): CotizacionMultipleItem[] {

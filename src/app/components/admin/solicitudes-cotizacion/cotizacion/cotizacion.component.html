@@ -6,20 +6,19 @@
         @if(esEdicion){
         <div class="no-print flex min-w-0 flex-auto flex-col mx-6 mt-4">
             <div
-                class="sticky top-0 z-[2000] flex items-center justify-between w-full rounded-xl border border-transparent bg-transparent px-2 py-2 transition-all duration-300 backdrop-blur-md md:px-4">
+                class="sticky top-0 z-[100] flex items-center justify-between w-full rounded-xl border border-transparent bg-transparent px-2 py-2 transition-all duration-300 backdrop-blur-md md:px-4">
                 <div class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">
                     Editar cotización
                 </div>
                 <div class="flex justify-end gap-2">
+                        <button mat-raised-button color="warn" class="gap-2 text-white" [routerLink]="'/admin/solicitudes-cotizacion'">
+                            <mat-icon class="icon-size-5 icon-thick text-white" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
+                            <span>Regresar</span>
+                        </button>
                     <button mat-raised-button color="primary" class="gap-2 text-white" type="button"
                         [disabled]="exportandoPdf" (click)="exportarCotizacionPdf()">
                         <mat-icon class="icon-size-5 icon-thick text-white" [svgIcon]="'heroicons_outline:document-arrow-down'"></mat-icon>
                         <span>{{ exportandoPdf ? 'Generando...' : 'Descargar PDF' }}</span>
-                    </button>
-                    <button mat-raised-button color="warn" class="gap-2 text-white"
-                        [routerLink]="'/admin/solicitudes-cotizacion'">
-                        <mat-icon class="icon-size-5 icon-thick text-white" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
-                        <span>Regresar</span>
                     </button>
                 </div>
             </div>
@@ -435,7 +434,8 @@
                                                                 : 'tp-valid'">
 
                                                     <mat-select formControlName="condicionesPrecioSinSeguro" multiple
-                                                        panelClass="tp-select-panel" [compareWith]="comparePolitica">
+                                                        panelClass="tp-select-panel" panelWidth="min(56rem, calc(100vw - 1.5rem))"
+                                                        [compareWith]="comparePolitica">
                                                         <mat-select-trigger>
                                                             {{
                                                             estatusLabelPrimerSeleccionado('condicionesPrecioSinSeguro',
@@ -568,7 +568,8 @@
                                                                 : 'tp-valid'">
 
                                                     <mat-select formControlName="condicionesPrecioConSeguro" multiple
-                                                        panelClass="tp-select-panel" [compareWith]="comparePolitica">
+                                                        panelClass="tp-select-panel" panelWidth="min(56rem, calc(100vw - 1.5rem))"
+                                                        [compareWith]="comparePolitica">
                                                         <mat-select-trigger>
                                                             {{
                                                             estatusLabelPrimerSeleccionado('condicionesPrecioConSeguro',
@@ -808,7 +809,8 @@
                                                                 : 'tp-valid'">
 
                                                     <mat-select formControlName="condicionesPrecioMeses" multiple
-                                                        panelClass="tp-select-panel" [compareWith]="comparePolitica">
+                                                        panelClass="tp-select-panel" panelWidth="min(56rem, calc(100vw - 1.5rem))"
+                                                        [compareWith]="comparePolitica">
                                                         <mat-select-trigger>
                                                             {{ estatusLabelPrimerSeleccionado('condicionesPrecioMeses',
                                                             politicas)
@@ -990,7 +992,7 @@
                                                     <mat-select formControlName="tipoHabitacion"
                                                         [compareWith]="compareTipoHabitacion"
                                                         placeholder="Selecciona tipo de habitación">
-                                                        @for (option of tiposHabitacion; track option.id) {
+                                                        @for (option of obtenerTiposHabitacionDisponibles($index + 1); track option.id) {
                                                         <mat-option [value]="option">{{ option.nombre_habitacion }}</mat-option>
                                                         }
                                                     </mat-select>
@@ -1015,7 +1017,8 @@
                                                         <mat-form-field appearance="fill" class="tp-select w-full"
                                                             [ngClass]="estatusInvalido ? 'tp-invalid' : 'tp-valid'">
                                                             <mat-select formControlName="condicionesPrecioSinSeguro" multiple
-                                                                panelClass="tp-select-panel" [compareWith]="comparePolitica">
+                                                                panelClass="tp-select-panel" panelWidth="min(56rem, calc(100vw - 1.5rem))"
+                                                                [compareWith]="comparePolitica">
                                                                 <mat-select-trigger>
                                                                     {{
                                                                     estatusLabelDesdeSeleccion(habitacion.get('condicionesPrecioSinSeguro')?.value,
@@ -1078,7 +1081,8 @@
                                                         <mat-form-field appearance="fill" class="tp-select w-full"
                                                             [ngClass]="estatusInvalido ? 'tp-invalid' : 'tp-valid'">
                                                             <mat-select formControlName="condicionesPrecioConSeguro" multiple
-                                                                panelClass="tp-select-panel" [compareWith]="comparePolitica">
+                                                                panelClass="tp-select-panel" panelWidth="min(56rem, calc(100vw - 1.5rem))"
+                                                                [compareWith]="comparePolitica">
                                                                 <mat-select-trigger>
                                                                     {{
                                                                     estatusLabelDesdeSeleccion(habitacion.get('condicionesPrecioConSeguro')?.value,
@@ -1169,7 +1173,8 @@
                                                         <mat-form-field appearance="fill" class="tp-select w-full"
                                                             [ngClass]="estatusInvalido ? 'tp-invalid' : 'tp-valid'">
                                                             <mat-select formControlName="condicionesPrecioMeses" multiple
-                                                                panelClass="tp-select-panel" [compareWith]="comparePolitica">
+                                                                panelClass="tp-select-panel" panelWidth="min(56rem, calc(100vw - 1.5rem))"
+                                                                [compareWith]="comparePolitica">
                                                                 <mat-select-trigger>
                                                                     {{
                                                                     estatusLabelDesdeSeleccion(

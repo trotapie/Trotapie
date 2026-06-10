@@ -10,4 +10,11 @@ export interface ISolicitudCotizacionListado {
   tipo_destino: string;
   empleado_nombre: string;
   estatus_nombre: string;
+  habitaciones?:
+    | string
+    | {
+        es?: string | null;
+        traduccion?: string | null;
+      }
+    | null;
 }

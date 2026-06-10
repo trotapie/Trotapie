@@ -1,6 +1,6 @@
 <div class="absolute inset-0 flex min-w-0 flex-col overflow-y-auto">
     <div class="mx-6 my-6 flex min-w-0 flex-auto flex-col gap-4">
-        <div class="sticky top-0 z-[2000] mb-2 w-full rounded-xl border border-transparent bg-transparent px-2 py-2 backdrop-blur-md transition-all duration-300 md:px-4">
+        <div class="sticky top-0 z-[100] mb-2 w-full rounded-xl border border-transparent bg-transparent px-2 py-2 backdrop-blur-md transition-all duration-300 md:px-4">
             <div class="w-full md:flex md:items-center md:justify-between">
                 <div>
                     <h1 class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">Crear cotizacion</h1>
@@ -29,6 +29,9 @@
             </div>
             } @else {
             <form [formGroup]="form" class="form-grid">
+                <mat-stepper [linear]="isLinear" #stepper class="crear-cotizacion-stepper">
+                <mat-step [completed]="destinoHotelValido()">
+                <ng-template matStepLabel>Destino y Hotel</ng-template>
                 <section class="card">
                     <h2 class="section-title">Destino y Hotel</h2>
 
@@ -106,6 +109,9 @@
                             } @else if (!hoteles.length) {
                             <mat-hint>Selecciona destino para ver hoteles.</mat-hint>
                             }
+                            @if (form.get('hotel_id')?.hasError('required')) {
+                            <mat-error>Selecciona un hotel.</mat-error>
+                            }
                         </mat-form-field>
 
                         <mat-form-field class="w-full">
@@ -122,47 +128,24 @@
                             } @else if (form.get('hotel_id')?.value && !regimenes.length) {
                             <mat-hint>Este hotel no tiene regimenes disponibles.</mat-hint>
                             }
+                            @if (form.get('regimen_id')?.hasError('required')) {
+                            <mat-error>Selecciona un regimen.</mat-error>
+                            }
                         </mat-form-field>
                     </div>
 
-                    <div class="flex flex-wrap items-center gap-3">
-                        <button mat-flat-button color="primary" type="button" class="text-white"
-                            [disabled]="!form.get('hotel_id')?.value" (click)="agregarHotelComparativa()">
-                            <mat-icon class="mr-2 icon-size-5 text-white">add</mat-icon>
-                            Agregar a comparativa
+                    <div class="step-actions">
+                        <button mat-raised-button color="primary" class="w-full text-white sm:w-auto" type="button"
+                            [disabled]="!destinoHotelValido()" matStepperNext>
+                            Siguiente
+                            <mat-icon class="ml-2 icon-size-5 text-white">arrow_forward</mat-icon>
                         </button>
-                        <span class="text-sm text-gray-600">
-                            Seleccionados: {{ totalHotelesSeleccionados() }} de {{ MAX_COMPARE }}
-                        </span>
                     </div>
-
-                    @if (hotelesSeleccionados().length) {
-                    <div class="comparativa-seleccion">
-                        <div class="comparativa-seleccion-head">
-                            <h3>Hoteles seleccionados</h3>
-                        </div>
-
-                        <div class="comparativa-seleccion-list">
-                            @for (hotel of hotelesSeleccionados(); track hotel.hotel_id; let i = $index) {
-                            <article class="comparativa-item">
-                                <mat-radio-button name="hotelPrincipal" [checked]="hotelPrincipalId() === hotel.hotel_id"
-                                    (change)="seleccionarHotelPrincipal(hotel.hotel_id)">
-                                    Principal
-                                </mat-radio-button>
-                                <div class="comparativa-item-info">
-                                    <strong>{{ hotel.hotel_nombre }}</strong>
-                                    <span>{{ hotel.regimen_nombre }}</span>
-                                </div>
-                                <button mat-icon-button type="button" (click)="removerHotelComparativa(i)">
-                                    <mat-icon>close</mat-icon>
-                                </button>
-                            </article>
-                            }
-                        </div>
-                    </div>
-                    }
                 </section>
 
+                </mat-step>
+                <mat-step [completed]="fechasPersonasValido()">
+                <ng-template matStepLabel>Fechas y Personas</ng-template>
                 <section class="card">
                     <h2 class="section-title">Fechas y Personas</h2>
 
@@ -175,11 +158,6 @@
                             </mat-date-range-input>
                             <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
                             <mat-date-range-picker #picker></mat-date-range-picker>
-                        </mat-form-field>
-
-                        <mat-form-field class="w-full">
-                            <mat-label>Resumen</mat-label>
-                            <input matInput [value]="fechaSalida ? ('Salida: ' + fechaSalida) : 'Selecciona un rango'" disabled />
                         </mat-form-field>
                     </div>
 
@@ -238,7 +216,8 @@
                                     @for (age of room.childAges; track $index; let j = $index) {
                                     <mat-form-field class="w-full" appearance="outline">
                                         <mat-label>Edad menor {{ j + 1 }}</mat-label>
-                                        <mat-select [value]="age" (selectionChange)="setChildAge(i, j, $event.value)">
+                                        <mat-select [value]="age" panelClass="age-select-panel" panelWidth="min(28rem, calc(100vw - 1.5rem))"
+                                            (selectionChange)="setChildAge(i, j, $event.value)">
                                             <mat-option [value]="null">Selecciona edad</mat-option>
                                             @for (option of ageOptions; track option) {
                                             <mat-option [value]="option">{{ option }}</mat-option>
@@ -264,10 +243,32 @@
                             </button>
                         </div>
                     </div>
+
+                    <div class="step-actions step-actions-between">
+                        <button mat-stroked-button class="w-full sm:w-auto" type="button" matStepperPrevious>
+                            <mat-icon class="mr-2 icon-size-5">arrow_back</mat-icon>
+                            Anterior
+                        </button>
+                        <button mat-raised-button color="primary" class="w-full text-white sm:w-auto" type="button"
+                            [disabled]="!fechasPersonasValido()" matStepperNext>
+                            Siguiente
+                            <mat-icon class="ml-2 icon-size-5 text-white">arrow_forward</mat-icon>
+                        </button>
+                    </div>
                 </section>
 
+                </mat-step>
+                <mat-step [stepControl]="form">
+                <ng-template matStepLabel>Datos del Cliente</ng-template>
                 <section class="card">
                     <h2 class="section-title">Datos del Cliente</h2>
+
+                    <div class="step-actions">
+                        <button mat-stroked-button type="button" class="w-full sm:w-auto" (click)="abrirModalClientes()">
+                            <mat-icon class="mr-2 icon-size-5">search</mat-icon>
+                            Buscar cliente existente
+                        </button>
+                    </div>
 
                     <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
                         <mat-form-field class="w-full">
@@ -296,27 +297,126 @@
                         </mat-form-field>
                     </div>
 
-                    <mat-checkbox formControlName="ofertas">Recibir ofertas</mat-checkbox>
-
                     <mat-form-field class="w-full">
                         <mat-label>Peticiones especiales</mat-label>
                         <textarea matInput rows="3" formControlName="especiales"></textarea>
                     </mat-form-field>
-                </section>
 
-                <div class="actions">
-                    <button mat-raised-button color="primary" class="w-full text-white sm:w-auto" type="button"
-                        [disabled]="guardando || hasMissingAges() || form.invalid || !hotelesSeleccionados().length" (click)="crearCotizacion()">
-                        <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:plus'"></mat-icon>
-                        @if (guardando) {
-                        Creando...
-                        } @else {
-                        Crear cotizacion
-                        }
-                    </button>
-                </div>
+                    <div class="summary-card">
+                        <span class="summary-label">Resumen de la cotizacion</span>
+                        <strong>{{ resumenFechasPersonas }}</strong>
+                        <div class="summary-list">
+                            @for (habitacion of resumenHabitaciones; track $index) {
+                            <span>{{ habitacion }}</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="step-actions step-actions-between">
+                        <button mat-stroked-button class="w-full sm:w-auto" type="button" matStepperPrevious>
+                            <mat-icon class="mr-2 icon-size-5">arrow_back</mat-icon>
+                            Anterior
+                        </button>
+                        <button mat-raised-button color="primary" class="w-full text-white sm:w-auto" type="button"
+                            [disabled]="guardando || hasMissingAges() || form.invalid" (click)="crearCotizacion()">
+                            <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+                            @if (guardando) {
+                            Creando...
+                            } @else {
+                            Crear cotizacion
+                            }
+                        </button>
+                    </div>
+                </section>
+                </mat-step>
+                </mat-stepper>
             </form>
             }
         </div>
     </div>
 </div>
+
+@if (modalClientesAbierto) {
+<div class="modal-backdrop" (click)="cerrarModalClientes()">
+    <section class="modal-panel" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <div>
+                <h3 class="section-title">Buscar cliente</h3>
+                <p class="hint">Puedes buscar por nombre, correo, telefono o combinar filtros.</p>
+            </div>
+            <button mat-icon-button type="button" (click)="cerrarModalClientes()">
+                <mat-icon>close</mat-icon>
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+            <mat-form-field class="w-full">
+                <mat-label>Nombre</mat-label>
+                <input matInput [(ngModel)]="clienteBusquedaNombre" [ngModelOptions]="{standalone: true}" />
+            </mat-form-field>
+
+            <mat-form-field class="w-full">
+                <mat-label>Correo</mat-label>
+                <input matInput [(ngModel)]="clienteBusquedaEmail" [ngModelOptions]="{standalone: true}" />
+            </mat-form-field>
+
+            <mat-form-field class="w-full">
+                <mat-label>Telefono</mat-label>
+                <input matInput [(ngModel)]="clienteBusquedaTelefono" [ngModelOptions]="{standalone: true}" />
+            </mat-form-field>
+        </div>
+
+        <div class="step-actions">
+            <button mat-stroked-button type="button" (click)="cerrarModalClientes()">Cancelar</button>
+            <button mat-raised-button color="primary" class="text-white" type="button" [disabled]="buscandoClientes"
+                (click)="buscarClientesExistentes()">
+                <mat-icon class="mr-2 icon-size-5 text-white">search</mat-icon>
+                @if (buscandoClientes) {
+                Buscando...
+                } @else {
+                Buscar
+                }
+            </button>
+        </div>
+
+        @if (errorBusquedaClientes) {
+        <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {{ errorBusquedaClientes }}
+        </div>
+        }
+
+        <div class="client-results">
+            @if (buscandoClientes) {
+            <div class="client-empty">
+                <mat-progress-spinner diameter="32" mode="indeterminate"></mat-progress-spinner>
+            </div>
+            } @else if (resultadosClientes.length) {
+            @for (cliente of resultadosClientes; track cliente.id) {
+            <div class="client-result-row" [class.client-result-row-selected]="clienteSeleccionadoBusqueda?.id === cliente.id">
+                <div class="client-result-card" [class.client-result-card-selected]="clienteSeleccionadoBusqueda?.id === cliente.id"
+                    (click)="seleccionarClienteBusqueda(cliente)">
+                    <div class="client-result-content">
+                        <strong>{{ cliente.nombre }}</strong>
+                        <span>{{ cliente.email || 'Sin correo' }}</span>
+                        <span>{{ cliente.telefono || 'Sin telefono' }}</span>
+                    </div>
+                </div>
+
+                <div class="client-result-action">
+                    <button mat-raised-button color="primary" class="text-white" type="button"
+                        [disabled]="clienteSeleccionadoBusqueda?.id !== cliente.id"
+                        (click)="cargarClienteSeleccionado(); $event.stopPropagation()">
+                        Cargar persona
+                    </button>
+                </div>
+            </div>
+            }
+            } @else {
+            <div class="client-empty">
+                <span class="hint">Realiza una busqueda para ver coincidencias.</span>
+            </div>
+            }
+        </div>
+    </section>
+</div>
+}

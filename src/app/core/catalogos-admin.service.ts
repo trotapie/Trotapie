@@ -437,7 +437,7 @@ export class CatalogosAdminService {
       case 'tipos_habitacion': {
         const { data, error } = await this.client
           .from('tipos_habitacion')
-          .select('id, nombre_habitacion, descripcion')
+          .select('id, nombre_habitacion, capacidad_maxima, descripcion')
           .order('id', { ascending: true });
         if (error) throw error;
         return data ?? [];
@@ -686,9 +686,10 @@ export class CatalogosAdminService {
           .from('tipos_habitacion')
           .insert({
             nombre_habitacion: payload.nombre_habitacion ?? null,
+            capacidad_maxima: payload.capacidad_maxima ?? null,
             descripcion: payload.descripcion ?? null
           })
-          .select('id, nombre_habitacion, descripcion')
+          .select('id, nombre_habitacion, capacidad_maxima, descripcion')
           .single();
 
         if (error) throw error;
@@ -1064,6 +1065,7 @@ export class CatalogosAdminService {
           .from('tipos_habitacion')
           .update({
             nombre_habitacion: payload.nombre_habitacion ?? null,
+            capacidad_maxima: payload.capacidad_maxima ?? null,
             descripcion: payload.descripcion ?? null
           })
           .eq('id', id)
