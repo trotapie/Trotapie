@@ -45,6 +45,10 @@ interface TipoHabitacion {
 
 interface CotizacionHabitacionForm {
   tipoHabitacion: TipoHabitacion | null;
+  hotelId?: number | null;
+  hotelNombre?: string | null;
+  regimenId?: number | null;
+  regimen?: string | null;
   precio: number | string | null;
   precioConSeguro: number | string | null;
   precioMeses: number | string | null;
@@ -61,6 +65,7 @@ interface CotizacionHabitacionForm {
 interface HabitacionCotizacionPublicaVista {
   indice: number;
   tipoHabitacion: string | null;
+  hotelNombre?: string | null;
   detalleHabitacion: string | null;
   precioSinSeguro: number | null;
   precioConSeguro: number | null;
@@ -191,6 +196,10 @@ export class CotizacionComponent implements OnInit {
   mensajeCorreoCotizacion = '';
 
   edicionForm = this.fb.group({
+    hotelId: [null as number | null],
+    hotelNombre: [''],
+    regimenId: [null as number | null],
+    regimen: [''],
     precio: [null],
     precioConSeguro: [null],
     precioMeses: [null],
@@ -316,6 +325,7 @@ export class CotizacionComponent implements OnInit {
       return {
         indice: idx + 1,
         tipoHabitacion: this.obtenerNombreTipoHabitacion(item?.tipo_habitacion_id),
+        hotelNombre: String(item?.hotel_nombre ?? item?.hotelNombre ?? '').trim() || null,
         detalleHabitacion,
         precioSinSeguro,
         precioConSeguro,
@@ -690,6 +700,11 @@ export class CotizacionComponent implements OnInit {
 
   get mostrarTotalEstanciaEdicion(): boolean {
     return this.obtenerCamposTarifaActivos().length === 1;
+  }
+
+  getEtiquetaCotizacionMultiple(item: HabitacionCotizacionPublicaVista | null | undefined): string {
+    if (!item) return 'Hotel';
+    return item.hotelNombre?.trim() || item.tipoHabitacion?.trim() || `Hotel ${item.indice}`;
   }
 
   private obtenerPayloadEdicion(): any {
@@ -1618,8 +1633,9 @@ export class CotizacionComponent implements OnInit {
   habitacionCompleta(control: AbstractControl | null | undefined): boolean {
     if (!control) return false;
 
+    const esComparativaHotel = Boolean(control.get('hotelId')?.value || String(control.get('hotelNombre')?.value ?? '').trim());
     const tipoHabitacion = this.normalizarTipoHabitacion(control.get('tipoHabitacion')?.value);
-    if (!tipoHabitacion) return false;
+    if (!tipoHabitacion && !esComparativaHotel) return false;
 
     const secciones = [
       this.estadoSeccionNoReembolsable(control),
@@ -1676,6 +1692,10 @@ export class CotizacionComponent implements OnInit {
 
   private crearHabitacionAdicionalForm(value?: Partial<CotizacionHabitacionForm>) {
     const form = this.fb.group({
+      hotelId: [value?.hotelId ?? null],
+      hotelNombre: [value?.hotelNombre ?? ''],
+      regimenId: [value?.regimenId ?? null],
+      regimen: [value?.regimen ?? ''],
       tipoHabitacion: [value?.tipoHabitacion ?? null, [Validators.required]],
       precio: [value?.precio ?? null],
       precioConSeguro: [value?.precioConSeguro ?? null],
@@ -1902,9 +1922,23 @@ export class CotizacionComponent implements OnInit {
         item?.tipoHabitacion?.id ??
         item?.tipoHabitacion ??
         null;
+      const hotelId = item?.hotel_id ?? item?.hotelId ?? null;
+      const hotelNombre = String(item?.hotel_nombre ?? item?.hotelNombre ?? '').trim();
+      const tipoHabitacion = hotelId
+        ? ({
+          id: Number(hotelId) || 0,
+          nombre_habitacion: hotelNombre || `Hotel ${hotelId}`,
+          descripcion: '',
+          capacidad_maxima: null
+        } as any)
+        : this.normalizarTipoHabitacion(tipoHabitacionId);
 
       return {
-        tipoHabitacion: this.normalizarTipoHabitacion(tipoHabitacionId),
+        hotelId,
+        hotelNombre: hotelNombre || null,
+        regimenId: item?.regimen_id ?? item?.regimenId ?? null,
+        regimen: item?.regimen ?? null,
+        tipoHabitacion,
         precio: this.obtenerNumeroLimpio(item?.precio),
         precioConSeguro: this.obtenerNumeroLimpio(item?.precio_con_seguro ?? item?.precioConSeguro),
         precioMeses: this.obtenerNumeroLimpio(item?.precio_a_meses ?? item?.precioMeses),
@@ -2062,10 +2096,8 @@ export class CotizacionComponent implements OnInit {
   }
 
   private obtenerCotizacionMultiple(): CotizacionMultipleItem[] {
-    const tipoHabitacionPrincipal = this.normalizarTipoHabitacion(this.edicionForm.get('tipoHabitacion')?.value);
-
     const primeraHabitacion = {
-      tipoHabitacion: tipoHabitacionPrincipal,
+      tipoHabitacion: this.normalizarTipoHabitacion(this.edicionForm.get('tipoHabitacion')?.value),
       precio: this.edicionForm.get('precio')?.value,
       precioConSeguro: this.edicionForm.get('precioConSeguro')?.value,
       precioMeses: this.edicionForm.get('precioMeses')?.value,
@@ -2089,7 +2121,11 @@ export class CotizacionComponent implements OnInit {
 
     return habitaciones
       .map((item) => ({
-        tipo_habitacion_id: item?.tipoHabitacion?.id ?? null,
+        hotel_id: (item as any)?.hotelId ?? null,
+        hotel_nombre: String((item as any)?.hotelNombre ?? '').trim() || null,
+        regimen_id: (item as any)?.regimenId ?? null,
+        regimen: String((item as any)?.regimen ?? '').trim() || null,
+        tipo_habitacion_id: (item as any)?.hotelId ? null : item?.tipoHabitacion?.id ?? null,
         precio: this.obtenerNumeroLimpio(item?.precio),
         precio_con_seguro: this.obtenerNumeroLimpio(item?.precioConSeguro),
         precio_a_meses: this.obtenerNumeroLimpio(item?.precioMeses),

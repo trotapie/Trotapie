@@ -1507,6 +1507,51 @@ export class SupabaseService {
     }));
   }
 
+  async obtenerCotizacionesMultiples() {
+    const { data, error } = await this.client
+      .rpc('obtener_cotizaciones_multiples');
+
+    if (error) throw error;
+
+    const cotizaciones = (data ?? []) as ISolicitudCotizacionListado[];
+    if (!cotizaciones.length) {
+      return cotizaciones;
+    }
+
+    const ids = cotizaciones
+      .map((item) => Number(item.id))
+      .filter((id) => Number.isFinite(id) && id > 0);
+
+    if (!ids.length) {
+      return cotizaciones;
+    }
+
+    const { data: detalleHabitaciones, error: errorHabitaciones } = await this.client
+      .from('cotizaciones_multiples')
+      .select('id, habitaciones, created_at')
+      .in('id', ids);
+
+    if (errorHabitaciones) throw errorHabitaciones;
+
+    const habitacionesPorId = new Map<number, any>(
+      (detalleHabitaciones ?? []).map((item: any) => [Number(item.id), item.habitaciones ?? null])
+    );
+    const fechasPorId = new Map<number, string | Date | null>(
+      (detalleHabitaciones ?? []).map((item: any) => [Number(item.id), item.created_at ?? null])
+    );
+
+    return cotizaciones.map((item) => ({
+      ...item,
+      created_at: fechasPorId.get(Number(item.id)) ?? (item as any).created_at ?? null,
+      fecha_creacion:
+        (item as any).fecha_creacion ??
+        fechasPorId.get(Number(item.id)) ??
+        (item as any).created_at ??
+        null,
+      habitaciones: habitacionesPorId.get(Number(item.id)) ?? item.habitaciones ?? null
+    }));
+  }
+
   async obtenerCotizacionPorPublicId(publicId: string) {
     const { data, error } = await this.client.rpc(
       'obtener_cotizacion_por_public_id',
@@ -1561,7 +1606,7 @@ export class SupabaseService {
       p_precio_a_meses: limpiar(formValue.precioMeses),
 
       p_tipo_habitacion: formValue.tipoHabitacion?.id,
-      p_estatus_clave: formValue.estatus,
+      p_estatus_clave: formValue.estatus ?? 'pendiente',
 
       p_condiciones_precio: formValue.condicionesPrecioSinSeguro ?? [],
       p_condiciones_precio_seguro: formValue.condicionesPrecioConSeguro ?? [],
@@ -1748,6 +1793,52 @@ export class SupabaseService {
         orden: item.orden ?? null,
         regimen_id: item.regimen_id ?? null,
         destino_id: item.destino_id,
+        nombre_hotel: traduccionEs?.nombre_hotel ?? '',
+        regimen: regimenEs?.descripcion ?? ''
+      };
+    });
+  }
+
+  async obtenerHotelesAdmin() {
+    const { data, error } = await this.client
+      .from('hoteles')
+      .select(`
+        id,
+        orden,
+        regimen_id,
+        destino_id,
+        destinos:destino_id (
+          id,
+          nombre,
+          destino_padre_id
+        ),
+        traducciones:hotel_traducciones (
+          idioma_id,
+          nombre_hotel
+        ),
+        regimen:regimen_id (
+          id,
+          traducciones:regimen_traducciones (
+            idioma_id,
+            descripcion
+          )
+        )
+      `)
+      .order('orden', { ascending: true });
+
+    if (error) throw error;
+
+    return (data ?? []).map((item: any) => {
+      const traduccionEs = item?.traducciones?.find((x: any) => x.idioma_id === ES_ID);
+      const regimenEs = item?.regimen?.traducciones?.find((x: any) => x.idioma_id === ES_ID);
+      const destino = item?.destinos ?? null;
+
+      return {
+        id: item.id,
+        orden: item.orden ?? null,
+        regimen_id: item.regimen_id ?? null,
+        destino_id: item.destino_id,
+        destino_nombre: destino?.nombre ?? '',
         nombre_hotel: traduccionEs?.nombre_hotel ?? '',
         regimen: regimenEs?.descripcion ?? ''
       };

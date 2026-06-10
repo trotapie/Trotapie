@@ -41,6 +41,13 @@ export const compactNavigation: FuseNavigationItem[] = [
         link : 'admin/solicitudes-cotizacion'
     },
     {
+        id   : 'cotizacion-multiple',
+        title: 'Cotizaciones multiples',
+        type : 'basic',
+        icon : 'heroicons_outline:view-columns',
+        link : 'admin/cotizaciones-multiples'
+    },
+    {
         id   : 'empleados',
         title: 'Empleados',
         type : 'basic',

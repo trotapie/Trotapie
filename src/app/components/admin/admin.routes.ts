@@ -6,6 +6,8 @@ import { AdminActividadesComponent } from './actividades/admin-actividades.compo
 import { SolicitudesCotizacionComponent } from './solicitudes-cotizacion/solicitudes-cotizacion.component';
 import { CotizacionComponent } from './solicitudes-cotizacion/cotizacion/cotizacion.component';
 import { CrearCotizacionComponent } from './solicitudes-cotizacion/crear-cotizacion/crear-cotizacion.component';
+import { CotizacionesMultiplesComponent } from './cotizaciones-multiples/cotizaciones-multiples.component';
+import { CotizacionMultipleComponent } from './cotizacion-multiple/cotizacion-multiple.component';
 import { DestinosComponent } from './destinos/destinos/destinos.component';
 import { ConfiguracionDestinosComponent } from './destinos/configuracion-destinos/configuracion-destinos.component';
 import { TipoDestinosComponent } from './destinos/tipo-destinos/tipo-destinos.component';
@@ -173,12 +175,25 @@ export default [
         component: SolicitudesCotizacionComponent,
     },
     {
+        path: 'cotizaciones-multiples',
+        component: CotizacionesMultiplesComponent,
+    },
+    {
         path: 'empleados',
         component: EmpleadosComponent,
     },
     {
         path: 'solicitudes-cotizacion/nueva',
         component: CrearCotizacionComponent,
+    },
+    {
+        path: 'cotizaciones-multiples/nueva',
+        component: CotizacionMultipleComponent,
+    },
+    {
+        path: 'cotizacion-multiple',
+        redirectTo: 'cotizaciones-multiples/nueva',
+        pathMatch: 'full',
     },
     {
         path: 'edicion-cotizacion/:id',

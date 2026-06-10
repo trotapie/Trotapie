@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+ï»¿import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { FuseSplashScreenService } from '@fuse/services/splash-screen';
@@ -21,9 +21,21 @@ interface IContinente {
 interface IHotelAdmin {
   id: number;
   nombre_hotel: string;
+  destino_nombre: string;
   regimen: string;
   regimen_id: number | null;
   destino_id: number;
+}
+
+interface IHotelComparativaDraft {
+  hotel_id: number;
+  hotel_nombre: string;
+  destino_nombre: string;
+  regimen_id: number | null;
+  regimen: string;
+  precio: number | string | null;
+  precioConSeguro: number | string | null;
+  precioMeses: number | string | null;
 }
 
 interface IRegimen {
@@ -47,13 +59,13 @@ interface IClienteBusqueda {
 type Room = { adults: number; children: number; childAges: (number | null)[] };
 
 @Component({
-  selector: 'app-crear-cotizacion',
+  selector: 'app-cotizacion-multiple',
   standalone: true,
   imports: [MaterialModule, RouterLink],
-  templateUrl: './crear-cotizacion.component.html',
-  styleUrl: './crear-cotizacion.component.scss'
+  templateUrl: './cotizacion-multiple.component.html',
+  styleUrl: './cotizacion-multiple.component.scss'
 })
-export class CrearCotizacionComponent implements OnInit {
+export class CotizacionMultipleComponent implements OnInit {
   private fb = inject(FormBuilder);
   private supabase = inject(SupabaseService);
   private router = inject(Router);
@@ -65,6 +77,9 @@ export class CrearCotizacionComponent implements OnInit {
   asesores: IAsesor[] = [];
   hoteles: IHotelAdmin[] = [];
   regimenes: IRegimen[] = [];
+  hotelSeleccionadoId: number | null = null;
+  hotelesComparativa: IHotelComparativaDraft[] = [];
+  busquedaHotelTexto = '';
 
   continenteSeleccionadoId: number | null = null;
   paisSeleccionadoId: number | null = null;
@@ -97,12 +112,10 @@ export class CrearCotizacionComponent implements OnInit {
   totalPeople = computed(() => this.rooms().reduce((a, r) => a + r.adults + r.children, 0));
   labelHabitaciones = computed(() => {
     const personas = this.totalPeople() === 1 ? 'persona' : 'personas';
-    return `${this.totalRooms()} hab. · ${this.totalPeople()} ${personas}`;
+    return `${this.totalRooms()} hab. Â· ${this.totalPeople()} ${personas}`;
   });
 
   form = this.fb.group({
-    hotel_id: [null as number | null, [Validators.required]],
-    regimen_id: [null as number | null, [Validators.required]],
     rangoFechas: this.fb.group({
       start: [null as Date | null, [Validators.required]],
       end: [null as Date | null, [Validators.required]],
@@ -136,6 +149,8 @@ export class CrearCotizacionComponent implements OnInit {
         id: Number(item.id),
         nombre: String(item.nombre ?? '')
       }));
+
+      await this.cargarHoteles();
 
       this.form.get('rangoFechas')?.valueChanges.subscribe((range: any) => {
         this.calcularNoches(range?.start ?? null, range?.end ?? null);
@@ -204,20 +219,53 @@ export class CrearCotizacionComponent implements OnInit {
     });
   }
 
-  destinoHotelValido(): boolean {
-    const destinoValido = this.tipoBusqueda === 'NACIONAL'
-      ? Boolean(this.destinoNacionalId)
-      : Boolean(this.continenteSeleccionadoId && this.paisSeleccionadoId && this.ciudadInternacionalId);
-
-    return (
-      destinoValido &&
-      this.form.get('hotel_id')?.valid === true &&
-      this.form.get('regimen_id')?.valid === true
-    );
+  get resumenDestinoLabel(): string {
+    return this.tipoBusqueda === 'NACIONAL' ? 'Destino nacional' : 'Destino';
   }
 
-  fechasPersonasValido(): boolean {
-    return this.form.get('rangoFechas')?.valid === true && !this.hasMissingAges() && this.noches > 0;
+  get resumenDestino(): string {
+    return this.destinoActualNombre();
+  }
+
+  get resumenHotel(): string {
+    if (!this.hotelesComparativa.length) {
+      return 'Sin hoteles';
+    }
+
+    if (this.hotelesComparativa.length === 1) {
+      return this.hotelesComparativa[0].hotel_nombre;
+    }
+
+    return `${this.hotelesComparativa.length} hoteles seleccionados`;
+  }
+
+  get resumenRegimen(): string {
+    if (!this.hotelesComparativa.length) {
+      return 'Sin regimen';
+    }
+
+    const regimenes = this.hotelesComparativa
+      .map((item) => item.regimen)
+      .filter((item) => Boolean(String(item ?? '').trim()));
+
+    return regimenes.length ? regimenes.join(' Â· ') : 'Sin regimen';
+  }
+
+  personasHabitacionesValida(): boolean {
+    return this.rooms().length > 0 && !this.hasMissingAges();
+  }
+
+  hotelesCotizacionValida(): boolean {
+    return this.hotelesComparativa.length > 0 &&
+      this.hotelesComparativa.every((hotel) => this.hotelComparativaCompleta(hotel));
+  }
+
+  datosFinalesValida(): boolean {
+    return this.destinoFinalValido() &&
+      this.form.get('rangoFechas')?.valid === true &&
+      this.form.get('asesor_id')?.valid === true &&
+      this.form.get('nombre')?.valid === true &&
+      this.form.get('telefono')?.valid === true;
   }
 
   dateFilter = (date: Date | null): boolean => {
@@ -237,14 +285,11 @@ export class CrearCotizacionComponent implements OnInit {
     this.destinoNacionalId = null;
     this.ciudadInternacionalId = null;
     this.error = '';
-    this.resetHotelSelection();
   }
 
   async seleccionarDestinoNacional(destinoId: number | null) {
     this.destinoNacionalId = destinoId;
     this.error = '';
-    this.resetHotelSelection();
-    await this.cargarHoteles(destinoId);
   }
 
   seleccionarContinente(continenteId: number | null) {
@@ -252,29 +297,17 @@ export class CrearCotizacionComponent implements OnInit {
     this.paisSeleccionadoId = null;
     this.ciudadInternacionalId = null;
     this.error = '';
-    this.resetHotelSelection();
   }
 
   seleccionarPais(paisId: number | null) {
     this.paisSeleccionadoId = paisId;
     this.ciudadInternacionalId = null;
     this.error = '';
-    this.resetHotelSelection();
   }
 
   async seleccionarCiudadInternacional(ciudadId: number | null) {
     this.ciudadInternacionalId = ciudadId;
     this.error = '';
-    this.resetHotelSelection();
-    await this.cargarHoteles(ciudadId);
-  }
-
-  async onHotelChange(hotelId: number | null) {
-    this.form.patchValue({ hotel_id: hotelId, regimen_id: null });
-    this.regimenes = [];
-
-    if (!hotelId) return;
-    await this.cargarRegimenesHotel(hotelId);
   }
 
   onTelefonoInput(event: Event) {
@@ -345,62 +378,18 @@ export class CrearCotizacionComponent implements OnInit {
     this.cerrarModalClientes();
   }
 
-  private async cargarHoteles(destinoId: number | null) {
+  private async cargarHoteles() {
     this.hoteles = [];
-    if (!destinoId) return;
 
     this.cargandoHoteles = true;
     try {
-      const hoteles = await this.supabase.obtenerHotelesAdminPorDestino(destinoId);
+      const hoteles = await this.supabase.obtenerHotelesAdmin();
       this.hoteles = (hoteles ?? []) as IHotelAdmin[];
     } catch (error: any) {
-      this.error = error?.message ?? 'No se pudieron cargar los hoteles del destino.';
+      this.error = error?.message ?? 'No se pudieron cargar los hoteles disponibles.';
     } finally {
       this.cargandoHoteles = false;
     }
-  }
-
-  private async cargarRegimenesHotel(hotelId: number) {
-    this.cargandoRegimenes = true;
-
-    try {
-      const infoHotel = await this.supabase.infoHotel(hotelId, 'es');
-      const regimenesHotel = (infoHotel?.regimenes ?? []).map((item: any) => ({
-        id: Number(item.id),
-        descripcion: String(item.descripcion ?? '')
-      }));
-
-      const regimenesUnicos = regimenesHotel.filter(
-        (regimen: IRegimen, index: number, array: IRegimen[]) =>
-          array.findIndex((item) => item.id === regimen.id) === index
-      );
-
-      if (regimenesUnicos.length > 0) {
-        this.regimenes = regimenesUnicos;
-      } else {
-        const hotelSeleccionado = this.hoteles.find((item) => item.id === hotelId);
-        this.regimenes = hotelSeleccionado?.regimen_id
-          ? [{ id: hotelSeleccionado.regimen_id, descripcion: hotelSeleccionado.regimen || 'Regimen' }]
-          : [];
-      }
-
-      if (this.regimenes.length === 1) {
-        this.form.patchValue({ regimen_id: this.regimenes[0].id });
-      }
-    } catch {
-      const hotelSeleccionado = this.hoteles.find((item) => item.id === hotelId);
-      this.regimenes = hotelSeleccionado?.regimen_id
-        ? [{ id: hotelSeleccionado.regimen_id, descripcion: hotelSeleccionado.regimen || 'Regimen' }]
-        : [];
-    } finally {
-      this.cargandoRegimenes = false;
-    }
-  }
-
-  private resetHotelSelection() {
-    this.hoteles = [];
-    this.regimenes = [];
-    this.form.patchValue({ hotel_id: null, regimen_id: null });
   }
 
   private destinoActualNombre(): string {
@@ -501,35 +490,106 @@ export class CrearCotizacionComponent implements OnInit {
     return this.rooms().some((room) => this.roomNeedsAges(room));
   }
 
+  get hotelesFiltrados(): IHotelAdmin[] {
+    const filtro = this.busquedaHotelTexto.trim().toLowerCase();
+    const idsSeleccionados = new Set(this.hotelesComparativa.map((item) => item.hotel_id));
+
+    return this.hoteles.filter((hotel) => {
+      const coincideTexto = !filtro ||
+        [hotel.nombre_hotel, hotel.destino_nombre, hotel.regimen]
+          .join(' ')
+          .toLowerCase()
+          .includes(filtro);
+      return coincideTexto && !idsSeleccionados.has(hotel.id);
+    });
+  }
+
+  hotelYaEnComparativa(hotelId: number | null | undefined): boolean {
+    const id = Number(hotelId);
+    if (!Number.isFinite(id) || id <= 0) {
+      return false;
+    }
+
+    return this.hotelesComparativa.some((item) => item.hotel_id === id);
+  }
+
+  agregarHotelAComparativa() {
+    const id = Number(this.hotelSeleccionadoId);
+    if (!Number.isFinite(id) || id <= 0) {
+      return;
+    }
+
+    if (this.hotelYaEnComparativa(id)) {
+      return;
+    }
+
+    const hotel = this.hoteles.find((item) => item.id === id);
+    if (!hotel) {
+      return;
+    }
+
+    this.hotelesComparativa = [
+      ...this.hotelesComparativa,
+      {
+        hotel_id: hotel.id,
+        hotel_nombre: hotel.nombre_hotel,
+        destino_nombre: hotel.destino_nombre,
+        regimen_id: hotel.regimen_id,
+        regimen: hotel.regimen,
+        precio: null,
+        precioConSeguro: null,
+        precioMeses: null
+      }
+    ];
+    this.hotelSeleccionadoId = null;
+    this.sincronizarHotelesComparativa();
+  }
+
+  eliminarHotelComparativa(hotelId: number) {
+    this.hotelesComparativa = this.hotelesComparativa.filter((item) => item.hotel_id !== hotelId);
+  }
+
+  actualizarHotelComparativa(indice: number, campo: keyof IHotelComparativaDraft, valor: string | number | null) {
+    this.hotelesComparativa = this.hotelesComparativa.map((item, idx) =>
+      idx === indice ? { ...item, [campo]: valor } : item
+    );
+  }
+
+  hotelComparativaCompleta(hotel: IHotelComparativaDraft): boolean {
+    return this.parseNumber(hotel.precio) !== null
+      && this.parseNumber(hotel.precioConSeguro) !== null
+      && this.parseNumber(hotel.precioMeses) !== null;
+  }
+
+  get resumenHotelesComparativa(): string {
+    if (!this.hotelesComparativa.length) {
+      return 'Selecciona hoteles para comparar';
+    }
+
+    return this.hotelesComparativa.map((hotel) => hotel.hotel_nombre).join(' Â· ');
+  }
+
   async crearCotizacion() {
     this.error = '';
-    if (!this.destinoHotelValido()) {
-      this.form.get('hotel_id')?.markAsTouched();
-      this.form.get('regimen_id')?.markAsTouched();
-      this.error = this.tipoBusqueda === 'NACIONAL'
-        ? 'Selecciona destino nacional, hotel y regimen.'
-        : 'Selecciona continente, destino, ciudad, hotel y regimen.';
-      return;
-    }
-    if (!this.fechasPersonasValido()) {
-      this.form.get('rangoFechas')?.markAllAsTouched();
-      this.error = 'Selecciona fechas validas y edad para todos los menores.';
-      return;
-    }
-    if (this.form.invalid || this.hasMissingAges()) {
+    if (!this.personasHabitacionesValida()) {
       this.form.markAllAsTouched();
+      this.error = 'Completa habitaciones, personas, fechas y datos de la persona solicitante.';
+      return;
+    }
+
+    if (!this.hotelesCotizacionValida()) {
+      this.error = 'Selecciona al menos un hotel y completa sus tres precios.';
+      return;
+    }
+
+    if (!this.destinoFinalValido()) {
+      this.error = this.tipoBusqueda === 'NACIONAL'
+        ? 'Completa el destino nacional antes de guardar.'
+        : 'Completa continente, destino y ciudad antes de guardar.';
       return;
     }
 
     const value = this.form.getRawValue();
-    const hotelId = Number(value.hotel_id ?? 0);
-    if (!Number.isFinite(hotelId) || hotelId <= 0) {
-      this.error = 'Selecciona un hotel para crear la cotizacion.';
-      return;
-    }
-
-    const regimenIdRaw = value.regimen_id;
-    const regimenId = regimenIdRaw === null || regimenIdRaw === undefined ? null : Number(regimenIdRaw);
     const start = value.rangoFechas?.start ?? null;
     const end = value.rangoFechas?.end ?? null;
 
@@ -552,13 +612,14 @@ export class CrearCotizacionComponent implements OnInit {
 
       const habitaciones = this.formatHabitaciones(this.rooms());
       const peticionesEspeciales = value.especiales?.trim() ? String(value.especiales).trim() : null;
+      const hotelPrincipal = this.hotelesComparativa[0];
 
       const solicitud = await this.supabase.crearSolicitudCotizacion({
         cliente_id: Number(cliente.id),
-        hotel_id: hotelId,
+        hotel_id: hotelPrincipal?.hotel_id ?? 0,
         empleado_id: Number(value.asesor_id),
         idioma: 'es',
-        regimen_id: Number.isFinite(regimenId) ? regimenId : null,
+        regimen_id: hotelPrincipal?.regimen_id ?? null,
         fecha_entrada: fechaEntrada,
         fecha_salida: fechaSalida,
         noches: this.noches,
@@ -571,6 +632,22 @@ export class CrearCotizacionComponent implements OnInit {
         throw new Error('No se pudo obtener el public_id de la cotizacion creada.');
       }
 
+      await this.supabase.actualizarCotizacionPublicaCompleta(solicitud.public_id, {
+        precio: this.parseNumber(hotelPrincipal?.precio),
+        precioConSeguro: this.parseNumber(hotelPrincipal?.precioConSeguro),
+        precioMeses: this.parseNumber(hotelPrincipal?.precioMeses),
+        tipoHabitacion: null,
+        estatus: 'pendiente',
+        condicionesPrecioSinSeguro: [],
+        condicionesPrecioConSeguro: [],
+        condicionesPrecioMeses: [],
+        porcentajeSeguro: null,
+        porcentajeMeses: null,
+        fechaLimiteSeguro: null,
+        fechaLimiteMeses: null,
+        cotizacionMultiple: this.buildCotizacionMultiplePayload()
+      });
+
       await this.router.navigate(['/admin/edicion-cotizacion', solicitud.public_id]);
     } catch (error: any) {
       this.error = error?.message ?? 'No se pudo crear la cotizacion.';
@@ -579,21 +656,67 @@ export class CrearCotizacionComponent implements OnInit {
     }
   }
 
+  private sincronizarHotelesComparativa() {
+    this.hotelesComparativa = this.hotelesComparativa.map((hotel) => ({
+      ...hotel,
+      hotel_nombre: hotel.hotel_nombre || `Hotel ${hotel.hotel_id}`,
+      destino_nombre: hotel.destino_nombre || '',
+      regimen: hotel.regimen || 'Regimen'
+    }));
+  }
+
+  private destinoFinalValido(): boolean {
+    return this.tipoBusqueda === 'NACIONAL'
+      ? Boolean(this.destinoNacionalId)
+      : Boolean(this.continenteSeleccionadoId && this.paisSeleccionadoId && this.ciudadInternacionalId);
+  }
+
+  private buildCotizacionMultiplePayload() {
+    return this.hotelesComparativa.map((hotel, index) => ({
+      hotel_id: hotel.hotel_id,
+      hotel_nombre: hotel.hotel_nombre,
+      regimen_id: hotel.regimen_id,
+      regimen: hotel.regimen,
+      precio: this.parseNumber(hotel.precio),
+      precio_con_seguro: this.parseNumber(hotel.precioConSeguro),
+      precio_a_meses: this.parseNumber(hotel.precioMeses),
+      condiciones_precio: [],
+      condiciones_precio_seguro: [],
+      condiciones_precio_meses: [],
+      porcentaje_seguro: null,
+      porcentaje_meses: null,
+      fecha_limite_seguro: null,
+      fecha_limite_meses: null,
+      tipo_tarifa: null,
+      orden: index + 1,
+      es_principal: index === 0
+    }));
+  }
+
+  private parseNumber(value: number | string | null | undefined): number | null {
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+
+    const parsed = Number(String(value).replace(/[^0-9.-]/g, ''));
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
   private formatHabitaciones(rooms: Room[]) {
     const formatted = rooms.map((room, index) => {
       const parts: string[] = [];
       parts.push(`${room.adults} ${room.adults === 1 ? 'adulto' : 'adultos'}`);
 
       if (room.children > 0) {
-        const childrenText = `${room.children} ${room.children === 1 ? 'niño' : 'niños'}`;
+        const childrenText = `${room.children} ${room.children === 1 ? 'niÃ±o' : 'niÃ±os'}`;
         if (room.childAges?.length) {
-          parts.push(`${childrenText} · edades: ${room.childAges.join(', ')}`);
+          parts.push(`${childrenText} Â· edades: ${room.childAges.join(', ')}`);
         } else {
           parts.push(childrenText);
         }
       }
 
-      return `Habitación ${index + 1}: ${parts.join(' · ')}`;
+      return `HabitaciÃ³n ${index + 1}: ${parts.join(' Â· ')}`;
     });
 
     return {

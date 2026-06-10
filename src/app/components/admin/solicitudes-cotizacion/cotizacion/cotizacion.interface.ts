@@ -32,6 +32,11 @@ export interface ICotizacion {
 }
 
 export interface CotizacionMultipleItem {
+    hotel_id?: number | null;
+    hotel_nombre?: string | null;
+    hotelNombre?: string | null;
+    regimen_id?: number | null;
+    regimen?: string | null;
     tipo_habitacion_id: number | null;
     precio: number | null;
     precio_con_seguro: number | null;
