@@ -37,19 +37,19 @@ export class CatalogosAdminService {
   async obtenerDetalleCatalogoAtraccionesAdmin(catalogoAtraccionId: number) {
     const { data: catalogo, error: catalogoError } = await this.client
       .from('catalogo_atracciones')
-      .select(`
-        id,
-        clave,
-        icono,
-        orden,
-        activo,
-        created_at,
-        traducciones:catalogo_atracciones_traducciones (
-          idioma_id,
-          nombre,
-          descripcion
-        )
-      `)
+        .select(`
+            id,
+            clave,
+            icono,
+            orden,
+            activo,
+            created_at,
+            traducciones:catalogo_atracciones_traducciones (
+              idioma:idiomas(codigo),
+              nombre,
+              descripcion
+            )
+          `)
       .eq('id', catalogoAtraccionId)
       .maybeSingle();
 
@@ -395,11 +395,44 @@ export class CatalogosAdminService {
       case 'tipo_imagen': {
         const { data, error } = await this.client
           .from('tipos_imagen')
-          .select('id, clave, orden')
+          .select(`
+            id,
+            clave,
+            orden,
+            traducciones:tipos_imagen_traducciones!fk_tipo_imagen (
+              lang,
+              descripcion
+            )
+          `)
           .order('orden', { ascending: true })
           .order('id', { ascending: true });
         if (error) throw error;
-        return data ?? [];
+        return (data ?? []).map((item: any) => {
+          const traduccionEs = (item?.traducciones ?? []).find(
+            (traduccion: any) => String(traduccion?.lang ?? '').toLowerCase() === 'es'
+          );
+
+          const traduccionesPreview = (item?.traducciones ?? []).reduce((acc: Record<string, any>, traduccion: any) => {
+            const lang = String(traduccion?.lang ?? '').toLowerCase();
+            if (!lang) {
+              return acc;
+            }
+
+            acc[lang] = {
+              descripcion: traduccion?.descripcion ?? ''
+            };
+
+            return acc;
+          }, {});
+
+          return {
+            id: item.id,
+            clave: item.clave ?? '',
+            descripcion: traduccionEs?.descripcion ?? item.clave ?? `Tipo ${item.id}`,
+            orden: item.orden ?? null,
+            traducciones_preview: traduccionesPreview
+          };
+        });
       }
       case 'tipos_habitacion': {
         const { data, error } = await this.client
@@ -441,7 +474,7 @@ export class CatalogosAdminService {
         });
 
         return (data ?? []).map((item: any) => {
-          const traduccionEs = item?.traducciones?.find((x: any) => x.idioma_id === ES_ID);
+          const traduccionEs = item?.traducciones?.find((x: any) => String(x?.idioma?.codigo ?? '').toLowerCase() === 'es');
           return {
             id: item.id,
             clave: item.clave,
@@ -451,6 +484,19 @@ export class CatalogosAdminService {
             created_at: item.created_at,
             nombre: traduccionEs?.nombre ?? '',
             descripcion: traduccionEs?.descripcion ?? '',
+            traducciones_preview: (item?.traducciones ?? []).reduce((acc: Record<string, any>, traduccion: any) => {
+              const code = String(traduccion?.idioma?.codigo ?? '').toLowerCase();
+              if (!code) {
+                return acc;
+              }
+
+              acc[code] = {
+                nombre: traduccion?.nombre ?? '',
+                descripcion: traduccion?.descripcion ?? ''
+              };
+
+              return acc;
+            }, {}),
             total_registros: conteoPorCatalogo.get(Number(item.id)) ?? 0
           };
         });
@@ -547,6 +593,18 @@ export class CatalogosAdminService {
         if (error) throw error;
         return data;
       }
+      case 'conceptos': {
+        const { data, error } = await this.client
+          .from('conceptos')
+          .insert({
+            descripcion: payload.descripcion ?? null,
+            icono: payload.icono ?? null
+          })
+          .select('id, descripcion, icono')
+          .single();
+        if (error) throw error;
+        return data;
+      }
       case 'descuentos': {
         const { data, error } = await this.client
           .from('descuentos')
@@ -636,6 +694,55 @@ export class CatalogosAdminService {
         if (error) throw error;
         return data;
       }
+      case 'atracciones': {
+        const orden = Number(payload.orden);
+        const ordenFinal = Number.isFinite(orden) && orden > 0 ? orden : null;
+
+        const { data, error } = await this.client
+          .from('catalogo_atracciones')
+          .insert({
+            clave: payload.clave ?? null,
+            icono: payload.icono ?? null,
+            activo: payload.activo ?? true,
+            orden: ordenFinal
+          })
+          .select('id, clave, icono, activo, orden')
+          .single();
+
+        if (error) throw error;
+        await this.guardarTraduccionesCatalogoAtraccion(
+          Number((data as any).id),
+          String(payload.nombre ?? '').trim(),
+          String(payload.descripcion ?? '').trim()
+        );
+        return data;
+      }
+      case 'tipo_imagen': {
+        const { data: ultimoRegistro, error: ultimoError } = await this.client
+          .from('tipos_imagen')
+          .select('orden')
+          .order('orden', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (ultimoError) throw ultimoError;
+
+        const ordenMaximo = Number((ultimoRegistro as any)?.orden);
+        const siguienteOrden = Number.isFinite(ordenMaximo) ? ordenMaximo + 1 : 1;
+
+        const { data, error } = await this.client
+          .from('tipos_imagen')
+          .insert({
+            clave: payload.clave ?? null,
+            orden: siguienteOrden
+          })
+          .select('id, clave, orden')
+          .single();
+
+        if (error) throw error;
+        await this.guardarTraduccionesTipoImagen(Number((data as any).id), String(payload.descripcion_es ?? '').trim());
+        return data;
+      }
       default:
         throw new Error('Este catalogo no admite creacion desde esta pantalla.');
     }
@@ -684,6 +791,14 @@ export class CatalogosAdminService {
         if (error) throw error;
         return { deleted: 1 };
       }
+      case 'conceptos': {
+        const { error } = await this.client
+          .from('conceptos')
+          .delete()
+          .eq('id', id);
+        if (error) throw error;
+        return { deleted: 1 };
+      }
       case 'continentes': {
         const { error } = await this.client
           .from('continentes')
@@ -701,6 +816,20 @@ export class CatalogosAdminService {
 
         const { error } = await this.client
           .from('descuentos')
+          .delete()
+          .eq('id', id);
+        if (error) throw error;
+        return { deleted: 1 };
+      }
+      case 'tipo_imagen': {
+        const { error: deleteTraduccionesError } = await this.client
+          .from('tipos_imagen_traducciones')
+          .delete()
+          .eq('tipo_imagen_id', id);
+        if (deleteTraduccionesError) throw deleteTraduccionesError;
+
+        const { error } = await this.client
+          .from('tipos_imagen')
           .delete()
           .eq('id', id);
         if (error) throw error;
@@ -739,6 +868,20 @@ export class CatalogosAdminService {
       case 'tipos_habitacion': {
         const { error } = await this.client
           .from('tipos_habitacion')
+          .delete()
+          .eq('id', id);
+        if (error) throw error;
+        return { deleted: 1 };
+      }
+      case 'atracciones': {
+        const { error: deleteTraduccionesError } = await this.client
+          .from('catalogo_atracciones_traducciones')
+          .delete()
+          .eq('catalogo_atraccion_id', id);
+        if (deleteTraduccionesError) throw deleteTraduccionesError;
+
+        const { error } = await this.client
+          .from('catalogo_atracciones')
           .delete()
           .eq('id', id);
         if (error) throw error;
@@ -913,6 +1056,7 @@ export class CatalogosAdminService {
           .select('id')
           .maybeSingle();
         if (error) throw error;
+        await this.guardarTraduccionesTipoImagen(id, String(payload.descripcion_es ?? '').trim());
         return data;
       }
       case 'tipos_habitacion': {
@@ -934,7 +1078,8 @@ export class CatalogosAdminService {
           .update({
             clave: payload.clave ?? null,
             icono: payload.icono ?? null,
-            activo: payload.activo ?? null
+            activo: payload.activo ?? null,
+            orden: Number.isFinite(Number(payload.orden)) ? Number(payload.orden) : null
           })
           .eq('id', id)
           .select('id')
@@ -1139,6 +1284,108 @@ export class CatalogosAdminService {
     const { error } = await this.client
       .from('descuentos_traducciones')
       .upsert(traduccionesPayload, { onConflict: 'descuento_id,idioma_id' });
+
+    if (error) throw error;
+  }
+
+  private async guardarTraduccionesTipoImagen(tipoImagenId: number, descripcion: string) {
+    const texto = String(descripcion ?? '').trim();
+    if (!texto) {
+      return;
+    }
+
+    const traducciones = await this.supabase.traducirDesdeEspanol({
+      title: '',
+      description: texto
+    });
+
+    const traduccionesPayload = Object.entries(traducciones ?? {})
+      .map(([idioma, valor]: [string, any]) => {
+        const lang = String(idioma).toLowerCase();
+        if (!lang) {
+          return null;
+        }
+
+        return {
+          tipo_imagen_id: tipoImagenId,
+          lang,
+          descripcion: lang === 'es' ? texto : typeof valor?.description === 'string' ? valor.description : ''
+        };
+      })
+      .filter((item) => item !== null);
+
+    const esIdioma = 'es';
+    if (!traduccionesPayload.some((item) => item!.lang === esIdioma)) {
+      traduccionesPayload.push({
+        tipo_imagen_id: tipoImagenId,
+        lang: esIdioma,
+        descripcion: texto
+      });
+    }
+
+    const { error } = await this.client
+      .from('tipos_imagen_traducciones')
+      .upsert(traduccionesPayload, { onConflict: 'tipo_imagen_id,lang' });
+
+    if (error) throw error;
+  }
+
+  private async guardarTraduccionesCatalogoAtraccion(
+    catalogoAtraccionId: number,
+    nombre: string,
+    descripcion: string
+  ) {
+    const nombreLimpio = String(nombre ?? '').trim();
+    const descripcionLimpia = String(descripcion ?? '').trim();
+
+    if (!nombreLimpio && !descripcionLimpia) {
+      return;
+    }
+
+    const traducciones = await this.supabase.traducirDesdeEspanol({
+      title: nombreLimpio,
+      description: descripcionLimpia
+    });
+
+    const idiomasDisponibles = await this.supabase.obtenerIdiomasPreviewAdmin();
+    const mapaIdiomas = new Map(idiomasDisponibles.map((i) => [i.codigo.toLowerCase(), i.id]));
+
+    const traduccionesPayload = Object.entries(traducciones ?? {})
+      .map(([idioma, valor]: [string, any]) => {
+        const idiomaId = mapaIdiomas.get(String(idioma).toLowerCase());
+        if (!idiomaId) {
+          return null;
+        }
+
+        return {
+          catalogo_atraccion_id: catalogoAtraccionId,
+          idioma_id: idiomaId,
+          nombre: typeof valor?.title === 'string' ? valor.title : '',
+          descripcion: typeof valor?.description === 'string' ? valor.description : ''
+        };
+      })
+      .filter((item) => item !== null);
+
+    const esId = mapaIdiomas.get('es') || ES_ID;
+    if (!traduccionesPayload.some((item) => item!.idioma_id === esId)) {
+      traduccionesPayload.push({
+        catalogo_atraccion_id: catalogoAtraccionId,
+        idioma_id: esId,
+        nombre: nombreLimpio,
+        descripcion: descripcionLimpia
+      });
+    } else {
+      for (const item of traduccionesPayload) {
+        if (item!.idioma_id === esId) {
+          item!.nombre = nombreLimpio;
+          item!.descripcion = descripcionLimpia;
+        }
+      }
+    }
+
+    const { error } = await this.client
+      .from('catalogo_atracciones_traducciones')
+      .upsert(traduccionesPayload, { onConflict: 'catalogo_atraccion_id,idioma_id' });
 
     if (error) throw error;
   }

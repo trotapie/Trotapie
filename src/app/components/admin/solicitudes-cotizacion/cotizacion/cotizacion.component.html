@@ -1446,12 +1446,12 @@
     </div>
 
     @if(enviarCotizacion){
-    <div class="no-print fixed inset-0 z-[3000] flex items-center justify-center p-4" id="whatsapp-modal">
+    <div class="no-print fixed inset-0 z-[3000] flex items-start justify-center overflow-y-auto p-3 sm:items-center sm:p-4" id="whatsapp-modal">
         <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
         <div
-            class="relative bg-white dark:bg-slate-900 w-full max-w-md rounded-[2rem] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
-            <div class="p-8">
-                <div class="flex items-center justify-between mb-6">
+            class="relative flex w-full max-w-md max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900 sm:max-h-[calc(100dvh-3rem)]">
+            <div class="flex-1 overflow-y-auto px-4 py-5 sm:px-8 sm:py-8">
+                <div class="mb-5 flex items-start justify-between gap-4 sm:mb-6">
                     <div class="flex items-center gap-3">
                     <div class="w-12 h-12 bg-[#25D366]/10 rounded-2xl flex items-center justify-center">
                         <svg class="w-7 h-7 text-[#56dd88]" fill="currentColor" viewBox="0 0 24 24"
@@ -1464,15 +1464,15 @@
                     <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Contactar al cliente</h2>
                     </div>
                     <button (click)="enviarCotizacion = false"
-                        class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                        class="shrink-0 text-slate-400 transition-colors hover:text-slate-600 dark:hover:text-slate-200">
                         <mat-icon class="icon-size-5 icon-thick text-slate-600 dark:text-slate-200">close</mat-icon>
                     </button>
                 </div>
-                <p class="text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
+                <p class="mb-6 leading-relaxed text-slate-600 dark:text-slate-400 sm:mb-8">
                     Ingresa el telefono y/o correo del cliente para enviar la cotizacion por WhatsApp o por correo de
                     forma personalizada.
                 </p>
-                <form [formGroup]="telefonoForm" class="space-y-6">
+                <form [formGroup]="telefonoForm" class="space-y-5 sm:space-y-6">
 
                     <div>
                         <label class="block text-sm font-semibold mb-2" [ngClass]="telefonoInvalido
@@ -1560,19 +1560,22 @@
                         Incluir precios en archivo PDF
                     </label> -->
 
-                    <button type="button" (click)="enviarCotizacionCliente()" [disabled]="!puedeEnviarCotizacion"
-                        class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                        {{ enviandoCorreoCotizacion ? 'Enviando...' : textoBotonEnvioCotizacion }}
-                    </button>
-                    <p *ngIf="mensajeCorreoCotizacion"
-                        class="text-sm text-center"
-                        [ngClass]="mensajeCorreoCotizacion.includes('enviada') ? 'text-green-600' : 'text-red-600'">
-                        {{ mensajeCorreoCotizacion }}
-                    </p>
-                    <!-- <p class="text-[10px] text-center text-slate-400 uppercase tracking-widest font-medium">
+                </form>
+            </div>
+
+            <div class="shrink-0 border-t border-slate-200 bg-white px-4 py-4 dark:border-slate-800 dark:bg-slate-900 sm:px-8">
+                <button type="button" (click)="enviarCotizacionCliente()" [disabled]="!puedeEnviarCotizacion"
+                    class="w-full rounded-xl bg-slate-900 py-4 font-bold text-white transition-all disabled:cursor-not-allowed disabled:opacity-50">
+                    {{ enviandoCorreoCotizacion ? 'Enviando...' : textoBotonEnvioCotizacion }}
+                </button>
+                <p *ngIf="mensajeCorreoCotizacion"
+                    class="mt-3 text-center text-sm"
+                    [ngClass]="mensajeCorreoCotizacion.includes('enviada') ? 'text-green-600' : 'text-red-600'">
+                    {{ mensajeCorreoCotizacion }}
+                </p>
+                <!-- <p class="text-[10px] text-center text-slate-400 uppercase tracking-widest font-medium">
                     Respuesta promedio: &lt; 5 minutos
                 </p> -->
-                </form>
             </div>
         </div>
     </div>

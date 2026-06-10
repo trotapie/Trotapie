@@ -36,6 +36,13 @@ interface IAsesor {
   nombre: string;
 }
 
+interface IHotelSeleccionado {
+  hotel_id: number;
+  hotel_nombre: string;
+  regimen_id: number | null;
+  regimen_nombre: string;
+}
+
 type Room = { adults: number; children: number; childAges: (number | null)[] };
 
 @Component({
@@ -73,19 +80,23 @@ export class CrearCotizacionComponent implements OnInit {
   readonly MAX_ROOMS = 10;
   readonly MAX_PER_ROOM = 6;
   readonly MIN_ADULTS = 1;
+  readonly MAX_COMPARE = 8;
 
   ageOptions = Array.from({ length: 18 }, (_, i) => i);
   rooms = signal<Room[]>([{ adults: 2, children: 0, childAges: [] }]);
+  hotelesSeleccionados = signal<IHotelSeleccionado[]>([]);
+  hotelPrincipalId = signal<number | null>(null);
   totalRooms = computed(() => this.rooms().length);
   totalPeople = computed(() => this.rooms().reduce((a, r) => a + r.adults + r.children, 0));
+  totalHotelesSeleccionados = computed(() => this.hotelesSeleccionados().length);
   labelHabitaciones = computed(() => {
     const personas = this.totalPeople() === 1 ? 'persona' : 'personas';
     return `${this.totalRooms()} hab. · ${this.totalPeople()} ${personas}`;
   });
 
   form = this.fb.group({
-    hotel_id: [null as number | null, [Validators.required]],
-    regimen_id: [null as number | null, [Validators.required]],
+    hotel_id: [null as number | null],
+    regimen_id: [null as number | null],
     rangoFechas: this.fb.group({
       start: [null as Date | null, [Validators.required]],
       end: [null as Date | null, [Validators.required]],
@@ -218,6 +229,70 @@ export class CrearCotizacionComponent implements OnInit {
     await this.cargarRegimenesHotel(hotelId);
   }
 
+  agregarHotelComparativa() {
+    this.error = '';
+
+    if (this.totalHotelesSeleccionados() >= this.MAX_COMPARE) {
+      this.error = `Solo puedes comparar hasta ${this.MAX_COMPARE} hoteles a la vez.`;
+      return;
+    }
+
+    const hotelId = Number(this.form.get('hotel_id')?.value ?? 0);
+    if (!Number.isFinite(hotelId) || hotelId <= 0) {
+      this.error = 'Selecciona un hotel para agregar a la comparativa.';
+      return;
+    }
+
+    const hotelSeleccionado = this.hoteles.find((item) => item.id === hotelId);
+    if (!hotelSeleccionado) {
+      this.error = 'No se encontro el hotel seleccionado.';
+      return;
+    }
+
+    const regimenIdRaw = this.form.get('regimen_id')?.value;
+    const regimenId = regimenIdRaw === null || regimenIdRaw === undefined ? null : Number(regimenIdRaw);
+    const regimenSeleccionado = this.regimenes.find((item) => item.id === regimenId);
+
+    const nuevoHotel: IHotelSeleccionado = {
+      hotel_id: hotelSeleccionado.id,
+      hotel_nombre: hotelSeleccionado.nombre_hotel,
+      regimen_id: Number.isFinite(regimenId) ? regimenId : null,
+      regimen_nombre: regimenSeleccionado?.descripcion ?? hotelSeleccionado.regimen ?? 'Sin regimen definido'
+    };
+
+    const existe = this.hotelesSeleccionados().some((item) => item.hotel_id === nuevoHotel.hotel_id);
+
+    if (existe) {
+      this.error = 'Ese hotel ya esta en la comparativa.';
+      return;
+    }
+
+    this.hotelesSeleccionados.set([...this.hotelesSeleccionados(), nuevoHotel]);
+    if (!this.hotelPrincipalId()) {
+      this.hotelPrincipalId.set(nuevoHotel.hotel_id);
+    }
+
+    this.form.patchValue({ hotel_id: null, regimen_id: null });
+    this.regimenes = [];
+  }
+
+  removerHotelComparativa(index: number) {
+    this.error = '';
+    const actuales = [...this.hotelesSeleccionados()];
+    if (index < 0 || index >= actuales.length) return;
+
+    const [eliminado] = actuales.splice(index, 1);
+    this.hotelesSeleccionados.set(actuales);
+
+    if (this.hotelPrincipalId() === eliminado?.hotel_id) {
+      this.hotelPrincipalId.set(actuales[0]?.hotel_id ?? null);
+    }
+  }
+
+  seleccionarHotelPrincipal(hotelId: number) {
+    this.hotelPrincipalId.set(hotelId);
+  }
+
   onTelefonoInput(event: Event) {
     const input = event.target as HTMLInputElement;
     const limpio = (input.value ?? '').replace(/\D/g, '');
@@ -280,6 +355,49 @@ export class CrearCotizacionComponent implements OnInit {
     this.hoteles = [];
     this.regimenes = [];
     this.form.patchValue({ hotel_id: null, regimen_id: null });
+    this.hotelesSeleccionados.set([]);
+    this.hotelPrincipalId.set(null);
+  }
+
+  private destinoActualNombre(): string {
+    if (this.tipoBusqueda === 'NACIONAL') {
+      const destino = this.destinosNacionales.find((item) => item.id === this.destinoNacionalId);
+      return destino?.nombre ?? 'Destino';
+    }
+
+    const ciudad = this.ciudadesInternacionales.find((item) => item.id === this.ciudadInternacionalId);
+    if (ciudad?.nombre) return ciudad.nombre;
+
+    const pais = this.paisesInternacionales.find((item) => item.id === this.paisSeleccionadoId);
+    return pais?.nombre ?? 'Destino';
+  }
+
+  private generarDetalleComparativa(): string | null {
+    if (!this.hotelesSeleccionados().length) return null;
+
+    const principalId = this.hotelPrincipalId();
+    const lines = this.hotelesSeleccionados().map((item, index) => {
+      const principal = item.hotel_id === principalId ? ' [Principal]' : '';
+      return `${index + 1}. ${item.hotel_nombre} - ${item.regimen_nombre}${principal}`;
+    });
+
+    return `Comparativa de hoteles:\n${lines.join('\n')}`;
+  }
+
+  private async persistirHotelesComparativa(solicitudId: number, hotelPrincipalId: number) {
+    try {
+      const payload = this.hotelesSeleccionados().map((item, index) => ({
+        solicitud_id: solicitudId,
+        hotel_id: item.hotel_id,
+        regimen_id: item.regimen_id,
+        es_principal: item.hotel_id === hotelPrincipalId,
+        orden: index + 1
+      }));
+
+      await this.supabase.guardarHotelesComparativaSolicitud(payload);
+    } catch {
+      // Tabla opcional: si aun no existe en DB no bloqueamos el flujo de creacion.
+    }
   }
 
   private clampRoom(room: Room) {
@@ -373,6 +491,19 @@ export class CrearCotizacionComponent implements OnInit {
       this.form.markAllAsTouched();
       return;
     }
+    if (!this.hotelesSeleccionados().length) {
+      this.error = 'Debes agregar al menos un hotel a la comparativa.';
+      return;
+    }
+
+    const hotelPrincipal =
+      this.hotelesSeleccionados().find((item) => item.hotel_id === this.hotelPrincipalId()) ??
+      this.hotelesSeleccionados()[0];
+
+    if (!hotelPrincipal) {
+      this.error = 'No se encontro un hotel principal para crear la cotizacion.';
+      return;
+    }
 
     const value = this.form.getRawValue();
     const start = value.rangoFechas?.start ?? null;
@@ -396,24 +527,29 @@ export class CrearCotizacionComponent implements OnInit {
       });
 
       const habitaciones = this.formatHabitaciones(this.rooms());
+      const peticionesEspeciales = value.especiales?.trim() ? String(value.especiales).trim() : null;
+      const contextoComparativa = this.generarDetalleComparativa();
+      const peticionesCompletas = [peticionesEspeciales, contextoComparativa].filter(Boolean).join('\n\n');
 
       const solicitud = await this.supabase.crearSolicitudCotizacion({
         cliente_id: Number(cliente.id),
-        hotel_id: Number(value.hotel_id),
+        hotel_id: hotelPrincipal.hotel_id,
         empleado_id: Number(value.asesor_id),
         idioma: 'es',
-        regimen_id: value.regimen_id ? Number(value.regimen_id) : null,
+        regimen_id: hotelPrincipal.regimen_id,
         fecha_entrada: fechaEntrada,
         fecha_salida: fechaSalida,
         noches: this.noches,
         habitaciones,
-        peticiones_especiales: value.especiales?.trim() ? String(value.especiales).trim() : null,
+        peticiones_especiales: peticionesCompletas || null,
         recibir_ofertas: Boolean(value.ofertas),
       });
 
       if (!solicitud?.public_id) {
         throw new Error('No se pudo obtener el public_id de la cotizacion creada.');
       }
+
+      await this.persistirHotelesComparativa(solicitud.id, hotelPrincipal.hotel_id);
 
       await this.router.navigate(['/admin/edicion-cotizacion', solicitud.public_id]);
     } catch (error: any) {

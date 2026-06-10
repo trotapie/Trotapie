@@ -376,7 +376,7 @@ export class SupabaseService {
     const { data, error } = await this.client
       .from('empleados')
       .insert({ nombre, estatus_id: 1 })
-      .select('id, nombre, estatus_id, created_at')
+      .select('id, nombre, estatus_id')
       .single();
 
     if (error) throw error;
@@ -389,7 +389,7 @@ export class SupabaseService {
       .from('empleados')
       .update({ nombre })
       .eq('id', id)
-      .select('id, nombre, estatus_id, created_at')
+      .select('id, nombre, estatus_id')
       .single();
 
     if (error) throw error;
@@ -401,11 +401,21 @@ export class SupabaseService {
       .from('empleados')
       .update({ estatus_id: estatusId })
       .eq('id', id)
-      .select('id, nombre, estatus_id, created_at')
+      .select('id, nombre, estatus_id')
       .single();
 
     if (error) throw error;
     return data;
+  }
+
+  async eliminarEmpleadoAdmin(id: number) {
+    const { error } = await this.client
+      .from('empleados')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+    return { deleted: 1 };
   }
 
   continentes() {

@@ -1,9 +1,12 @@
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ApexOptions } from 'apexcharts';
-import { MaterialModule } from 'app/shared/material.module';
-import { AnalyticsService } from './analytics.service';
-import { Subject, takeUntil } from 'rxjs';
 import { Router } from '@angular/router';
+import { CatalogosAdminService } from 'app/core/catalogos-admin.service';
+import { SupabaseService } from 'app/core/supabase.service';
+import { ISolicitudCotizacionListado } from 'app/interface/solicitudes-cotizacion.interface';
+import { MaterialModule } from 'app/shared/material.module';
+
+type RankingItem = { nombre: string; total: number };
 
 @Component({
   selector: 'app-admin',
@@ -11,656 +14,459 @@ import { Router } from '@angular/router';
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.scss'
 })
-export class AdminComponent implements OnInit, OnDestroy {
+export class AdminComponent implements OnInit {
+  private _supabase = inject(SupabaseService);
+  private _catalogosAdmin = inject(CatalogosAdminService);
+  private _router = inject(Router);
 
-  private _analyticsService = inject(AnalyticsService)
-  private _router = inject(Router)
+  isLoading = false;
+  errorMessage = '';
+  updatedAt: Date | null = null;
+  warnings: string[] = [];
 
+  totalSolicitudes = 0;
+  totalCotizadas = 0;
+  totalPendientes = 0;
+  totalCanceladas = 0;
+  totalUltimos30Dias = 0;
+  totalOtras = 0;
 
-  chartVisitors: ApexOptions;
-  chartConversions: ApexOptions;
-  chartImpressions: ApexOptions;
-  chartVisits: ApexOptions;
-  chartVisitorsVsPageViews: ApexOptions;
-  chartNewVsReturning: ApexOptions;
-  chartGender: ApexOptions;
-  chartAge: ApexOptions;
-  chartLanguage: ApexOptions;
-  data: any;
+  tasaCotizacion = 0;
+  tasaPendientes = 0;
+  promedioSolicitudesDia30 = 0;
 
-  private _unsubscribeAll: Subject<any> = new Subject<any>();
+  totalDestinos = 0;
+  totalHoteles = 0;
+  totalEmpleados = 0;
+  totalContinentes = 0;
+  totalTiposDestino = 0;
+  totalIdiomas = 0;
+  totalCatalogoAtracciones = 0;
+  totalTiposHabitacion = 0;
+
+  destinosEnSolicitudes = 0;
+  hotelesEnSolicitudes = 0;
+  empleadosConActividad = 0;
+
+  topHotelesCotizados: RankingItem[] = [];
+  topDestinosCotizados: RankingItem[] = [];
+  topEmpleadosCotizados: RankingItem[] = [];
+
+  chartResumen: ApexOptions = {};
+  chartDistribucion: ApexOptions = {};
+  chartSolicitudes30Dias: ApexOptions = {};
+  chartTipoDestino: ApexOptions = {};
+  chartTopHoteles: ApexOptions = {};
+  chartTopDestinos: ApexOptions = {};
+  chartTopEmpleados: ApexOptions = {};
 
   ngOnInit(): void {
-
-    // MOCK DATA TEMPORAL
-    this.data = {
-      visitors: {
-        series: [
-          {
-            name: 'Visitors',
-            data: [
-              [new Date('2025-01-01').getTime(), 1200],
-              [new Date('2025-01-02').getTime(), 1800],
-              [new Date('2025-01-03').getTime(), 1500],
-              [new Date('2025-01-04').getTime(), 2200],
-              [new Date('2025-01-05').getTime(), 1900],
-              [new Date('2025-01-06').getTime(), 2500],
-              [new Date('2025-01-07').getTime(), 2300],
-            ],
-          },
-        ],
-      },
-
-      conversions: {
-        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-        series: [
-          {
-            name: 'Conversions',
-            data: [12, 19, 15, 22, 18, 25, 23],
-          },
-        ],
-      },
-
-      impressions: {
-        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-        series: [
-          {
-            name: 'Impressions',
-            data: [300, 420, 380, 500, 460, 610, 590],
-          },
-        ],
-      },
-
-      visits: {
-        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-        series: [
-          {
-            name: 'Visits',
-            data: [80, 95, 90, 110, 105, 130, 125],
-          },
-        ],
-      },
-
-      visitorsVsPageViews: {
-        series: [
-          {
-            name: 'Visitors',
-            data: [
-              [new Date('2025-01-01').getTime(), 1200],
-              [new Date('2025-01-07').getTime(), 2300],
-            ],
-          },
-          {
-            name: 'Page Views',
-            data: [
-              [new Date('2025-01-01').getTime(), 2000],
-              [new Date('2025-01-07').getTime(), 3200],
-            ],
-          },
-        ],
-      },
-
-      newVsReturning: {
-        labels: ['New', 'Returning'],
-        series: [62, 38],
-      },
-
-      gender: {
-        labels: ['Male', 'Female'],
-        series: [58, 42],
-      },
-
-      age: {
-        labels: ['18–24', '25–34', '35–44', '45–54', '55+'],
-        series: [18, 32, 24, 16, 10],
-      },
-
-      language: {
-        labels: ['Spanish', 'English'],
-        series: [72, 28],
-      },
-    };
-
-    // Construye los charts con el mock
-    this._prepareChartData();
+    void this.recargarDashboard();
   }
 
-  ngOnDestroy(): void {
+  async recargarDashboard(): Promise<void> {
+    this.isLoading = true;
+    this.errorMessage = '';
+    this.warnings = [];
 
+    try {
+      const [
+        solicitudes,
+        destinos,
+        tiposDestino,
+        empleados,
+        continentes,
+        idiomas,
+        atracciones,
+        tiposHabitacion,
+        hotelesCount
+      ] = await Promise.all([
+        this._safeCall('solicitudes', () => this._supabase.obtenerSolicitudesCotizacion(), [] as ISolicitudCotizacionListado[]),
+        this._safeCall('destinos', () => this._supabase.obtenerDestinosAdmin(), [] as any[]),
+        this._safeCall('tipos de destino', () => this._supabase.obtenerTiposDestinoAdmin(), [] as any[]),
+        this._safeCall('empleados', async () => {
+          const { data, error } = await this._supabase.empleados({ incluirInhabilitados: true });
+          if (error) throw error;
+          return data ?? [];
+        }, [] as any[]),
+        this._safeCall('continentes', async () => {
+          const { data, error } = await this._supabase.continentes();
+          if (error) throw error;
+          return data ?? [];
+        }, [] as any[]),
+        this._safeCall('idiomas', () => this._catalogosAdmin.obtenerCatalogoAdmin('idiomas'), [] as any[]),
+        this._safeCall('catalogo de atracciones', () => this._catalogosAdmin.obtenerCatalogoAdmin('atracciones'), [] as any[]),
+        this._safeCall('tipos de habitacion', () => this._catalogosAdmin.obtenerCatalogoAdmin('tipos_habitacion'), [] as any[]),
+        this._safeCall('hoteles', async () => {
+          const { count, error } = await this._supabase
+            .getClient()
+            .from('hoteles')
+            .select('id', { count: 'exact', head: true });
+
+          if (error) throw error;
+          return count ?? 0;
+        }, 0),
+      ]);
+
+      const listaSolicitudes = solicitudes ?? [];
+
+      this.totalDestinos = destinos.length;
+      this.totalHoteles = hotelesCount || this._contarUnicosPorCampo(listaSolicitudes, 'hotel_nombre');
+      this.totalEmpleados = empleados.length;
+      this.totalContinentes = continentes.length;
+      this.totalTiposDestino = tiposDestino.length;
+      this.totalIdiomas = idiomas.length;
+      this.totalCatalogoAtracciones = atracciones.length;
+      this.totalTiposHabitacion = tiposHabitacion.length;
+
+      this._calcularResumenSolicitudes(listaSolicitudes);
+      this._calcularCoberturaOperativa(listaSolicitudes);
+      this._calcularTopCotizados(listaSolicitudes);
+      this._prepararGraficas(listaSolicitudes);
+
+      this.updatedAt = new Date();
+    } catch (error) {
+      console.error('Error al cargar dashboard de admin:', error);
+      this.errorMessage = 'No se pudo cargar el dashboard completo. Intenta recargar.';
+    } finally {
+      this.isLoading = false;
+    }
   }
 
-  private _prepareChartData(): void {
-    // Visitors
-    this.chartVisitors = {
+  private _calcularResumenSolicitudes(solicitudes: ISolicitudCotizacionListado[]): void {
+    const total = solicitudes.length;
+    let cotizadas = 0;
+    let pendientes = 0;
+    let canceladas = 0;
+    let ultimos30Dias = 0;
+
+    const fechaLimite = new Date();
+    fechaLimite.setDate(fechaLimite.getDate() - 30);
+    fechaLimite.setHours(0, 0, 0, 0);
+
+    solicitudes.forEach((solicitud) => {
+      const estatus = this._normalizarTexto(solicitud.estatus_nombre);
+      const fechaSolicitud = this._parseFecha(solicitud.fecha_creacion);
+
+      if (estatus.includes('cotiz') || estatus.includes('confirm')) cotizadas += 1;
+      else if (estatus.includes('pend')) pendientes += 1;
+      else if (estatus.includes('cancel')) canceladas += 1;
+
+      if (fechaSolicitud && fechaSolicitud >= fechaLimite) ultimos30Dias += 1;
+    });
+
+    this.totalSolicitudes = total;
+    this.totalCotizadas = cotizadas;
+    this.totalPendientes = pendientes;
+    this.totalCanceladas = canceladas;
+    this.totalUltimos30Dias = ultimos30Dias;
+    this.totalOtras = Math.max(total - cotizadas - pendientes - canceladas, 0);
+
+    this.tasaCotizacion = total > 0 ? Number(((cotizadas / total) * 100).toFixed(1)) : 0;
+    this.tasaPendientes = total > 0 ? Number(((pendientes / total) * 100).toFixed(1)) : 0;
+    this.promedioSolicitudesDia30 = Number((ultimos30Dias / 30).toFixed(1));
+  }
+
+  private _calcularCoberturaOperativa(solicitudes: ISolicitudCotizacionListado[]): void {
+    this.destinosEnSolicitudes = this._contarUnicosPorCampo(solicitudes, 'destino_nombre');
+    this.hotelesEnSolicitudes = this._contarUnicosPorCampo(solicitudes, 'hotel_nombre');
+    this.empleadosConActividad = this._contarUnicosPorCampo(solicitudes, 'empleado_nombre');
+  }
+
+  private _calcularTopCotizados(solicitudes: ISolicitudCotizacionListado[]): void {
+    const cotizadas = solicitudes.filter((solicitud) => {
+      const estatus = this._normalizarTexto(solicitud.estatus_nombre);
+      return estatus.includes('cotiz') || estatus.includes('confirm');
+    });
+
+    const base = cotizadas.length > 0 ? cotizadas : solicitudes;
+
+    this.topHotelesCotizados = this._calcularTop(base, 'hotel_nombre');
+    this.topDestinosCotizados = this._calcularTop(base, 'destino_nombre');
+    this.topEmpleadosCotizados = this._calcularTop(base, 'empleado_nombre');
+  }
+
+  private _prepararGraficas(solicitudes: ISolicitudCotizacionListado[]): void {
+    const conteoEstatus = this._contarPorCampo(solicitudes, 'estatus_nombre');
+    const conteoTipoDestino = this._contarPorCampo(solicitudes, 'tipo_destino');
+    const tendencia30 = this._serieUltimosDias(solicitudes, 30);
+
+    this.chartResumen = {
       chart: {
-        animations: {
-          speed: 400,
-          animateGradually: {
-            enabled: false,
-          },
-        },
         fontFamily: 'inherit',
         foreColor: 'inherit',
-        width: '100%',
-        height: '100%',
-        type: 'area',
-        toolbar: {
-          show: false,
-        },
-        zoom: {
-          enabled: false,
-        },
+        type: 'bar',
+        height: 340,
+        toolbar: { show: false },
       },
-      colors: ['#818CF8'],
+      colors: ['#0EA5E9', '#10B981', '#F59E0B', '#EF4444', '#6366F1'],
       dataLabels: {
-        enabled: false,
-      },
-      fill: {
-        colors: ['#312E81'],
-      },
-      grid: {
-        show: true,
-        borderColor: '#334155',
-        padding: {
-          top: 10,
-          bottom: -40,
-          left: 0,
-          right: 0,
-        },
-        position: 'back',
-        xaxis: {
-          lines: {
-            show: true,
-          },
-        },
-      },
-      series: this.data.visitors.series,
-      stroke: {
-        width: 2,
-      },
-      tooltip: {
-        followCursor: true,
-        theme: 'dark',
-        x: {
-          format: 'MMM dd, yyyy',
-        },
-        y: {
-          formatter: (value: number): string => `${value}`,
-        },
-      },
-      xaxis: {
-        axisBorder: {
-          show: false,
-        },
-        axisTicks: {
-          show: false,
-        },
-        crosshairs: {
-          stroke: {
-            color: '#475569',
-            dashArray: 0,
-            width: 2,
-          },
-        },
-        labels: {
-          offsetY: -20,
-          style: {
-            colors: '#CBD5E1',
-          },
-        },
-        tickAmount: 20,
-        tooltip: {
-          enabled: false,
-        },
-        type: 'datetime',
-      },
-      yaxis: {
-        axisTicks: {
-          show: false,
-        },
-        axisBorder: {
-          show: false,
-        },
-        min: (min): number => min - 750,
-        max: (max): number => max + 250,
-        tickAmount: 5,
-        show: false,
-      },
-    };
-
-    // Conversions
-    this.chartConversions = {
-      chart: {
-        animations: {
-          enabled: false,
-        },
-        fontFamily: 'inherit',
-        foreColor: 'inherit',
-        height: '100%',
-        type: 'area',
-        sparkline: {
-          enabled: true,
-        },
-      },
-      colors: ['#38BDF8'],
-      fill: {
-        colors: ['#38BDF8'],
-        opacity: 0.5,
-      },
-      series: this.data.conversions.series,
-      stroke: {
-        curve: 'smooth',
-      },
-      tooltip: {
-        followCursor: true,
-        theme: 'dark',
-      },
-      xaxis: {
-        type: 'category',
-        categories: this.data.conversions.labels,
-      },
-      yaxis: {
-        labels: {
-          formatter: (val): string => val.toString(),
-        },
-      },
-    };
-
-    // Impressions
-    this.chartImpressions = {
-      chart: {
-        animations: {
-          enabled: false,
-        },
-        fontFamily: 'inherit',
-        foreColor: 'inherit',
-        height: '100%',
-        type: 'area',
-        sparkline: {
-          enabled: true,
-        },
-      },
-      colors: ['#34D399'],
-      fill: {
-        colors: ['#34D399'],
-        opacity: 0.5,
-      },
-      series: this.data.impressions.series,
-      stroke: {
-        curve: 'smooth',
-      },
-      tooltip: {
-        followCursor: true,
-        theme: 'dark',
-      },
-      xaxis: {
-        type: 'category',
-        categories: this.data.impressions.labels,
-      },
-      yaxis: {
-        labels: {
-          formatter: (val): string => val.toString(),
-        },
-      },
-    };
-
-    // Visits
-    this.chartVisits = {
-      chart: {
-        animations: {
-          enabled: false,
-        },
-        fontFamily: 'inherit',
-        foreColor: 'inherit',
-        height: '100%',
-        type: 'area',
-        sparkline: {
-          enabled: true,
-        },
-      },
-      colors: ['#FB7185'],
-      fill: {
-        colors: ['#FB7185'],
-        opacity: 0.5,
-      },
-      series: this.data.visits.series,
-      stroke: {
-        curve: 'smooth',
-      },
-      tooltip: {
-        followCursor: true,
-        theme: 'dark',
-      },
-      xaxis: {
-        type: 'category',
-        categories: this.data.visits.labels,
-      },
-      yaxis: {
-        labels: {
-          formatter: (val): string => val.toString(),
-        },
-      },
-    };
-
-    // Visitors vs Page Views
-    this.chartVisitorsVsPageViews = {
-      chart: {
-        animations: {
-          enabled: false,
-        },
-        fontFamily: 'inherit',
-        foreColor: 'inherit',
-        height: '100%',
-        type: 'area',
-        toolbar: {
-          show: false,
-        },
-        zoom: {
-          enabled: false,
-        },
-      },
-      colors: ['#64748B', '#94A3B8'],
-      dataLabels: {
-        enabled: false,
-      },
-      fill: {
-        colors: ['#64748B', '#94A3B8'],
-        opacity: 0.5,
-      },
-      grid: {
-        show: false,
-        padding: {
-          bottom: -40,
-          left: 0,
-          right: 0,
-        },
-      },
-      legend: {
-        show: false,
-      },
-      series: this.data.visitorsVsPageViews.series,
-      stroke: {
-        curve: 'smooth',
-        width: 2,
-      },
-      tooltip: {
-        followCursor: true,
-        theme: 'dark',
-        x: {
-          format: 'MMM dd, yyyy',
-        },
-      },
-      xaxis: {
-        axisBorder: {
-          show: false,
-        },
-        labels: {
-          offsetY: -20,
-          rotate: 0,
-          style: {
-            colors: 'var(--fuse-text-secondary)',
-          },
-        },
-        tickAmount: 3,
-        tooltip: {
-          enabled: false,
-        },
-        type: 'datetime',
-      },
-      yaxis: {
-        labels: {
-          style: {
-            colors: 'var(--fuse-text-secondary)',
-          },
-        },
-        max: (max): number => max + 250,
-        min: (min): number => min - 250,
-        show: false,
-        tickAmount: 5,
-      },
-    };
-
-    // New vs. returning
-    this.chartNewVsReturning = {
-      chart: {
-        animations: {
-          speed: 400,
-          animateGradually: {
-            enabled: false,
-          },
-        },
-        fontFamily: 'inherit',
-        foreColor: 'inherit',
-        height: '100%',
-        type: 'donut',
-        sparkline: {
-          enabled: true,
-        },
-      },
-      colors: ['#3182CE', '#63B3ED'],
-      labels: this.data.newVsReturning.labels,
-      plotOptions: {
-        pie: {
-          customScale: 0.9,
-          expandOnClick: false,
-          donut: {
-            size: '70%',
-          },
-        },
-      },
-      series: this.data.newVsReturning.series,
-      states: {
-        hover: {
-          filter: {
-            type: 'none',
-          },
-        },
-        active: {
-          filter: {
-            type: 'none',
-          },
-        },
-      },
-      tooltip: {
         enabled: true,
-        fillSeriesColor: false,
-        theme: 'dark',
-        custom: ({
-          seriesIndex,
-          w,
-        }): string => `<div class="flex items-center h-8 min-h-8 max-h-8 px-3">
-                                                    <div class="w-3 h-3 rounded-full" style="background-color: ${w.config.colors[seriesIndex]};"></div>
-                                                    <div class="ml-2 text-md leading-none">${w.config.labels[seriesIndex]}:</div>
-                                                    <div class="ml-2 text-md font-bold leading-none">${w.config.series[seriesIndex]}%</div>
-                                                </div>`,
+        formatter: (value: number): string => `${value}`,
       },
+      grid: { borderColor: '#E2E8F0' },
+      plotOptions: {
+        bar: {
+          borderRadius: 8,
+          columnWidth: '45%',
+        },
+      },
+      series: [
+        {
+          name: 'Solicitudes',
+          data: [
+            this.totalSolicitudes,
+            this.totalCotizadas,
+            this.totalPendientes,
+            this.totalCanceladas,
+            this.totalUltimos30Dias,
+          ],
+        },
+      ],
+      stroke: { show: false },
+      xaxis: {
+        categories: ['Totales', 'Cotizadas', 'Pendientes', 'Canceladas', 'Ultimos 30 dias'],
+      },
+      yaxis: { min: 0, forceNiceScale: true },
+      tooltip: { theme: 'light' },
     };
 
-    // Gender
-    this.chartGender = {
+    this.chartDistribucion = {
       chart: {
-        animations: {
-          speed: 400,
-          animateGradually: {
-            enabled: false,
-          },
-        },
         fontFamily: 'inherit',
         foreColor: 'inherit',
-        height: '100%',
         type: 'donut',
-        sparkline: {
-          enabled: true,
+        height: 340,
+        events: {
+          dataPointSelection: (_event: any, _chartContext: any, config: any) => {
+            const index = Number(config?.dataPointIndex ?? -1);
+            const estatus = conteoEstatus.labels?.[index];
+            if (!estatus) return;
+            void this._navegarASolicitudesPorEstatus(estatus);
+          },
         },
       },
-      colors: ['#319795', '#4FD1C5'],
-      labels: this.data.gender.labels,
+      colors: ['#10B981', '#F59E0B', '#EF4444', '#3B82F6', '#A855F7', '#14B8A6'],
+      labels: conteoEstatus.labels,
+      series: conteoEstatus.series,
+      legend: { position: 'bottom' },
       plotOptions: {
-        pie: {
-          customScale: 0.9,
-          expandOnClick: false,
-          donut: {
-            size: '70%',
-          },
-        },
+        pie: { donut: { size: '64%' } },
       },
-      series: this.data.gender.series,
-      states: {
-        hover: {
-          filter: {
-            type: 'none',
-          },
-        },
-        active: {
-          filter: {
-            type: 'none',
-          },
-        },
-      },
-      tooltip: {
-        enabled: true,
-        fillSeriesColor: false,
-        theme: 'dark',
-        custom: ({
-          seriesIndex,
-          w,
-        }): string => `<div class="flex items-center h-8 min-h-8 max-h-8 px-3">
-                                                     <div class="w-3 h-3 rounded-full" style="background-color: ${w.config.colors[seriesIndex]};"></div>
-                                                     <div class="ml-2 text-md leading-none">${w.config.labels[seriesIndex]}:</div>
-                                                     <div class="ml-2 text-md font-bold leading-none">${w.config.series[seriesIndex]}%</div>
-                                                 </div>`,
-      },
+      noData: { text: 'Sin datos disponibles' },
+      tooltip: { theme: 'light' },
     };
 
-    // Age
-    this.chartAge = {
+    this.chartTipoDestino = {
       chart: {
-        animations: {
-          speed: 400,
-          animateGradually: {
-            enabled: false,
-          },
-        },
         fontFamily: 'inherit',
         foreColor: 'inherit',
-        height: '100%',
         type: 'donut',
-        sparkline: {
-          enabled: true,
-        },
+        height: 340,
       },
-      colors: ['#DD6B20', '#F6AD55'],
-      labels: this.data.age.labels,
+      colors: ['#2563EB', '#0891B2', '#7C3AED', '#F97316', '#16A34A'],
+      labels: conteoTipoDestino.labels,
+      series: conteoTipoDestino.series,
+      legend: { position: 'bottom' },
       plotOptions: {
-        pie: {
-          customScale: 0.9,
-          expandOnClick: false,
-          donut: {
-            size: '70%',
-          },
-        },
+        pie: { donut: { size: '64%' } },
       },
-      series: this.data.age.series,
-      states: {
-        hover: {
-          filter: {
-            type: 'none',
-          },
-        },
-        active: {
-          filter: {
-            type: 'none',
-          },
-        },
-      },
-      tooltip: {
-        enabled: true,
-        fillSeriesColor: false,
-        theme: 'dark',
-        custom: ({
-          seriesIndex,
-          w,
-        }): string => `<div class="flex items-center h-8 min-h-8 max-h-8 px-3">
-                                                    <div class="w-3 h-3 rounded-full" style="background-color: ${w.config.colors[seriesIndex]};"></div>
-                                                    <div class="ml-2 text-md leading-none">${w.config.labels[seriesIndex]}:</div>
-                                                    <div class="ml-2 text-md font-bold leading-none">${w.config.series[seriesIndex]}%</div>
-                                                </div>`,
-      },
+      noData: { text: 'Sin datos disponibles' },
+      tooltip: { theme: 'light' },
     };
 
-    // Language
-    this.chartLanguage = {
+    this.chartSolicitudes30Dias = {
       chart: {
-        animations: {
-          speed: 400,
-          animateGradually: {
-            enabled: false,
-          },
-        },
         fontFamily: 'inherit',
         foreColor: 'inherit',
-        height: '100%',
-        type: 'donut',
-        sparkline: {
-          enabled: true,
-        },
+        type: 'line',
+        height: 340,
+        toolbar: { show: false },
+        zoom: { enabled: false },
       },
-      colors: ['#805AD5', '#B794F4'],
-      labels: this.data.language.labels,
+      colors: ['#0EA5E9'],
+      dataLabels: { enabled: false },
+      stroke: { curve: 'smooth', width: 3 },
+      markers: { size: 3 },
+      grid: { borderColor: '#E2E8F0' },
+      series: [
+        {
+          name: 'Solicitudes',
+          data: tendencia30.series,
+        },
+      ],
+      xaxis: {
+        categories: tendencia30.labels,
+      },
+      yaxis: { min: 0, forceNiceScale: true },
+      tooltip: { theme: 'light' },
+    };
+
+    this.chartTopHoteles = this._crearGraficaTop('Hoteles', this.topHotelesCotizados, '#10B981');
+    this.chartTopDestinos = this._crearGraficaTop('Destinos', this.topDestinosCotizados, '#3B82F6');
+    this.chartTopEmpleados = this._crearGraficaTop('Empleados', this.topEmpleadosCotizados, '#8B5CF6');
+  }
+
+  private _crearGraficaTop(nombreSerie: string, items: RankingItem[], color: string): ApexOptions {
+    return {
+      chart: {
+        fontFamily: 'inherit',
+        foreColor: 'inherit',
+        type: 'bar',
+        height: 340,
+        toolbar: { show: false },
+      },
+      colors: [color],
       plotOptions: {
-        pie: {
-          customScale: 0.9,
-          expandOnClick: false,
-          donut: {
-            size: '70%',
-          },
+        bar: {
+          horizontal: true,
+          borderRadius: 6,
+          barHeight: '65%',
         },
       },
-      series: this.data.language.series,
-      states: {
-        hover: {
-          filter: {
-            type: 'none',
-          },
+      dataLabels: { enabled: false },
+      series: [
+        {
+          name: nombreSerie,
+          data: items.map((x) => x.total),
         },
-        active: {
-          filter: {
-            type: 'none',
-          },
-        },
+      ],
+      xaxis: {
+        categories: items.map((x) => x.nombre),
       },
-      tooltip: {
-        enabled: true,
-        fillSeriesColor: false,
-        theme: 'dark',
-        custom: ({
-          seriesIndex,
-          w,
-        }): string => `<div class="flex items-center h-8 min-h-8 max-h-8 px-3">
-                                                    <div class="w-3 h-3 rounded-full" style="background-color: ${w.config.colors[seriesIndex]};"></div>
-                                                    <div class="ml-2 text-md leading-none">${w.config.labels[seriesIndex]}:</div>
-                                                    <div class="ml-2 text-md font-bold leading-none">${w.config.series[seriesIndex]}%</div>
-                                                </div>`,
-      },
+      yaxis: { labels: { maxWidth: 220 } },
+      grid: { borderColor: '#E2E8F0' },
+      tooltip: { theme: 'light' },
+      noData: { text: 'Sin datos disponibles' },
     };
   }
 
-  private _fixSvgFill(element: Element): void {
-    // Current URL
-    const currentURL = this._router.url;
+  private _contarPorCampo(
+    solicitudes: ISolicitudCotizacionListado[],
+    key: 'estatus_nombre' | 'tipo_destino'
+  ): { labels: string[]; series: number[] } {
+    const mapa = new Map<string, number>();
 
-    // 1. Find all elements with 'fill' attribute within the element
-    // 2. Filter out the ones that doesn't have cross reference so we only left with the ones that use the 'url(#id)' syntax
-    // 3. Insert the 'currentURL' at the front of the 'fill' attribute value
-    Array.from(element.querySelectorAll('*[fill]'))
-      .filter((el) => el.getAttribute('fill').indexOf('url(') !== -1)
-      .forEach((el) => {
-        const attrVal = el.getAttribute('fill');
-        el.setAttribute(
-          'fill',
-          `url(${currentURL}${attrVal.slice(attrVal.indexOf('#'))}`
-        );
-      });
+    solicitudes.forEach((solicitud) => {
+      const valor = (solicitud[key] ?? '').toString().trim() || 'Sin dato';
+      mapa.set(valor, (mapa.get(valor) ?? 0) + 1);
+    });
+
+    const ordenado = [...mapa.entries()].sort((a, b) => b[1] - a[1]);
+
+    return {
+      labels: ordenado.map(([label]) => label),
+      series: ordenado.map(([, total]) => total),
+    };
   }
 
+  private _calcularTop(
+    solicitudes: ISolicitudCotizacionListado[],
+    key: 'hotel_nombre' | 'destino_nombre' | 'empleado_nombre'
+  ): RankingItem[] {
+    const mapa = new Map<string, number>();
+
+    solicitudes.forEach((solicitud) => {
+      const nombre = (solicitud[key] ?? '').toString().trim();
+      if (!nombre) return;
+      mapa.set(nombre, (mapa.get(nombre) ?? 0) + 1);
+    });
+
+    return [...mapa.entries()]
+      .map(([nombre, total]) => ({ nombre, total }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 8);
+  }
+
+  private _contarUnicosPorCampo(
+    solicitudes: ISolicitudCotizacionListado[],
+    key: 'hotel_nombre' | 'destino_nombre' | 'empleado_nombre'
+  ): number {
+    return new Set(
+      solicitudes
+        .map((solicitud) => (solicitud[key] ?? '').toString().trim())
+        .filter((valor) => valor.length > 0)
+    ).size;
+  }
+
+  private _serieUltimosDias(
+    solicitudes: ISolicitudCotizacionListado[],
+    dias: number
+  ): { labels: string[]; series: number[] } {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    const inicio = new Date(hoy);
+    inicio.setDate(inicio.getDate() - (dias - 1));
+
+    const labels: string[] = [];
+    const series: number[] = [];
+    const conteo = new Map<string, number>();
+
+    solicitudes.forEach((solicitud) => {
+      const fecha = this._parseFecha(solicitud.fecha_creacion);
+      if (!fecha) return;
+
+      const limpia = new Date(fecha);
+      limpia.setHours(0, 0, 0, 0);
+
+      if (limpia < inicio || limpia > hoy) return;
+
+      const key = this._keyDate(limpia);
+      conteo.set(key, (conteo.get(key) ?? 0) + 1);
+    });
+
+    for (let i = 0; i < dias; i += 1) {
+      const dia = new Date(inicio);
+      dia.setDate(inicio.getDate() + i);
+
+      const key = this._keyDate(dia);
+      labels.push(this._labelDate(dia));
+      series.push(conteo.get(key) ?? 0);
+    }
+
+    return { labels, series };
+  }
+
+  private _keyDate(fecha: Date): string {
+    return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`;
+  }
+
+  private _labelDate(fecha: Date): string {
+    return `${String(fecha.getDate()).padStart(2, '0')}/${String(fecha.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  private _normalizarTexto(texto: string | null | undefined): string {
+    return (texto ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toLowerCase();
+  }
+
+  private _parseFecha(fecha: string | Date | null | undefined): Date | null {
+    if (!fecha) return null;
+    const parsed = fecha instanceof Date ? fecha : new Date(fecha);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  private async _safeCall<T>(
+    label: string,
+    task: () => Promise<T>,
+    fallback: T
+  ): Promise<T> {
+    try {
+      return await task();
+    } catch (error) {
+      console.warn(`[dashboard] No se pudo cargar ${label}:`, error);
+      this.warnings.push(`No se pudo cargar ${label}`);
+      return fallback;
+    }
+  }
+
+  private async _navegarASolicitudesPorEstatus(estatus: string): Promise<void> {
+    await this._router.navigate(['/admin/solicitudes-cotizacion'], {
+      queryParams: { estatus }
+    });
+  }
 }

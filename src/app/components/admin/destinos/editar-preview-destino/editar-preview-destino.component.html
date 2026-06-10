@@ -1,15 +1,27 @@
 <div class="flex min-w-0 flex-auto flex-col bg-gray-50">
   <div class="mx-auto flex w-full max-w-screen-xl flex-col px-6 py-6 sm:px-8">
-    <div class="mb-4 flex items-center justify-between">
-      <div>
-        <h1 class="text-3xl font-bold tracking-tight text-gray-900">Editar preview del destino</h1>
-        <p class="mt-1 text-sm text-gray-500">{{ destinoNombre }}</p>
-      </div>
+    <div class="sticky top-0 z-[2000] mb-4 w-full rounded-xl border border-transparent bg-transparent px-2 py-2 backdrop-blur-md transition-all duration-300 md:px-4">
+      <div class="w-full md:flex md:items-center md:justify-between">
+        <div>
+          <h1 class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">Editar preview del destino</h1>
+          <p class="mt-1 text-sm text-gray-500">{{ destinoNombre }}</p>
+        </div>
 
-      <button mat-stroked-button (click)="regresar()">
-        <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
-        Volver
-      </button>
+        <div class="my-2 flex items-center gap-3 md:my-0">
+          <button mat-raised-button color="warn" class="text-white" (click)="regresar()">
+            <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
+            Regresar
+          </button>
+          <button mat-raised-button color="primary" class="text-white" type="submit" form="form-editar-preview" [disabled]="guardando">
+            <mat-icon class="mr-2 icon-size-5 text-white">save</mat-icon>
+            @if (guardando) {
+              Guardando...
+            } @else {
+              Guardar preview
+            }
+          </button>
+        </div>
+      </div>
     </div>
 
     @if (cargando) {
@@ -18,7 +30,7 @@
         <p class="mt-4 text-sm text-gray-500">Cargando preview del destino...</p>
       </div>
     } @else {
-      <form [formGroup]="form" (ngSubmit)="guardar()" class="space-y-6">
+      <form id="form-editar-preview" [formGroup]="form" (ngSubmit)="guardar()" class="space-y-6">
         <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
           <h2 class="mb-4 text-lg font-semibold text-gray-900">Informacion general</h2>
           <mat-form-field class="w-full">
@@ -219,23 +231,13 @@
           </div>
         }
 
-        <div class="flex items-center justify-end gap-3">
-          <button mat-stroked-button type="button" (click)="regresar()">Cancelar</button>
-          <button mat-flat-button color="primary" type="submit" [disabled]="guardando">
-            @if (guardando) {
-              Guardando...
-            } @else {
-              Guardar preview
-            }
-          </button>
-        </div>
       </form>
     }
   </div>
 </div>
 
 @if (mostrarModalExito) {
-  <div class="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 px-4">
+  <div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
     <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
       <h3 class="text-xl font-semibold text-gray-900">Actualizacion completada</h3>
       <p class="mt-2 text-sm text-gray-600">{{ mensajeModalExito }}</p>
@@ -248,7 +250,7 @@
 }
 
 @if (mostrarModalConfirmarEliminarActividad) {
-  <div class="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 px-4">
+  <div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
     <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
       <h3 class="text-xl font-semibold text-gray-900">Confirmar eliminacion</h3>
       <p class="mt-2 text-sm text-gray-600">Seguro que quieres eliminar esta atraccion principal?</p>
@@ -268,7 +270,7 @@
 }
 
 @if (mostrarModalEditarDatoRapido) {
-  <div class="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 px-4">
+  <div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
     <div class="w-full max-w-3xl rounded-2xl bg-white p-6 shadow-2xl">
       <h3 class="text-xl font-semibold text-gray-900">Editar dato rapido</h3>
 
@@ -297,7 +299,7 @@
 }
 
 @if (mostrarModalNuevoDatoRapido) {
-  <div class="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 px-4">
+  <div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
     <div class="w-full max-w-3xl rounded-2xl bg-white p-6 shadow-2xl">
       <h3 class="text-xl font-semibold text-gray-900">Crear nuevo dato rapido</h3>
 
@@ -333,7 +335,7 @@
 }
 
 @if (mostrarModalEditarTextoPreview) {
-  <div class="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 px-4">
+  <div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
     <div class="flex h-[85vh] w-full max-w-3xl flex-col rounded-2xl bg-white p-6 shadow-2xl">
       <h3 class="shrink-0 text-xl font-semibold text-gray-900">Editar texto del preview</h3>
 
@@ -387,7 +389,7 @@
 }
 
 @if (mostrarModalEditarActividad || mostrarModalNuevaActividad) {
-  <div class="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 px-4">
+  <div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
     <div class="relative flex h-[85vh] w-full max-w-4xl flex-col rounded-2xl bg-white p-6 shadow-2xl">
       <h3 class="shrink-0 text-xl font-semibold text-gray-900">
         {{ mostrarModalEditarActividad ? 'Editar actividad' : 'Crear nueva actividad' }}
@@ -497,6 +499,17 @@
           </div>
         </div>
       }
+    </div>
+  </div>
+}
+
+@if (guardando) {
+  <div class="fixed inset-0 z-[3500] flex items-center justify-center bg-black/50 px-4 backdrop-blur-[2px]">
+    <div class="w-full max-w-xs rounded-2xl bg-white p-6 shadow-2xl">
+      <div class="flex flex-col items-center gap-3 text-center">
+        <mat-progress-spinner diameter="44" mode="indeterminate"></mat-progress-spinner>
+        <p class="text-sm font-medium text-gray-700">Guardando cambios...</p>
+      </div>
     </div>
   </div>
 }

@@ -18,6 +18,11 @@ interface IDescuentoTraduccionPreview {
   descripcion: string;
 }
 
+interface IAtraccionTraduccionPreview {
+  nombre: string;
+  descripcion: string;
+}
+
 interface CatalogoColumna {
   key: string;
   label: string;
@@ -152,7 +157,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
       columnas: [
         { key: 'id', label: 'ID' },
         { key: 'clave', label: 'Clave' },
-        { key: 'orden', label: 'Orden' }
+        { key: 'descripcion', label: 'Descripcion' }
       ],
       tieneOrden: true,
       editableKeys: ['clave']
@@ -170,13 +175,11 @@ export class CatalogoPlaceholderComponent implements OnInit {
       columnas: [
         { key: 'id', label: 'ID' },
         { key: 'clave', label: 'Clave' },
+        { key: 'orden', label: 'Orden' },
         { key: 'nombre', label: 'Nombre' },
         { key: 'descripcion', label: 'Descripcion' },
         { key: 'icono', label: 'Icono' },
-        { key: 'total_registros', label: 'Registros' },
-        { key: 'activo', label: 'Activo' },
-        { key: 'orden', label: 'Orden' },
-        { key: 'created_at', label: 'Creado' }
+        { key: 'activo', label: 'Activo' }
       ],
       tieneOrden: true,
       editableKeys: ['clave', 'nombre', 'descripcion', 'icono', 'activo'],
@@ -216,13 +219,34 @@ export class CatalogoPlaceholderComponent implements OnInit {
   traduciendoAmenidad = false;
   traduccionesDescuentoPreview: Record<string, IDescuentoTraduccionPreview> = {};
   traduciendoDescuento = false;
+  traduccionesAtraccionPreview: Record<string, IAtraccionTraduccionPreview> = {};
+  traduciendoAtraccion = false;
+  traduccionesTipoImagenPreview: Record<string, { descripcion: string }> = {};
+  traduciendoTipoImagen = false;
   politicasDisponiblesTarifa: IPoliticaTarifaAdmin[] = [];
   filtroPoliticasTarifa = '';
   mostrarFiltrosAmenidades = false;
+  mostrarFiltrosTipoImagen = false;
+  mostrarFiltrosAtracciones = false;
   filtrosAmenidades = {
     id: '',
     descripcion: '',
     clave: '',
+    activo: ''
+  };
+  filtrosTipoImagen = {
+    id: '',
+    clave: '',
+    descripcion: '',
+    orden: ''
+  };
+  filtrosAtracciones = {
+    id: '',
+    clave: '',
+    orden: '',
+    nombre: '',
+    descripcion: '',
+    icono: '',
     activo: ''
   };
   politicasTarifaSeleccionadas = new Set<number>();
@@ -232,6 +256,8 @@ export class CatalogoPlaceholderComponent implements OnInit {
   private ultimaLlaveTraduccionPolitica = '';
   private ultimaLlaveTraduccionAmenidad = '';
   private ultimaLlaveTraduccionDescuento = '';
+  private ultimaLlaveTraduccionAtraccion = '';
+  private ultimaLlaveTraduccionTipoImagen = '';
   readonly idiomasVistaPolitica = [
     { code: 'es', label: 'Español' },
     { code: 'en', label: 'Inglés' },
@@ -246,6 +272,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
   get esCatalogoAtracciones(): boolean {
     return this.catalogoKey === 'atracciones';
+  }
+
+  get esCatalogoConceptos(): boolean {
+    return this.catalogoKey === 'conceptos';
   }
 
   get esCatalogoIdiomas(): boolean {
@@ -272,13 +302,20 @@ export class CatalogoPlaceholderComponent implements OnInit {
     return this.catalogoKey === 'tipos_habitacion';
   }
 
+  get esCatalogoTipoImagen(): boolean {
+    return this.catalogoKey === 'tipo_imagen';
+  }
+
   get puedeCrearRegistro(): boolean {
     return (
       this.catalogoKey === 'actividades' ||
+      this.catalogoKey === 'conceptos' ||
       this.catalogoKey === 'continentes' ||
       this.catalogoKey === 'descuentos' ||
+      this.catalogoKey === 'atracciones' ||
       this.catalogoKey === 'idiomas' ||
       this.catalogoKey === 'politicas' ||
+      this.catalogoKey === 'tipo_imagen' ||
       this.catalogoKey === 'tarifas' ||
       this.catalogoKey === 'tipos_habitacion'
     );
@@ -287,10 +324,13 @@ export class CatalogoPlaceholderComponent implements OnInit {
   get usaModalEdicion(): boolean {
     return (
       this.catalogoKey === 'actividades' ||
+      this.catalogoKey === 'conceptos' ||
       this.catalogoKey === 'continentes' ||
       this.catalogoKey === 'descuentos' ||
+      this.catalogoKey === 'atracciones' ||
       this.catalogoKey === 'idiomas' ||
       this.catalogoKey === 'politicas' ||
+      this.catalogoKey === 'tipo_imagen' ||
       this.catalogoKey === 'tarifas' ||
       this.catalogoKey === 'tipos_habitacion'
     );
@@ -299,10 +339,13 @@ export class CatalogoPlaceholderComponent implements OnInit {
   get puedeEliminarRegistro(): boolean {
     return (
       this.catalogoKey === 'actividades' ||
+      this.catalogoKey === 'conceptos' ||
       this.catalogoKey === 'continentes' ||
       this.catalogoKey === 'descuentos' ||
+      this.catalogoKey === 'atracciones' ||
       this.catalogoKey === 'idiomas' ||
       this.catalogoKey === 'politicas' ||
+      this.catalogoKey === 'tipo_imagen' ||
       this.catalogoKey === 'tarifas' ||
       this.catalogoKey === 'tipos_habitacion'
     );
@@ -314,6 +357,43 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   get filteredItems(): any[] {
+    if (this.esCatalogoTipoImagen) {
+      return this.items.filter((item) => {
+        const filtros = this.filtrosTipoImagen;
+        const coincideId = this.coincideFiltro(String(item?.id ?? ''), filtros.id);
+        const coincideClave = this.coincideFiltro(String(item?.clave ?? ''), filtros.clave);
+        const coincideDescripcion = this.coincideFiltro(String(item?.descripcion ?? ''), filtros.descripcion);
+        const coincideOrden = this.coincideFiltro(String(item?.orden ?? ''), filtros.orden);
+        return coincideId && coincideClave && coincideDescripcion && coincideOrden;
+      });
+    }
+
+    if (this.esCatalogoAtracciones) {
+      return this.items.filter((item) => {
+        const filtros = this.filtrosAtracciones;
+        const coincideId = this.coincideFiltro(String(item?.id ?? ''), filtros.id);
+        const coincideClave = this.coincideFiltro(String(item?.clave ?? ''), filtros.clave);
+        const coincideOrden = this.coincideFiltro(String(item?.orden ?? ''), filtros.orden);
+        const coincideNombre = this.coincideFiltro(String(item?.nombre ?? ''), filtros.nombre);
+        const coincideDescripcion = this.coincideFiltro(String(item?.descripcion ?? ''), filtros.descripcion);
+        const coincideIcono = this.coincideFiltro(String(item?.icono ?? ''), filtros.icono);
+        const coincideActivo =
+          !this.limpiarTexto(filtros.activo) ||
+          (filtros.activo === 'activo' && Boolean(item?.activo)) ||
+          (filtros.activo === 'inactivo' && !Boolean(item?.activo));
+
+        return (
+          coincideId &&
+          coincideClave &&
+          coincideOrden &&
+          coincideNombre &&
+          coincideDescripcion &&
+          coincideIcono &&
+          coincideActivo
+        );
+      });
+    }
+
     if (!this.esCatalogoAmenidades) {
       return this.items;
     }
@@ -340,6 +420,22 @@ export class CatalogoPlaceholderComponent implements OnInit {
     return this.mostrarFiltrosAmenidades ? 'Ocultar filtros' : 'Mostrar filtros';
   }
 
+  get hayFiltrosTipoImagen(): boolean {
+    return Object.values(this.filtrosTipoImagen).some((value) => Boolean(this.limpiarTexto(value)));
+  }
+
+  get textoBotonFiltrosTipoImagen(): string {
+    return this.mostrarFiltrosTipoImagen ? 'Ocultar filtros' : 'Mostrar filtros';
+  }
+
+  get hayFiltrosAtracciones(): boolean {
+    return Object.values(this.filtrosAtracciones).some((value) => Boolean(this.limpiarTexto(value)));
+  }
+
+  get textoBotonFiltrosAtracciones(): string {
+    return this.mostrarFiltrosAtracciones ? 'Ocultar filtros' : 'Mostrar filtros';
+  }
+
   get tieneTraduccionesPoliticaPreview(): boolean {
     return Object.keys(this.traduccionesPoliticaPreview ?? {}).length > 0;
   }
@@ -350,6 +446,14 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
   get tieneTraduccionesDescuentoPreview(): boolean {
     return Object.keys(this.traduccionesDescuentoPreview ?? {}).length > 0;
+  }
+
+  get tieneTraduccionesAtraccionPreview(): boolean {
+    return Object.keys(this.traduccionesAtraccionPreview ?? {}).length > 0;
+  }
+
+  get tieneTraduccionesTipoImagenPreview(): boolean {
+    return Object.keys(this.traduccionesTipoImagenPreview ?? {}).length > 0;
   }
 
   get descuentoListoParaGuardar(): boolean {
@@ -403,8 +507,16 @@ export class CatalogoPlaceholderComponent implements OnInit {
       return 'Nuevo idioma';
     }
 
+    if (this.esCatalogoConceptos) {
+      return 'Nuevo concepto';
+    }
+
     if (this.esCatalogoAmenidades) {
       return 'Nueva amenidad';
+    }
+
+    if (this.esCatalogoAtracciones) {
+      return 'Nueva atraccion';
     }
 
     if (this.esCatalogoPoliticas) {
@@ -413,6 +525,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
     if (this.esCatalogoDescuentos) {
       return 'Nuevo descuento';
+    }
+
+    if (this.esCatalogoTipoImagen) {
+      return 'Nuevo tipo imagen';
     }
 
     if (this.esCatalogoTarifas) {
@@ -431,8 +547,16 @@ export class CatalogoPlaceholderComponent implements OnInit {
       return 'Captura codigo y nombre para crear el nuevo idioma.';
     }
 
+    if (this.esCatalogoConceptos) {
+      return 'Captura descripcion e icono para crear el nuevo concepto.';
+    }
+
     if (this.esCatalogoAmenidades) {
       return 'Captura descripcion, clave y estatus para crear la nueva amenidad.';
+    }
+
+    if (this.esCatalogoAtracciones) {
+      return 'Captura clave, icono, nombre y descripcion para crear la nueva atraccion.';
     }
 
     if (this.esCatalogoPoliticas) {
@@ -441,6 +565,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
     if (this.esCatalogoDescuentos) {
       return 'Captura el tipo de descuento y el icono para crear un nuevo descuento.';
+    }
+
+    if (this.esCatalogoTipoImagen) {
+      return 'Captura la clave y el nombre visible para crear un nuevo tipo de imagen.';
     }
 
     if (this.esCatalogoTarifas) {
@@ -459,8 +587,16 @@ export class CatalogoPlaceholderComponent implements OnInit {
       return 'Editar idioma';
     }
 
+    if (this.esCatalogoConceptos) {
+      return 'Editar concepto';
+    }
+
     if (this.esCatalogoAmenidades) {
       return 'Editar amenidad';
+    }
+
+    if (this.esCatalogoAtracciones) {
+      return 'Editar atraccion';
     }
 
     if (this.esCatalogoPoliticas) {
@@ -469,6 +605,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
     if (this.esCatalogoDescuentos) {
       return 'Editar descuento';
+    }
+
+    if (this.esCatalogoTipoImagen) {
+      return 'Editar tipo imagen';
     }
 
     if (this.esCatalogoTarifas) {
@@ -487,8 +627,16 @@ export class CatalogoPlaceholderComponent implements OnInit {
       return 'Actualiza codigo, nombre y estatus del idioma.';
     }
 
+    if (this.esCatalogoConceptos) {
+      return 'Actualiza descripcion e icono del concepto.';
+    }
+
     if (this.esCatalogoAmenidades) {
       return 'Actualiza descripcion, clave y estatus de la amenidad.';
+    }
+
+    if (this.esCatalogoAtracciones) {
+      return 'Actualiza clave, icono, nombre y descripcion de la atraccion.';
     }
 
     if (this.esCatalogoPoliticas) {
@@ -497,6 +645,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
     if (this.esCatalogoDescuentos) {
       return 'Actualiza el tipo de descuento y el icono.';
+    }
+
+    if (this.esCatalogoTipoImagen) {
+      return 'Actualiza la clave y el nombre visible del tipo de imagen.';
     }
 
     if (this.esCatalogoTarifas) {
@@ -515,8 +667,16 @@ export class CatalogoPlaceholderComponent implements OnInit {
       return 'Nuevo idioma';
     }
 
+    if (this.esCatalogoConceptos) {
+      return 'Nuevo concepto';
+    }
+
     if (this.esCatalogoAmenidades) {
       return 'Nueva amenidad';
+    }
+
+    if (this.esCatalogoAtracciones) {
+      return 'Nueva atraccion';
     }
 
     if (this.esCatalogoPoliticas) {
@@ -525,6 +685,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
     if (this.esCatalogoDescuentos) {
       return 'Nuevo descuento';
+    }
+
+    if (this.esCatalogoTipoImagen) {
+      return 'Agregar tipo imagen';
     }
 
     if (this.esCatalogoTarifas) {
@@ -543,8 +707,16 @@ export class CatalogoPlaceholderComponent implements OnInit {
       return 'Crear idioma';
     }
 
+    if (this.esCatalogoConceptos) {
+      return 'Crear concepto';
+    }
+
     if (this.esCatalogoAmenidades) {
       return 'Crear amenidad';
+    }
+
+    if (this.esCatalogoAtracciones) {
+      return 'Crear atraccion';
     }
 
     if (this.esCatalogoPoliticas) {
@@ -553,6 +725,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
     if (this.esCatalogoDescuentos) {
       return 'Crear descuento';
+    }
+
+    if (this.esCatalogoTipoImagen) {
+      return 'Crear tipo imagen';
     }
 
     if (this.esCatalogoTarifas) {
@@ -571,8 +747,16 @@ export class CatalogoPlaceholderComponent implements OnInit {
       return 'Idioma guardado correctamente.';
     }
 
+    if (this.esCatalogoConceptos) {
+      return 'Concepto guardado correctamente.';
+    }
+
     if (this.esCatalogoAmenidades) {
       return 'Amenidad guardada correctamente.';
+    }
+
+    if (this.esCatalogoAtracciones) {
+      return 'Atraccion guardada correctamente.';
     }
 
     if (this.esCatalogoPoliticas) {
@@ -581,6 +765,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
     if (this.esCatalogoTarifas) {
       return 'Tarifa guardada correctamente.';
+    }
+
+    if (this.esCatalogoTipoImagen) {
+      return 'Tipo imagen guardado correctamente.';
     }
 
     if (this.esCatalogoTiposHabitacion) {
@@ -595,8 +783,16 @@ export class CatalogoPlaceholderComponent implements OnInit {
       return 'Idioma creado correctamente.';
     }
 
+    if (this.esCatalogoConceptos) {
+      return 'Concepto creado correctamente.';
+    }
+
     if (this.esCatalogoAmenidades) {
       return 'Amenidad creada correctamente.';
+    }
+
+    if (this.esCatalogoAtracciones) {
+      return 'Atraccion creada correctamente.';
     }
 
     if (this.esCatalogoPoliticas) {
@@ -611,6 +807,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
       return 'Tarifa creada correctamente.';
     }
 
+    if (this.esCatalogoTipoImagen) {
+      return 'Tipo imagen creado correctamente.';
+    }
+
     if (this.esCatalogoTiposHabitacion) {
       return 'Habitacion creada correctamente.';
     }
@@ -623,8 +823,16 @@ export class CatalogoPlaceholderComponent implements OnInit {
       return 'Idioma eliminado correctamente.';
     }
 
+    if (this.esCatalogoConceptos) {
+      return 'Concepto eliminado correctamente.';
+    }
+
     if (this.esCatalogoAmenidades) {
       return 'Amenidad eliminada correctamente.';
+    }
+
+    if (this.esCatalogoAtracciones) {
+      return 'Atraccion eliminada correctamente.';
     }
 
     if (this.esCatalogoPoliticas) {
@@ -660,7 +868,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
         this.catalogosAdmin.obtenerCatalogoAdmin(this.catalogoKey),
         this.esCatalogoTarifas ? this.catalogosAdmin.obtenerPoliticasDisponiblesTarifa() : Promise.resolve([])
       ]);
-      this.items = [...(info ?? [])];
+      const items = [...(info ?? [])];
+      this.items = this.esCatalogoTipoImagen
+        ? items.sort((a, b) => Number(a?.id ?? 0) - Number(b?.id ?? 0))
+        : items;
       this.politicasDisponiblesTarifa = [...(politicasTarifa ?? [])];
       this.ordenOriginalIds = this.items.map((item) => Number(item.id));
       this.pageIndex = 0;
@@ -712,7 +923,25 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
   iniciarEdicion(item: any) {
     if (this.esCatalogoAtracciones) {
-      this.irEditarAtracciones(item);
+      this.error = '';
+      this.errorModalEdicion = '';
+      this.editingId = Number(item.id);
+      this.editingDraft = {
+        clave: item?.clave ?? '',
+        icono: item?.icono ?? '',
+        nombre: item?.nombre ?? '',
+        nombre_es: item?.nombre ?? '',
+        descripcion: item?.descripcion ?? '',
+        descripcion_es: item?.descripcion ?? '',
+        orden: item?.orden ?? null,
+        activo: Boolean(item?.activo)
+      };
+      this.traduccionesAtraccionPreview = this.normalizarTraduccionesAtraccion(item?.traducciones_preview);
+      this.ultimaLlaveTraduccionAtraccion = this.obtenerLlaveTraduccionAtraccion(
+        item?.nombre,
+        item?.descripcion
+      );
+      this.modalEdicionAbierto = true;
       return;
     }
 
@@ -725,7 +954,13 @@ export class CatalogoPlaceholderComponent implements OnInit {
       return acc;
     }, {} as Record<string, any>);
 
-    if (this.esCatalogoPoliticas) {
+    if (this.esCatalogoConceptos) {
+      this.editingDraft = {
+        ...this.editingDraft,
+        descripcion: item?.descripcion ?? '',
+        icono: item?.icono ?? ''
+      };
+    } else if (this.esCatalogoPoliticas) {
       this.editingDraft = {
         ...this.editingDraft,
         titulo_es: item?.titulo_es ?? '',
@@ -759,6 +994,13 @@ export class CatalogoPlaceholderComponent implements OnInit {
     } else if (this.esCatalogoDescuentos) {
       this.traduccionesDescuentoPreview = this.normalizarTraduccionesDescuento(item?.traducciones_preview);
       this.ultimaLlaveTraduccionDescuento = this.limpiarTexto(item?.tipo_descuento);
+    } else if (this.esCatalogoTipoImagen) {
+      this.editingDraft = {
+        ...this.editingDraft,
+        descripcion_es: item?.descripcion ?? ''
+      };
+      this.traduccionesTipoImagenPreview = this.normalizarTraduccionesTipoImagen(item?.traducciones_preview);
+      this.ultimaLlaveTraduccionTipoImagen = this.limpiarTexto(item?.descripcion);
     }
 
     if (this.usaModalEdicion) {
@@ -779,6 +1021,8 @@ export class CatalogoPlaceholderComponent implements OnInit {
     this.limpiarVistaPreviaPolitica();
     this.limpiarVistaPreviaAmenidad();
     this.limpiarVistaPreviaDescuento();
+    this.limpiarVistaPreviaAtraccion();
+    this.limpiarVistaPreviaTipoImagen();
     this.filtroPoliticasTarifa = '';
     this.politicasTarifaSeleccionadas.clear();
   }
@@ -792,6 +1036,210 @@ export class CatalogoPlaceholderComponent implements OnInit {
     this.traduccionesDescuentoPreview = {};
     this.ultimaLlaveTraduccionDescuento = '';
     this.traduciendoDescuento = false;
+  }
+
+  private limpiarVistaPreviaAtraccion() {
+    this.traduccionesAtraccionPreview = {};
+    this.ultimaLlaveTraduccionAtraccion = '';
+    this.traduciendoAtraccion = false;
+  }
+
+  private limpiarVistaPreviaTipoImagen() {
+    this.traduccionesTipoImagenPreview = {};
+    this.ultimaLlaveTraduccionTipoImagen = '';
+    this.traduciendoTipoImagen = false;
+  }
+
+  private obtenerLlaveTraduccionAtraccion(
+    nombre: string | null | undefined,
+    descripcion: string | null | undefined
+  ): string {
+    return `${this.limpiarTexto(nombre)}|${this.limpiarTexto(descripcion)}`;
+  }
+
+  private normalizarTraduccionesAtraccion(
+    traducciones: Record<string, any> | null | undefined
+  ): Record<string, IAtraccionTraduccionPreview> {
+    return Object.entries(traducciones ?? {}).reduce((acc, [idioma, valor]) => {
+      const codigoIdioma = String(idioma ?? '').toLowerCase();
+      if (!codigoIdioma) {
+        return acc;
+      }
+
+      acc[codigoIdioma] = {
+        nombre: String(valor?.nombre ?? valor?.titulo ?? '').trim(),
+        descripcion: String(valor?.descripcion ?? '').trim()
+      };
+
+      return acc;
+    }, {} as Record<string, IAtraccionTraduccionPreview>);
+  }
+
+  async traducirAtraccionAlSalirDelCampo(event?: Event) {
+    if (!this.esCatalogoAtracciones) {
+      return;
+    }
+
+    if (event instanceof KeyboardEvent && event.key === 'Enter') {
+      event.preventDefault();
+    }
+
+    await this.actualizarVistaPreviaAtraccion();
+  }
+
+  private obtenerLlaveTraduccionTipoImagen(descripcion: string | null | undefined): string {
+    return this.limpiarTexto(descripcion);
+  }
+
+  private normalizarTraduccionesTipoImagen(traducciones: any): Record<string, { descripcion: string }> {
+    if (!traducciones || typeof traducciones !== 'object') {
+      return {};
+    }
+
+    return Object.entries(traducciones).reduce((acc, [codigo, valor]: [string, any]) => {
+      const code = String(codigo ?? '').toLowerCase();
+      if (!code) {
+        return acc;
+      }
+
+      acc[code] = {
+        descripcion: typeof valor?.descripcion === 'string' ? valor.descripcion : ''
+      };
+
+      return acc;
+    }, {} as Record<string, { descripcion: string }>);
+  }
+
+  async traducirTipoImagenAlSalirDelCampo(event?: Event) {
+    if (!this.esCatalogoTipoImagen) {
+      return;
+    }
+
+    if (event instanceof KeyboardEvent && event.key === 'Enter') {
+      event.preventDefault();
+    }
+
+    await this.actualizarVistaPreviaTipoImagen();
+  }
+
+  private async actualizarVistaPreviaTipoImagen(ignorarEstadoGuardado = false) {
+    if (!this.esCatalogoTipoImagen || this.traduciendoTipoImagen) {
+      return;
+    }
+
+    if (!ignorarEstadoGuardado && (this.guardandoEdicion || this.guardandoCreacion)) {
+      return;
+    }
+
+    const fuente = this.modalEdicionAbierto ? this.editingDraft : this.modalCrearAbierto ? this.nuevoRegistroDraft : null;
+    if (!fuente) {
+      return;
+    }
+
+    const descripcion = this.limpiarTexto(String(fuente['descripcion_es'] ?? ''));
+    if (!descripcion) {
+      this.limpiarVistaPreviaTipoImagen();
+      return;
+    }
+
+    const llaveActual = this.obtenerLlaveTraduccionTipoImagen(descripcion);
+    if (llaveActual === this.ultimaLlaveTraduccionTipoImagen && Object.keys(this.traduccionesTipoImagenPreview).length > 0) {
+      return;
+    }
+
+    this.traduciendoTipoImagen = true;
+
+    try {
+      const traducciones = await this.supabase.traducirDesdeEspanol({
+        title: '',
+        description: descripcion
+      });
+
+      const concentrado = this.idiomasVistaPolitica.reduce((acc, idioma) => {
+        const traduccionIdioma = traducciones?.[idioma.code];
+        if (!traduccionIdioma) {
+          return acc;
+        }
+
+        acc[idioma.code] = {
+          descripcion: typeof traduccionIdioma.description === 'string' ? traduccionIdioma.description : ''
+        };
+
+        return acc;
+      }, {} as Record<string, { descripcion: string }>);
+
+      concentrado['es'] = { descripcion };
+
+      this.traduccionesTipoImagenPreview = concentrado;
+      this.ultimaLlaveTraduccionTipoImagen = llaveActual;
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudo traducir el tipo de imagen.';
+    } finally {
+      this.traduciendoTipoImagen = false;
+    }
+  }
+
+  private async actualizarVistaPreviaAtraccion(ignorarEstadoGuardado = false) {
+    if (!this.esCatalogoAtracciones || this.traduciendoAtraccion) {
+      return;
+    }
+
+    if (!ignorarEstadoGuardado && (this.guardandoEdicion || this.guardandoCreacion)) {
+      return;
+    }
+
+    const fuente = this.modalEdicionAbierto ? this.editingDraft : this.modalCrearAbierto ? this.nuevoRegistroDraft : null;
+    if (!fuente) {
+      return;
+    }
+
+    const nombre = this.limpiarTexto(String(fuente['nombre'] ?? fuente['nombre_es'] ?? ''));
+    const descripcion = this.limpiarTexto(String(fuente['descripcion'] ?? fuente['descripcion_es'] ?? ''));
+
+    if (!nombre && !descripcion) {
+      this.limpiarVistaPreviaAtraccion();
+      return;
+    }
+
+    const llaveActual = this.obtenerLlaveTraduccionAtraccion(nombre, descripcion);
+    if (llaveActual === this.ultimaLlaveTraduccionAtraccion && Object.keys(this.traduccionesAtraccionPreview).length > 0) {
+      return;
+    }
+
+    this.traduciendoAtraccion = true;
+
+    try {
+      const traducciones = await this.supabase.traducirDesdeEspanol({
+        title: nombre,
+        description: descripcion
+      });
+
+      const concentrado = this.idiomasVistaPolitica.reduce((acc, idioma) => {
+        const traduccionIdioma = traducciones?.[idioma.code];
+        if (!traduccionIdioma) {
+          return acc;
+        }
+
+        acc[idioma.code] = {
+          nombre: typeof traduccionIdioma.title === 'string' ? traduccionIdioma.title : '',
+          descripcion: typeof traduccionIdioma.description === 'string' ? traduccionIdioma.description : ''
+        };
+
+        return acc;
+      }, {} as Record<string, IAtraccionTraduccionPreview>);
+
+      concentrado['es'] = {
+        nombre,
+        descripcion
+      };
+
+      this.traduccionesAtraccionPreview = concentrado;
+      this.ultimaLlaveTraduccionAtraccion = llaveActual;
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudo traducir la atraccion.';
+    } finally {
+      this.traduciendoAtraccion = false;
+    }
   }
 
   async traducirAmenidadAlSalirDelCampo(event?: Event) {
@@ -911,6 +1359,66 @@ export class CatalogoPlaceholderComponent implements OnInit {
         this.items = this.items.map((current) =>
           Number(current.id) === this.editingId
             ? { ...current, ...payload }
+            : current
+        );
+      } else if (this.esCatalogoConceptos) {
+        const descripcion = String(this.editingDraft['descripcion'] ?? '').trim();
+        const icono = String(this.editingDraft['icono'] ?? '').trim();
+
+        if (!descripcion) {
+          this.errorModalEdicion = 'La descripcion es obligatoria para editar un concepto.';
+          this.guardandoEdicion = false;
+          return;
+        }
+
+        const payload = {
+          descripcion,
+          icono
+        };
+
+        await this.catalogosAdmin.actualizarCatalogoAdmin('conceptos', this.editingId, payload);
+        this.items = this.items.map((current) =>
+          Number(current.id) === this.editingId
+            ? { ...current, ...payload }
+            : current
+        );
+      } else if (this.esCatalogoAtracciones) {
+        const clave = String(this.editingDraft['clave'] ?? '').trim();
+        const icono = String(this.editingDraft['icono'] ?? '').trim();
+        const nombre = String(this.editingDraft['nombre'] ?? this.editingDraft['nombre_es'] ?? '').trim();
+        const descripcion = String(this.editingDraft['descripcion'] ?? this.editingDraft['descripcion_es'] ?? '').trim();
+        const orden = this.parseNumber(this.editingDraft['orden']);
+
+        if (!clave || !nombre || !descripcion || !Number.isFinite(Number(orden))) {
+          this.errorModalEdicion = 'Clave, nombre, descripcion y orden son obligatorios para editar una atraccion.';
+          this.guardandoEdicion = false;
+          return;
+        }
+
+        await this.actualizarVistaPreviaAtraccion(true);
+
+        const payload = {
+          clave,
+          icono,
+          orden,
+          activo: Boolean(this.editingDraft['activo']),
+          nombre,
+          descripcion
+        };
+
+        await this.catalogosAdmin.actualizarCatalogoAdmin('atracciones', this.editingId, payload);
+        this.items = this.items.map((current) =>
+          Number(current.id) === this.editingId
+            ? {
+              ...current,
+              clave,
+              icono,
+              orden,
+              activo: Boolean(this.editingDraft['activo']),
+              nombre,
+              descripcion,
+              traducciones_preview: this.traduccionesAtraccionPreview
+            }
             : current
         );
       } else if (this.esCatalogoPoliticas) {
@@ -1036,6 +1544,40 @@ export class CatalogoPlaceholderComponent implements OnInit {
             }
             : current
         );
+      } else if (this.esCatalogoTipoImagen) {
+        const clave = String(this.editingDraft['clave'] ?? '').trim();
+        const descripcionEs = String(this.editingDraft['descripcion_es'] ?? '').trim();
+
+        if (!clave) {
+          this.errorModalEdicion = 'La clave es obligatoria para editar un tipo de imagen.';
+          this.guardandoEdicion = false;
+          return;
+        }
+
+        if (!descripcionEs) {
+          this.errorModalEdicion = 'La descripcion en español es obligatoria para editar un tipo de imagen.';
+          this.guardandoEdicion = false;
+          return;
+        }
+
+        await this.actualizarVistaPreviaTipoImagen(true);
+
+        const payload = {
+          clave,
+          descripcion_es: descripcionEs
+        };
+
+        await this.catalogosAdmin.actualizarCatalogoAdmin('tipo_imagen', this.editingId, payload);
+        this.items = this.items.map((current) =>
+          Number(current.id) === this.editingId
+            ? {
+              ...current,
+              clave,
+              descripcion: descripcionEs,
+              traducciones_preview: this.traduccionesTipoImagenPreview
+            }
+            : current
+        );
       } else {
         const nombre = String(this.editingDraft['nombre'] ?? '').trim();
         if (!nombre) {
@@ -1086,6 +1628,12 @@ export class CatalogoPlaceholderComponent implements OnInit {
         clave: '',
         activo: true
       };
+    } else if (this.esCatalogoConceptos) {
+      this.nuevoRegistroDraft = {
+        ...this.nuevoRegistroDraft,
+        descripcion: '',
+        icono: ''
+      };
     } else if (this.esCatalogoPoliticas) {
       this.nuevoRegistroDraft = {
         ...this.nuevoRegistroDraft,
@@ -1104,6 +1652,26 @@ export class CatalogoPlaceholderComponent implements OnInit {
         icono: ''
       };
       this.limpiarVistaPreviaDescuento();
+    } else if (this.esCatalogoAtracciones) {
+      this.nuevoRegistroDraft = {
+        ...this.nuevoRegistroDraft,
+        clave: '',
+        icono: '',
+        nombre: '',
+        nombre_es: '',
+        descripcion: '',
+        descripcion_es: '',
+        orden: this.items.reduce((max, current) => Math.max(max, Number(current?.orden ?? 0)), 0) + 1,
+        activo: true
+      };
+      this.limpiarVistaPreviaAtraccion();
+    } else if (this.esCatalogoTipoImagen) {
+      this.nuevoRegistroDraft = {
+        ...this.nuevoRegistroDraft,
+        clave: '',
+        descripcion_es: ''
+      };
+      this.limpiarVistaPreviaTipoImagen();
     } else if (this.esCatalogoTarifas) {
       this.nuevoRegistroDraft = {
         ...this.nuevoRegistroDraft,
@@ -1133,6 +1701,8 @@ export class CatalogoPlaceholderComponent implements OnInit {
     this.filtroPoliticasTarifa = '';
     this.politicasTarifaSeleccionadas.clear();
     this.limpiarVistaPreviaDescuento();
+    this.limpiarVistaPreviaAtraccion();
+    this.limpiarVistaPreviaTipoImagen();
   }
 
   abrirModalEliminar(item: any) {
@@ -1225,6 +1795,20 @@ export class CatalogoPlaceholderComponent implements OnInit {
           nombre,
           activo: Boolean(this.nuevoRegistroDraft['activo'])
         });
+      } else if (this.esCatalogoConceptos) {
+        const descripcion = String(this.nuevoRegistroDraft['descripcion'] ?? '').trim();
+        const icono = String(this.nuevoRegistroDraft['icono'] ?? '').trim();
+
+        if (!descripcion) {
+          this.errorModalCreacion = 'La descripcion es obligatoria para crear un concepto.';
+          this.guardandoCreacion = false;
+          return;
+        }
+
+        await this.catalogosAdmin.crearCatalogoAdmin(this.catalogoKey, {
+          descripcion,
+          icono
+        });
       } else if (this.esCatalogoPoliticas) {
         const codigo = String(this.nuevoRegistroDraft['codigo'] ?? '').trim();
         const categoria = String(this.nuevoRegistroDraft['categoria'] ?? '').trim();
@@ -1263,6 +1847,51 @@ export class CatalogoPlaceholderComponent implements OnInit {
         await this.catalogosAdmin.crearCatalogoAdmin(this.catalogoKey, {
           tipo_descuento: tipoDescuento,
           icono
+        });
+      } else if (this.esCatalogoAtracciones) {
+        const clave = String(this.nuevoRegistroDraft['clave'] ?? '').trim();
+        const icono = String(this.nuevoRegistroDraft['icono'] ?? '').trim();
+        const nombre = String(this.nuevoRegistroDraft['nombre'] ?? this.nuevoRegistroDraft['nombre_es'] ?? '').trim();
+        const descripcion = String(this.nuevoRegistroDraft['descripcion'] ?? this.nuevoRegistroDraft['descripcion_es'] ?? '').trim();
+        const orden = this.parseNumber(this.nuevoRegistroDraft['orden']);
+
+        if (!clave || !nombre || !descripcion || !Number.isFinite(Number(orden))) {
+          this.errorModalCreacion = 'Clave, nombre, descripcion y orden son obligatorios para crear una atraccion.';
+          this.guardandoCreacion = false;
+          return;
+        }
+
+        await this.actualizarVistaPreviaAtraccion(true);
+
+        await this.catalogosAdmin.crearCatalogoAdmin(this.catalogoKey, {
+          clave,
+          icono,
+          orden,
+          activo: Boolean(this.nuevoRegistroDraft['activo']),
+          nombre,
+          descripcion
+        });
+      } else if (this.esCatalogoTipoImagen) {
+        const clave = String(this.nuevoRegistroDraft['clave'] ?? '').trim();
+        const descripcionEs = String(this.nuevoRegistroDraft['descripcion_es'] ?? '').trim();
+
+        if (!clave) {
+          this.errorModalCreacion = 'La clave es obligatoria para crear un tipo de imagen.';
+          this.guardandoCreacion = false;
+          return;
+        }
+
+        if (!descripcionEs) {
+          this.errorModalCreacion = 'La descripcion en español es obligatoria para crear un tipo de imagen.';
+          this.guardandoCreacion = false;
+          return;
+        }
+
+        await this.actualizarVistaPreviaTipoImagen(true);
+
+        await this.catalogosAdmin.crearCatalogoAdmin(this.catalogoKey, {
+          clave,
+          descripcion_es: descripcionEs
         });
       } else if (this.esCatalogoAmenidades) {
         const descripcion = String(this.nuevoRegistroDraft['descripcion'] ?? '').trim();
@@ -1466,8 +2095,32 @@ export class CatalogoPlaceholderComponent implements OnInit {
     this.pageIndex = 0;
   }
 
+  onFiltrosTipoImagenChange() {
+    if (!this.esCatalogoTipoImagen) {
+      return;
+    }
+
+    this.pageIndex = 0;
+  }
+
+  onFiltrosAtraccionesChange() {
+    if (!this.esCatalogoAtracciones) {
+      return;
+    }
+
+    this.pageIndex = 0;
+  }
+
   toggleFiltrosAmenidades() {
     this.mostrarFiltrosAmenidades = !this.mostrarFiltrosAmenidades;
+  }
+
+  toggleFiltrosTipoImagen() {
+    this.mostrarFiltrosTipoImagen = !this.mostrarFiltrosTipoImagen;
+  }
+
+  toggleFiltrosAtracciones() {
+    this.mostrarFiltrosAtracciones = !this.mostrarFiltrosAtracciones;
   }
 
   limpiarFiltrosAmenidades() {
@@ -1480,12 +2133,39 @@ export class CatalogoPlaceholderComponent implements OnInit {
     this.pageIndex = 0;
   }
 
+  limpiarFiltrosTipoImagen() {
+    this.filtrosTipoImagen = {
+      id: '',
+      clave: '',
+      descripcion: '',
+      orden: ''
+    };
+    this.pageIndex = 0;
+  }
+
+  limpiarFiltrosAtracciones() {
+    this.filtrosAtracciones = {
+      id: '',
+      clave: '',
+      orden: '',
+      nombre: '',
+      descripcion: '',
+      icono: '',
+      activo: ''
+    };
+    this.pageIndex = 0;
+  }
+
   getGlobalIndex(localIndex: number): number {
     return this.pageIndex * this.pageSize + localIndex;
   }
 
   getValor(item: any, key: string, index: number): string {
     const valor = item?.[key];
+
+    if (key === 'orden' && this.esCatalogoAtracciones) {
+      return valor === null || valor === undefined || valor === '' ? '-' : String(valor);
+    }
 
     if (key === 'orden' && this.tieneOrden) {
       return String(index + 1);
@@ -1729,6 +2409,15 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
   private limpiarTexto(value: string | null | undefined): string {
     return String(value ?? '').trim();
+  }
+
+  private parseNumber(value: number | string | null | undefined): number | null {
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
   }
 
   private coincideFiltro(valor: string, filtro: string): boolean {

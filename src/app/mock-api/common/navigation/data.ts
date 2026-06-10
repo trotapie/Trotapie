@@ -39,6 +39,13 @@ export const compactNavigation: FuseNavigationItem[] = [
         type : 'basic',
         icon : 'heroicons_outline:inbox-stack',
         link : 'admin/solicitudes-cotizacion'
+    },
+    {
+        id   : 'empleados',
+        title: 'Empleados',
+        type : 'basic',
+        icon : 'heroicons_outline:users',
+        link : 'admin/empleados'
     }
 ];
 export const futuristicNavigation: FuseNavigationItem[] = [

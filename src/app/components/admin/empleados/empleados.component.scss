@@ -1,0 +1,36 @@
+.table-wrapper {
+  overflow: auto;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 0.75rem;
+}
+
+table {
+  width: 100%;
+}
+
+.actions-col {
+  width: 180px;
+  min-width: 180px;
+  text-align: center;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+}
+
+.status-pill--off {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.fixed .max-w-lg {
+  max-height: 90vh;
+  overflow: auto;
+}

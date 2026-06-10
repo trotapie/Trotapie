@@ -19,11 +19,11 @@ interface CatalogoItem {
 export class AdminActividadesComponent {
   catalogos: CatalogoItem[] = [
     {
-      titulo: 'Catalogo de actividades',
-      descripcion: 'Gestiona el catalogo general de actividades disponibles.',
+      titulo: 'Catalogo de amenidades',
+      descripcion: 'Gestiona el catalogo general de amenidades disponibles.',
       icono: 'heroicons_outline:clipboard-document-list',
       imagen: 'https://images.unsplash.com/photo-1551918120-9739cb430c6d?q=80&w=774&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-      link: '/admin/catalogos/actividades'
+      link: '/admin/catalogos/amenidades'
     },
     {
       titulo: 'Conceptos',

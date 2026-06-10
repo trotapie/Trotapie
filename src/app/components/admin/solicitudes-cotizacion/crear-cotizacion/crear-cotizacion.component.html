@@ -124,6 +124,43 @@
                             }
                         </mat-form-field>
                     </div>
+
+                    <div class="flex flex-wrap items-center gap-3">
+                        <button mat-flat-button color="primary" type="button" class="text-white"
+                            [disabled]="!form.get('hotel_id')?.value" (click)="agregarHotelComparativa()">
+                            <mat-icon class="mr-2 icon-size-5 text-white">add</mat-icon>
+                            Agregar a comparativa
+                        </button>
+                        <span class="text-sm text-gray-600">
+                            Seleccionados: {{ totalHotelesSeleccionados() }} de {{ MAX_COMPARE }}
+                        </span>
+                    </div>
+
+                    @if (hotelesSeleccionados().length) {
+                    <div class="comparativa-seleccion">
+                        <div class="comparativa-seleccion-head">
+                            <h3>Hoteles seleccionados</h3>
+                        </div>
+
+                        <div class="comparativa-seleccion-list">
+                            @for (hotel of hotelesSeleccionados(); track hotel.hotel_id; let i = $index) {
+                            <article class="comparativa-item">
+                                <mat-radio-button name="hotelPrincipal" [checked]="hotelPrincipalId() === hotel.hotel_id"
+                                    (change)="seleccionarHotelPrincipal(hotel.hotel_id)">
+                                    Principal
+                                </mat-radio-button>
+                                <div class="comparativa-item-info">
+                                    <strong>{{ hotel.hotel_nombre }}</strong>
+                                    <span>{{ hotel.regimen_nombre }}</span>
+                                </div>
+                                <button mat-icon-button type="button" (click)="removerHotelComparativa(i)">
+                                    <mat-icon>close</mat-icon>
+                                </button>
+                            </article>
+                            }
+                        </div>
+                    </div>
+                    }
                 </section>
 
                 <section class="card">
@@ -269,7 +306,7 @@
 
                 <div class="actions">
                     <button mat-raised-button color="primary" class="w-full text-white sm:w-auto" type="button"
-                        [disabled]="guardando || hasMissingAges() || form.invalid" (click)="crearCotizacion()">
+                        [disabled]="guardando || hasMissingAges() || form.invalid || !hotelesSeleccionados().length" (click)="crearCotizacion()">
                         <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:plus'"></mat-icon>
                         @if (guardando) {
                         Creando...

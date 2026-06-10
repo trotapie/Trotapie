@@ -21,7 +21,7 @@ type EmailPayload = {
 };
 
 const GOOGLE_SCRIPT_EXEC_URL = 'https://script.google.com/macros/s/AKfycbyOpwBR5DUqJHbKx8ZGN_IQ8NT06iwH-bb8BsgC9-jBxbgPOgqarHLdg-W5eXfGppyH7w/exec';
-const DEFAULT_REPLY_TO = 'alexsaenz539@gmail.com';
+const DEFAULT_REPLY_TO = '';
 const DEFAULT_REMITENTE_NOMBRE = 'Trotapie';
 const DEFAULT_TITULO_CORREO = 'Tu cotizacion esta lista';
 const DEFAULT_MENSAJE_CORREO = 'Te compartimos tu cotizacion en PDF.';
@@ -120,47 +120,41 @@ Deno.serve(async (req) => {
     const tituloCorreo = DEFAULT_TITULO_CORREO;
     const mensajeFinal = mensaje || DEFAULT_MENSAJE_CORREO;
     const replyTo = Deno.env.get('MAILEROO_REPLY_TO') || DEFAULT_REPLY_TO;
-
-    const resumen = [
-      hotel ? `Hotel: ${hotel}` : '',
-      destino ? `Destino: ${destino}` : '',
-      fechaEntrada ? `Entrada: ${fechaEntrada}` : '',
-      fechaSalida ? `Salida: ${fechaSalida}` : '',
-      Number.isFinite(noches) && noches > 0 ? `Noches: ${noches}` : '',
-      telefono ? `Telefono: ${telefono}` : ''
-    ]
-      .filter(Boolean)
-      .join('\n');
-
-    const appPublicUrl = (Deno.env.get('APP_PUBLIC_URL') || 'https://app.trotapie.com').replace(/\/+$/, '');
-    const cotizacionUrl = publicId
-      ? `${appPublicUrl}/cotizacion/${encodeURIComponent(publicId)}`
-      : '';
+    const remitenteNombre = DEFAULT_REMITENTE_NOMBRE;
 
     const html = `
-      <div style="font-family: Arial, sans-serif; color: #111827;">
-        <h2 style="margin:0 0 12px;">Cotizacion de viaje${publicId ? ` #${escapeHtml(publicId)}` : ''}</h2>
-        <p style="margin:0 0 8px;">Hola ${escapeHtml(nombre)},</p>
-        <p style="margin:0 0 10px;">Adjunto encontrarás el PDF con el detalle completo de tu solicitud de cotización.</p>
-        ${mensajeFinal ? `<p style="margin:0 0 10px;"><strong>Descripcion:</strong> ${escapeHtml(mensajeFinal)}</p>` : ''}
-        ${resumen ? `<pre style="white-space:pre-wrap;background:#f9fafb;padding:12px;border-radius:8px;border:1px solid #e5e7eb;">${escapeHtml(resumen)}</pre>` : ''}
-        ${cotizacionUrl ? `<p style="margin:14px 0;"><a href="${escapeHtml(cotizacionUrl)}" style="display:inline-block;padding:10px 14px;background:#0f766e;color:#ffffff;text-decoration:none;border-radius:8px;">Ver cotizacion</a></p>` : ''}
-        <p style="margin:12px 0 0;">Gracias por confiar en Trotapie.</p>
+      <div style="font-family: Arial, sans-serif; color: #111827; max-width: 600px; margin: 0 auto;">
+        <div style="padding: 24px; border: 1px solid #e5e7eb; border-radius: 14px;">
+          <h2 style="margin: 0 0 12px 0; color: #111827;">
+            ${escapeHtml(tituloCorreo)}
+          </h2>
+
+          <p style="font-size: 15px; line-height: 1.5;">
+            Hola <strong>${escapeHtml(nombre)}</strong>,
+          </p>
+
+          <p style="font-size: 15px; line-height: 1.5;">
+            ${escapeHtml(mensajeFinal)}
+          </p>
+
+          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
+
+          <p style="font-size: 13px; color: #6b7280;">
+            Este correo fue enviado por ${escapeHtml(remitenteNombre)}.
+          </p>
+        </div>
       </div>
     `;
 
-    const plainLines = [
-      `Hola ${nombre},`,
-      '',
-      'Adjunto encontrarás el PDF con el detalle completo de tu solicitud de cotización.',
-      mensajeFinal ? `Descripcion: ${mensajeFinal}` : '',
-      resumen,
-      cotizacionUrl ? `Ver cotizacion: ${cotizacionUrl}` : '',
-      '',
-      'Gracias por confiar en Trotapie.'
-    ].filter(Boolean);
+    const plain = `
+${tituloCorreo}
 
-    const plain = plainLines.join('\n');
+Hola ${nombre},
+
+${mensajeFinal}
+
+Este correo fue enviado por ${remitenteNombre}.
+    `.trim();
 
     const googleScriptResult = await enviarPrimeroConGoogleScript({
       url: GOOGLE_SCRIPT_EXEC_URL,
@@ -169,7 +163,7 @@ Deno.serve(async (req) => {
       asunto: asuntoFinal,
       titulo: tituloCorreo,
       mensaje: mensajeFinal,
-      remitenteNombre: DEFAULT_REMITENTE_NOMBRE,
+      remitenteNombre,
       replyTo,
       pdfBase64,
       pdfNombre: pdfFilename,
@@ -227,12 +221,12 @@ Deno.serve(async (req) => {
     const mailPayload: Record<string, unknown> = {
       from: {
         address: 'no-reply@1ad700884a9f9f2e.maileroo.org',
-        display_name: DEFAULT_REMITENTE_NOMBRE,
+        display_name: remitenteNombre,
       },
       to: destinatariosFallback.map((address) => ({ address, display_name: nombre || 'Cliente' })),
       reply_to: {
         address: replyTo,
-        display_name: DEFAULT_REMITENTE_NOMBRE,
+        display_name: remitenteNombre,
       },
       subject: asuntoFinal,
       html,
@@ -478,3 +472,4 @@ async function safeJson(response: Response): Promise<any> {
     return {};
   }
 }
+
