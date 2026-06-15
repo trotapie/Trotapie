@@ -4,4 +4,7 @@ export interface User {
     email: string;
     avatar?: string;
     status?: string;
+    role?: string;
+    permissions?: string[];
+    requiresPasswordChange?: boolean;
 }

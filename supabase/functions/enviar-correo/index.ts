@@ -20,8 +20,8 @@ type EmailPayload = {
   pdf_filename?: string;
 };
 
-const GOOGLE_SCRIPT_EXEC_URL = 'https://script.google.com/macros/s/AKfycbyOpwBR5DUqJHbKx8ZGN_IQ8NT06iwH-bb8BsgC9-jBxbgPOgqarHLdg-W5eXfGppyH7w/exec';
-const DEFAULT_REPLY_TO = '';
+const GOOGLE_SCRIPT_EXEC_URL = 'https://script.google.com/macros/s/AKfycbxojdZ6fXbfu7ji0mIGGaMB1JO9SMIs0kqJW6NsWbyToFcXHuSKGPDKkU5598zTRU7q/exec';
+const DEFAULT_REPLY_TO = 'cotizaciones@trotapie.com';
 const DEFAULT_REMITENTE_NOMBRE = 'Trotapie';
 const DEFAULT_TITULO_CORREO = 'Tu cotizacion esta lista';
 const DEFAULT_MENSAJE_CORREO = 'Te compartimos tu cotizacion en PDF.';

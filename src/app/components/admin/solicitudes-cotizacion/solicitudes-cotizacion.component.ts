@@ -4,6 +4,7 @@ import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FuseSplashScreenService } from '@fuse/services/splash-screen';
+import { AuthService } from 'app/core/auth/auth.service';
 import { SupabaseService } from 'app/core/supabase.service';
 import { ISolicitudCotizacionListado } from 'app/interface/solicitudes-cotizacion.interface';
 import { EstatusComponent } from 'app/shared/estatus/estatus.component';
@@ -27,6 +28,7 @@ type ColumnFilterKey =
 })
 export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
   private splashScreen = inject(FuseSplashScreenService);
+  private authService = inject(AuthService);
   private supabase = inject(SupabaseService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -83,7 +85,7 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
 
     try {
       const data = await this.supabase.obtenerSolicitudesCotizacion();
-      this.dataSource.data = data ?? [];
+      this.dataSource.data = await this.filtrarSolicitudesPorUsuario(data ?? []);
       this.estatusOptions = this.obtenerOpcionesEstatus(this.dataSource.data);
 
       if (this.paginator) this.dataSource.paginator = this.paginator;
@@ -91,6 +93,37 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
     } finally {
       this.splashScreen.hide();
     }
+  }
+
+  private async filtrarSolicitudesPorUsuario(
+    solicitudes: ISolicitudCotizacionListado[]
+  ): Promise<ISolicitudCotizacionListado[]> {
+    if (this.authService.isAdmin) {
+      return solicitudes;
+    }
+
+    const { data, error } = await this.supabase.getClient().auth.getUser();
+    if (error || !data?.user?.id) {
+      return [];
+    }
+
+    const { data: empleado, error: empleadoError } = await this.supabase
+      .getClient()
+      .from('empleados')
+      .select('id')
+      .eq('auth_user_id', data.user.id)
+      .maybeSingle();
+
+    if (empleadoError || !empleado?.id) {
+      return [];
+    }
+
+    const empleadoId = Number(empleado.id);
+    if (!Number.isFinite(empleadoId) || empleadoId <= 0) {
+      return [];
+    }
+
+    return solicitudes.filter((solicitud) => Number(solicitud.empleado_id) === empleadoId);
   }
 
   ngAfterViewInit(): void {

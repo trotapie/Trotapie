@@ -13,32 +13,44 @@ export const defaultNavigation: FuseNavigationItem[] = [
 ];
 export const compactNavigation: FuseNavigationItem[] = [
     {
+        id   : 'dashboard',
+        title: 'Dashboard',
+        type : 'basic',
+        icon : 'heroicons_outline:chart-pie',
+        link : '/admin/dashboard',
+        exactMatch: true
+    },
+    {
         id   : 'destinos',
         title: 'Destinos',
         type : 'basic',
         icon : 'heroicons_outline:map-pin',
-        link : 'admin/destinos'
+        link : '/admin/destinos',
+        meta : { permissions: ['destinos.view'] }
     },
     {
         id   : 'hoteles',
         title: 'Hoteles',
         type : 'basic',
         icon : 'heroicons_outline:building-office-2',
-        link : 'admin/hoteles'
+        link : '/admin/hoteles',
+        meta : { permissions: ['hoteles.view'] }
     },
     {
         id   : 'catalogos',
         title: 'Catalogos',
         type : 'basic',
         icon : 'heroicons_outline:squares-2x2',
-        link : 'admin/catalogos'
+        link : '/admin/catalogos',
+        meta : { roles: ['admin'] }
     },
     {
         id   : 'example',
         title: 'Solicitudes cotizacion',
         type : 'basic',
         icon : 'heroicons_outline:inbox-stack',
-        link : 'admin/solicitudes-cotizacion'
+        link : '/admin/solicitudes-cotizacion',
+        meta : { permissions: ['cotizaciones.view'] }
     },
     // {
     //     id   : 'cotizacion-multiple',
@@ -52,7 +64,16 @@ export const compactNavigation: FuseNavigationItem[] = [
         title: 'Empleados',
         type : 'basic',
         icon : 'heroicons_outline:users',
-        link : 'admin/empleados'
+        link : '/admin/empleados',
+        meta : { permissions: ['empleados.manage'] }
+    },
+    {
+        id   : 'configuracion',
+        title: 'Configuracion',
+        type : 'basic',
+        icon : 'heroicons_outline:cog-8-tooth',
+        link : '/admin/configuracion',
+        meta : { permissions: ['empleados.manage'] }
     }
 ];
 export const futuristicNavigation: FuseNavigationItem[] = [

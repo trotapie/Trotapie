@@ -5,9 +5,10 @@ import { of, switchMap } from 'rxjs';
 
 export const AuthGuard: CanActivateFn | CanActivateChildFn = (route, state) => {
     const router: Router = inject(Router);
+    const authService = inject(AuthService);
 
     // Check the authentication status
-    return inject(AuthService)
+    return authService
         .check()
         .pipe(
             switchMap((authenticated) => {
@@ -21,6 +22,14 @@ export const AuthGuard: CanActivateFn | CanActivateChildFn = (route, state) => {
                     const urlTree = router.parseUrl(`sign-in?${redirectURL}`);
 
                     return of(urlTree);
+                }
+
+                if (
+                    authService.requiresPasswordChange &&
+                    state.url !== '/first-login-password' &&
+                    state.url !== '/sign-out'
+                ) {
+                    return of(router.parseUrl('/first-login-password'));
                 }
 
                 // Allow the access

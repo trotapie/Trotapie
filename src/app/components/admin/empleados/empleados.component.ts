@@ -1,16 +1,27 @@
 import { AfterViewInit, Component, OnInit, ViewChild, inject } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { MatPaginator } from '@angular/material/paginator';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { SupabaseService } from 'app/core/supabase.service';
 import { EstatusComponent } from 'app/shared/estatus/estatus.component';
 import { MaterialModule } from 'app/shared/material.module';
+import { EmpleadoToastComponent } from './empleado-toast.component';
 
 interface IEmpleadoAdmin {
   id: number;
   nombre: string;
   estatus_id: number | null;
+  email: string | null;
+  auth_user_id: string | null;
+  primera_vez_login: boolean;
+}
+
+interface IRolAdmin {
+  id: number;
+  key: string;
+  name: string;
 }
 
 @Component({
@@ -26,25 +37,35 @@ export class EmpleadosComponent implements OnInit, AfterViewInit {
 
   private supabase = inject(SupabaseService);
   private fb = inject(FormBuilder);
+  private snackBar = inject(MatSnackBar);
 
-  displayedColumns: string[] = ['id', 'nombre', 'estatus', 'acciones'];
+  displayedColumns: string[] = ['id', 'nombre', 'email', 'estatus', 'acceso', 'acciones'];
   dataSource = new MatTableDataSource<IEmpleadoAdmin>([]);
 
   cargando = false;
+  cargandoRoles = false;
   guardando = false;
   actualizandoEstatusId: number | null = null;
   eliminandoEmpleadoId: number | null = null;
   empleadoEditandoId: number | null = null;
   modalEmpleadoAbierto = false;
   modalInhabilitarAbierto = false;
+  modalQuitarAccesoAbierto = false;
   modalEliminarAbierto = false;
+  modalContrasenaTemporalAbierto = false;
   empleadoPendienteInhabilitar: IEmpleadoAdmin | null = null;
+  empleadoPendienteQuitarAcceso: IEmpleadoAdmin | null = null;
   empleadoPendienteEliminar: IEmpleadoAdmin | null = null;
   error = '';
   mensaje = '';
+  contrasenaTemporal = '';
+  contrasenaTemporalCopiada = false;
+  rolesDisponibles: IRolAdmin[] = [];
+  rolesSeleccionados: number | null = null;
 
   form = this.fb.group({
-    nombre: ['', [Validators.required, Validators.maxLength(120)]]
+    nombre: ['', [Validators.required, Validators.maxLength(120)]],
+    email: ['', [Validators.email, Validators.maxLength(180)]],
   });
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
@@ -54,12 +75,15 @@ export class EmpleadosComponent implements OnInit, AfterViewInit {
     this.dataSource.filterPredicate = (data, filter) =>
       this.normalizar(data.id).includes(filter) ||
       this.normalizar(data.nombre).includes(filter) ||
+      this.normalizar(data.email).includes(filter) ||
       this.normalizar(this.obtenerEtiquetaEstatus(data)).includes(filter);
 
     this.dataSource.sortingDataAccessor = (data: IEmpleadoAdmin, sortHeaderId: string) => {
       if (sortHeaderId === 'id') return data.id;
       if (sortHeaderId === 'nombre') return this.normalizar(data.nombre);
+      if (sortHeaderId === 'email') return this.normalizar(data.email);
       if (sortHeaderId === 'estatus') return this.normalizar(this.obtenerEtiquetaEstatus(data));
+      if (sortHeaderId === 'acceso') return data.primera_vez_login ? 2 : data.auth_user_id ? 1 : 0;
       return '';
     };
 
@@ -78,6 +102,9 @@ export class EmpleadosComponent implements OnInit, AfterViewInit {
   async guardarEmpleado() {
     this.error = '';
     this.mensaje = '';
+    this.contrasenaTemporal = '';
+    this.contrasenaTemporalCopiada = false;
+    this.modalContrasenaTemporalAbierto = false;
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -85,24 +112,62 @@ export class EmpleadosComponent implements OnInit, AfterViewInit {
     }
 
     const nombre = String(this.form.get('nombre')?.value ?? '').trim();
+    const email = String(this.form.get('email')?.value ?? '').trim().toLowerCase();
     if (!nombre) {
       this.error = 'El nombre es obligatorio.';
       this.form.get('nombre')?.markAsTouched();
       return;
     }
 
+    const roleId = Number(this.rolesSeleccionados);
+
+    if (Number.isFinite(roleId) && roleId > 0 && !email) {
+      this.error = 'Agrega un email de acceso para poder asignar roles.';
+      this.form.get('email')?.markAsTouched();
+      return;
+    }
+
     this.guardando = true;
     try {
+      let empleado: IEmpleadoAdmin;
+      let contrasenaTemporalGenerada = '';
+      let debeMostrarContrasenaTemporal = false;
+
       if (this.estaEditando && this.empleadoEditandoId !== null) {
-        await this.supabase.actualizarEmpleadoAdmin(this.empleadoEditandoId, { nombre });
+        empleado = await this.supabase.actualizarEmpleadoAdmin(this.empleadoEditandoId, { nombre }) as IEmpleadoAdmin;
         this.mensaje = 'Empleado actualizado correctamente.';
       } else {
-        await this.supabase.crearEmpleadoAdmin({ nombre });
+        empleado = await this.supabase.crearEmpleadoAdmin({ nombre }) as IEmpleadoAdmin;
         this.mensaje = 'Empleado creado correctamente.';
       }
 
-      this.cerrarModalEmpleado();
+      if (email) {
+        const respuesta = await this.supabase.guardarAccesoEmpleadoAdmin({
+          empleadoId: empleado.id,
+          email,
+          nombre,
+          roleId: Number.isFinite(roleId) && roleId > 0 ? roleId : null,
+        });
+        contrasenaTemporalGenerada = String(respuesta?.temporaryPassword ?? '').trim();
+        debeMostrarContrasenaTemporal = Boolean(contrasenaTemporalGenerada);
+        this.contrasenaTemporal = contrasenaTemporalGenerada;
+        this.contrasenaTemporalCopiada = false;
+        this.mensaje = this.estaEditando
+          ? 'Empleado y acceso actualizados correctamente.'
+          : 'Empleado creado con acceso correctamente.';
+        this.mostrarToast({
+          title: 'Acceso guardado',
+          message: this.mensaje,
+          variant: 'success',
+        });
+      }
+
+      this.cerrarModalEmpleado(true);
       await this.cargarEmpleados();
+
+      if (debeMostrarContrasenaTemporal) {
+        this.abrirModalContrasenaTemporal(contrasenaTemporalGenerada);
+      }
     } catch (error: any) {
       this.error = error?.message ?? 'No se pudo guardar el empleado.';
     } finally {
@@ -110,12 +175,27 @@ export class EmpleadosComponent implements OnInit, AfterViewInit {
     }
   }
 
-  editarEmpleado(item: IEmpleadoAdmin) {
+  async editarEmpleado(item: IEmpleadoAdmin) {
     this.error = '';
     this.mensaje = '';
+    this.contrasenaTemporal = '';
+    this.contrasenaTemporalCopiada = false;
+    this.modalContrasenaTemporalAbierto = false;
     this.modalEmpleadoAbierto = true;
     this.empleadoEditandoId = item.id;
-    this.form.patchValue({ nombre: item.nombre });
+    await this.cargarRolesDisponibles();
+    this.form.patchValue({
+      nombre: item.nombre,
+      email: item.email ?? '',
+    });
+
+    try {
+      const roleIds = await this.supabase.rolesEmpleadoAdmin(item.id);
+      this.rolesSeleccionados = roleIds[0] ?? null;
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudieron cargar los roles del empleado.';
+      this.rolesSeleccionados = null;
+    }
   }
 
   async cambiarEstatusEmpleado(item: IEmpleadoAdmin) {
@@ -134,6 +214,58 @@ export class EmpleadosComponent implements OnInit, AfterViewInit {
     }
 
     await this.aplicarCambioEstatus(item, false);
+  }
+
+  abrirModalQuitarAcceso(item: IEmpleadoAdmin) {
+    this.error = '';
+    this.mensaje = '';
+
+    if (this.esEmpleadoProtegido(item)) {
+      this.error = 'El empleado "Otro" no puede quedarse sin acceso.';
+      return;
+    }
+
+    if (!item.auth_user_id) {
+      this.error = 'Este empleado no tiene acceso asignado.';
+      return;
+    }
+
+    this.modalQuitarAccesoAbierto = true;
+    this.empleadoPendienteQuitarAcceso = item;
+  }
+
+  cerrarModalQuitarAcceso() {
+    this.modalQuitarAccesoAbierto = false;
+    this.empleadoPendienteQuitarAcceso = null;
+  }
+
+  async confirmarQuitarAcceso() {
+    if (!this.empleadoPendienteQuitarAcceso || this.eliminandoEmpleadoId !== null) return;
+
+    this.eliminandoEmpleadoId = this.empleadoPendienteQuitarAcceso.id;
+    this.error = '';
+    this.mensaje = '';
+
+    try {
+      await this.supabase.quitarAccesoEmpleadoAdmin(this.empleadoPendienteQuitarAcceso.id);
+      this.mensaje = 'Acceso quitado correctamente.';
+      this.mostrarToast({
+        title: 'Acceso eliminado',
+        message: 'Se removio el usuario de este empleado.',
+        variant: 'warning',
+      });
+
+      if (this.empleadoEditandoId === this.empleadoPendienteQuitarAcceso.id) {
+        this.cerrarModalEmpleado();
+      }
+
+      this.cerrarModalQuitarAcceso();
+      await this.cargarEmpleados();
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudo quitar el acceso del empleado.';
+    } finally {
+      this.eliminandoEmpleadoId = null;
+    }
   }
 
   abrirModalEliminar(item: IEmpleadoAdmin) {
@@ -194,17 +326,60 @@ export class EmpleadosComponent implements OnInit, AfterViewInit {
     this.cerrarModalInhabilitar();
   }
 
-  abrirModalNuevoEmpleado() {
+  async abrirModalNuevoEmpleado() {
     this.error = '';
+    this.contrasenaTemporal = '';
+    this.contrasenaTemporalCopiada = false;
+    this.modalContrasenaTemporalAbierto = false;
+    await this.cargarRolesDisponibles();
+    this.rolesSeleccionados = this.obtenerRolPorDefecto();
     this.form.reset();
     this.empleadoEditandoId = null;
     this.modalEmpleadoAbierto = true;
   }
 
-  cerrarModalEmpleado() {
+  cerrarModalEmpleado(preservarContrasenaTemporal = false) {
     this.modalEmpleadoAbierto = false;
     this.empleadoEditandoId = null;
+    if (!preservarContrasenaTemporal) {
+      this.contrasenaTemporal = '';
+      this.modalContrasenaTemporalAbierto = false;
+    }
+    this.rolesSeleccionados = null;
     this.form.reset();
+  }
+
+  cerrarModalContrasenaTemporal() {
+    this.modalContrasenaTemporalAbierto = false;
+    this.contrasenaTemporal = '';
+    this.contrasenaTemporalCopiada = false;
+  }
+
+  private abrirModalContrasenaTemporal(contrasena: string) {
+    this.contrasenaTemporal = contrasena;
+    this.contrasenaTemporalCopiada = false;
+    this.modalContrasenaTemporalAbierto = false;
+
+    setTimeout(() => {
+      this.modalContrasenaTemporalAbierto = true;
+    }, 0);
+  }
+
+  async copiarContrasenaTemporal() {
+    if (!this.contrasenaTemporal) return;
+
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(this.contrasenaTemporal);
+      } else {
+        this.copiarTextoFallback(this.contrasenaTemporal);
+      }
+
+      this.contrasenaTemporalCopiada = true;
+    } catch {
+      this.copiarTextoFallback(this.contrasenaTemporal);
+      this.contrasenaTemporalCopiada = true;
+    }
   }
 
   aplicarFiltro(event: Event) {
@@ -225,6 +400,10 @@ export class EmpleadosComponent implements OnInit, AfterViewInit {
     return this.estaInhabilitado(item) ? 'INACTIVO' : 'ACTIVO';
   }
 
+  compareById(a: number | null, b: number | null): boolean {
+    return Number(a) === Number(b);
+  }
+
   private async aplicarCambioEstatus(item: IEmpleadoAdmin, inhabilitar: boolean) {
     this.actualizandoEstatusId = item.id;
     try {
@@ -233,9 +412,13 @@ export class EmpleadosComponent implements OnInit, AfterViewInit {
         inhabilitar ? this.ESTATUS_INHABILITADO : this.ESTATUS_ACTIVO
       );
 
-      this.mensaje = inhabilitar
-        ? 'Empleado inhabilitado correctamente.'
-        : 'Empleado habilitado correctamente.';
+      this.mostrarToast({
+        title: inhabilitar ? 'Empleado inhabilitado' : 'Empleado habilitado',
+        message: inhabilitar
+          ? 'El empleado fue marcado como inactivo correctamente.'
+          : 'El empleado ya puede acceder al sistema nuevamente.',
+        variant: inhabilitar ? 'warning' : 'success',
+      });
 
       if (this.empleadoEditandoId === item.id) {
         this.cerrarModalEmpleado();
@@ -260,7 +443,10 @@ export class EmpleadosComponent implements OnInit, AfterViewInit {
       this.dataSource.data = (data ?? []).map((item: any) => ({
         id: Number(item.id),
         nombre: String(item.nombre ?? ''),
-        estatus_id: Number.isFinite(Number(item.estatus_id)) ? Number(item.estatus_id) : null
+        estatus_id: Number.isFinite(Number(item.estatus_id)) ? Number(item.estatus_id) : null,
+        email: item.email ? String(item.email) : null,
+        auth_user_id: item.auth_user_id ? String(item.auth_user_id) : null,
+        primera_vez_login: Boolean(item.primera_vez_login)
       }));
     } catch (error: any) {
       this.error = error?.message ?? 'No se pudo cargar el concentrado de empleados.';
@@ -269,7 +455,60 @@ export class EmpleadosComponent implements OnInit, AfterViewInit {
     }
   }
 
+  private async cargarRolesDisponibles() {
+    if (this.rolesDisponibles.length || this.cargandoRoles) {
+      return;
+    }
+
+    this.cargandoRoles = true;
+
+    try {
+      const { data, error } = await this.supabase.rolesAdmin();
+      if (error) throw error;
+
+      this.rolesDisponibles = (data ?? []).map((item: any) => ({
+        id: Number(item.id),
+        key: String(item.key ?? ''),
+        name: String(item.name ?? item.key ?? ''),
+      }));
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudieron cargar los roles disponibles.';
+    } finally {
+      this.cargandoRoles = false;
+    }
+  }
+
+  private obtenerRolPorDefecto(): number | null {
+    const rolEmpleado = this.rolesDisponibles.find((item) => item.key === 'empleado');
+    return rolEmpleado ? rolEmpleado.id : null;
+  }
+
   private normalizar(value: unknown): string {
     return String(value ?? '').trim().toLowerCase();
+  }
+
+  private mostrarToast(data: {
+    title: string;
+    message: string;
+    variant: 'success' | 'warning';
+  }) {
+    this.snackBar.openFromComponent(EmpleadoToastComponent, {
+      data,
+      duration: 3500,
+      horizontalPosition: 'right',
+      verticalPosition: 'top',
+      panelClass: ['tp-snackbar'],
+    });
+  }
+
+  private copiarTextoFallback(value: string) {
+    const textarea = document.createElement('textarea');
+    textarea.value = value;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
   }
 }

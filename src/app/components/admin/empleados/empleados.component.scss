@@ -34,3 +34,15 @@ table {
   max-height: 90vh;
   overflow: auto;
 }
+
+/* El panel del mat-select vive fuera del modal. Lo subimos por encima
+   del overlay fijo para que las opciones queden visibles y clickeables. */
+:host ::ng-deep .cdk-overlay-container,
+:host ::ng-deep .cdk-overlay-pane,
+:host ::ng-deep .cdk-global-overlay-wrapper {
+  z-index: 6000 !important;
+}
+
+:host ::ng-deep .cdk-overlay-pane:has(.empleados-roles-panel) {
+  z-index: 6001 !important;
+}

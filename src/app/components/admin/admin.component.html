@@ -1,9 +1,9 @@
 <div class="admin-dashboard p-6">
   <header class="dashboard-header sticky top-0 z-[100] mb-6 w-full rounded-xl border border-transparent bg-transparent px-2 py-2 backdrop-blur-md transition-all duration-300 md:px-4">
     <div class="header-copy">
-      <h1 class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">Dashboard General del Sitio</h1>
+      <h1 class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">{{ tituloDashboard }}</h1>
       <p class="text-secondary text-sm">
-        Vista integral de operacion comercial, solicitudes, catalogos y comportamiento de cotizaciones.
+        {{ subtituloDashboard }}
       </p>
       <p *ngIf="updatedAt" class="updated-at text-xs">
         Actualizado: {{ updatedAt | date:'dd/MM/yyyy HH:mm' }}
@@ -18,7 +18,7 @@
 
   <div *ngIf="isLoading" class="state-card">
     <mat-progress-spinner diameter="32" mode="indeterminate"></mat-progress-spinner>
-    <span>Cargando dashboard completo...</span>
+    <span>{{ esVistaPersonal ? 'Cargando tu dashboard...' : 'Cargando dashboard completo...' }}</span>
   </div>
 
   <div *ngIf="!isLoading && errorMessage" class="state-card error">
@@ -73,7 +73,7 @@
       </div>
     </section>
 
-    <section class="mb-6">
+    <section *ngIf="mostrarSeccionesAdmin" class="mb-6">
       <h2 class="section-title">Inventario del Sitio</h2>
       <div class="inventory-grid">
         <article class="inventory-card">
@@ -111,7 +111,7 @@
       </div>
     </section>
 
-    <section class="mb-6">
+    <section *ngIf="mostrarSeccionesAdmin" class="mb-6">
       <h2 class="section-title">Cobertura Operativa</h2>
       <div class="coverage-grid">
         <article class="coverage-card">

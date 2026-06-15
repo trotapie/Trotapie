@@ -139,6 +139,6 @@ export class CompactLayoutComponent implements OnInit, OnDestroy {
     }
 
     irAdmin() {
-        this.router.navigate(['/admin']);
+        this.router.navigate(['/admin/dashboard']);
     }
 }

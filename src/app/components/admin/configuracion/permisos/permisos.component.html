@@ -1,0 +1,165 @@
+<div class="flex min-w-0 flex-auto flex-col">
+    <div class="sticky top-0 z-[100] mx-6 mt-2 rounded-xl border border-transparent bg-transparent px-2 py-2 backdrop-blur-md transition-all duration-300 md:px-4">
+        <div class="w-full md:flex md:items-center md:justify-between">
+            <div>
+                <div class="text-3xl font-semibold leading-tight text-gray-900">
+                    Permisos
+                </div>
+                <p class="mt-1 text-sm text-gray-500">
+                    Crea y administra los permisos base que despues se asignan a cada rol.
+                </p>
+            </div>
+
+            <div class="my-2 flex gap-2 md:my-0">
+                <button mat-stroked-button [routerLink]="['/admin/configuracion']">
+                    <mat-icon class="mr-2 icon-size-5">arrow_back</mat-icon>
+                    Regresar
+                </button>
+                <button mat-raised-button color="primary" class="text-white" (click)="abrirModalNuevo()">
+                    <mat-icon class="mr-2 icon-size-5 text-white">add</mat-icon>
+                    Nuevo permiso
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <section class="m-3">
+        <article class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <h2 class="text-lg font-semibold text-gray-900">Concentrado</h2>
+                <mat-form-field appearance="outline" class="w-full sm:w-80">
+                    <mat-label>Buscar permiso</mat-label>
+                    <input matInput (input)="aplicarFiltro($event)" placeholder="ID, clave o descripcion" />
+                </mat-form-field>
+            </div>
+
+            @if (error && !modalAbierto && !modalEliminarAbierto) {
+            <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {{ error }}
+            </div>
+            }
+
+            <div class="overflow-hidden rounded-2xl border border-gray-200">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">ID</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Clave</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Descripcion</th>
+                                <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody class="divide-y divide-gray-100 bg-white">
+                            @for (permiso of permisosFiltrados; track permiso.id) {
+                            <tr>
+                                <td class="px-4 py-3 text-sm text-gray-700">{{ permiso.id }}</td>
+                                <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ permiso.key }}</td>
+                                <td class="px-4 py-3 text-sm text-gray-600">{{ permiso.description }}</td>
+                                <td class="px-4 py-3">
+                                    <div class="flex justify-end gap-1">
+                                        <button mat-icon-button matTooltip="Editar permiso" (click)="editarPermiso(permiso)">
+                                            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
+                                        </button>
+                                        <button mat-icon-button matTooltip="Eliminar permiso" (click)="abrirModalEliminar(permiso)">
+                                            <mat-icon class="icon-size-5 text-red-600" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            }
+
+                            @if (!permisosFiltrados.length) {
+                            <tr>
+                                <td colspan="4" class="px-4 py-8 text-center text-sm text-gray-500">
+                                    {{ cargando ? 'Cargando permisos...' : 'No hay permisos para mostrar.' }}
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </article>
+    </section>
+</div>
+
+@if (modalAbierto) {
+<div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 p-4">
+    <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
+        <h2 class="text-xl font-semibold text-gray-900">
+            {{ estaEditando ? 'Editar permiso' : 'Nuevo permiso' }}
+        </h2>
+        <p class="mt-1 text-sm text-gray-500">
+            Define la clave tecnica y la descripcion que se mostrara dentro del sistema.
+        </p>
+
+        <form class="mt-4 space-y-4" [formGroup]="form" (ngSubmit)="guardarPermiso()">
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Clave</mat-label>
+                <input matInput formControlName="key" maxlength="120" />
+                @if (form.get('key')?.hasError('required') && form.get('key')?.touched) {
+                <mat-error>La clave es obligatoria.</mat-error>
+                }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Descripcion</mat-label>
+                <input matInput formControlName="description" maxlength="180" />
+                @if (form.get('description')?.hasError('required') && form.get('description')?.touched) {
+                <mat-error>La descripcion es obligatoria.</mat-error>
+                }
+            </mat-form-field>
+
+            @if (error) {
+            <div class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {{ error }}
+            </div>
+            }
+
+            <div class="flex flex-wrap justify-end gap-2">
+                <button type="button" mat-stroked-button (click)="cerrarModal()" [disabled]="guardando">
+                    Cancelar
+                </button>
+                <button mat-raised-button color="primary" class="text-white" [disabled]="guardando">
+                    {{ guardando ? 'Guardando...' : (estaEditando ? 'Actualizar' : 'Crear permiso') }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+}
+
+@if (modalEliminarAbierto && permisoPendienteEliminar) {
+<div class="fixed inset-0 z-[3025] flex items-center justify-center bg-black/60 p-4">
+    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+        <h3 class="text-xl font-semibold text-gray-900">
+            Eliminar permiso
+        </h3>
+        <p class="mt-2 text-sm text-gray-600">
+            Vas a eliminar el permiso <strong>{{ permisoPendienteEliminar.key }}</strong>.
+        </p>
+        <p class="mt-1 text-xs text-gray-500">
+            Si este permiso esta asociado a un rol, la base puede rechazar la eliminacion hasta quitarlo de ese rol.
+        </p>
+
+        @if (error) {
+        <div class="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            {{ error }}
+        </div>
+        }
+
+        <div class="mt-6 flex justify-end gap-2">
+            <button mat-stroked-button type="button" (click)="cerrarModalEliminar()" [disabled]="eliminandoId !== null">
+                Cancelar
+            </button>
+            <button mat-raised-button color="warn" class="text-white" type="button"
+                (click)="confirmarEliminar()"
+                [disabled]="eliminandoId !== null">
+                {{ eliminandoId === permisoPendienteEliminar.id ? 'Eliminando...' : 'Eliminar' }}
+            </button>
+        </div>
+    </div>
+</div>
+}

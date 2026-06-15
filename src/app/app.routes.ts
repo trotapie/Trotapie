@@ -1,6 +1,7 @@
 import { Route } from '@angular/router';
 import { initialDataResolver } from 'app/app.resolvers';
 import { AuthGuard } from 'app/core/auth/guards/auth.guard';
+import { AccessGuard } from 'app/core/auth/guards/access.guard';
 import { NoAuthGuard } from 'app/core/auth/guards/noAuth.guard';
 import { LayoutComponent } from 'app/layout/layout.component';
 import { ClearSessionGuard } from './core/auth/guards/clear-session.guard';
@@ -18,7 +19,7 @@ export const appRoutes: Route[] = [
     // After the user signs in, the sign-in page will redirect the user to the 'signed-in-redirect'
     // path. Below is another redirection for that path to redirect the user to the desired
     // location. This is a small convenience to keep all main routes together here on this file.
-    { path: 'signed-in-redirect', pathMatch: 'full', redirectTo: 'inicio' },
+    { path: 'signed-in-redirect', pathMatch: 'full', redirectTo: 'admin/dashboard' },
 
     // Auth routes for guests
     {
@@ -48,6 +49,7 @@ export const appRoutes: Route[] = [
             layout: 'empty'
         },
         children: [
+            { path: 'first-login-password', loadChildren: () => import('app/modules/auth/first-login-password/first-login-password.routes') },
             { path: 'sign-out', loadChildren: () => import('app/modules/auth/sign-out/sign-out.routes') },
             { path: 'unlock-session', loadChildren: () => import('app/modules/auth/unlock-session/unlock-session.routes') }
         ]
@@ -96,8 +98,8 @@ export const appRoutes: Route[] = [
             },
             {
                 path: 'admin',
-                canActivate: [AuthGuard],
-                canActivateChild: [AuthGuard],
+                canActivate: [AuthGuard, AccessGuard],
+                canActivateChild: [AuthGuard, AccessGuard],
                 data: { layout: 'compact' },
                 loadChildren: () =>
                     import('app/components/admin/admin.routes').then(m => m.default)

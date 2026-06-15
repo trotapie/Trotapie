@@ -6,6 +6,11 @@
 @tailwind components;
 @tailwind utilities;
 
+.cdk-overlay-container,
+.cdk-global-overlay-wrapper {
+    z-index: 6000 !important;
+}
+
 .tp-select-panel.mat-mdc-select-panel {
     box-sizing: border-box;
     width: 100% !important;
@@ -62,6 +67,32 @@
 
 .age-select-panel .mat-mdc-option:first-child {
     grid-column: 1 / -1;
+}
+
+.empleados-roles-panel.mat-mdc-select-panel {
+    box-sizing: border-box;
+    max-height: min(24rem, calc(100vh - 5rem)) !important;
+    overflow-y: auto;
+    border-radius: 1rem;
+}
+
+.empleados-roles-panel .mat-mdc-option {
+    min-height: 44px;
+    height: auto;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+.cdk-overlay-pane:has(.empleados-roles-panel) {
+    z-index: 5000 !important;
+}
+
+body .cdk-overlay-container .cdk-overlay-pane:has(.mat-mdc-select-panel) {
+    z-index: 5000 !important;
+}
+
+body .cdk-overlay-container .cdk-overlay-pane:has(.empleados-roles-panel) {
+    z-index: 5000 !important;
 }
 
 @media (max-width: 480px) {
@@ -236,6 +267,22 @@
 
 .glass-radio-group label:hover {
     color: rgb(19, 63, 1);
+}
+
+.tp-snackbar {
+    .mdc-snackbar__surface {
+        background: transparent !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+    }
+
+    .mdc-snackbar__label {
+        padding: 0 !important;
+    }
+
+    .mat-mdc-snack-bar-label {
+        padding: 0 !important;
+    }
 }
 
 .glass-radio-group input:checked+label {

@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { ApexOptions } from 'apexcharts';
 import { Router } from '@angular/router';
+import { AuthService } from 'app/core/auth/auth.service';
 import { CatalogosAdminService } from 'app/core/catalogos-admin.service';
 import { SupabaseService } from 'app/core/supabase.service';
 import { ISolicitudCotizacionListado } from 'app/interface/solicitudes-cotizacion.interface';
@@ -17,6 +18,7 @@ type SerieUltimosDias = { labels: string[]; series: number[]; fechas: string[] }
 })
 export class AdminComponent implements OnInit {
   private _supabase = inject(SupabaseService);
+  private _authService = inject(AuthService);
   private _catalogosAdmin = inject(CatalogosAdminService);
   private _router = inject(Router);
 
@@ -24,6 +26,9 @@ export class AdminComponent implements OnInit {
   errorMessage = '';
   updatedAt: Date | null = null;
   warnings: string[] = [];
+  esVistaPersonal = false;
+  nombreEmpleadoActual = '';
+  empleadoActualId: number | null = null;
 
   totalSolicitudes = 0;
   totalCotizadas = 0;
@@ -62,6 +67,20 @@ export class AdminComponent implements OnInit {
   chartTopEmpleados: ApexOptions = {};
   private fechasTendencia30Dias: string[] = [];
 
+  get tituloDashboard(): string {
+    return this._authService.isAdmin ? 'Dashboard General del Sitio' : 'Mi Dashboard';
+  }
+
+  get subtituloDashboard(): string {
+    return this._authService.isAdmin
+      ? 'Vista integral de operacion comercial, solicitudes, catalogos y comportamiento de cotizaciones.'
+      : 'Vista personal con tu actividad y solicitudes asociadas a tu usuario.';
+  }
+
+  get mostrarSeccionesAdmin(): boolean {
+    return this._authService.isAdmin;
+  }
+
   ngOnInit(): void {
     void this.recargarDashboard();
   }
@@ -70,65 +89,111 @@ export class AdminComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
     this.warnings = [];
+    this.esVistaPersonal = !this._authService.isAdmin;
+    this.nombreEmpleadoActual = '';
+    this.empleadoActualId = null;
 
     try {
-      const [
-        solicitudes,
-        destinos,
-        tiposDestino,
-        empleados,
-        continentes,
-        idiomas,
-        atracciones,
-        tiposHabitacion,
-        hotelesCount
-      ] = await Promise.all([
-        this._safeCall('solicitudes', () => this._supabase.obtenerSolicitudesCotizacion(), [] as ISolicitudCotizacionListado[]),
-        this._safeCall('destinos', () => this._supabase.obtenerDestinosAdmin(), [] as any[]),
-        this._safeCall('tipos de destino', () => this._supabase.obtenerTiposDestinoAdmin(), [] as any[]),
-        this._safeCall('empleados', async () => {
-          const { data, error } = await this._supabase.empleados({ incluirInhabilitados: true });
-          if (error) throw error;
-          return data ?? [];
-        }, [] as any[]),
-        this._safeCall('continentes', async () => {
-          const { data, error } = await this._supabase.continentes();
-          if (error) throw error;
-          return data ?? [];
-        }, [] as any[]),
-        this._safeCall('idiomas', () => this._catalogosAdmin.obtenerCatalogoAdmin('idiomas'), [] as any[]),
-        this._safeCall('catalogo de atracciones', () => this._catalogosAdmin.obtenerCatalogoAdmin('atracciones'), [] as any[]),
-        this._safeCall('tipos de habitacion', () => this._catalogosAdmin.obtenerCatalogoAdmin('tipos_habitacion'), [] as any[]),
-        this._safeCall('hoteles', async () => {
-          const { count, error } = await this._supabase
-            .getClient()
-            .from('hoteles')
-            .select('id', { count: 'exact', head: true });
-
-          if (error) throw error;
-          return count ?? 0;
-        }, 0),
-      ]);
-
+      const solicitudes = await this._safeCall(
+        'solicitudes',
+        () => this._supabase.obtenerSolicitudesCotizacion(),
+        [] as ISolicitudCotizacionListado[]
+      );
       const listaSolicitudes = solicitudes ?? [];
 
-      this.totalDestinos = destinos.length;
-      this.totalHoteles = hotelesCount || this._contarUnicosPorCampo(listaSolicitudes, 'hotel_nombre');
-      this.totalEmpleados = empleados.length;
-      this.totalContinentes = continentes.length;
-      this.totalTiposDestino = tiposDestino.length;
-      this.totalIdiomas = idiomas.length;
-      this.totalCatalogoAtracciones = atracciones.length;
-      this.totalTiposHabitacion = tiposHabitacion.length;
+      if (this._authService.isAdmin) {
+        const [
+          destinos,
+          tiposDestino,
+          empleados,
+          continentes,
+          idiomas,
+          atracciones,
+          tiposHabitacion,
+          hotelesCount
+        ] = await Promise.all([
+          this._safeCall('destinos', () => this._supabase.obtenerDestinosAdmin(), [] as any[]),
+          this._safeCall('tipos de destino', () => this._supabase.obtenerTiposDestinoAdmin(), [] as any[]),
+          this._safeCall('empleados', async () => {
+            const { data, error } = await this._supabase.empleados({ incluirInhabilitados: true });
+            if (error) throw error;
+            return data ?? [];
+          }, [] as any[]),
+          this._safeCall('continentes', async () => {
+            const { data, error } = await this._supabase.continentes();
+            if (error) throw error;
+            return data ?? [];
+          }, [] as any[]),
+          this._safeCall('idiomas', () => this._catalogosAdmin.obtenerCatalogoAdmin('idiomas'), [] as any[]),
+          this._safeCall('catalogo de atracciones', () => this._catalogosAdmin.obtenerCatalogoAdmin('atracciones'), [] as any[]),
+          this._safeCall('tipos de habitacion', () => this._catalogosAdmin.obtenerCatalogoAdmin('tipos_habitacion'), [] as any[]),
+          this._safeCall('hoteles', async () => {
+            const { count, error } = await this._supabase
+              .getClient()
+              .from('hoteles')
+              .select('id', { count: 'exact', head: true });
 
-      this._calcularResumenSolicitudes(listaSolicitudes);
-      this._calcularCoberturaOperativa(listaSolicitudes);
-      this._calcularTopCotizados(listaSolicitudes);
-      this._prepararGraficas(listaSolicitudes);
+            if (error) throw error;
+            return count ?? 0;
+          }, 0),
+        ]);
+
+        this.totalDestinos = destinos.length;
+        this.totalHoteles = hotelesCount || this._contarUnicosPorCampo(listaSolicitudes, 'hotel_nombre');
+        this.totalEmpleados = empleados.length;
+        this.totalContinentes = continentes.length;
+        this.totalTiposDestino = tiposDestino.length;
+        this.totalIdiomas = idiomas.length;
+        this.totalCatalogoAtracciones = atracciones.length;
+        this.totalTiposHabitacion = tiposHabitacion.length;
+
+        this._calcularResumenSolicitudes(listaSolicitudes);
+        this._calcularCoberturaOperativa(listaSolicitudes);
+        this._calcularTopCotizados(listaSolicitudes);
+        this._prepararGraficas(listaSolicitudes);
+      } else {
+        const user = await this._obtenerUsuarioActual();
+        const empleadoActual = await this._obtenerEmpleadoActual(user.id);
+
+        if (!empleadoActual) {
+          throw new Error('No tienes un empleado vinculado para ver tu dashboard.');
+        }
+
+        this.nombreEmpleadoActual = empleadoActual.nombre;
+        this.empleadoActualId = empleadoActual.id;
+
+        const solicitudesFiltradas = this._filtrarSolicitudesPorEmpleado(listaSolicitudes, empleadoActual.nombre);
+
+        this.totalSolicitudes = solicitudesFiltradas.length;
+        this.totalCotizadas = 0;
+        this.totalPendientes = 0;
+        this.totalCanceladas = 0;
+        this.totalUltimos30Dias = 0;
+        this.totalOtras = 0;
+        this.tasaCotizacion = 0;
+        this.tasaPendientes = 0;
+        this.promedioSolicitudesDia30 = 0;
+
+        this.totalDestinos = this._contarUnicosPorCampo(solicitudesFiltradas, 'destino_nombre');
+        this.totalHoteles = this._contarUnicosPorCampo(solicitudesFiltradas, 'hotel_nombre');
+        this.totalEmpleados = solicitudesFiltradas.length ? this._contarUnicosPorCampo(solicitudesFiltradas, 'empleado_nombre') : 1;
+        this.totalContinentes = 0;
+        this.totalTiposDestino = 0;
+        this.totalIdiomas = 0;
+        this.totalCatalogoAtracciones = 0;
+        this.totalTiposHabitacion = 0;
+
+        this._calcularResumenSolicitudes(solicitudesFiltradas);
+        this._calcularCoberturaOperativa(solicitudesFiltradas);
+        this._calcularTopCotizados(solicitudesFiltradas);
+        this._prepararGraficas(solicitudesFiltradas);
+      }
 
       this.updatedAt = new Date();
     } catch (error) {
-      this.errorMessage = 'No se pudo cargar el dashboard completo. Intenta recargar.';
+      this.errorMessage = this._authService.isAdmin
+        ? 'No se pudo cargar el dashboard completo. Intenta recargar.'
+        : 'No se pudo cargar tu dashboard. Intenta recargar.';
     } finally {
       this.isLoading = false;
     }
@@ -466,6 +531,53 @@ export class AdminComponent implements OnInit {
       .replace(/[\u0300-\u036f]/g, '')
       .trim()
       .toLowerCase();
+  }
+
+  private _filtrarSolicitudesPorEmpleado(
+    solicitudes: ISolicitudCotizacionListado[],
+    nombreEmpleado: string
+  ): ISolicitudCotizacionListado[] {
+    const objetivo = this._normalizarTexto(nombreEmpleado);
+
+    if (!objetivo) {
+      return [];
+    }
+
+    return solicitudes.filter((solicitud) => this._normalizarTexto(solicitud.empleado_nombre) === objetivo);
+  }
+
+  private async _obtenerUsuarioActual(): Promise<{ id: string; email: string | null }> {
+    const { data, error } = await this._supabase.getClient().auth.getUser();
+
+    if (error) throw error;
+    if (!data?.user?.id) {
+      throw new Error('No se pudo identificar al usuario autenticado.');
+    }
+
+    return {
+      id: data.user.id,
+      email: data.user.email ?? null,
+    };
+  }
+
+  private async _obtenerEmpleadoActual(userId: string): Promise<{ id: number; nombre: string } | null> {
+    const { data, error } = await this._supabase
+      .getClient()
+      .from('empleados')
+      .select('id, nombre')
+      .eq('auth_user_id', userId)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    if (!data?.id || !data?.nombre) {
+      return null;
+    }
+
+    return {
+      id: Number(data.id),
+      nombre: String(data.nombre),
+    };
   }
 
   private _parseFecha(fecha: string | Date | null | undefined): Date | null {
