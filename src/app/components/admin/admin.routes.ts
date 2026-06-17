@@ -13,6 +13,7 @@ import { ConfiguracionDestinosComponent } from './destinos/configuracion-destino
 import { TipoDestinosComponent } from './destinos/tipo-destinos/tipo-destinos.component';
 import { EditarDestinoComponent } from './destinos/editar-destino/editar-destino.component';
 import { EditarPreviewDestinoComponent } from './destinos/editar-preview-destino/editar-preview-destino.component';
+import { EditarActividadDestinoComponent } from './destinos/editar-actividad-destino/editar-actividad-destino.component';
 import { CatalogoPlaceholderComponent } from './catalogos/catalogo-placeholder/catalogo-placeholder.component';
 import { AtraccionesDetalleComponent } from './catalogos/atracciones-detalle/atracciones-detalle.component';
 import { EmpleadosComponent } from './empleados/empleados.component';
@@ -278,6 +279,11 @@ export default [
     {
         path: 'destinos/configurar-destinos/preview/:id',
         component: EditarPreviewDestinoComponent,
+        data: DESTINOS_VIEW,
+    },
+    {
+        path: 'destinos/configurar-destinos/preview/:id/actividad/:actividadId',
+        component: EditarActividadDestinoComponent,
         data: DESTINOS_VIEW,
     },
     {

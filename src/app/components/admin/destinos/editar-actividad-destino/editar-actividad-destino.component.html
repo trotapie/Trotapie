@@ -1,0 +1,343 @@
+<div class="flex min-w-0 flex-auto flex-col bg-gray-50">
+  <div class="mx-auto flex w-full max-w-screen-xl flex-col px-6 py-6 sm:px-8">
+    <app-blocking-loader
+      [open]="cargando || guardando || traduciendoActividad"
+      [title]="cargando ? 'Cargando actividad' : guardando ? 'Guardando actividad' : 'Traduciendo actividad'"
+      [message]="cargando ? 'Estamos cargando los datos para que puedas editarlos.' : guardando ? 'No cierres la pantalla mientras guardamos los cambios.' : 'Estamos generando las traducciones automaticamente.'"
+    />
+
+    <div class="sticky top-0 z-[100] mb-4 w-full rounded-xl border border-transparent bg-transparent px-2 py-2 backdrop-blur-md transition-all duration-300 md:px-4">
+      <div class="w-full md:flex md:items-center md:justify-between">
+        <div>
+          <h1 class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">Editar actividad</h1>
+          <p class="mt-1 text-sm text-gray-500">{{ destinoNombre }} · {{ actividadNombre }}</p>
+        </div>
+
+        <div class="my-2 flex items-center gap-3 md:my-0">
+          <button mat-stroked-button type="button" (click)="regresar()">
+            <mat-icon class="mr-2 icon-size-5" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
+            Regresar
+          </button>
+          <button mat-raised-button color="primary" class="text-white" type="button" (click)="guardar()" [disabled]="guardando">
+            @if (guardando) {
+              Guardando...
+            } @else {
+              Guardar cambios
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+
+    @if (!cargando) {
+      <form [formGroup]="form" class="space-y-6">
+        <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
+          <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 class="text-lg font-semibold text-gray-900">Traducciones</h2>
+              <p class="text-sm text-gray-500">Escribe el contenido principal en español y se completará el resto automaticamente.</p>
+            </div>
+
+            <button
+              mat-stroked-button
+              type="button"
+              (click)="onActividadEsBlurOEnter('es')"
+              [disabled]="traduciendoActividad"
+            >
+              @if (traduciendoActividad) {
+                Traduciendo...
+              } @else {
+                Traducir ahora
+              }
+            </button>
+          </div>
+
+          <div formArrayName="traducciones" class="space-y-4">
+            @if (traduccionPrincipalControl) {
+              <div class="rounded-xl border border-gray-200 p-4" [formGroupName]="indiceIdiomaEspanol">
+                <p class="mb-3 text-sm font-semibold text-gray-700">
+                  {{ getNombreIdioma(traduccionPrincipalControl.get('codigo')?.value ?? 'es') }}
+                </p>
+
+                <div class="grid grid-cols-1 gap-4">
+                  <mat-form-field class="w-full">
+                    <mat-label>Nombre principal</mat-label>
+                    <input
+                      matInput
+                      formControlName="nombre"
+                      (blur)="onActividadEsBlurOEnter('es')"
+                      (keydown.enter)="onActividadEsBlurOEnter('es', $event)"
+                    />
+                  </mat-form-field>
+
+                  <mat-form-field class="w-full">
+                    <mat-label>Descripcion principal</mat-label>
+                    <textarea
+                      matInput
+                      rows="3"
+                      formControlName="descripcion"
+                      (blur)="onActividadEsBlurOEnter('es')"
+                      (keydown.enter)="onActividadEsBlurOEnter('es', $event)"
+                    ></textarea>
+                  </mat-form-field>
+                </div>
+              </div>
+            } @else {
+              <div class="rounded-xl border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800">
+                No se encontro la traduccion en espanol para capturar la actividad.
+              </div>
+            }
+
+            <div class="rounded-xl border border-gray-200 bg-gray-50 p-3">
+              <p class="mb-3 text-sm font-semibold text-gray-700">Traducciones automáticas</p>
+              <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                @for (idioma of idiomas; track idioma.id) {
+                  @if (idioma.codigo !== 'es') {
+                    <div class="rounded-lg border border-gray-200 bg-white p-3">
+                      <p class="mb-1 text-sm font-semibold text-gray-700">{{ getNombreIdioma(idioma.codigo) }}</p>
+                      <p class="text-sm text-gray-900">
+                        {{ getTraduccionIdioma(idioma.codigo)?.nombre || 'Sin nombre' }}
+                      </p>
+                      <p class="mt-1 text-sm text-gray-600">
+                        {{ getTraduccionIdioma(idioma.codigo)?.descripcion || 'Sin descripcion' }}
+                      </p>
+                    </div>
+                  }
+                }
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <mat-drawer-container class="actividad-drawer-container rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <mat-drawer
+            class="actividad-drawer"
+            mode="side"
+            position="end"
+            [opened]="editorImagenAbierto"
+            (closedStart)="cerrarEditorImagen()"
+          >
+            @if (imagenEditandoControl) {
+              <div class="flex h-full flex-col" [formGroup]="imagenEditandoControl">
+                <div class="border-b border-gray-200 px-5 py-4">
+                  <div class="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 class="text-lg font-semibold text-gray-900">Editar imagen</h3>
+                      <p class="text-sm text-gray-500">Actualiza la carpeta, vigencia o imagen principal.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex-1 space-y-5 overflow-y-auto px-5 py-5">
+                  @if (imagenEditandoControl.get('imagen_url')?.value) {
+                    <a [href]="imagenEditandoControl.get('imagen_url')?.value" target="_blank" rel="noopener noreferrer" class="block">
+                      <img
+                        [src]="imagenEditandoControl.get('imagen_url')?.value"
+                        alt="Vista previa"
+                        class="h-48 w-full rounded-2xl border border-gray-200 object-cover"
+                      />
+                    </a>
+                  } @else {
+                    <div class="flex h-48 w-full items-center justify-center rounded-2xl border border-dashed border-gray-300 bg-gray-50 text-sm text-gray-400">
+                      Sin imagen
+                    </div>
+                  }
+
+                  <mat-form-field class="w-full">
+                    <mat-label>URL de imagen</mat-label>
+                    <input matInput formControlName="imagen_url" />
+                  </mat-form-field>
+
+                  <mat-form-field class="w-full">
+                    <mat-label>Carpeta</mat-label>
+                    <mat-select
+                      [value]="carpetaEditandoSeleccionadaId"
+                      (selectionChange)="onCarpetaImagenChange($event.value)"
+                    >
+                      <mat-option [value]="null">Sin carpeta</mat-option>
+                      @for (carpeta of carpetasParaSelector; track carpeta.id) {
+                        <mat-option [value]="carpeta.id">
+                          {{ carpeta.nombre }}
+                        </mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+
+                  <div class="grid grid-cols-1 gap-4">
+                    <mat-form-field class="w-full">
+                      <mat-label>Vigencia desde</mat-label>
+                      <input matInput [matDatepicker]="vigenciaDesdePicker" formControlName="vigencia_desde" />
+                      <mat-datepicker-toggle matIconSuffix [for]="vigenciaDesdePicker"></mat-datepicker-toggle>
+                      <mat-datepicker #vigenciaDesdePicker></mat-datepicker>
+                    </mat-form-field>
+
+                    <mat-form-field class="w-full">
+                      <mat-label>Vigencia hasta</mat-label>
+                      <input matInput [matDatepicker]="vigenciaHastaPicker" formControlName="vigencia_hasta" />
+                      <mat-datepicker-toggle matIconSuffix [for]="vigenciaHastaPicker"></mat-datepicker-toggle>
+                      <mat-datepicker #vigenciaHastaPicker></mat-datepicker>
+                    </mat-form-field>
+                  </div>
+
+                </div>
+
+                <div class="border-t border-gray-200 px-5 py-4">
+                  <div class="grid grid-cols-1 gap-2">
+                    <button mat-flat-button color="warn" type="button" (click)="eliminarImagen(imagenEditandoIndex!)">
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+          </mat-drawer>
+
+          <mat-drawer-content>
+            <section class="p-6 sm:p-8">
+              <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 class="text-lg font-semibold text-gray-900">Galeria por carpetas</h2>
+                  <p class="text-sm text-gray-500">Explora tus carpetas y abre cada imagen en la barra lateral para editarla.</p>
+                </div>
+              </div>
+
+              <div class="mb-6">
+                <app-folder-image-manager
+                  [title]="'Seleccion de imagen principal'"
+                  [subtitle]="'Navega por carpetas y abre una imagen para editarla o marcarla como principal.'"
+                  [folders]="galeriaCarpetas"
+                  [selectedImageId]="imagenSeleccionadaGestorId"
+                  (addImage)="agregarImagen()"
+                  (folderSelected)="seleccionarCarpeta($event?.name ?? 'Todas')"
+                  (createFolder)="crearCarpetaActividad($event)"
+                  (renameFolder)="renombrarCarpetaActividad($event.folder, $event.name)"
+                  (deleteFolder)="eliminarCarpetaActividad($event)"
+                  (imageSelected)="seleccionarImagenPrincipalDesdeGestor($event)"
+                />
+              </div>
+            </section>
+          </mat-drawer-content>
+        </mat-drawer-container>
+
+        @if (mostrarModalConfirmarEliminarCarpeta && carpetaAEliminar) {
+          <div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
+            <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+              <h3 class="text-xl font-semibold text-gray-900">Confirmar eliminacion</h3>
+              <p class="mt-2 text-sm text-gray-600">
+                Seguro que quieres eliminar la carpeta
+                <span class="font-semibold text-gray-900">{{ carpetaAEliminar.name }}</span>?
+              </p>
+
+              @if (carpetaAEliminar.images.length) {
+                @if (modalEliminarCarpetaPaso === 'inicio') {
+                    <p class="mt-2 text-sm text-gray-600">
+                    Esta carpeta tiene {{ carpetaAEliminar.images.length }} imagen{{ carpetaAEliminar.images.length === 1 ? '' : 'es' }}.
+                    Todas esas imagenes se moveran solo desde esta carpeta.
+                  </p>
+
+                  <div class="mt-6 grid gap-2">
+                    <button mat-flat-button color="warn" type="button" (click)="ejecutarAccionEliminarCarpeta('delete_images')">
+                      Eliminar imagenes y carpeta
+                    </button>
+                    @if (carpetasParaMoverEliminar.length) {
+                      <button mat-stroked-button type="button" (click)="mostrarPasoMoverCarpeta()">
+                        Mover solo estas imagenes a otra carpeta
+                      </button>
+                    }
+                    <button mat-stroked-button type="button" (click)="mostrarPasoCrearCarpeta()">
+                      Crear nueva carpeta y mover solo estas imagenes
+                    </button>
+                    <button mat-stroked-button type="button" (click)="cerrarModalConfirmarEliminarCarpeta()">
+                      Cancelar
+                    </button>
+                  </div>
+                } @else if (modalEliminarCarpetaPaso === 'mover') {
+                  <p class="mt-2 text-sm text-gray-600">
+                    Selecciona una carpeta destino para mover solo las imagenes de esta carpeta antes de borrar la carpeta actual.
+                  </p>
+
+                  <mat-form-field class="mt-4 w-full">
+                    <mat-label>Carpeta destino</mat-label>
+                    <mat-select [(value)]="carpetaDestinoEliminarId">
+                      @for (carpeta of carpetasParaMoverEliminar; track carpeta.id) {
+                        <mat-option [value]="carpeta.id">{{ carpeta.nombre }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+
+                  <div class="mt-6 flex justify-end gap-2">
+                    <button mat-stroked-button type="button" (click)="volverPasoEliminarCarpeta()">
+                      Volver
+                    </button>
+                    <button mat-stroked-button type="button" (click)="cerrarModalConfirmarEliminarCarpeta()">
+                      Cancelar
+                    </button>
+                    <button mat-flat-button color="warn" type="button" (click)="ejecutarAccionEliminarCarpeta('move_existing')" [disabled]="procesandoEliminarCarpeta">
+                      @if (procesandoEliminarCarpeta) {
+                        Moviendo...
+                      } @else {
+                        Mover imagenes y eliminar carpeta
+                      }
+                    </button>
+                  </div>
+                } @else if (modalEliminarCarpetaPaso === 'crear') {
+                  <p class="mt-2 text-sm text-gray-600">
+                    Escribe el nombre de la nueva carpeta para mover solo las imagenes de esta carpeta antes de borrarla.
+                  </p>
+
+                  <mat-form-field class="mt-4 w-full">
+                    <mat-label>Nueva carpeta</mat-label>
+                    <input
+                      matInput
+                      [value]="nuevaCarpetaEliminarNombre"
+                      (input)="nuevaCarpetaEliminarNombre = $any($event.target).value"
+                    />
+                  </mat-form-field>
+
+                  <div class="mt-6 flex justify-end gap-2">
+                    <button mat-stroked-button type="button" (click)="volverPasoEliminarCarpeta()">
+                      Volver
+                    </button>
+                    <button mat-stroked-button type="button" (click)="cerrarModalConfirmarEliminarCarpeta()">
+                      Cancelar
+                    </button>
+                    <button mat-flat-button color="warn" type="button" (click)="ejecutarAccionEliminarCarpeta('create_and_move')" [disabled]="procesandoEliminarCarpeta">
+                      @if (procesandoEliminarCarpeta) {
+                        Creando...
+                      } @else {
+                        Crear carpeta y mover
+                      }
+                    </button>
+                  </div>
+                }
+              } @else {
+                <p class="mt-2 text-sm text-gray-600">
+                  Esta carpeta esta vacia. Si la eliminas, desaparecera definitivamente.
+                </p>
+
+                <div class="mt-6 flex justify-end gap-2">
+                  <button mat-stroked-button type="button" (click)="cerrarModalConfirmarEliminarCarpeta()">
+                    Cancelar
+                  </button>
+                  <button mat-flat-button color="warn" type="button" (click)="ejecutarAccionEliminarCarpeta('delete_empty')" [disabled]="procesandoEliminarCarpeta">
+                    @if (procesandoEliminarCarpeta) {
+                      Eliminando...
+                    } @else {
+                      Eliminar
+                    }
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        @if (error) {
+          <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {{ error }}
+          </div>
+        }
+      </form>
+    }
+  </div>
+</div>

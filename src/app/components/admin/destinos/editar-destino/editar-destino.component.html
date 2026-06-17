@@ -1,5 +1,11 @@
 <div class="flex min-w-0 flex-auto flex-col bg-gray-50">
     <div class="mx-auto flex w-full max-w-screen-xl flex-col px-6 py-6 sm:px-8">
+        <app-blocking-loader
+            [open]="cargando || guardando"
+            [title]="cargando ? 'Cargando destino' : 'Guardando destino'"
+            [message]="cargando ? 'Estamos preparando la informacion para editarla.' : 'No cierres la pantalla mientras terminamos de guardar.'"
+        />
+
         <div class="sticky top-0 z-[100] mb-4 w-full rounded-xl border border-transparent bg-transparent px-2 py-2 backdrop-blur-md transition-all duration-300 md:px-4">
             <div class="w-full md:flex md:items-center md:justify-between">
                 <div>
@@ -17,12 +23,7 @@
             </div>
         </div>
 
-        @if (cargando) {
-        <div class="rounded-2xl border border-gray-200 bg-white p-8 text-center">
-            <mat-progress-spinner class="mx-auto" diameter="36" mode="indeterminate"></mat-progress-spinner>
-            <p class="mt-4 text-sm text-gray-500">Cargando informacion del destino...</p>
-        </div>
-        } @else {
+        @if (!cargando) {
         <form [formGroup]="form" (ngSubmit)="guardar()"
             class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
             <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
@@ -147,13 +148,3 @@
 </div>
 }
 
-@if (guardando) {
-<div class="fixed inset-0 z-[3500] flex items-center justify-center bg-black/50 px-4 backdrop-blur-[2px]">
-    <div class="w-full max-w-xs rounded-2xl bg-white p-6 shadow-2xl">
-        <div class="flex flex-col items-center gap-3 text-center">
-            <mat-progress-spinner diameter="44" mode="indeterminate"></mat-progress-spinner>
-            <p class="text-sm font-medium text-gray-700">Guardando cambios...</p>
-        </div>
-    </div>
-</div>
-}

@@ -5,6 +5,21 @@
     @apply bg-black bg-opacity-60 sm:bg-transparent #{'!important'};
 }
 
+body.modal-locked {
+    overflow: hidden;
+}
+
+body.modal-locked app-root {
+    pointer-events: none;
+}
+
+body.modal-locked .fm-modal-backdrop,
+body.modal-locked .fm-modal-backdrop *,
+body.modal-locked .modal-blocker,
+body.modal-locked .modal-blocker * {
+    pointer-events: auto;
+}
+
 /* -------------------------------------------------------------------------- */
 /*  @ Font smoothing
 /* -------------------------------------------------------------------------- */
@@ -203,6 +218,21 @@
 
     .mat-ripple-element {
         @apply bg-black/10 #{'!important'};
+    }
+}
+
+/* Force white content on primary background buttons */
+.mat-mdc-raised-button.mat-primary,
+.mat-mdc-unelevated-button.mat-primary,
+.mat-mdc-fab.mat-primary,
+.mat-mdc-mini-fab.mat-primary {
+    color: #ffffff !important;
+
+    .mdc-button__label,
+    .mat-icon,
+    .mat-mdc-button-touch-target,
+    .mdc-fab__label {
+        color: #ffffff !important;
     }
 }
 

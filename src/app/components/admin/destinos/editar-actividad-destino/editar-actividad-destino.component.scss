@@ -1,0 +1,22 @@
+.actividad-drawer-container {
+  min-height: 36rem;
+  overflow: hidden;
+}
+
+.actividad-drawer {
+  width: min(28rem, 38vw);
+  border-left: 1px solid #e5e7eb;
+  background: #ffffff;
+}
+
+@media (max-width: 1024px) {
+  .actividad-drawer {
+    width: min(24rem, 46vw);
+  }
+}
+
+@media (max-width: 768px) {
+  .actividad-drawer {
+    width: 100%;
+  }
+}

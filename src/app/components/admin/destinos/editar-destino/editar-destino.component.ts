@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { SupabaseService } from 'app/core/supabase.service';
+import { BlockingLoaderComponent } from 'app/shared/blocking-loader/blocking-loader.component';
 import { MaterialModule } from 'app/shared/material.module';
 
 interface ITipoDestino {
@@ -22,7 +23,7 @@ interface IDestinoPadre {
 @Component({
   selector: 'app-editar-destino',
   standalone: true,
-  imports: [MaterialModule],
+  imports: [MaterialModule, BlockingLoaderComponent],
   templateUrl: './editar-destino.component.html',
   styleUrl: './editar-destino.component.scss'
 })

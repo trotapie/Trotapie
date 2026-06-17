@@ -9,6 +9,7 @@ import {
   IPreviewDestinoAdmin,
   SupabaseService
 } from 'app/core/supabase.service';
+import { BlockingLoaderComponent } from 'app/shared/blocking-loader/blocking-loader.component';
 import { MaterialModule } from 'app/shared/material.module';
 
 interface ILangConfig {
@@ -19,7 +20,7 @@ interface ILangConfig {
 @Component({
   selector: 'app-editar-preview-destino',
   standalone: true,
-  imports: [MaterialModule, DragDropModule],
+  imports: [MaterialModule, DragDropModule, BlockingLoaderComponent],
   templateUrl: './editar-preview-destino.component.html',
   styleUrl: './editar-preview-destino.component.scss'
 })
@@ -100,7 +101,8 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
   });
 
   formActividad = this.fb.group({
-    imagen_fondo: ['', [Validators.required]],
+    imagen_fondo: [''],
+    imagenes: this.fb.array([]),
     traducciones: this.fb.group({})
   });
 
@@ -114,6 +116,21 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
 
   get actividadesArray(): UntypedFormArray {
     return this.form.get('actividades') as UntypedFormArray;
+  }
+
+  get imagenesActividadArray(): UntypedFormArray {
+    return this.formActividad.get('imagenes') as UntypedFormArray;
+  }
+
+  get bloqueandoPantalla(): boolean {
+    return (
+      this.cargando ||
+      this.guardando ||
+      this.actualizandoOrden ||
+      this.guardandoActividad ||
+      this.traduciendoActividad ||
+      this.eliminandoActividadIndex !== null
+    );
   }
 
   ngAfterViewInit(): void {
@@ -188,8 +205,15 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     console.table(
       (data.actividades ?? []).map((actividad) => ({
         actividad_id: actividad.id,
+        imagen_fondo_id: actividad.imagen_fondo_id ?? null,
         imagen_fondo: actividad.imagen_fondo,
+        imagen_seleccionada_id: actividad.imagen_seleccionada_id ?? actividad.imagen_fondo_id ?? null,
+        imagen_seleccionada: actividad.imagen_seleccionada ?? actividad.imagen_fondo ?? '',
         total_imagenes: actividad.imagenes?.length ?? 0,
+        imagen_activa_id:
+          actividad.imagenes?.find((imagen) => imagen.activa)?.id ??
+          actividad.imagenes?.[0]?.id ??
+          null,
         imagen_activa:
           actividad.imagenes?.find((imagen) => imagen.activa)?.imagen_url ??
           actividad.imagenes?.[0]?.imagen_url ??
@@ -230,15 +254,24 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
           titulo_descripcion: this.limpiarTexto(item.titulo_descripcion)
         })),
         detalles_rapidos: detallesRapidos,
-        actividades: (raw.actividades ?? []).map((actividad: any) => ({
-          id: this.parseNumber(actividad.id),
-          imagen_fondo: this.limpiarTexto(actividad.imagen_fondo),
-          traducciones: this.idiomas.map((idioma) => ({
-            idioma_id: idioma.id,
-            nombre: this.limpiarTexto(actividad?.traducciones?.[idioma.codigo]?.nombre),
-            descripcion: this.limpiarTexto(actividad?.traducciones?.[idioma.codigo]?.descripcion)
-          }))
-        }))
+        actividades: (raw.actividades ?? []).map((actividad: any) => {
+          const imagenes = this.normalizarImagenesActividadPayload(actividad?.imagenes ?? []);
+          const imagenPrincipal = this.obtenerImagenPrincipalGaleria(
+            imagenes,
+            this.limpiarTexto(actividad.imagen_fondo)
+          );
+
+          return {
+            id: this.parseNumber(actividad.id),
+            imagen_fondo: imagenPrincipal,
+            imagenes,
+            traducciones: this.idiomas.map((idioma) => ({
+              idioma_id: idioma.id,
+              nombre: this.limpiarTexto(actividad?.traducciones?.[idioma.codigo]?.nombre),
+              descripcion: this.limpiarTexto(actividad?.traducciones?.[idioma.codigo]?.descripcion)
+            }))
+          };
+        })
       });
 
       this.mensajeModalExito = 'Preview del destino actualizado correctamente.';
@@ -272,6 +305,8 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     imagen_url: string;
     activa: boolean;
     orden: number | null;
+    vigencia_desde: string | null;
+    vigencia_hasta: string | null;
     created_at: string | null;
   }> {
     return (this.actividadesArray.at(index)?.get('imagenes')?.value ?? []) as Array<{
@@ -279,6 +314,8 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
       imagen_url: string;
       activa: boolean;
       orden: number | null;
+      vigencia_desde: string | null;
+      vigencia_hasta: string | null;
       created_at: string | null;
     }>;
   }
@@ -288,6 +325,8 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     imagen_url: string;
     activa: boolean;
     orden: number | null;
+    vigencia_desde: string | null;
+    vigencia_hasta: string | null;
     created_at: string | null;
   }> {
     if (this.indiceActividadEditando === null) {
@@ -357,6 +396,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
 
     this.formActividad.reset({ imagen_fondo: '' });
     this.formActividad.setControl('traducciones', this.fb.group(traducciones));
+    this.formActividad.setControl('imagenes', this.fb.array([]));
     this.concentradoTraduccionesActividad = {};
     this.ultimaLlaveTraduccionActividad = '';
     this.mostrarModalNuevaActividad = true;
@@ -379,10 +419,32 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
       imagen_fondo: actividad.get('imagen_fondo')?.value ?? ''
     });
     this.formActividad.setControl('traducciones', this.fb.group(traducciones));
+    this.formActividad.setControl(
+      'imagenes',
+      this.buildImagenesFormArray(this.getImagenesActividad(index))
+    );
     this.concentradoTraduccionesActividad = {};
     this.ultimaLlaveTraduccionActividad = '';
     this.indiceActividadEditando = index;
     this.mostrarModalEditarActividad = true;
+  }
+
+  abrirPantallaEditarActividad(index: number) {
+    const actividad = this.actividadesArray.at(index);
+    if (!actividad) return;
+
+    const actividadId = this.parseNumber(actividad.get('id')?.value);
+    if (!actividadId) {
+      this.error = 'Primero guarda la actividad para poder editar sus imagenes en pantalla.';
+      return;
+    }
+
+    this.router.navigate([
+      '/admin/destinos/configurar-destinos/preview',
+      this.destinoId,
+      'actividad',
+      actividadId
+    ]);
   }
 
   cerrarModalActividad() {
@@ -446,11 +508,34 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
       const actividadIndex = this.indiceActividadEditando;
       const actividadExistente = actividadIndex !== null ? this.actividadesArray.at(actividadIndex) : null;
       const actividadId = this.parseNumber(actividadExistente?.get('id')?.value);
+      const imagenes = this.normalizarImagenesActividadPayload(raw.imagenes ?? []);
+      const imagenActivaId = imagenes.find((imagen) => imagen.activa)?.id ?? null;
+      const imagenPrincipal = this.obtenerImagenPrincipalGaleria(
+        imagenes.length ? imagenes : undefined,
+        this.limpiarTexto(raw.imagen_fondo)
+      );
+
+      if (!imagenPrincipal && !imagenes.length) {
+        this.error = 'Agrega al menos una imagen o captura una imagen de fondo.';
+        return;
+      }
 
       const guardada = await this.supabase.guardarActividadDestinoAdmin({
         destino_id: this.destinoId,
         actividad_id: actividadId,
-        imagen_fondo: this.limpiarTexto(raw.imagen_fondo),
+        imagen_fondo: imagenPrincipal,
+        imagen_activa_id: imagenActivaId,
+        imagenes: imagenes.length
+          ? imagenes
+          : imagenPrincipal
+            ? [{
+                imagen_url: imagenPrincipal,
+                activa: true,
+                orden: 1,
+                vigencia_desde: null,
+                vigencia_hasta: null
+              }]
+            : [],
         traducciones: this.idiomas.map((idioma) => ({
           idioma_id: idioma.id,
           nombre: this.limpiarTexto(raw?.traducciones?.[idioma.codigo]?.nombre),
@@ -459,10 +544,27 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
       });
 
       if (actividadExistente) {
+        const actividadForm = actividadExistente as any;
         actividadExistente.patchValue({
           id: guardada.id,
-          imagen_fondo: raw.imagen_fondo ?? ''
+          imagen_fondo: imagenPrincipal ?? ''
         });
+        actividadForm.setControl(
+          'imagenes',
+          this.buildImagenesFormArray(
+                imagenes.length
+                  ? imagenes
+                  : [{
+                  id: null,
+                  imagen_url: imagenPrincipal ?? '',
+                  activa: true,
+                  orden: 1,
+                  vigencia_desde: null,
+                  vigencia_hasta: null,
+                  created_at: null
+                }]
+          )
+        );
 
         this.idiomas.forEach((idioma) => {
           actividadExistente.get(['traducciones', idioma.codigo, 'nombre'])?.setValue(
@@ -475,7 +577,15 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
       } else {
         const actividadGroup = this.buildActividadGroup({
           id: guardada.id,
-          imagen_fondo: raw.imagen_fondo ?? '',
+          imagen_fondo: imagenPrincipal ?? '',
+          imagenes: imagenes.length ? imagenes : [{
+            id: null,
+            imagen_url: imagenPrincipal ?? '',
+            activa: true,
+            orden: 1,
+            vigencia_desde: null,
+            vigencia_hasta: null
+          }],
           traducciones: raw.traducciones ?? {}
         });
         this.actividadesArray.push(actividadGroup);
@@ -855,12 +965,184 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
       return acc;
     }, {} as Record<string, any>);
 
+    const imagenes = this.normalizarImagenesActividadPayload(item?.imagenes ?? []);
+
     return this.fb.group({
       id: [this.parseNumber(item?.id)],
-      imagen_fondo: [item?.imagen_fondo ?? '', [Validators.required]],
-      imagenes: [Array.isArray(item?.imagenes) ? item.imagenes : []],
+      imagen_fondo: [item?.imagen_fondo ?? ''],
+      imagenes: this.buildImagenesFormArray(imagenes),
       traducciones: this.fb.group(traducciones)
     });
+  }
+
+  private buildImagenesFormArray(imagenes: Array<any> = []): UntypedFormArray {
+    return this.fb.array(
+      imagenes.map((imagen, index) =>
+        this.fb.group({
+          id: [this.parseNumber(imagen?.id)],
+          imagen_url: [imagen?.imagen_url ?? ''],
+          activa: [Boolean(imagen?.activa)],
+          orden: [Number.isFinite(Number(imagen?.orden)) ? Number(imagen.orden) : index + 1],
+          vigencia_desde: [imagen?.vigencia_desde ?? null],
+          vigencia_hasta: [imagen?.vigencia_hasta ?? null],
+          created_at: [imagen?.created_at ?? null]
+        })
+      )
+    );
+  }
+
+  private normalizarImagenesActividadPayload(imagenes: Array<any> = []) {
+    return (imagenes ?? [])
+      .map((imagen, index) => ({
+        id: this.parseNumber(imagen?.id),
+        imagen_url: this.limpiarTexto(imagen?.imagen_url),
+        activa: Boolean(imagen?.activa),
+        orden: this.parseNumber(imagen?.orden) ?? index + 1,
+        vigencia_desde: this.normalizarFechaYYYYMMDD(imagen?.vigencia_desde),
+        vigencia_hasta: this.normalizarFechaYYYYMMDD(imagen?.vigencia_hasta),
+        created_at: imagen?.created_at ?? null
+      }))
+      .filter((imagen) => !!imagen.imagen_url);
+  }
+
+  private obtenerImagenPrincipalGaleria(
+    imagenes?: Array<{
+      imagen_url: string | null;
+      activa?: boolean;
+      orden?: number | null;
+      vigencia_desde?: string | null;
+      vigencia_hasta?: string | null;
+    }>,
+    fallback = ''
+  ): string {
+    const lista = this.normalizarImagenesActividadPayload(imagenes ?? []);
+    if (!lista.length) {
+      return this.limpiarTexto(fallback) ?? '';
+    }
+
+    const hoy = this.obtenerFechaMexicoHoy();
+    const vigentes = lista.filter((imagen) => this.imagenEstaVigente(imagen, hoy));
+    const candidataVigente = vigentes.find((imagen) => imagen.activa) ?? vigentes[0] ?? null;
+    const candidataActiva = lista.find((imagen) => imagen.activa) ?? null;
+    const candidataOrden = [...lista].sort((a, b) => {
+      const ordenA = Number(a.orden ?? Number.MAX_SAFE_INTEGER);
+      const ordenB = Number(b.orden ?? Number.MAX_SAFE_INTEGER);
+      if (ordenA !== ordenB) {
+        return ordenA - ordenB;
+      }
+      return Number(a.id ?? 0) - Number(b.id ?? 0);
+    })[0] ?? null;
+
+    return candidataVigente?.imagen_url ?? candidataActiva?.imagen_url ?? candidataOrden?.imagen_url ?? this.limpiarTexto(fallback) ?? '';
+  }
+
+  private normalizarFechaYYYYMMDD(value: string | Date | null | undefined): string | null {
+    if (!value) {
+      return null;
+    }
+
+    if (value instanceof Date) {
+      if (Number.isNaN(value.getTime())) {
+        return null;
+      }
+
+      return value.toISOString().slice(0, 10);
+    }
+
+    const texto = String(value).trim();
+    return texto ? texto.slice(0, 10) : null;
+  }
+
+  private obtenerFechaMexicoHoy(): string {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Mexico_City',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(new Date());
+  }
+
+  private imagenEstaVigente(
+    imagen: { vigencia_desde?: string | null; vigencia_hasta?: string | null },
+    fechaReferencia: string
+  ): boolean {
+    const desde = this.normalizarFechaYYYYMMDD(imagen?.vigencia_desde);
+    const hasta = this.normalizarFechaYYYYMMDD(imagen?.vigencia_hasta);
+
+    if (!desde && !hasta) {
+      return false;
+    }
+
+    if (desde && fechaReferencia < desde) {
+      return false;
+    }
+
+    if (hasta && fechaReferencia > hasta) {
+      return false;
+    }
+
+    return true;
+  }
+
+  private moverImagenActividad(index: number, delta: number) {
+    const target = index + delta;
+    if (target < 0 || target >= this.imagenesActividadArray.length) {
+      return;
+    }
+
+    const control = this.imagenesActividadArray;
+    const current = control.at(index);
+    control.removeAt(index);
+    control.insert(target, current);
+    this.normalizarOrdenImagenesActividad();
+  }
+
+  private eliminarImagenActividad(index: number) {
+    if (index < 0 || index >= this.imagenesActividadArray.length) {
+      return;
+    }
+
+    this.imagenesActividadArray.removeAt(index);
+    this.normalizarOrdenImagenesActividad();
+  }
+
+  private agregarImagenActividad() {
+    this.imagenesActividadArray.push(
+      this.fb.group({
+        id: [null],
+        imagen_url: [''],
+        activa: [this.imagenesActividadArray.length === 0],
+        orden: [this.imagenesActividadArray.length + 1],
+        vigencia_desde: [null],
+        vigencia_hasta: [null],
+        created_at: [null]
+      })
+    );
+  }
+
+  private setImagenActiva(index: number) {
+    this.imagenesActividadArray.controls.forEach((control, currentIndex) => {
+      control.get('activa')?.setValue(currentIndex === index, { emitEvent: false });
+    });
+
+    const imagenSeleccionada = this.imagenesActividadArray.at(index);
+    const url = String(imagenSeleccionada?.get('imagen_url')?.value ?? '').trim();
+    if (url) {
+      this.formActividad.get('imagen_fondo')?.setValue(url, { emitEvent: false });
+    }
+  }
+
+  private normalizarOrdenImagenesActividad() {
+    this.imagenesActividadArray.controls.forEach((control, index) => {
+      control.get('orden')?.setValue(index + 1, { emitEvent: false });
+    });
+
+    const existeActiva = this.imagenesActividadArray.controls.some(
+      (control) => Boolean(control.get('activa')?.value)
+    );
+    if (!existeActiva && this.imagenesActividadArray.length > 0) {
+      this.imagenesActividadArray.at(0)?.get('activa')?.setValue(true, { emitEvent: false });
+    }
   }
 
   private buildValoresGroup(initial?: Record<string, string>) {

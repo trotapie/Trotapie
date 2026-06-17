@@ -38,11 +38,26 @@ export interface IDetalleRapidoPreviewAdmin {
 export interface IActividadPreviewAdmin {
   id: number | null;
   imagen_fondo: string;
+  imagen_fondo_id?: number | null;
+  imagen_seleccionada?: string;
+  imagen_seleccionada_id?: number | null;
+  carpetas?: Array<{
+    id: number;
+    nombre: string;
+    orden: number | null;
+    created_at: string | null;
+    updated_at: string | null;
+  }>;
   imagenes?: Array<{
     id: number;
     imagen_url: string;
+    carpeta_id?: number | null;
+    carpeta_nombre?: string | null;
+    carpeta?: string | null;
     activa: boolean;
     orden: number | null;
+    vigencia_desde: string | null;
+    vigencia_hasta: string | null;
     created_at: string | null;
   }>;
   traducciones: Record<number, { nombre: string; descripcion: string }>;
@@ -82,6 +97,386 @@ export class SupabaseService {
   // ✅ agrega esto dentro de SupabaseService
   getClient(): SupabaseClient {
     return this.client;
+  }
+
+  private obtenerFechaMexicoHoy(): string {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Mexico_City',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(new Date());
+  }
+
+  private normalizarFecha(valor?: string | null): string | null {
+    const fecha = String(valor ?? '').trim();
+    return fecha.length ? fecha.slice(0, 10) : null;
+  }
+
+  private normalizarNombreCarpeta(valor?: string | null): string {
+    const nombre = String(valor ?? '').trim();
+    if (!nombre.length) {
+      return 'Sin carpeta';
+    }
+
+    return nombre.charAt(0).toUpperCase() + nombre.slice(1);
+  }
+
+  private claveCarpeta(valor?: string | null): string {
+    return this.normalizarNombreCarpeta(valor).toLowerCase();
+  }
+
+  private parseNumber(value: number | string | null | undefined): number | null {
+    if (value === null || value === undefined || value === '') return null;
+    const numberValue = Number(value);
+    return Number.isFinite(numberValue) ? numberValue : null;
+  }
+
+  private imagenEstaVigente(imagen: {
+    vigencia_desde?: string | null;
+    vigencia_hasta?: string | null;
+  }, fechaReferencia: string): boolean {
+    const desde = this.normalizarFecha(imagen?.vigencia_desde);
+    const hasta = this.normalizarFecha(imagen?.vigencia_hasta);
+
+    if (!desde && !hasta) {
+      return false;
+    }
+
+    if (desde && fechaReferencia < desde) {
+      return false;
+    }
+
+    if (hasta && fechaReferencia > hasta) {
+      return false;
+    }
+
+    return true;
+  }
+
+  private ordenarImagenesGaleria(
+    imagenes: Array<{
+      id: number;
+      imagen_url: string;
+      carpeta?: string | null;
+      activa?: boolean;
+      orden?: number | null;
+      vigencia_desde?: string | null;
+      vigencia_hasta?: string | null;
+      created_at?: string | null;
+    }>
+  ) {
+    return [...(imagenes ?? [])].sort((a: any, b: any) => {
+      const ordenA = a?.orden ?? Number.MAX_SAFE_INTEGER;
+      const ordenB = b?.orden ?? Number.MAX_SAFE_INTEGER;
+      if (ordenA !== ordenB) {
+        return ordenA - ordenB;
+      }
+      return Number(a?.id ?? 0) - Number(b?.id ?? 0);
+    });
+  }
+
+  private seleccionarImagenGaleria(
+    imagenes: Array<{
+      id: number;
+      imagen_url: string;
+      carpeta?: string | null;
+      activa?: boolean;
+      orden?: number | null;
+      vigencia_desde?: string | null;
+      vigencia_hasta?: string | null;
+      created_at?: string | null;
+    }>,
+    fechaReferencia = this.obtenerFechaMexicoHoy()
+  ) {
+    const ordenadas = this.ordenarImagenesGaleria(imagenes);
+    const vigentes = ordenadas.filter((imagen) => this.imagenEstaVigente(imagen, fechaReferencia));
+    const candidataVigente = vigentes.find((imagen) => Boolean(imagen?.activa)) ?? vigentes[0] ?? null;
+    const candidataActiva = ordenadas.find((imagen) => Boolean(imagen?.activa)) ?? null;
+    const candidataOrden = ordenadas[0] ?? null;
+
+    return candidataVigente ?? candidataActiva ?? candidataOrden;
+  }
+
+  private async obtenerCarpetasActividad(actividadId: number) {
+    const { data, error } = await this.client
+      .from('atracciones_carpetas')
+      .select('id, atraccion_id, nombre, orden, created_at, updated_at')
+      .eq('atraccion_id', actividadId)
+      .order('orden', { ascending: true })
+      .order('id', { ascending: true });
+
+    if (error) throw error;
+    return data ?? [];
+  }
+
+  private async asegurarCarpetasActividad(actividadId: number, nombresCarpeta: string[]) {
+    const nombresNormalizados = [...new Set(nombresCarpeta.map((valor) => this.normalizarNombreCarpeta(valor)))];
+    const carpetasExistentesOriginal = await this.obtenerCarpetasActividad(actividadId);
+    const carpetasExistentes: any[] = [];
+    const carpetasPorNombre = new Map<string, any>();
+
+    for (const carpeta of carpetasExistentesOriginal) {
+      const nombreNormalizado = this.normalizarNombreCarpeta(carpeta.nombre);
+      if (carpeta.nombre !== nombreNormalizado) {
+        const { error: updateError } = await this.client
+          .from('atracciones_carpetas')
+          .update({ nombre: nombreNormalizado })
+          .eq('id', carpeta.id);
+
+        if (updateError) throw updateError;
+
+        carpeta.nombre = nombreNormalizado;
+      }
+
+      carpetasExistentes.push(carpeta);
+      carpetasPorNombre.set(this.claveCarpeta(carpeta.nombre), carpeta);
+    }
+
+    const faltantes = nombresNormalizados.filter((nombre) => !carpetasPorNombre.has(this.claveCarpeta(nombre)));
+    if (faltantes.length) {
+      const siguienteOrdenBase = carpetasExistentes.length;
+      const inserts = faltantes.map((nombre, index) => ({
+        atraccion_id: actividadId,
+        nombre: this.normalizarNombreCarpeta(nombre),
+        orden: siguienteOrdenBase + index + 1
+      }));
+
+      const { data: carpetasInsertadas, error: carpetasInsertadasError } = await this.client
+        .from('atracciones_carpetas')
+        .upsert(inserts, {
+          onConflict: 'atraccion_id,nombre'
+        })
+        .select('id, atraccion_id, nombre, orden, created_at, updated_at');
+
+      if (carpetasInsertadasError) throw carpetasInsertadasError;
+
+      (carpetasInsertadas ?? []).forEach((carpeta: any) => {
+        carpetasPorNombre.set(this.claveCarpeta(carpeta.nombre), carpeta);
+      });
+    }
+
+    return carpetasPorNombre;
+  }
+
+  private async sincronizarImagenesActividad(
+    actividadId: number,
+    imagenes?: Array<{
+      id?: number | null;
+      imagen_url: string | null;
+      carpeta_id?: number | null;
+      carpeta_nombre?: string | null;
+      carpeta?: string | null;
+      activa?: boolean;
+      orden?: number | null;
+      vigencia_desde?: string | null;
+      vigencia_hasta?: string | null;
+    }>,
+    imagenActivaId?: number | null
+  ) {
+    if (!Array.isArray(imagenes)) {
+      return;
+    }
+
+    const limpias = imagenes
+      .map((imagen, index) => ({
+        id: Number.isFinite(Number(imagen?.id)) ? Number(imagen?.id) : null,
+        imagen_url: String(imagen?.imagen_url ?? '').trim(),
+        carpeta_id: this.parseNumber(imagen?.carpeta_id),
+        carpeta_nombre: this.normalizarNombreCarpeta(imagen?.carpeta_nombre ?? imagen?.carpeta),
+        carpeta: this.normalizarNombreCarpeta(imagen?.carpeta_nombre ?? imagen?.carpeta),
+        activa: Boolean(imagen?.activa),
+        orden: Number.isFinite(Number(imagen?.orden)) ? Number(imagen?.orden) : index + 1,
+        vigencia_desde: this.normalizarFecha(imagen?.vigencia_desde),
+        vigencia_hasta: this.normalizarFecha(imagen?.vigencia_hasta)
+      }))
+      .filter((imagen) => !!imagen.imagen_url);
+
+    if (!limpias.length) {
+      const { error: eliminarImagenesError } = await this.client
+        .from('atracciones_imagenes')
+        .delete()
+        .eq('atraccion_id', actividadId);
+
+      if (eliminarImagenesError) throw eliminarImagenesError;
+      return;
+    }
+
+    const idActivaRecibida = this.parseNumber(imagenActivaId);
+    const indicePorId = idActivaRecibida !== null
+      ? limpias.findIndex((imagen) => imagen.id === idActivaRecibida)
+      : -1;
+    const primeraActiva = limpias.findIndex((imagen) => imagen.activa);
+    const indiceActivaFinal = indicePorId >= 0 ? indicePorId : primeraActiva >= 0 ? primeraActiva : 0;
+    limpias.forEach((imagen, index) => {
+      imagen.activa = index === indiceActivaFinal;
+    });
+
+    console.log('[sincronizarImagenesActividad] Estado activo preparado:', {
+      actividad_id: actividadId,
+      imagen_activa_id_recibida: idActivaRecibida,
+      indice_activa_final: indiceActivaFinal,
+      imagenes: limpias.map((imagen) => ({
+        id: imagen.id,
+        imagen_url: imagen.imagen_url,
+        activa: imagen.activa,
+        orden: imagen.orden,
+        carpeta_id: imagen.carpeta_id,
+        carpeta_nombre: imagen.carpeta_nombre,
+        carpeta: imagen.carpeta
+      }))
+    });
+
+    const carpetasPorNombre = await this.asegurarCarpetasActividad(
+      actividadId,
+      limpias.map((imagen) => imagen.carpeta_nombre ?? imagen.carpeta)
+    );
+
+    const { data: existentes, error: existentesError } = await this.client
+      .from('atracciones_imagenes')
+      .select('id, activa')
+      .eq('atraccion_id', actividadId);
+
+    if (existentesError) throw existentesError;
+
+    const idsExistentes = new Set((existentes ?? []).map((item: any) => Number(item.id)));
+    const idImagenActivaActual =
+      (existentes ?? []).find((item: any) => Boolean(item.activa))?.id ?? null;
+    const idsRecibidos = new Set<number>();
+    let idImagenActivaFinal: number | null = null;
+
+    for (let index = 0; index < limpias.length; index += 1) {
+      const imagen = limpias[index];
+      let carpetaAsignada: any = null;
+
+      if (imagen.carpeta_id !== null) {
+        const { data: carpetaPorId, error: carpetaPorIdError } = await this.client
+          .from('atracciones_carpetas')
+          .select('id, atraccion_id, nombre, orden, created_at, updated_at')
+          .eq('id', imagen.carpeta_id)
+          .eq('atraccion_id', actividadId)
+          .maybeSingle();
+
+        if (carpetaPorIdError) throw carpetaPorIdError;
+        carpetaAsignada = carpetaPorId;
+      }
+
+      if (!carpetaAsignada?.id) {
+        carpetaAsignada = carpetasPorNombre.get(this.claveCarpeta(imagen.carpeta_nombre ?? imagen.carpeta));
+      }
+
+      if (!carpetaAsignada?.id) {
+        throw new Error(
+          `No se pudo resolver la carpeta "${imagen.carpeta_nombre ?? imagen.carpeta}" para la actividad ${actividadId}.`
+        );
+      }
+
+      if (imagen.id && idsExistentes.has(imagen.id)) {
+        idsRecibidos.add(imagen.id);
+        const { error: updateError } = await this.client
+          .from('atracciones_imagenes')
+          .update({
+            imagen_url: imagen.imagen_url,
+            carpeta_id: carpetaAsignada.id,
+            carpeta: carpetaAsignada.nombre,
+            orden: imagen.orden,
+            vigencia_desde: imagen.vigencia_desde,
+            vigencia_hasta: imagen.vigencia_hasta
+          })
+          .eq('id', imagen.id)
+          .eq('atraccion_id', actividadId);
+
+        if (updateError) throw updateError;
+        if (index === indiceActivaFinal) {
+          idImagenActivaFinal = imagen.id;
+        }
+        continue;
+      }
+
+      const { data: nuevaImagen, error: insertError } = await this.client
+        .from('atracciones_imagenes')
+        .insert({
+          atraccion_id: actividadId,
+          imagen_url: imagen.imagen_url,
+          carpeta_id: carpetaAsignada.id,
+          carpeta: carpetaAsignada.nombre,
+          activa: false,
+          orden: imagen.orden,
+          vigencia_desde: imagen.vigencia_desde,
+          vigencia_hasta: imagen.vigencia_hasta
+        })
+        .select('id')
+        .single();
+
+      if (insertError) throw insertError;
+      if (nuevaImagen?.id) {
+        idsRecibidos.add(Number(nuevaImagen.id));
+        if (index === indiceActivaFinal) {
+          idImagenActivaFinal = Number(nuevaImagen.id);
+        }
+      }
+    }
+
+    const idsParaEliminar = [...idsExistentes].filter((id) => !idsRecibidos.has(id));
+    if (idsParaEliminar.length) {
+      const { error: eliminarError } = await this.client
+        .from('atracciones_imagenes')
+        .delete()
+        .eq('atraccion_id', actividadId)
+        .in('id', idsParaEliminar);
+
+      if (eliminarError) throw eliminarError;
+    }
+
+    const imagenActivaFinal = limpias[indiceActivaFinal] ?? null;
+    if (idImagenActivaFinal === null && imagenActivaFinal?.imagen_url) {
+      const { data: imagenesPorUrl, error: buscarPorUrlError } = await this.client
+        .from('atracciones_imagenes')
+        .select('id')
+        .eq('atraccion_id', actividadId)
+        .eq('imagen_url', imagenActivaFinal.imagen_url)
+        .limit(1);
+
+      if (buscarPorUrlError) throw buscarPorUrlError;
+
+      const idPorUrl = this.parseNumber(imagenesPorUrl?.[0]?.id);
+      if (idPorUrl === null) {
+        throw new Error('No se encontro la imagen seleccionada para marcarla como principal.');
+      }
+
+      idImagenActivaFinal = idPorUrl;
+    }
+
+    const idImagenActivaAnterior = this.parseNumber(idImagenActivaActual);
+    if (
+      idImagenActivaAnterior !== null &&
+      idImagenActivaAnterior !== idImagenActivaFinal &&
+      idsRecibidos.has(idImagenActivaAnterior)
+    ) {
+      const { error: desactivarAnteriorError } = await this.client
+        .from('atracciones_imagenes')
+        .update({ activa: false })
+        .eq('id', idImagenActivaAnterior)
+        .eq('atraccion_id', actividadId);
+
+      if (desactivarAnteriorError) throw desactivarAnteriorError;
+    }
+
+    if (idImagenActivaFinal !== null && idImagenActivaFinal !== idImagenActivaAnterior) {
+      const { error: activarFinalError } = await this.client
+        .from('atracciones_imagenes')
+        .update({ activa: true })
+        .eq('id', idImagenActivaFinal)
+        .eq('atraccion_id', actividadId);
+
+      if (activarFinalError) throw activarFinalError;
+    }
+
+    console.log('[sincronizarImagenesActividad] Imagen activa persistida:', {
+      actividad_id: actividadId,
+      imagen_activa_anterior_id: idImagenActivaAnterior,
+      imagen_activa_id: idImagenActivaFinal
+    });
   }
 
   // ===== AUTH =====
@@ -920,7 +1315,9 @@ export class SupabaseService {
     let detallesRapidosTraducciones: any[] = [];
     let actividades: any[] = [];
     let actividadesTraducciones: any[] = [];
-    let actividadesImagenes: any[] = [];
+    let actividadesCarpetas: any[] = [];
+    const imagenesActividadPorId = new Map<number, any[]>();
+    const carpetasActividadPorId = new Map<number, any[]>();
 
     if (detalleId) {
       const [traduccionesResponse, detallesRapidosResponse] = await Promise.all([
@@ -971,7 +1368,11 @@ export class SupabaseService {
 
       const { data: actividadesData, error: actividadesError } = await this.client
         .from('atracciones_principales')
-        .select('id, imagen_fondo, detalles_destino_id')
+        .select(`
+          id,
+          imagen_fondo,
+          detalles_destino_id
+        `)
         .eq('detalles_destino_id', detalleId)
         .order('id', { ascending: true });
 
@@ -980,31 +1381,62 @@ export class SupabaseService {
 
       const actividadIds = actividades.map((item: any) => item.id);
       if (actividadIds.length) {
-        const [actividadesTrResponse, actividadesImagenesResponse] = await Promise.all([
+        const [imagenesActividadResponse, carpetasActividadResponse] = await Promise.all([
+          this.client.rpc('obtener_atracciones_imagenes_admin', {
+            p_atraccion_ids: actividadIds
+          }),
           this.client
-            .from('atracciones_principales_traducciones')
-            .select('atracciones_principales_id, idioma_id, nombre, descripcion')
-            .in('atracciones_principales_id', actividadIds)
-            .in('idioma_id', idiomaIds),
-          this.client
-            .from('atracciones_imagenes')
-            .select('id, atraccion_id, imagen_url, activa, orden, created_at')
+            .from('atracciones_carpetas')
+            .select('id, atraccion_id, nombre, orden, created_at, updated_at')
             .in('atraccion_id', actividadIds)
+            .order('orden', { ascending: true })
+            .order('id', { ascending: true })
         ]);
 
-        if (actividadesTrResponse.error) throw actividadesTrResponse.error;
-        actividadesTraducciones = actividadesTrResponse.data ?? [];
+        const { data: imagenesActividadData, error: imagenesActividadError } = imagenesActividadResponse;
+        const { data: carpetasActividadData, error: carpetasActividadError } = carpetasActividadResponse;
 
-        if (actividadesImagenesResponse.error) {
-          console.warn(
-            '[obtenerPreviewDestinoAdmin] No se pudieron cargar imagenes de actividades:',
-            actividadesImagenesResponse.error
-          );
-          actividadesImagenes = [];
-        } else {
-          actividadesImagenes = actividadesImagenesResponse.data ?? [];
-        }
+        if (imagenesActividadError) throw imagenesActividadError;
+        if (carpetasActividadError) throw carpetasActividadError;
+
+        console.log('[Preview destino] Imagenes crudas de obtener_atracciones_imagenes_admin:', {
+          destino_id: destinoId,
+          detalle_id: detalleId,
+          actividad_ids: actividadIds,
+          total: imagenesActividadData?.length ?? 0,
+          imagenes: imagenesActividadData
+        });
+
+        actividadesCarpetas = carpetasActividadData ?? [];
+
+        (imagenesActividadData ?? []).forEach((imagen: any) => {
+          const atraccionId = Number(imagen.atraccion_id);
+          if (!imagenesActividadPorId.has(atraccionId)) {
+            imagenesActividadPorId.set(atraccionId, []);
+          }
+
+          imagenesActividadPorId.get(atraccionId)?.push(imagen);
+        });
       }
+
+      if (actividadIds.length) {
+        const { data: actividadesTrResponse, error: actividadesTraduccionesError } = await this.client
+          .from('atracciones_principales_traducciones')
+          .select('atracciones_principales_id, idioma_id, nombre, descripcion')
+          .in('atracciones_principales_id', actividadIds)
+          .in('idioma_id', idiomaIds);
+
+        if (actividadesTraduccionesError) throw actividadesTraduccionesError;
+        actividadesTraducciones = actividadesTrResponse ?? [];
+      }
+      actividadesCarpetas.forEach((item: any) => {
+        const atraccionId = Number(item.atraccion_id);
+        if (!carpetasActividadPorId.has(atraccionId)) {
+          carpetasActividadPorId.set(atraccionId, []);
+        }
+
+        carpetasActividadPorId.get(atraccionId)?.push(item);
+      });
     } else {
       detallesRapidos = catalogoTipos.map((tipo: any, index: number) => ({
         id: -(index + 1),
@@ -1058,15 +1490,6 @@ export class SupabaseService {
         });
     });
 
-    const imagenesActividadPorId = new Map<number, Array<any>>();
-    actividadesImagenes.forEach((item: any) => {
-      const actividadId = Number(item.atraccion_id);
-      if (!imagenesActividadPorId.has(actividadId)) {
-        imagenesActividadPorId.set(actividadId, []);
-      }
-      imagenesActividadPorId.get(actividadId)?.push(item);
-    });
-
     return {
       detalles_destinos_id: detalleId,
       destino_id: destinoId,
@@ -1077,19 +1500,40 @@ export class SupabaseService {
       catalogo_tipos_dato_rapido: catalogoTipos,
       actividades: (actividades ?? []).map((actividad: any) => {
         const traduccionesActividad = traduccionesActividadPorId.get(actividad.id) ?? new Map();
-        const imagenesOrdenadas = [...(imagenesActividadPorId.get(Number(actividad.id)) ?? [])].sort(
-          (a: any, b: any) => {
-            const ordenA = a?.orden ?? Number.MAX_SAFE_INTEGER;
-            const ordenB = b?.orden ?? Number.MAX_SAFE_INTEGER;
-            if (ordenA !== ordenB) {
-              return ordenA - ordenB;
-            }
-            return Number(a?.id ?? 0) - Number(b?.id ?? 0);
-          }
+        const imagenesActividad = imagenesActividadPorId.get(Number(actividad.id)) ?? [];
+        const imagenesOrdenadas = this.ordenarImagenesGaleria(
+          imagenesActividad.map((imagen: any) => ({
+            id: Number(imagen.id),
+            imagen_url: imagen.imagen_url ?? '',
+            carpeta_id: this.parseNumber(imagen.carpeta_id),
+            carpeta_nombre: imagen.carpeta_nombre ?? null,
+            carpeta: imagen.carpeta ?? null,
+            activa: Boolean(imagen.activa),
+            orden: imagen.orden ?? null,
+            vigencia_desde: imagen.vigencia_desde ?? null,
+            vigencia_hasta: imagen.vigencia_hasta ?? null,
+            created_at: imagen.created_at ?? null
+          }))
         );
-        const imagenActiva = imagenesOrdenadas.find((imagen: any) => Boolean(imagen?.activa));
-        const imagenReferencia = imagenActiva ?? imagenesOrdenadas[0];
+        const imagenSeleccionada = this.seleccionarImagenGaleria(imagenesOrdenadas);
+        const imagenFondoUrl = imagenSeleccionada?.imagen_url ?? actividad.imagen_fondo ?? '';
+        const imagenFondoRegistro =
+          imagenSeleccionada ??
+          imagenesOrdenadas.find((imagen: any) => imagen.imagen_url === actividad.imagen_fondo) ??
+          null;
+        const imagenFondoId = this.parseNumber(imagenFondoRegistro?.id);
         const recordTraducciones: Record<number, { nombre: string; descripcion: string }> = {};
+
+        console.log('[Preview destino] Imagenes devueltas para actividad:', {
+          destino_id: destinoId,
+          actividad_id: actividad.id,
+          total_crudas: imagenesActividad.length,
+          total_ordenadas: imagenesOrdenadas.length,
+          imagen_fondo_id: imagenFondoId,
+          imagen_fondo: imagenFondoUrl,
+          imagen_seleccionada: imagenSeleccionada,
+          imagenes: imagenesOrdenadas
+        });
 
         idiomas.forEach((idioma) => {
           recordTraducciones[idioma.id] = traduccionesActividad.get(idioma.id) ?? {
@@ -1100,15 +1544,21 @@ export class SupabaseService {
 
         return {
           id: actividad.id,
-          imagen_fondo:
-            imagenReferencia?.imagen_url ??
-            actividad.imagen_fondo ??
-            '',
+          imagen_fondo: imagenFondoUrl,
+          imagen_fondo_id: imagenFondoId,
+          imagen_seleccionada: imagenFondoUrl,
+          imagen_seleccionada_id: imagenFondoId,
+          carpetas: carpetasActividadPorId.get(Number(actividad.id)) ?? [],
           imagenes: imagenesOrdenadas.map((imagen: any) => ({
             id: Number(imagen.id),
             imagen_url: imagen.imagen_url ?? '',
+            carpeta_id: this.parseNumber(imagen.carpeta_id),
+            carpeta_nombre: imagen.carpeta_nombre ?? null,
+            carpeta: imagen.carpeta ?? null,
             activa: Boolean(imagen.activa),
             orden: imagen.orden ?? null,
+            vigencia_desde: imagen.vigencia_desde ?? null,
+            vigencia_hasta: imagen.vigencia_hasta ?? null,
             created_at: imagen.created_at ?? null
           })),
           traducciones: recordTraducciones
@@ -1162,6 +1612,15 @@ export class SupabaseService {
     actividades: Array<{
       id: number | null;
       imagen_fondo: string | null;
+      imagenes?: Array<{
+        id?: number | null;
+        imagen_url: string | null;
+        carpeta?: string | null;
+        activa?: boolean;
+        orden?: number | null;
+        vigencia_desde?: string | null;
+        vigencia_hasta?: string | null;
+      }>;
       traducciones: Array<{
         idioma_id: number;
         nombre: string | null;
@@ -1300,6 +1759,7 @@ export class SupabaseService {
 
         if (updateActividadError) throw updateActividadError;
         mapaActividadId.set(index, idActividad);
+        await this.sincronizarImagenesActividad(idActividad, actividad.imagenes);
         continue;
       }
 
@@ -1313,7 +1773,9 @@ export class SupabaseService {
         .single();
 
       if (crearActividadError) throw crearActividadError;
-      mapaActividadId.set(index, Number(nuevaActividad.id));
+      const nuevaActividadId = Number(nuevaActividad.id);
+      mapaActividadId.set(index, nuevaActividadId);
+      await this.sincronizarImagenesActividad(nuevaActividadId, actividad.imagenes);
     }
 
     const traduccionesActividadesPayload = payload.actividades.flatMap((actividad, index) => {
@@ -1405,6 +1867,16 @@ export class SupabaseService {
     destino_id: number;
     actividad_id?: number | null;
     imagen_fondo: string | null;
+    imagen_activa_id?: number | null;
+    imagenes?: Array<{
+      id?: number | null;
+      imagen_url: string | null;
+      carpeta?: string | null;
+      activa?: boolean;
+      orden?: number | null;
+      vigencia_desde?: string | null;
+      vigencia_hasta?: string | null;
+    }>;
     traducciones: Array<{
       idioma_id: number;
       nombre: string | null;
@@ -1446,6 +1918,7 @@ export class SupabaseService {
         .eq('detalles_destino_id', detallesDestinoId);
 
       if (actualizarActividadError) throw actualizarActividadError;
+      await this.sincronizarImagenesActividad(actividadId, payload.imagenes, payload.imagen_activa_id);
     } else {
       const { data: nuevaActividad, error: crearActividadError } = await this.client
         .from('atracciones_principales')
@@ -1458,6 +1931,7 @@ export class SupabaseService {
 
       if (crearActividadError) throw crearActividadError;
       actividadId = nuevaActividad.id;
+      await this.sincronizarImagenesActividad(actividadId, payload.imagenes, payload.imagen_activa_id);
     }
 
     const traduccionesPayload = payload.traducciones
@@ -1497,6 +1971,435 @@ export class SupabaseService {
     }
 
     return { id: actividadId };
+  }
+
+  async actualizarImagenesActividadDestinoAdmin(payload: {
+    destino_id: number;
+    actividad_id: number;
+    imagen_fondo: string | null;
+    imagen_activa_id?: number | null;
+    imagenes: Array<{
+      id?: number | null;
+      imagen_url: string | null;
+      carpeta?: string | null;
+      activa?: boolean;
+      orden?: number | null;
+      vigencia_desde?: string | null;
+      vigencia_hasta?: string | null;
+    }>;
+  }) {
+    const { data: detalleExistente, error: detalleExistenteError } = await this.client
+      .from('detalles_destinos')
+      .select('id')
+      .eq('destino_id', payload.destino_id)
+      .maybeSingle();
+
+    if (detalleExistenteError) throw detalleExistenteError;
+    if (!detalleExistente?.id) {
+      throw new Error('No se encontro el detalle del destino.');
+    }
+
+    const { error: actualizarActividadError } = await this.client
+      .from('atracciones_principales')
+      .update({ imagen_fondo: payload.imagen_fondo })
+      .eq('id', payload.actividad_id)
+      .eq('detalles_destino_id', detalleExistente.id);
+
+    if (actualizarActividadError) throw actualizarActividadError;
+
+    await this.sincronizarImagenesActividad(payload.actividad_id, payload.imagenes, payload.imagen_activa_id);
+    return { id: payload.actividad_id };
+  }
+
+  async crearCarpetaActividadAdmin(payload: {
+    destino_id: number;
+    actividad_id: number;
+    nombre: string;
+  }) {
+    const nombre = this.normalizarNombreCarpeta(payload.nombre);
+    if (!nombre) {
+      throw new Error('La carpeta no puede estar vacia.');
+    }
+
+    const { data: detalleExistente, error: detalleExistenteError } = await this.client
+      .from('detalles_destinos')
+      .select('id')
+      .eq('destino_id', payload.destino_id)
+      .maybeSingle();
+
+    if (detalleExistenteError) throw detalleExistenteError;
+    if (!detalleExistente?.id) {
+      throw new Error('No se encontro el detalle del destino.');
+    }
+
+    const { data: actividad, error: actividadError } = await this.client
+      .from('atracciones_principales')
+      .select('id')
+      .eq('id', payload.actividad_id)
+      .eq('detalles_destino_id', detalleExistente.id)
+      .maybeSingle();
+
+    if (actividadError) throw actividadError;
+    if (!actividad?.id) {
+      throw new Error('No se encontro la actividad solicitada.');
+    }
+
+    const { data: existente, error: existenteError } = await this.client
+      .from('atracciones_carpetas')
+      .select('id, atraccion_id, nombre, orden, created_at, updated_at')
+      .eq('atraccion_id', payload.actividad_id)
+      .ilike('nombre', nombre)
+      .maybeSingle();
+
+    if (existenteError) throw existenteError;
+    if (existente) {
+      const nombreNormalizado = this.normalizarNombreCarpeta(existente.nombre);
+      if (existente.nombre !== nombreNormalizado) {
+        const { error: updateExistenteError } = await this.client
+          .from('atracciones_carpetas')
+          .update({ nombre: nombreNormalizado })
+          .eq('id', existente.id);
+
+        if (updateExistenteError) throw updateExistenteError;
+        existente.nombre = nombreNormalizado;
+      }
+
+      return existente;
+    }
+
+    const { data: ultimaCarpeta, error: ultimaCarpetaError } = await this.client
+      .from('atracciones_carpetas')
+      .select('orden')
+      .eq('atraccion_id', payload.actividad_id)
+      .order('orden', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (ultimaCarpetaError) throw ultimaCarpetaError;
+
+    const { data: nuevaCarpeta, error: nuevaCarpetaError } = await this.client
+      .from('atracciones_carpetas')
+      .insert({
+        atraccion_id: payload.actividad_id,
+        nombre: this.normalizarNombreCarpeta(nombre),
+        orden: Number(ultimaCarpeta?.orden ?? 0) + 1
+      })
+      .select('id, atraccion_id, nombre, orden, created_at, updated_at')
+      .single();
+
+    if (nuevaCarpetaError) throw nuevaCarpetaError;
+    return nuevaCarpeta;
+  }
+
+  async renombrarCarpetaActividadAdmin(payload: {
+    destino_id: number;
+    actividad_id: number;
+    carpeta_id: number;
+    nombre: string;
+  }) {
+    const nombre = this.normalizarNombreCarpeta(payload.nombre);
+    if (!nombre) {
+      throw new Error('La carpeta no puede estar vacia.');
+    }
+
+    const { data: detalleExistente, error: detalleExistenteError } = await this.client
+      .from('detalles_destinos')
+      .select('id')
+      .eq('destino_id', payload.destino_id)
+      .maybeSingle();
+
+    if (detalleExistenteError) throw detalleExistenteError;
+    if (!detalleExistente?.id) {
+      throw new Error('No se encontro el detalle del destino.');
+    }
+
+    const { data: actividad, error: actividadError } = await this.client
+      .from('atracciones_principales')
+      .select('id')
+      .eq('id', payload.actividad_id)
+      .eq('detalles_destino_id', detalleExistente.id)
+      .maybeSingle();
+
+    if (actividadError) throw actividadError;
+    if (!actividad?.id) {
+      throw new Error('No se encontro la actividad solicitada.');
+    }
+
+    const { data: carpeta, error: carpetaError } = await this.client
+      .from('atracciones_carpetas')
+      .select('id, atraccion_id, nombre, orden, created_at, updated_at')
+      .eq('id', payload.carpeta_id)
+      .eq('atraccion_id', payload.actividad_id)
+      .maybeSingle();
+
+    if (carpetaError) throw carpetaError;
+    if (!carpeta?.id) {
+      throw new Error('No se encontro la carpeta solicitada.');
+    }
+
+    const { data: existente, error: existenteError } = await this.client
+      .from('atracciones_carpetas')
+      .select('id')
+      .eq('atraccion_id', payload.actividad_id)
+      .ilike('nombre', nombre)
+      .neq('id', carpeta.id)
+      .maybeSingle();
+
+    if (existenteError) throw existenteError;
+    if (existente) {
+      throw new Error('Ya existe una carpeta con ese nombre.');
+    }
+
+    const { data: carpetaActualizada, error: actualizarError } = await this.client
+      .from('atracciones_carpetas')
+      .update({ nombre })
+      .eq('id', carpeta.id)
+      .eq('atraccion_id', payload.actividad_id)
+      .select('id, atraccion_id, nombre, orden, created_at, updated_at')
+      .single();
+
+    if (actualizarError) throw actualizarError;
+
+    const { error: actualizarImagenesError } = await this.client
+      .from('atracciones_imagenes')
+      .update({ carpeta: nombre })
+      .eq('atraccion_id', payload.actividad_id)
+      .eq('carpeta_id', carpeta.id);
+
+    if (actualizarImagenesError) throw actualizarImagenesError;
+
+    return carpetaActualizada;
+  }
+
+  async eliminarCarpetaActividadAdmin(payload: {
+    destino_id: number;
+    actividad_id: number;
+    carpeta_id: number;
+  }) {
+    const { data: detalleExistente, error: detalleExistenteError } = await this.client
+      .from('detalles_destinos')
+      .select('id')
+      .eq('destino_id', payload.destino_id)
+      .maybeSingle();
+
+    if (detalleExistenteError) throw detalleExistenteError;
+    if (!detalleExistente?.id) {
+      throw new Error('No se encontro el detalle del destino.');
+    }
+
+    const { data: actividad, error: actividadError } = await this.client
+      .from('atracciones_principales')
+      .select('id')
+      .eq('id', payload.actividad_id)
+      .eq('detalles_destino_id', detalleExistente.id)
+      .maybeSingle();
+
+    if (actividadError) throw actividadError;
+    if (!actividad?.id) {
+      throw new Error('No se encontro la actividad solicitada.');
+    }
+
+    const { data: carpeta, error: carpetaError } = await this.client
+      .from('atracciones_carpetas')
+      .select('id, atraccion_id, nombre, orden, created_at, updated_at')
+      .eq('id', payload.carpeta_id)
+      .eq('atraccion_id', payload.actividad_id)
+      .maybeSingle();
+
+    if (carpetaError) throw carpetaError;
+    if (!carpeta?.id) {
+      throw new Error('No se encontro la carpeta solicitada.');
+    }
+
+    const { data: imagenesEnCarpeta, error: imagenesEnCarpetaError } = await this.client
+      .from('atracciones_imagenes')
+      .select('id')
+      .eq('atraccion_id', payload.actividad_id)
+      .eq('carpeta_id', carpeta.id)
+      .limit(1);
+
+    if (imagenesEnCarpetaError) throw imagenesEnCarpetaError;
+    if ((imagenesEnCarpeta ?? []).length > 0) {
+      throw new Error('La carpeta tiene imagenes. Usa mover o eliminar imagenes antes de borrarla.');
+    }
+
+    const { error: eliminarCarpetaError } = await this.client
+      .from('atracciones_carpetas')
+      .delete()
+      .eq('id', carpeta.id)
+      .eq('atraccion_id', payload.actividad_id);
+
+    if (eliminarCarpetaError) throw eliminarCarpetaError;
+
+    return { deleted: 1 };
+  }
+
+  async eliminarCarpetaConImagenesActividadAdmin(payload: {
+    destino_id: number;
+    actividad_id: number;
+    carpeta_id: number;
+  }) {
+    const { data: detalleExistente, error: detalleExistenteError } = await this.client
+      .from('detalles_destinos')
+      .select('id')
+      .eq('destino_id', payload.destino_id)
+      .maybeSingle();
+
+    if (detalleExistenteError) throw detalleExistenteError;
+    if (!detalleExistente?.id) {
+      throw new Error('No se encontro el detalle del destino.');
+    }
+
+    const { data: actividad, error: actividadError } = await this.client
+      .from('atracciones_principales')
+      .select('id')
+      .eq('id', payload.actividad_id)
+      .eq('detalles_destino_id', detalleExistente.id)
+      .maybeSingle();
+
+    if (actividadError) throw actividadError;
+    if (!actividad?.id) {
+      throw new Error('No se encontro la actividad solicitada.');
+    }
+
+    const { data: carpeta, error: carpetaError } = await this.client
+      .from('atracciones_carpetas')
+      .select('id, atraccion_id, nombre, orden, created_at, updated_at')
+      .eq('id', payload.carpeta_id)
+      .eq('atraccion_id', payload.actividad_id)
+      .maybeSingle();
+
+    if (carpetaError) throw carpetaError;
+    if (!carpeta?.id) {
+      throw new Error('No se encontro la carpeta solicitada.');
+    }
+
+    const { error: eliminarImagenesError } = await this.client
+      .from('atracciones_imagenes')
+      .delete()
+      .eq('atraccion_id', payload.actividad_id)
+      .eq('carpeta_id', carpeta.id);
+
+    if (eliminarImagenesError) throw eliminarImagenesError;
+
+    const { error: eliminarCarpetaError } = await this.client
+      .from('atracciones_carpetas')
+      .delete()
+      .eq('id', carpeta.id)
+      .eq('atraccion_id', payload.actividad_id);
+
+    if (eliminarCarpetaError) throw eliminarCarpetaError;
+
+    return { deleted: 1 };
+  }
+
+  async moverImagenesCarpetaActividadAdmin(payload: {
+    destino_id: number;
+    actividad_id: number;
+    carpeta_origen_id: number;
+    carpeta_destino_id: number;
+  }) {
+    const { data: detalleExistente, error: detalleExistenteError } = await this.client
+      .from('detalles_destinos')
+      .select('id')
+      .eq('destino_id', payload.destino_id)
+      .maybeSingle();
+
+    if (detalleExistenteError) throw detalleExistenteError;
+    if (!detalleExistente?.id) {
+      throw new Error('No se encontro el detalle del destino.');
+    }
+
+    const { data: actividad, error: actividadError } = await this.client
+      .from('atracciones_principales')
+      .select('id')
+      .eq('id', payload.actividad_id)
+      .eq('detalles_destino_id', detalleExistente.id)
+      .maybeSingle();
+
+    if (actividadError) throw actividadError;
+    if (!actividad?.id) {
+      throw new Error('No se encontro la actividad solicitada.');
+    }
+
+    const { data: carpetaOrigen, error: carpetaOrigenError } = await this.client
+      .from('atracciones_carpetas')
+      .select('id, atraccion_id, nombre, orden, created_at, updated_at')
+      .eq('id', payload.carpeta_origen_id)
+      .eq('atraccion_id', payload.actividad_id)
+      .maybeSingle();
+
+    if (carpetaOrigenError) throw carpetaOrigenError;
+    if (!carpetaOrigen?.id) {
+      throw new Error('No se encontro la carpeta de origen.');
+    }
+
+    const { data: carpetaDestino, error: carpetaDestinoError } = await this.client
+      .from('atracciones_carpetas')
+      .select('id, atraccion_id, nombre, orden, created_at, updated_at')
+      .eq('id', payload.carpeta_destino_id)
+      .eq('atraccion_id', payload.actividad_id)
+      .maybeSingle();
+
+    if (carpetaDestinoError) throw carpetaDestinoError;
+    if (!carpetaDestino?.id) {
+      throw new Error('No se encontro la carpeta destino.');
+    }
+
+    if (Number(carpetaOrigen.id) === Number(carpetaDestino.id)) {
+      return { moved: 0 };
+    }
+
+    const { error: moverImagenesError } = await this.client
+      .from('atracciones_imagenes')
+      .update({
+        carpeta_id: carpetaDestino.id,
+        carpeta: this.normalizarNombreCarpeta(carpetaDestino.nombre)
+      })
+      .eq('atraccion_id', payload.actividad_id)
+      .eq('carpeta_id', carpetaOrigen.id);
+
+    if (moverImagenesError) throw moverImagenesError;
+
+    return { moved: 1 };
+  }
+
+  async administrarCarpetaActividadAdmin(payload: {
+    destino_id: number;
+    actividad_id: number;
+    carpeta_id: number;
+    accion: 'delete_empty' | 'delete_images' | 'move_existing' | 'create_and_move';
+    carpeta_destino_id?: number | null;
+    nueva_carpeta_nombre?: string | null;
+  }) {
+    const { data, error } = await this.client.rpc('administrar_carpeta_actividad_admin', {
+      p_destino_id: payload.destino_id,
+      p_actividad_id: payload.actividad_id,
+      p_carpeta_id: payload.carpeta_id,
+      p_accion: payload.accion,
+      p_carpeta_destino_id: payload.carpeta_destino_id ?? null,
+      p_nueva_carpeta_nombre: payload.nueva_carpeta_nombre ?? null
+    });
+
+    if (error) throw error;
+    return data;
+  }
+
+  async moverImagenActividadAdmin(payload: {
+    destino_id: number;
+    actividad_id: number;
+    imagen_id: number;
+    carpeta_destino_id: number;
+  }) {
+    const { data, error } = await this.client.rpc('mover_imagen_actividad_admin', {
+      p_destino_id: payload.destino_id,
+      p_actividad_id: payload.actividad_id,
+      p_imagen_id: payload.imagen_id,
+      p_carpeta_destino_id: payload.carpeta_destino_id
+    });
+
+    if (error) throw error;
+    return data;
   }
 
   async eliminarActividadDestinoAdmin(payload: { destino_id: number; actividad_id: number }) {
@@ -1922,12 +2825,52 @@ export class SupabaseService {
   }
 
   async obtenerDetalleDestino(destinoId: number, lang?: string) {
-
     const { data, error } = await this.client.rpc('get_detalle_destino', {
       p_destino_id: destinoId,
       p_codigo: lang,
     });
-    return data;
+
+    if (error) throw error;
+
+    const respuesta: any = Array.isArray(data) ? [...data] : data ? [data] : [];
+    if (!respuesta.length) {
+      return data;
+    }
+
+    try {
+      const previewDestino = await this.obtenerPreviewDestinoAdmin(destinoId);
+      const imagenesPorId = new Map<number, string>();
+
+      (previewDestino.actividades ?? []).forEach((actividad) => {
+        const actividadId = Number(actividad.id);
+        const imagenSeleccionada = actividad.imagen_seleccionada ?? actividad.imagen_fondo ?? '';
+        if (actividadId && imagenSeleccionada) {
+          imagenesPorId.set(actividadId, imagenSeleccionada);
+        }
+      });
+
+      respuesta[0] = {
+        ...respuesta[0],
+        atracciones_principales: (respuesta[0]?.atracciones_principales ?? []).map((actividad: any, index: number) => {
+          const actividadId = Number(actividad?.id);
+          const imagenPreview =
+            (actividadId ? imagenesPorId.get(actividadId) : null) ??
+            previewDestino.actividades?.[index]?.imagen_seleccionada ??
+            previewDestino.actividades?.[index]?.imagen_fondo ??
+            actividad?.imagen_fondo ??
+            '';
+
+          return {
+            ...actividad,
+            imagen_fondo: imagenPreview
+          };
+        })
+      };
+    } catch (previewError) {
+      console.warn('[obtenerDetalleDestino] No se pudo resolver la galeria del preview:', previewError);
+    }
+
+    return respuesta;
   }
 
   // Admin: devuelve la estructura completa para crear/editar preview
