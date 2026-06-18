@@ -2,7 +2,20 @@
   <div class="fm-header">
     <div>
       <p class="fm-kicker">Administrador de archivos</p>
-      <h3 class="fm-title">{{ title }}</h3>
+      <div class="fm-title-row">
+        <h3 class="fm-title">{{ title }}</h3>
+        @if (activeImage) {
+          <button
+            mat-icon-button
+            type="button"
+            class="fm-active-info-button"
+            [matMenuTriggerFor]="activeImageInfoMenu"
+            aria-label="Ver imagen activa"
+          >
+            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:information-circle'"></mat-icon>
+          </button>
+        }
+      </div>
       <p class="fm-subtitle">{{ subtitle }}</p>
     </div>
 
@@ -55,12 +68,16 @@
         @for (folder of folders; track trackByFolder($index, folder)) {
           <div
             class="fm-folder-card"
+            [class.fm-folder-card--drop-target]="isDropTarget(folder)"
             [class.fm-folder-card--active]="folder.id === activeFolderId"
             role="button"
             tabindex="0"
             (click)="selectFolder(folder)"
             (keydown.enter)="selectFolder(folder)"
             (keydown.space)="$event.preventDefault(); selectFolder(folder)"
+            (dragover)="onFolderDragOver(folder, $event)"
+            (dragleave)="onFolderDragLeave(folder)"
+            (drop)="onFolderDrop(folder, $event)"
           >
             <div class="fm-folder-icon-wrap">
               <mat-icon class="fm-folder-icon" [svgIcon]="'heroicons_solid:folder'"></mat-icon>
@@ -106,23 +123,29 @@
               type="button"
               class="fm-image-card"
               [class.fm-image-card--selected]="isSelected(image)"
+              draggable="true"
+              (dragstart)="onImageDragStart(image, $event)"
+              (dragend)="onImageDragEnd()"
               (click)="selectImage(image)"
             >
               <div class="fm-image-preview">
                 <img class="fm-image-thumb" [src]="image.imageUrl" [alt]="image.name" />
-                <span class="fm-file-type">{{ getImageTypeLabel(image) }}</span>
+                @if (isActiveImage(image)) {
+                  <div
+                    class="fm-active-star"
+                    aria-label="Imagen principal"
+                    matTooltip="Imagen principal"
+                    matTooltipPosition="above"
+                  >
+                    <mat-icon class="icon-size-4" [svgIcon]="'heroicons_solid:star'"></mat-icon>
+                  </div>
+                }
+                <!-- <span class="fm-file-type">{{ getImageTypeLabel(image) }}</span> -->
               </div>
 
               <div class="fm-image-meta">
-                <div class="fm-image-name">{{ image.name }}</div>
-                @if (image.subtitle) {
-                  <div class="fm-image-subtitle">{{ image.subtitle }}</div>
-                }
+                <!-- <div class="fm-image-name">{{ image.name }}</div> -->
               </div>
-
-              @if (isSelected(image)) {
-                <div class="fm-image-badge">Seleccionada</div>
-              }
             </button>
           }
         </div>
@@ -140,6 +163,16 @@
     </div>
   }
 </div>
+
+<mat-menu #activeImageInfoMenu="matMenu" xPosition="after" yPosition="below" class="fm-active-image-menu">
+  @if (activeImage) {
+    <div class="fm-active-image-popover" (click)="$event.stopPropagation()">
+      <p class="fm-active-image-kicker">Imagen activa</p>
+      <img [src]="activeImage.imageUrl" [alt]="activeImage.name" />
+      <p class="fm-active-image-name">{{ activeImage.name }}</p>
+    </div>
+  }
+</mat-menu>
 
 @if (editingFolderId !== null) {
   <div class="fm-modal-backdrop">

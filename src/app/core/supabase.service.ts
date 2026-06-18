@@ -1318,7 +1318,6 @@ export class SupabaseService {
     let actividadesCarpetas: any[] = [];
     const imagenesActividadPorId = new Map<number, any[]>();
     const carpetasActividadPorId = new Map<number, any[]>();
-
     if (detalleId) {
       const [traduccionesResponse, detallesRapidosResponse] = await Promise.all([
         this.client
@@ -1501,19 +1500,40 @@ export class SupabaseService {
       actividades: (actividades ?? []).map((actividad: any) => {
         const traduccionesActividad = traduccionesActividadPorId.get(actividad.id) ?? new Map();
         const imagenesActividad = imagenesActividadPorId.get(Number(actividad.id)) ?? [];
+        const carpetasActividad = carpetasActividadPorId.get(Number(actividad.id)) ?? [];
+        const carpetasActividadMap = new Map<number, any>(
+          carpetasActividad
+            .map((carpeta: any) => [this.parseNumber(carpeta?.id), carpeta] as const)
+            .filter(([id]) => id !== null) as Array<readonly [number, any]>
+        );
+        const carpetasActividadPorClave = new Map<string, any>(
+          carpetasActividad.map((carpeta: any) => [this.claveCarpeta(carpeta?.nombre), carpeta] as const)
+        );
         const imagenesOrdenadas = this.ordenarImagenesGaleria(
-          imagenesActividad.map((imagen: any) => ({
-            id: Number(imagen.id),
-            imagen_url: imagen.imagen_url ?? '',
-            carpeta_id: this.parseNumber(imagen.carpeta_id),
-            carpeta_nombre: imagen.carpeta_nombre ?? null,
-            carpeta: imagen.carpeta ?? null,
-            activa: Boolean(imagen.activa),
-            orden: imagen.orden ?? null,
-            vigencia_desde: imagen.vigencia_desde ?? null,
-            vigencia_hasta: imagen.vigencia_hasta ?? null,
-            created_at: imagen.created_at ?? null
-          }))
+          imagenesActividad.map((imagen: any) => {
+            const carpetaIdCrudo = this.parseNumber(imagen.carpeta_id);
+            const carpetaPorId = carpetaIdCrudo !== null ? carpetasActividadMap.get(carpetaIdCrudo) : null;
+            const carpetaPorNombre = carpetasActividadPorClave.get(
+              this.claveCarpeta(carpetaPorId?.nombre ?? imagen.carpeta_nombre ?? imagen.carpeta)
+            );
+            const nombreCarpetaResuelto =
+              carpetaPorId?.nombre ?? carpetaPorNombre?.nombre ?? imagen.carpeta_nombre ?? imagen.carpeta ?? null;
+            const nombreCarpetaNormalizado = this.normalizarNombreCarpeta(nombreCarpetaResuelto) ?? null;
+            const carpetaId = carpetaIdCrudo ?? this.parseNumber(carpetaPorNombre?.id);
+
+            return {
+              id: Number(imagen.id),
+              imagen_url: imagen.imagen_url ?? '',
+              carpeta_id: carpetaId,
+              carpeta_nombre: nombreCarpetaNormalizado,
+              carpeta: nombreCarpetaNormalizado,
+              activa: Boolean(imagen.activa),
+              orden: imagen.orden ?? null,
+              vigencia_desde: imagen.vigencia_desde ?? null,
+              vigencia_hasta: imagen.vigencia_hasta ?? null,
+              created_at: imagen.created_at ?? null
+            };
+          })
         );
         const imagenSeleccionada = this.seleccionarImagenGaleria(imagenesOrdenadas);
         const imagenFondoUrl = imagenSeleccionada?.imagen_url ?? actividad.imagen_fondo ?? '';
@@ -1529,6 +1549,7 @@ export class SupabaseService {
           actividad_id: actividad.id,
           total_crudas: imagenesActividad.length,
           total_ordenadas: imagenesOrdenadas.length,
+          carpetas_actividad: carpetasActividad,
           imagen_fondo_id: imagenFondoId,
           imagen_fondo: imagenFondoUrl,
           imagen_seleccionada: imagenSeleccionada,
@@ -1548,13 +1569,13 @@ export class SupabaseService {
           imagen_fondo_id: imagenFondoId,
           imagen_seleccionada: imagenFondoUrl,
           imagen_seleccionada_id: imagenFondoId,
-          carpetas: carpetasActividadPorId.get(Number(actividad.id)) ?? [],
+          carpetas: carpetasActividad,
           imagenes: imagenesOrdenadas.map((imagen: any) => ({
             id: Number(imagen.id),
             imagen_url: imagen.imagen_url ?? '',
             carpeta_id: this.parseNumber(imagen.carpeta_id),
-            carpeta_nombre: imagen.carpeta_nombre ?? null,
-            carpeta: imagen.carpeta ?? null,
+            carpeta_nombre: this.normalizarNombreCarpeta(imagen.carpeta_nombre ?? imagen.carpeta) ?? null,
+            carpeta: this.normalizarNombreCarpeta(imagen.carpeta_nombre ?? imagen.carpeta) ?? null,
             activa: Boolean(imagen.activa),
             orden: imagen.orden ?? null,
             vigencia_desde: imagen.vigencia_desde ?? null,
@@ -1871,6 +1892,8 @@ export class SupabaseService {
     imagenes?: Array<{
       id?: number | null;
       imagen_url: string | null;
+      carpeta_id?: number | null;
+      carpeta_nombre?: string | null;
       carpeta?: string | null;
       activa?: boolean;
       orden?: number | null;
@@ -1918,6 +1941,21 @@ export class SupabaseService {
         .eq('detalles_destino_id', detallesDestinoId);
 
       if (actualizarActividadError) throw actualizarActividadError;
+      console.log('[guardarActividadDestinoAdmin] Antes de sincronizar imagenes:', {
+        destino_id: payload.destino_id,
+        actividad_id: actividadId,
+        imagen_fondo: payload.imagen_fondo,
+        imagen_activa_id: payload.imagen_activa_id ?? null,
+        imagenes: (payload.imagenes ?? []).map((imagen) => ({
+          id: imagen.id ?? null,
+          imagen_url: imagen.imagen_url,
+          carpeta_id: imagen.carpeta_id ?? null,
+          carpeta_nombre: imagen.carpeta_nombre ?? null,
+          carpeta: imagen.carpeta ?? null,
+          activa: imagen.activa ?? false,
+          orden: imagen.orden ?? null
+        }))
+      });
       await this.sincronizarImagenesActividad(actividadId, payload.imagenes, payload.imagen_activa_id);
     } else {
       const { data: nuevaActividad, error: crearActividadError } = await this.client
@@ -1931,6 +1969,21 @@ export class SupabaseService {
 
       if (crearActividadError) throw crearActividadError;
       actividadId = nuevaActividad.id;
+      console.log('[  ] Antes de sincronizar imagenes (nueva actividad):', {
+        destino_id: payload.destino_id,
+        actividad_id: actividadId,
+        imagen_fondo: payload.imagen_fondo,
+        imagen_activa_id: payload.imagen_activa_id ?? null,
+        imagenes: (payload.imagenes ?? []).map((imagen) => ({
+          id: imagen.id ?? null,
+          imagen_url: imagen.imagen_url,
+          carpeta_id: imagen.carpeta_id ?? null,
+          carpeta_nombre: imagen.carpeta_nombre ?? null,
+          carpeta: imagen.carpeta ?? null,
+          activa: imagen.activa ?? false,
+          orden: imagen.orden ?? null
+        }))
+      });
       await this.sincronizarImagenesActividad(actividadId, payload.imagenes, payload.imagen_activa_id);
     }
 
@@ -1971,6 +2024,110 @@ export class SupabaseService {
     }
 
     return { id: actividadId };
+  }
+
+  async guardarImagenesActividadAdmin(payload: {
+    destino_id: number;
+    actividad_id: number;
+    imagen_fondo: string | null;
+    imagen_activa_id?: number | null;
+    imagenes?: Array<{
+      id?: number | null;
+      imagen_url: string | null;
+      carpeta_id?: number | null;
+      carpeta_nombre?: string | null;
+      carpeta?: string | null;
+      activa?: boolean;
+      orden?: number | null;
+      vigencia_desde?: string | null;
+      vigencia_hasta?: string | null;
+    }>;
+  }) {
+    const { data: detalleExistente, error: detalleExistenteError } = await this.client
+      .from('detalles_destinos')
+      .select('id')
+      .eq('destino_id', payload.destino_id)
+      .maybeSingle();
+
+    if (detalleExistenteError) throw detalleExistenteError;
+    if (!detalleExistente?.id) {
+      throw new Error('No se encontro el detalle del destino.');
+    }
+
+    const { error: actualizarActividadError } = await this.client
+      .from('atracciones_principales')
+      .update({ imagen_fondo: payload.imagen_fondo })
+      .eq('id', payload.actividad_id)
+      .eq('detalles_destino_id', detalleExistente.id);
+
+    if (actualizarActividadError) throw actualizarActividadError;
+
+    console.log('[guardarImagenesActividadAdmin] Antes de sincronizar imagenes:', {
+      destino_id: payload.destino_id,
+      actividad_id: payload.actividad_id,
+      imagen_fondo: payload.imagen_fondo,
+      imagen_activa_id: payload.imagen_activa_id ?? null,
+      imagenes: (payload.imagenes ?? []).map((imagen) => ({
+        id: imagen.id ?? null,
+        imagen_url: imagen.imagen_url,
+        carpeta_id: imagen.carpeta_id ?? null,
+        carpeta_nombre: imagen.carpeta_nombre ?? null,
+        carpeta: imagen.carpeta ?? null,
+        activa: imagen.activa ?? false,
+        orden: imagen.orden ?? null
+      }))
+    });
+
+    await this.sincronizarImagenesActividad(payload.actividad_id, payload.imagenes, payload.imagen_activa_id);
+    return { id: payload.actividad_id };
+  }
+
+  async guardarTraduccionesActividadAdmin(payload: {
+    destino_id: number;
+    actividad_id: number;
+    traducciones: Array<{
+      idioma_id: number;
+      nombre: string | null;
+      descripcion: string | null;
+    }>;
+  }) {
+    const traduccionesPayload = payload.traducciones
+      .filter((item) => {
+        const nombreLimpio = (item.nombre ?? '').trim();
+        return !!nombreLimpio;
+      })
+      .map((item) => ({
+        atracciones_principales_id: payload.actividad_id,
+        idioma_id: item.idioma_id,
+        nombre: item.nombre,
+        descripcion: item.descripcion
+      }));
+
+    if (traduccionesPayload.length) {
+      const { error: traduccionesError } = await this.client
+        .from('atracciones_principales_traducciones')
+        .upsert(traduccionesPayload, {
+          onConflict: 'atracciones_principales_id,idioma_id'
+        });
+
+      if (traduccionesError) throw traduccionesError;
+    }
+
+    const idiomasSinNombre = payload.traducciones
+      .filter((item) => !((item.nombre ?? '').trim()))
+      .map((item) => item.idioma_id);
+
+    if (idiomasSinNombre.length) {
+      const { error: borrarTraduccionesVaciasError } = await this.client
+        .from('atracciones_principales_traducciones')
+        .delete()
+        .eq('atracciones_principales_id', payload.actividad_id)
+        .in('idioma_id', idiomasSinNombre);
+
+      if (borrarTraduccionesVaciasError) throw borrarTraduccionesVaciasError;
+    }
+
+    return { id: payload.actividad_id };
   }
 
   async actualizarImagenesActividadDestinoAdmin(payload: {

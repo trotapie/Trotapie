@@ -4,6 +4,7 @@ import { MaterialModule } from 'app/shared/material.module';
 
 export interface FolderImageManagerImage {
   id: string | number;
+  draftKey?: string | null;
   name: string;
   imageUrl: string;
   folderId?: string | number | null;
@@ -32,6 +33,7 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
   @Input() subtitle = 'Selecciona una carpeta y elige una imagen.';
   @Input() folders: FolderImageManagerFolder[] = [];
   @Input() selectedImageId: string | number | null = null;
+  @Input() activeImageId: string | number | null = null;
 
   @Output() imageSelected = new EventEmitter<FolderImageManagerImage>();
   @Output() folderSelected = new EventEmitter<FolderImageManagerFolder | null>();
@@ -39,6 +41,7 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
   @Output() renameFolder = new EventEmitter<{ folder: FolderImageManagerFolder; name: string }>();
   @Output() deleteFolder = new EventEmitter<FolderImageManagerFolder>();
   @Output() addImage = new EventEmitter<void>();
+  @Output() imageDroppedOnFolder = new EventEmitter<{ image: FolderImageManagerImage; folder: FolderImageManagerFolder }>();
 
   activeFolderId: string | number | null = null;
   creatingFolder = false;
@@ -46,6 +49,8 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
   editingFolderId: string | number | null = null;
   editingFolderName = '';
   folderActionsTargetFolder: FolderImageManagerFolder | null = null;
+  draggedImage: FolderImageManagerImage | null = null;
+  dropTargetFolderId: string | number | null = null;
 
   ngOnChanges(changes: SimpleChanges): void {
     const selectedImageChanged =
@@ -90,8 +95,47 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
     return this.activeFolder?.images ?? [];
   }
 
+  get selectedImage(): FolderImageManagerImage | null {
+    if (this.selectedImageId === null || this.selectedImageId === undefined) {
+      return null;
+    }
+
+    return this.findImageById(this.selectedImageId);
+  }
+
+  get activeImage(): FolderImageManagerImage | null {
+    if (this.activeImageId === null || this.activeImageId === undefined) {
+      return null;
+    }
+
+    return this.findImageById(this.activeImageId);
+  }
+
   isSelected(image: FolderImageManagerImage): boolean {
-    return image.id === this.selectedImageId;
+    return this.idsMatch(image.id, this.selectedImageId);
+  }
+
+  isActiveImage(image: FolderImageManagerImage): boolean {
+    return this.idsMatch(image.id, this.activeImageId);
+  }
+
+  private findImageById(imageId: string | number): FolderImageManagerImage | null {
+    for (const folder of this.folders) {
+      const image = folder.images.find((item) => this.idsMatch(item.id, imageId));
+      if (image) {
+        return image;
+      }
+    }
+
+    return null;
+  }
+
+  private idsMatch(left: string | number | null | undefined, right: string | number | null | undefined): boolean {
+    if (left === null || left === undefined || right === null || right === undefined) {
+      return false;
+    }
+
+    return String(left) === String(right);
   }
 
   selectFolder(folder: FolderImageManagerFolder): void {
@@ -142,6 +186,53 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
     this.imageSelected.emit(image);
   }
 
+  onImageDragStart(image: FolderImageManagerImage, event: DragEvent): void {
+    this.draggedImage = image;
+    this.dropTargetFolderId = null;
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', String(image.id));
+    }
+  }
+
+  onImageDragEnd(): void {
+    this.draggedImage = null;
+    this.dropTargetFolderId = null;
+  }
+
+  onFolderDragOver(folder: FolderImageManagerFolder, event: DragEvent): void {
+    if (!this.draggedImage || folder.id === this.draggedImage.folderId) {
+      return;
+    }
+
+    event.preventDefault();
+    this.dropTargetFolderId = folder.id;
+  }
+
+  onFolderDragLeave(folder: FolderImageManagerFolder): void {
+    if (this.dropTargetFolderId === folder.id) {
+      this.dropTargetFolderId = null;
+    }
+  }
+
+  onFolderDrop(folder: FolderImageManagerFolder, event: DragEvent): void {
+    event.preventDefault();
+    const image = this.draggedImage;
+    this.draggedImage = null;
+    this.dropTargetFolderId = null;
+
+    if (!image || folder.id === image.folderId) {
+      return;
+    }
+
+    const sourceFolder = this.folders.find((item) => item.id === image.folderId) ?? null;
+    this.imageDroppedOnFolder.emit({ image, folder });
+
+    if (sourceFolder) {
+      this.activeFolderId = sourceFolder.id;
+    }
+  }
+
   openCreateFolder(): void {
     this.creatingFolder = true;
     queueMicrotask(() => {
@@ -175,6 +266,10 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
 
   trackByImage(_: number, image: FolderImageManagerImage): string | number {
     return image.id;
+  }
+
+  isDropTarget(folder: FolderImageManagerFolder): boolean {
+    return this.dropTargetFolderId === folder.id;
   }
 
   getFileCountLabel(total: number): string {

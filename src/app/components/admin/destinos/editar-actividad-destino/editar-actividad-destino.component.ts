@@ -17,6 +17,7 @@ interface ILangConfig {
 }
 
 type ImagenActividadForm = {
+  draft_key?: string | null;
   id: number | null;
   imagen_url: string;
   carpeta_id: number | null;
@@ -51,7 +52,8 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   ];
 
   cargando = true;
-  guardando = false;
+  guardandoImagenes = false;
+  guardandoTraducciones = false;
   error = '';
   destinoId = 0;
   actividadId = 0;
@@ -69,8 +71,20 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   carpetaDestinoEliminarId: number | null = null;
   nuevaCarpetaEliminarNombre = '';
   procesandoEliminarCarpeta = false;
+  mostrarModalConfirmarMoverImagen = false;
+  imagenAReubicar: {
+    draft_key: string;
+    imagen_id: number | null;
+    imagen_url: string;
+    carpeta_origen_id: number | null;
+    carpeta_origen_nombre: string;
+    carpeta_destino_id: number;
+    carpeta_destino_nombre: string;
+  } | null = null;
   concentradoTraduccionesActividad: Record<string, { nombre: string; descripcion: string }> = {};
   ultimaLlaveTraduccionActividad = '';
+  private pendientesImagenesCarpeta = new Map<string, { carpeta_id: number | null; carpeta_nombre: string; carpeta: string }>();
+  private imagenesClaveSecuencia = 0;
   carpetasActividad: Array<{
     id: number;
     nombre: string;
@@ -140,6 +154,8 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       }
 
       const carpetaId = this.parseNumber(control.get('carpeta_id')?.value);
+      const imagenId = this.parseNumber(control.get('id')?.value);
+      const draftKey = this.limpiarTexto(control.get('draft_key')?.value) ?? `actividad-imagen-${index}`;
       const carpetaNombre = this.normalizarCarpeta(
         control.get('carpeta_nombre')?.value ?? control.get('carpeta')?.value
       );
@@ -150,12 +166,12 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
         null;
       const folderId = folderExistente?.id ?? carpetaId ?? this.slugify(carpetaNombre);
       const image: FolderImageManagerImage = {
-        id: `actividad-imagen-${index}`,
+        id: imagenId ?? draftKey,
+        draftKey,
         name: this.obtenerNombreImagen(imageUrl, index),
         imageUrl,
         folderId,
-        folderName: carpetaNombre,
-        subtitle: control.get('activa')?.value ? 'Imagen principal actual' : 'Click para seleccionar'
+        folderName: carpetaNombre
       };
 
       if (!folderExistente) {
@@ -185,12 +201,26 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
 
   get imagenPrincipalSeleccionadaId(): string | null {
     const activeIndex = (this.imagenesArray.controls as any[]).findIndex((control) => Boolean(control.get('activa')?.value));
-    return activeIndex >= 0 ? `actividad-imagen-${activeIndex}` : null;
+    if (activeIndex < 0) {
+      return null;
+    }
+
+    const control = this.imagenesArray.at(activeIndex);
+    return String(
+      this.parseNumber(control?.get('id')?.value)
+      ?? this.limpiarTexto(control?.get('draft_key')?.value)
+      ?? `actividad-imagen-${activeIndex}`
+    );
   }
 
   get imagenSeleccionadaGestorId(): string | null {
     if (this.imagenEditandoIndex !== null) {
-      return `actividad-imagen-${this.imagenEditandoIndex}`;
+      const control = this.imagenesArray.at(this.imagenEditandoIndex);
+      return String(
+        this.parseNumber(control?.get('id')?.value)
+        ?? this.limpiarTexto(control?.get('draft_key')?.value)
+        ?? `actividad-imagen-${this.imagenEditandoIndex}`
+      );
     }
 
     return this.imagenPrincipalSeleccionadaId;
@@ -235,12 +265,21 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     return this.parseNumber(control.get('id')?.value);
   }
 
+  get imagenEditandoEsActiva(): boolean {
+    return Boolean(this.imagenEditandoControl?.get('activa')?.value);
+  }
+
+  get puedeEliminarImagenEditando(): boolean {
+    return !!this.imagenEditandoControl && !this.imagenEditandoEsActiva && this.imagenesArray.length > 1;
+  }
+
   get carpetasParaSelector(): Array<{ id: number; nombre: string }> {
     return [...this.carpetasActividad]
       .map((carpeta) => ({
         id: Number(carpeta.id),
         nombre: this.normalizarCarpeta(carpeta.nombre)
       }))
+      .filter((carpeta) => carpeta.nombre !== 'Sin carpeta')
       .sort((a, b) => a.nombre.localeCompare(b.nombre));
   }
 
@@ -252,13 +291,6 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   get carpetasDestinoParaImagen(): Array<{ id: number; nombre: string }> {
     const carpetaActualId = this.carpetaEditandoSeleccionadaId;
     return this.carpetasParaSelector.filter((carpeta) => carpeta.id !== carpetaActualId);
-  }
-
-  get carpetaSinCarpetaId(): number | null {
-    const carpeta = this.carpetasActividad.find(
-      (item) => this.normalizarCarpeta(item.nombre).toLowerCase() === 'sin carpeta'
-    );
-    return carpeta ? Number(carpeta.id) : null;
   }
 
   get indiceIdiomaEspanol(): number {
@@ -315,7 +347,6 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       this.actividadNombre = this.obtenerNombreActividad(actividad, preview);
       this.idiomas = this.ordenarIdiomas(preview.idiomas);
       this.carpetasActividad = actividad.carpetas ?? [];
-      await this.asegurarCarpetaSinCarpetaActividad();
 
       const traducciones = this.idiomas.map((idioma) =>
         this.fb.group({
@@ -364,21 +395,12 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (valor === null || valor === undefined || valor === '') {
-      const carpetaSinCarpetaId = this.carpetaSinCarpetaId;
-      if (carpetaSinCarpetaId === null) {
-        this.error = 'No se pudo resolver la carpeta "Sin carpeta".';
-        return;
-      }
+    const draftKey = this.getImagenEditandoDraftKey();
+    if (!draftKey) {
+      return;
+    }
 
-      this.imagenEditandoControl.patchValue({
-        carpeta_id: carpetaSinCarpetaId,
-        carpeta_nombre: 'Sin carpeta',
-        carpeta: 'Sin carpeta'
-      });
-      if (this.imagenEditandoIndex !== null) {
-        this.setImagenActiva(this.imagenEditandoIndex);
-      }
+    if (valor === null || valor === undefined || valor === '') {
       return;
     }
 
@@ -386,15 +408,16 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     const carpeta = this.carpetasActividad.find((item) => Number(item.id) === carpetaId);
     const carpetaNombre = carpeta ? this.normalizarCarpeta(carpeta.nombre) : this.normalizarCarpeta(valor);
 
-    this.imagenEditandoControl.patchValue({
+    this.establecerCarpetaPendiente(draftKey, carpetaId, carpetaNombre);
+
+    console.log('[Editar actividad destino] Carpeta de imagen marcada como pendiente:', {
+      imagen_index: this.imagenEditandoIndex,
+      valor_recibido: valor,
       carpeta_id: carpetaId,
       carpeta_nombre: carpetaNombre,
-      carpeta: carpetaNombre
+      imagen: this.imagenEditandoControl.getRawValue(),
+      draft_key: draftKey
     });
-
-    if (this.imagenEditandoIndex !== null) {
-      this.setImagenActiva(this.imagenEditandoIndex);
-    }
   }
 
   async crearCarpetaActividad(nombre: string) {
@@ -474,6 +497,56 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     }
   }
 
+  confirmarMoverImagenPendiente(payload: {
+    draft_key: string;
+    imagen_id: number | null;
+    imagen_url: string;
+    carpeta_origen_id: number | null;
+    carpeta_origen_nombre: string;
+    carpeta_destino_id: number;
+    carpeta_destino_nombre: string;
+  }): void {
+    this.imagenAReubicar = payload;
+    this.mostrarModalConfirmarMoverImagen = true;
+    this.setModalLocked(true);
+  }
+
+  solicitarMoverImagenDesdeGestor(evento: { image: FolderImageManagerImage; folder: FolderImageManagerFolder }): void {
+    console.log('imageneeeeeeen ',evento);
+    
+    const imagenId = this.parseNumber(evento.image.id);
+    const carpetaOrigenId = this.parseNumber(evento.image.folderId ?? null);
+    const carpetaDestinoId = this.parseNumber(evento.folder.id);
+
+    if (carpetaDestinoId === null) {
+      return;
+    }
+
+    this.confirmarMoverImagenPendiente({
+      draft_key: evento.image.draftKey ?? String(evento.image.id),
+      imagen_id: imagenId,
+      imagen_url: evento.image.imageUrl,
+      carpeta_origen_id: carpetaOrigenId,
+      carpeta_origen_nombre: this.normalizarCarpeta(evento.image.folderName ?? ''),
+      carpeta_destino_id: carpetaDestinoId,
+      carpeta_destino_nombre: this.normalizarCarpeta(evento.folder.name)
+    });
+  }
+
+  cancelarMoverImagenPendiente(): void {
+    this.mostrarModalConfirmarMoverImagen = false;
+    this.imagenAReubicar = null;
+    this.setModalLocked(false);
+  }
+
+  aceptarMoverImagenPendiente(): void {
+    if (!this.imagenAReubicar) {
+      return;
+    }
+
+    void this.moverImagenAhora(this.imagenAReubicar);
+  }
+
   async eliminarCarpetaActividad(carpeta: FolderImageManagerFolder) {
     this.carpetaAEliminar = carpeta;
     this.mostrarModalConfirmarEliminarCarpeta = true;
@@ -493,6 +566,71 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     this.setModalLocked(false);
   }
 
+  private cerrarModalMoverImagenPendiente(): void {
+    this.mostrarModalConfirmarMoverImagen = false;
+    this.imagenAReubicar = null;
+    this.setModalLocked(false);
+  }
+
+  private async moverImagenAhora(payload: {
+    draft_key: string;
+    imagen_id: number | null;
+    imagen_url: string;
+    carpeta_origen_id: number | null;
+    carpeta_origen_nombre: string;
+    carpeta_destino_id: number;
+    carpeta_destino_nombre: string;
+  }): Promise<void> {
+   console.log(payload);
+   
+    const imagenId = payload.imagen_id;
+    if (imagenId === null) {
+      this.error = 'No se pudo identificar la imagen para moverla.';
+      return;
+    }
+
+    if (this.guardandoImagenes || this.guardandoTraducciones) {
+      return;
+    }
+
+    this.error = '';
+    this.guardandoImagenes = true;
+
+    try {
+      await this.supabase.moverImagenActividadAdmin({
+        destino_id: this.destinoId,
+        actividad_id: this.actividadId,
+        imagen_id: imagenId,
+        carpeta_destino_id: payload.carpeta_destino_id
+      });
+
+      const indice = (this.imagenesArray.controls as any[]).findIndex(
+        (control) => this.parseNumber(control.get('id')?.value) === imagenId
+      );
+
+      if (indice >= 0) {
+        const control = this.imagenesArray.at(indice);
+        control.patchValue(
+          {
+            carpeta_id: payload.carpeta_destino_id,
+            carpeta_nombre: payload.carpeta_destino_nombre,
+            carpeta: payload.carpeta_destino_nombre
+          },
+          { emitEvent: false }
+        );
+      }
+
+      this.pendientesImagenesCarpeta.delete(payload.draft_key);
+      this.carpetaActiva = payload.carpeta_destino_nombre;
+      this.normalizarOrdenImagenes();
+      this.cerrarModalMoverImagenPendiente();
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudo mover la imagen.';
+    } finally {
+      this.guardandoImagenes = false;
+    }
+  }
+
   async ejecutarAccionEliminarCarpeta(
     accion: 'delete_empty' | 'delete_images' | 'move_existing' | 'create_and_move'
   ): Promise<void> {
@@ -507,6 +645,11 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     }
 
     if (this.procesandoEliminarCarpeta) {
+      return;
+    }
+
+    if (accion === 'delete_images' && this.carpetaContieneImagenActiva(carpetaId)) {
+      this.error = 'Esta carpeta contiene la imagen principal. Primero marca otra imagen como principal.';
       return;
     }
 
@@ -604,6 +747,14 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     indices.forEach((index) => this.imagenesArray.removeAt(index));
   }
 
+  private carpetaContieneImagenActiva(carpetaId: number): boolean {
+    return (this.imagenesArray.controls as any[]).some(
+      (control) =>
+        this.parseNumber(control.get('carpeta_id')?.value) === carpetaId
+        && Boolean(control.get('activa')?.value)
+    );
+  }
+
   private moverImagenesLocales(carpetaOrigenId: number, carpetaDestinoId: number, carpetaDestinoNombre: string): void {
     const controles = this.imagenesArray.controls as any[];
     controles.forEach((control) => {
@@ -620,34 +771,6 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
         { emitEvent: false }
       );
     });
-  }
-
-  private async asegurarCarpetaSinCarpetaActividad(): Promise<void> {
-    if (this.carpetasActividad.some((item) => this.normalizarCarpeta(item.nombre).toLowerCase() === 'sin carpeta')) {
-      return;
-    }
-
-    const carpetaSinCarpeta = await this.supabase.crearCarpetaActividadAdmin({
-      destino_id: this.destinoId,
-      actividad_id: this.actividadId,
-      nombre: 'Sin carpeta'
-    });
-
-    const carpetaId = this.parseNumber(carpetaSinCarpeta?.id);
-    if (carpetaId === null) {
-      throw new Error('No se pudo crear la carpeta "Sin carpeta".');
-    }
-
-    this.carpetasActividad = [
-      ...this.carpetasActividad,
-      {
-        id: carpetaId,
-        nombre: 'Sin carpeta',
-        orden: Number(carpetaSinCarpeta?.orden ?? this.carpetasActividad.length + 1),
-        created_at: carpetaSinCarpeta?.created_at ?? null,
-        updated_at: carpetaSinCarpeta?.updated_at ?? null
-      }
-    ];
   }
 
   async confirmarEliminarCarpetaActividad() {
@@ -691,6 +814,11 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     }
 
     if (this.procesandoEliminarCarpeta) {
+      return;
+    }
+
+    if (this.carpetaContieneImagenActiva(carpetaId)) {
+      this.error = 'Esta carpeta contiene la imagen principal. Primero marca otra imagen como principal.';
       return;
     }
 
@@ -854,19 +982,24 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   }
 
   agregarImagen() {
-    const carpetaIdInicial =
+    const carpetaInicial =
       this.carpetaActiva !== 'Todas'
-        ? this.carpetasActividad.find((item) => this.normalizarCarpeta(item.nombre) === this.carpetaActiva)?.id ?? this.carpetaSinCarpetaId
-        : this.carpetaSinCarpetaId;
-    const carpetaNombreInicial = this.carpetaActiva !== 'Todas' ? this.carpetaActiva : 'Sin carpeta';
+        ? this.obtenerCarpetaPorNombre(this.carpetaActiva) ?? this.obtenerCarpetaDefaultActividad()
+        : this.obtenerCarpetaDefaultActividad();
+
+    if (!carpetaInicial) {
+      this.error = 'Crea una carpeta antes de agregar imagenes.';
+      return;
+    }
 
     this.imagenesArray.push(
       this.fb.group({
+        draft_key: [this.generarClaveImagenBorrador()],
         id: [null],
         imagen_url: [''],
-        carpeta_id: [carpetaIdInicial],
-        carpeta_nombre: [carpetaNombreInicial],
-        carpeta: [carpetaNombreInicial],
+        carpeta_id: [carpetaInicial.id],
+        carpeta_nombre: [carpetaInicial.nombre],
+        carpeta: [carpetaInicial.nombre],
         activa: [this.imagenesArray.length === 0],
         orden: [this.imagenesArray.length + 1],
         vigencia_desde: [null],
@@ -878,9 +1011,30 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     this.abrirEditorImagen(this.imagenesArray.length - 1);
   }
 
-  eliminarImagen(index: number) {
+  async eliminarImagen(index: number): Promise<void> {
     if (index < 0 || index >= this.imagenesArray.length) {
       return;
+    }
+
+    const control = this.imagenesArray.at(index);
+    if (Boolean(control.get('activa')?.value)) {
+      this.error = 'No puedes eliminar la imagen principal. Primero marca otra imagen como principal.';
+      return;
+    }
+
+    if (this.imagenesArray.length <= 1) {
+      this.error = 'Debe quedar al menos una imagen en la actividad.';
+      return;
+    }
+
+    const imagenId = this.parseNumber(control.get('id')?.value);
+    const draftKey = this.limpiarTexto(control.get('draft_key')?.value);
+    const snapshot = control.getRawValue();
+    const pendienteCarpeta = draftKey ? this.pendientesImagenesCarpeta.get(draftKey) ?? null : null;
+    const indiceEditandoAnterior = this.imagenEditandoIndex;
+
+    if (draftKey) {
+      this.pendientesImagenesCarpeta.delete(draftKey);
     }
 
     this.imagenesArray.removeAt(index);
@@ -889,6 +1043,39 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       this.editorImagenAbierto = false;
     } else if (this.imagenEditandoIndex !== null && this.imagenEditandoIndex > index) {
       this.imagenEditandoIndex -= 1;
+    }
+    this.normalizarOrdenImagenes();
+
+    if (imagenId === null) {
+      return;
+    }
+
+    const guardadoOk = await this.guardarImagenes();
+    if (guardadoOk) {
+      return;
+    }
+
+    this.imagenesArray.insert(index, this.fb.group({
+      draft_key: [snapshot.draft_key ?? this.generarClaveImagenBorrador()],
+      id: [this.parseNumber(snapshot.id)],
+      imagen_url: [snapshot.imagen_url ?? '', [Validators.required]],
+      carpeta_id: [this.parseNumber(snapshot.carpeta_id)],
+      carpeta_nombre: [snapshot.carpeta_nombre ?? ''],
+      carpeta: [snapshot.carpeta ?? snapshot.carpeta_nombre ?? ''],
+      activa: [Boolean(snapshot.activa)],
+      orden: [this.parseNumber(snapshot.orden) ?? index + 1],
+      vigencia_desde: [this.parseDateValue(snapshot.vigencia_desde)],
+      vigencia_hasta: [this.parseDateValue(snapshot.vigencia_hasta)],
+      created_at: [snapshot.created_at ?? null]
+    }));
+
+    if (draftKey && pendienteCarpeta) {
+      this.pendientesImagenesCarpeta.set(draftKey, pendienteCarpeta);
+    }
+
+    this.imagenEditandoIndex = indiceEditandoAnterior;
+    if (this.imagenEditandoIndex !== null) {
+      this.editorImagenAbierto = true;
     }
     this.normalizarOrdenImagenes();
   }
@@ -912,13 +1099,25 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     });
   }
 
+  async marcarImagenEditandoComoPrincipal(): Promise<void> {
+    if (this.imagenEditandoIndex === null) {
+      return;
+    }
+
+    this.setImagenActiva(this.imagenEditandoIndex);
+    await this.guardarImagenes();
+  }
+
   seleccionarImagenPrincipalDesdeGestor(image: FolderImageManagerImage) {
-    const index = Number(String(image.id).replace('actividad-imagen-', ''));
+    const index = (this.imagenesArray.controls as any[]).findIndex(
+      (control) =>
+        this.parseNumber(control.get('id')?.value) === this.parseNumber(image.id)
+        || this.limpiarTexto(control.get('draft_key')?.value) === (image.draftKey ?? String(image.id))
+    );
     if (!Number.isFinite(index)) {
       return;
     }
 
-    this.setImagenActiva(index);
     this.abrirEditorImagen(index);
   }
 
@@ -951,9 +1150,9 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   }
 
   async confirmarMoverImagen(): Promise<void> {
-    const imagenId = this.imagenEditandoId;
-    if (imagenId === null) {
-      this.error = 'Guarda la imagen primero para poder moverla.';
+    const draftKey = this.getImagenEditandoDraftKey();
+    if (!draftKey) {
+      this.error = 'No se pudo identificar la imagen seleccionada.';
       return;
     }
 
@@ -969,57 +1168,31 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (this.procesandoEliminarCarpeta) {
-      return;
-    }
+    const carpetaDestinoNombre = this.normalizarCarpeta(
+      this.carpetasActividad.find((item) => Number(item.id) === carpetaDestinoId)?.nombre ?? ''
+    );
 
-    this.procesandoEliminarCarpeta = true;
-    this.error = '';
-
-    try {
-      const respuesta: any = await this.supabase.moverImagenActividadAdmin({
-        destino_id: this.destinoId,
-        actividad_id: this.actividadId,
-        imagen_id: imagenId,
-        carpeta_destino_id: carpetaDestinoId
-      });
-
-      const carpetaDestinoNombre = this.normalizarCarpeta(
-        respuesta?.carpeta_destino_nombre ?? this.carpetasActividad.find((item) => Number(item.id) === carpetaDestinoId)?.nombre
-      );
-
-      this.imagenEditandoControl?.patchValue({
-        carpeta_id: carpetaDestinoId,
-        carpeta_nombre: carpetaDestinoNombre,
-        carpeta: carpetaDestinoNombre
-      });
-
-      if (this.imagenEditandoIndex !== null) {
-        this.setImagenActiva(this.imagenEditandoIndex);
-      }
-
-      this.carpetaActiva = carpetaDestinoNombre;
-      this.cerrarModalMoverImagen();
-      this.normalizarOrdenImagenes();
-    } catch (error: any) {
-      this.error = error?.message ?? 'No se pudo mover la imagen.';
-    } finally {
-      this.procesandoEliminarCarpeta = false;
-    }
+    this.establecerCarpetaPendiente(draftKey, carpetaDestinoId, carpetaDestinoNombre);
+    this.cerrarModalMoverImagen();
   }
 
-  async guardar() {
-    if (this.guardando) return;
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
+  async guardar(): Promise<void> {
+    return this.guardarTraducciones();
+  }
+
+  async guardarTraducciones(): Promise<void> {
+    if (this.guardandoTraducciones || this.guardandoImagenes || this.traduciendoActividad) {
       return;
     }
 
-    if (this.imagenEditandoIndex !== null) {
-      this.setImagenActiva(this.imagenEditandoIndex);
+    const traduccionesControl = this.traduccionesArray;
+    if (traduccionesControl.invalid) {
+      traduccionesControl.markAllAsTouched();
+      return;
     }
 
     await this.traducirActividadDesdeEspanol();
+
     const raw = this.form.getRawValue();
     const traducciones = (raw.traducciones ?? []).map((item: any) => ({
       idioma_id: Number(item.idioma_id),
@@ -1027,17 +1200,55 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       descripcion: this.limpiarTexto(item.descripcion)
     }));
 
-    const imagenes = this.normalizarImagenesActividadPayload(raw.imagenes ?? []);
+    this.guardandoTraducciones = true;
+    this.error = '';
+
+    try {
+      await this.supabase.guardarTraduccionesActividadAdmin({
+        destino_id: this.destinoId,
+        actividad_id: this.actividadId,
+        traducciones
+      });
+
+      this.concentradoTraduccionesActividad = this.idiomas.reduce((acc, idioma) => {
+        const traduccion = (raw.traducciones ?? []).find((item: any) => Number(item.idioma_id) === idioma.id);
+        acc[idioma.codigo] = {
+          nombre: this.limpiarTexto(traduccion?.nombre) ?? '',
+          descripcion: this.limpiarTexto(traduccion?.descripcion) ?? ''
+        };
+        return acc;
+      }, {} as Record<string, { nombre: string; descripcion: string }>);
+      this.ultimaLlaveTraduccionActividad = this.obtenerLlaveTraduccionEspanol();
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudieron guardar las traducciones.';
+    } finally {
+      this.guardandoTraducciones = false;
+    }
+  }
+
+  async guardarImagenes(): Promise<boolean> {
+    if (this.guardandoImagenes || this.guardandoTraducciones || this.traduciendoActividad) {
+      return false;
+    }
+
+    if (this.imagenesArray.invalid) {
+      this.imagenesArray.markAllAsTouched();
+      return false;
+    }
+
+    const raw = this.form.getRawValue();
+    const imagenesConPendientes = this.aplicarPendientesImagenes(raw.imagenes ?? []);
+    const imagenes = this.normalizarImagenesActividadPayload(imagenesConPendientes).map(({ draft_key, ...imagen }) => imagen);
     const imagenPrincipal = this.obtenerImagenPrincipalGaleria(imagenes);
     const imagenActiva = imagenes.find((imagen) => imagen.activa) ?? null;
     const imagenActivaId = imagenActiva?.id ?? null;
 
     if (!imagenes.length) {
       this.error = 'Agrega al menos una imagen.';
-      return;
+      return false;
     }
 
-    this.guardando = true;
+    this.guardandoImagenes = true;
     this.error = '';
 
     try {
@@ -1054,20 +1265,22 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
         }))
       });
 
-      await this.supabase.guardarActividadDestinoAdmin({
+      await this.supabase.guardarImagenesActividadAdmin({
         destino_id: this.destinoId,
         actividad_id: this.actividadId,
         imagen_fondo: imagenPrincipal,
         imagen_activa_id: imagenActivaId,
-        imagenes,
-        traducciones
+        imagenes: imagenesConPendientes
       });
 
-      this.router.navigate(['/admin/destinos/configurar-destinos/preview/' + this.destinoId]);
+      this.aplicarPendientesImagenesAlFormulario();
+      this.pendientesImagenesCarpeta.clear();
+      return true;
     } catch (error: any) {
-      this.error = error?.message ?? 'No se pudo guardar la actividad.';
+      this.error = error?.message ?? 'No se pudieron guardar las imagenes.';
+      return false;
     } finally {
-      this.guardando = false;
+      this.guardandoImagenes = false;
     }
   }
 
@@ -1088,7 +1301,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       event.preventDefault();
     }
 
-    if (this.traduciendoActividad || this.guardando) {
+    if (this.traduciendoActividad || this.guardandoImagenes || this.guardandoTraducciones) {
       return;
     }
 
@@ -1112,15 +1325,16 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   }
 
   private buildImagenesFormArray(imagenes: any[] = []) {
-    const carpetaSinCarpetaId = this.carpetaSinCarpetaId;
+    const carpetaDefault = this.obtenerCarpetaDefaultActividad();
     return this.fb.array(
       imagenes.map((imagen, index) =>
         this.fb.group({
+          draft_key: [this.generarClaveImagenBorrador()],
           id: [this.parseNumber(imagen?.id)],
           imagen_url: [imagen?.imagen_url ?? '', [Validators.required]],
-          carpeta_id: [this.parseNumber(imagen?.carpeta_id) ?? carpetaSinCarpetaId],
-          carpeta_nombre: [imagen?.carpeta_nombre ?? imagen?.carpeta ?? 'Sin carpeta'],
-          carpeta: [imagen?.carpeta_nombre ?? imagen?.carpeta ?? 'Sin carpeta'],
+          carpeta_id: [this.parseNumber(imagen?.carpeta_id) ?? carpetaDefault?.id ?? null],
+          carpeta_nombre: [this.normalizarCarpeta(imagen?.carpeta_nombre ?? imagen?.carpeta ?? carpetaDefault?.nombre ?? '')],
+          carpeta: [this.normalizarCarpeta(imagen?.carpeta_nombre ?? imagen?.carpeta ?? carpetaDefault?.nombre ?? '')],
           activa: [Boolean(imagen?.activa)],
           orden: [Number.isFinite(Number(imagen?.orden)) ? Number(imagen.orden) : index + 1],
           vigencia_desde: [this.parseDateValue(imagen?.vigencia_desde)],
@@ -1132,14 +1346,15 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   }
 
   private normalizarImagenesActividadPayload(imagenes: Array<any> = []): ImagenActividadForm[] {
-    const carpetaSinCarpetaId = this.carpetaSinCarpetaId;
+    const carpetaDefault = this.obtenerCarpetaDefaultActividad();
     return (imagenes ?? [])
       .map((imagen, index) => ({
+        draft_key: this.limpiarTexto(imagen?.draft_key) ?? this.generarClaveImagenBorrador(),
         id: this.parseNumber(imagen?.id),
         imagen_url: this.limpiarTexto(imagen?.imagen_url) ?? '',
-        carpeta_id: this.parseNumber(imagen?.carpeta_id) ?? carpetaSinCarpetaId,
-        carpeta_nombre: this.limpiarTexto(imagen?.carpeta_nombre ?? imagen?.carpeta) ?? 'Sin carpeta',
-        carpeta: this.normalizarCarpeta(imagen?.carpeta_nombre ?? imagen?.carpeta) || 'Sin carpeta',
+        carpeta_id: this.parseNumber(imagen?.carpeta_id) ?? carpetaDefault?.id ?? null,
+        carpeta_nombre: this.normalizarCarpeta(imagen?.carpeta_nombre ?? imagen?.carpeta ?? carpetaDefault?.nombre ?? ''),
+        carpeta: this.normalizarCarpeta(imagen?.carpeta_nombre ?? imagen?.carpeta ?? carpetaDefault?.nombre ?? ''),
         activa: Boolean(imagen?.activa),
         orden: this.parseNumber(imagen?.orden) ?? index + 1,
         vigencia_desde: this.normalizarFechaYYYYMMDD(imagen?.vigencia_desde),
@@ -1147,6 +1362,68 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
         created_at: imagen?.created_at ?? null
       }))
       .filter((imagen) => !!imagen.imagen_url);
+  }
+
+  private aplicarPendientesImagenes(imagenes: Array<any> = []): Array<any> {
+    return (imagenes ?? []).map((imagen) => {
+      const draftKey = this.limpiarTexto(imagen?.draft_key);
+      const pendiente = draftKey ? this.pendientesImagenesCarpeta.get(draftKey) : null;
+      if (!pendiente) {
+        return imagen;
+      }
+
+      return {
+        ...imagen,
+        carpeta_id: pendiente.carpeta_id,
+        carpeta_nombre: pendiente.carpeta_nombre,
+        carpeta: pendiente.carpeta
+      };
+    });
+  }
+
+  private aplicarPendientesImagenesAlFormulario(): void {
+    (this.imagenesArray.controls as any[]).forEach((control) => {
+      const draftKey = this.limpiarTexto(control.get('draft_key')?.value);
+      if (!draftKey) {
+        return;
+      }
+
+      const pendiente = this.pendientesImagenesCarpeta.get(draftKey);
+      if (!pendiente) {
+        return;
+      }
+
+      control.patchValue(
+        {
+          carpeta_id: pendiente.carpeta_id,
+          carpeta_nombre: pendiente.carpeta_nombre,
+          carpeta: pendiente.carpeta
+        },
+        { emitEvent: false }
+      );
+    });
+  }
+
+  private establecerCarpetaPendiente(draftKey: string, carpetaId: number | null, carpetaNombre: string): void {
+    const nombreNormalizado = this.normalizarCarpeta(carpetaNombre);
+    this.pendientesImagenesCarpeta.set(draftKey, {
+      carpeta_id: carpetaId,
+      carpeta_nombre: nombreNormalizado,
+      carpeta: nombreNormalizado
+    });
+  }
+
+  private getImagenEditandoDraftKey(): string | null {
+    if (this.imagenEditandoIndex === null) {
+      return null;
+    }
+
+    return this.limpiarTexto(this.imagenesArray.at(this.imagenEditandoIndex)?.get('draft_key')?.value);
+  }
+
+  private generarClaveImagenBorrador(): string {
+    this.imagenesClaveSecuencia += 1;
+    return `imagen-${Date.now()}-${this.imagenesClaveSecuencia}`;
   }
 
   private obtenerImagenPrincipalGaleria(
@@ -1231,10 +1508,39 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   private normalizarCarpeta(valor: string | number | null | undefined): string {
     const carpeta = String(valor ?? '').trim();
     if (!carpeta.length) {
-      return 'Sin carpeta';
+      return '';
     }
 
     return carpeta.charAt(0).toUpperCase() + carpeta.slice(1);
+  }
+
+  private obtenerCarpetaDefaultActividad(): { id: number; nombre: string } | null {
+    const carpeta = [...this.carpetasActividad]
+      .map((item) => ({
+        id: Number(item.id),
+        nombre: this.normalizarCarpeta(item.nombre),
+        orden: Number(item.orden ?? Number.MAX_SAFE_INTEGER)
+      }))
+      .filter((item) => Number.isFinite(item.id) && !!item.nombre && item.nombre !== 'Sin carpeta')
+      .sort((a, b) => (a.orden - b.orden) || a.nombre.localeCompare(b.nombre))[0];
+
+    return carpeta ? { id: carpeta.id, nombre: carpeta.nombre } : null;
+  }
+
+  private obtenerCarpetaPorNombre(nombre: string): { id: number; nombre: string } | null {
+    const nombreNormalizado = this.normalizarCarpeta(nombre).toLowerCase();
+    const carpeta = this.carpetasActividad.find(
+      (item) => this.normalizarCarpeta(item.nombre).toLowerCase() === nombreNormalizado
+    );
+
+    if (!carpeta) {
+      return null;
+    }
+
+    return {
+      id: Number(carpeta.id),
+      nombre: this.normalizarCarpeta(carpeta.nombre)
+    };
   }
 
   private async traducirActividadDesdeEspanol(): Promise<void> {

@@ -1,9 +1,9 @@
 <div class="flex min-w-0 flex-auto flex-col bg-gray-50">
   <div class="mx-auto flex w-full max-w-screen-xl flex-col px-6 py-6 sm:px-8">
     <app-blocking-loader
-      [open]="cargando || guardando || traduciendoActividad"
-      [title]="cargando ? 'Cargando actividad' : guardando ? 'Guardando actividad' : 'Traduciendo actividad'"
-      [message]="cargando ? 'Estamos cargando los datos para que puedas editarlos.' : guardando ? 'No cierres la pantalla mientras guardamos los cambios.' : 'Estamos generando las traducciones automaticamente.'"
+      [open]="cargando || guardandoImagenes || guardandoTraducciones || traduciendoActividad"
+      [title]="cargando ? 'Cargando actividad' : guardandoImagenes ? 'Guardando imágenes' : guardandoTraducciones ? 'Guardando traducciones' : 'Traduciendo actividad'"
+      [message]="cargando ? 'Estamos cargando los datos para que puedas editarlos.' : guardandoImagenes ? 'No cierres la pantalla mientras guardamos las imágenes.' : guardandoTraducciones ? 'No cierres la pantalla mientras guardamos las traducciones.' : 'Estamos generando las traducciones automaticamente.'"
     />
 
     <div class="sticky top-0 z-[100] mb-4 w-full rounded-xl border border-transparent bg-transparent px-2 py-2 backdrop-blur-md transition-all duration-300 md:px-4">
@@ -18,11 +18,11 @@
             <mat-icon class="mr-2 icon-size-5" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
             Regresar
           </button>
-          <button mat-raised-button color="primary" class="text-white" type="button" (click)="guardar()" [disabled]="guardando">
-            @if (guardando) {
+          <button mat-raised-button color="primary" class="text-white" type="button" (click)="guardarTraducciones()" [disabled]="guardandoTraducciones">
+            @if (guardandoTraducciones) {
               Guardando...
             } @else {
-              Guardar cambios
+              Guardar
             }
           </button>
         </div>
@@ -125,10 +125,44 @@
                       <h3 class="text-lg font-semibold text-gray-900">Editar imagen</h3>
                       <p class="text-sm text-gray-500">Actualiza la carpeta, vigencia o imagen principal.</p>
                     </div>
+                    <button mat-icon-button type="button" aria-label="Cerrar editor de imagen" (click)="cerrarEditorImagen()">
+                      <mat-icon [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
+                    </button>
                   </div>
                 </div>
 
                 <div class="flex-1 space-y-5 overflow-y-auto px-5 py-5">
+                  <div class="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3">
+                    <div class="flex items-center justify-between gap-3">
+                      <div>
+                        <p class="text-sm font-semibold text-gray-900">Imagen principal</p>
+                        <p class="text-sm text-gray-500">
+                          @if (imagenEditandoEsActiva) {
+                            Esta es la imagen activa actual.
+                          } @else {
+                            Puedes marcar esta imagen como la principal de la actividad.
+                          }
+                        </p>
+                      </div>
+
+                      <button
+                        mat-stroked-button
+                        type="button"
+                        color="primary"
+                        (click)="marcarImagenEditandoComoPrincipal()"
+                        [disabled]="imagenEditandoEsActiva || guardandoImagenes"
+                      >
+                        @if (imagenEditandoEsActiva) {
+                          Imagen principal actual
+                        } @else if (guardandoImagenes) {
+                          Guardando principal...
+                        } @else {
+                          Dejar como principal
+                        }
+                      </button>
+                    </div>
+                  </div>
+
                   @if (imagenEditandoControl.get('imagen_url')?.value) {
                     <a [href]="imagenEditandoControl.get('imagen_url')?.value" target="_blank" rel="noopener noreferrer" class="block">
                       <img
@@ -154,7 +188,6 @@
                       [value]="carpetaEditandoSeleccionadaId"
                       (selectionChange)="onCarpetaImagenChange($event.value)"
                     >
-                      <mat-option [value]="null">Sin carpeta</mat-option>
                       @for (carpeta of carpetasParaSelector; track carpeta.id) {
                         <mat-option [value]="carpeta.id">
                           {{ carpeta.nombre }}
@@ -183,9 +216,27 @@
 
                 <div class="border-t border-gray-200 px-5 py-4">
                   <div class="grid grid-cols-1 gap-2">
-                    <button mat-flat-button color="warn" type="button" (click)="eliminarImagen(imagenEditandoIndex!)">
+                    <button mat-flat-button color="primary" type="button" (click)="guardarImagenes()" [disabled]="guardandoImagenes">
+                      @if (guardandoImagenes) {
+                        Guardando imágenes...
+                      } @else {
+                        Guardar imágenes
+                      }
+                    </button>
+                    <button
+                      mat-flat-button
+                      color="warn"
+                      type="button"
+                      (click)="eliminarImagen(imagenEditandoIndex!)"
+                      [disabled]="!puedeEliminarImagenEditando"
+                    >
                       Eliminar
                     </button>
+                    @if (imagenEditandoEsActiva) {
+                      <p class="m-0 text-center text-xs text-red-600">
+                        Marca otra imagen como principal antes de eliminar esta.
+                      </p>
+                    }
                   </div>
                 </div>
               </div>
@@ -207,12 +258,14 @@
                   [subtitle]="'Navega por carpetas y abre una imagen para editarla o marcarla como principal.'"
                   [folders]="galeriaCarpetas"
                   [selectedImageId]="imagenSeleccionadaGestorId"
+                  [activeImageId]="imagenPrincipalSeleccionadaId"
                   (addImage)="agregarImagen()"
                   (folderSelected)="seleccionarCarpeta($event?.name ?? 'Todas')"
                   (createFolder)="crearCarpetaActividad($event)"
                   (renameFolder)="renombrarCarpetaActividad($event.folder, $event.name)"
                   (deleteFolder)="eliminarCarpetaActividad($event)"
                   (imageSelected)="seleccionarImagenPrincipalDesdeGestor($event)"
+                  (imageDroppedOnFolder)="solicitarMoverImagenDesdeGestor($event)"
                 />
               </div>
             </section>
@@ -328,6 +381,31 @@
                   </button>
                 </div>
               }
+            </div>
+          </div>
+        }
+
+        @if (mostrarModalConfirmarMoverImagen && imagenAReubicar) {
+          <div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
+            <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+              <h3 class="text-xl font-semibold text-gray-900">Mover imagen</h3>
+              <p class="mt-2 text-sm text-gray-600">
+                La imagen quedara preparada para moverse a
+                <span class="font-semibold text-gray-900">{{ imagenAReubicar.carpeta_destino_nombre }}</span>.
+              </p>
+
+              <div class="mt-6 flex justify-end gap-2">
+                <button mat-stroked-button type="button" (click)="cancelarMoverImagenPendiente()">
+                  Cancelar
+                </button>
+                <button mat-flat-button color="primary" type="button" (click)="aceptarMoverImagenPendiente()" [disabled]="guardandoImagenes">
+                  @if (guardandoImagenes) {
+                    Moviendo...
+                  } @else {
+                    Mover ahora
+                  }
+                </button>
+              </div>
             </div>
           </div>
         }
