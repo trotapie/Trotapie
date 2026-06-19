@@ -84,7 +84,7 @@
               </div>
             } @else {
               <div class="rounded-xl border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800">
-                No se encontro la traduccion en espanol para capturar la actividad.
+                No se encontró la traducción en español para capturar la actividad.
               </div>
             }
 
@@ -109,168 +109,109 @@
           </div>
         </section>
 
-        <mat-drawer-container class="actividad-drawer-container rounded-2xl border border-gray-200 bg-white shadow-sm">
-          <mat-drawer
-            class="actividad-drawer"
-            mode="side"
-            position="end"
-            [opened]="editorImagenAbierto"
-            (closedStart)="cerrarEditorImagen()"
-          >
-            @if (imagenEditandoControl) {
-              <div class="flex h-full flex-col" [formGroup]="imagenEditandoControl">
-                <div class="border-b border-gray-200 px-5 py-4">
-                  <div class="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 class="text-lg font-semibold text-gray-900">Editar imagen</h3>
-                      <p class="text-sm text-gray-500">Actualiza la carpeta, vigencia o imagen principal.</p>
-                    </div>
-                    <button mat-icon-button type="button" aria-label="Cerrar editor de imagen" (click)="cerrarEditorImagen()">
-                      <mat-icon [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
-                    </button>
-                  </div>
-                </div>
+        <section class="rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <app-folder-image-manager
+            [title]="'Galería de Imágenes'"
+            [subtitle]="'Administre y organice sus archivos visuales.'"
+            [folders]="galeriaCarpetas"
+            [selectedImageId]="imagenSeleccionadaGestorId"
+            [activeImageId]="imagenPrincipalSeleccionadaId"
+            [showDetailPanel]="true"
+            [isSavingFolder]="procesandoCrearCarpeta"
+            (addImage)="agregarImagen()"
+            (folderSelected)="seleccionarCarpeta($event?.name ?? 'Todas')"
+            (createFolder)="crearCarpetaActividad($event)"
+            (renameFolder)="renombrarCarpetaActividad($event.folder, $event.name)"
+            (deleteFolder)="eliminarCarpetaActividad($event)"
+            (imageSelected)="seleccionarImagenPrincipalDesdeGestor($event)"
+            (editImage)="editarImagenDesdeGestor($event)"
+            (makePrimaryImage)="marcarImagenComoPrincipalDesdeGestor($event)"
+            (imageDroppedOnFolder)="solicitarMoverImagenDesdeGestor($event)"
+          />
+        </section>
 
-                <div class="flex-1 space-y-5 overflow-y-auto px-5 py-5">
-                  <div class="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3">
-                    <div class="flex items-center justify-between gap-3">
-                      <div>
-                        <p class="text-sm font-semibold text-gray-900">Imagen principal</p>
-                        <p class="text-sm text-gray-500">
-                          @if (imagenEditandoEsActiva) {
-                            Esta es la imagen activa actual.
-                          } @else {
-                            Puedes marcar esta imagen como la principal de la actividad.
-                          }
-                        </p>
-                      </div>
-
-                      <button
-                        mat-stroked-button
-                        type="button"
-                        color="primary"
-                        (click)="marcarImagenEditandoComoPrincipal()"
-                        [disabled]="imagenEditandoEsActiva || guardandoImagenes"
-                      >
-                        @if (imagenEditandoEsActiva) {
-                          Imagen principal actual
-                        } @else if (guardandoImagenes) {
-                          Guardando principal...
-                        } @else {
-                          Dejar como principal
-                        }
-                      </button>
-                    </div>
-                  </div>
-
-                  @if (imagenEditandoControl.get('imagen_url')?.value) {
-                    <a [href]="imagenEditandoControl.get('imagen_url')?.value" target="_blank" rel="noopener noreferrer" class="block">
-                      <img
-                        [src]="imagenEditandoControl.get('imagen_url')?.value"
-                        alt="Vista previa"
-                        class="h-48 w-full rounded-2xl border border-gray-200 object-cover"
-                      />
-                    </a>
-                  } @else {
-                    <div class="flex h-48 w-full items-center justify-center rounded-2xl border border-dashed border-gray-300 bg-gray-50 text-sm text-gray-400">
-                      Sin imagen
-                    </div>
-                  }
-
-                  <mat-form-field class="w-full">
-                    <mat-label>URL de imagen</mat-label>
-                    <input matInput formControlName="imagen_url" />
-                  </mat-form-field>
-
-                  <mat-form-field class="w-full">
-                    <mat-label>Carpeta</mat-label>
-                    <mat-select
-                      [value]="carpetaEditandoSeleccionadaId"
-                      (selectionChange)="onCarpetaImagenChange($event.value)"
-                    >
-                      @for (carpeta of carpetasParaSelector; track carpeta.id) {
-                        <mat-option [value]="carpeta.id">
-                          {{ carpeta.nombre }}
-                        </mat-option>
-                      }
-                    </mat-select>
-                  </mat-form-field>
-
-                  <div class="grid grid-cols-1 gap-4">
-                    <mat-form-field class="w-full">
-                      <mat-label>Vigencia desde</mat-label>
-                      <input matInput [matDatepicker]="vigenciaDesdePicker" formControlName="vigencia_desde" />
-                      <mat-datepicker-toggle matIconSuffix [for]="vigenciaDesdePicker"></mat-datepicker-toggle>
-                      <mat-datepicker #vigenciaDesdePicker></mat-datepicker>
-                    </mat-form-field>
-
-                    <mat-form-field class="w-full">
-                      <mat-label>Vigencia hasta</mat-label>
-                      <input matInput [matDatepicker]="vigenciaHastaPicker" formControlName="vigencia_hasta" />
-                      <mat-datepicker-toggle matIconSuffix [for]="vigenciaHastaPicker"></mat-datepicker-toggle>
-                      <mat-datepicker #vigenciaHastaPicker></mat-datepicker>
-                    </mat-form-field>
-                  </div>
-
-                </div>
-
-                <div class="border-t border-gray-200 px-5 py-4">
-                  <div class="grid grid-cols-1 gap-2">
-                    <button mat-flat-button color="primary" type="button" (click)="guardarImagenes()" [disabled]="guardandoImagenes">
-                      @if (guardandoImagenes) {
-                        Guardando imágenes...
-                      } @else {
-                        Guardar imágenes
-                      }
-                    </button>
-                    <button
-                      mat-flat-button
-                      color="warn"
-                      type="button"
-                      (click)="eliminarImagen(imagenEditandoIndex!)"
-                      [disabled]="!puedeEliminarImagenEditando"
-                    >
-                      Eliminar
-                    </button>
-                    @if (imagenEditandoEsActiva) {
-                      <p class="m-0 text-center text-xs text-red-600">
-                        Marca otra imagen como principal antes de eliminar esta.
-                      </p>
-                    }
-                  </div>
-                </div>
-              </div>
-            }
-          </mat-drawer>
-
-          <mat-drawer-content>
-            <section class="p-6 sm:p-8">
-              <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+        @if (editorImagenAbierto && imagenEditandoControl) {
+          <div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4 py-4">
+            <div class="image-edit-modal w-full max-w-2xl rounded-3xl bg-white shadow-2xl">
+              <div class="flex items-start justify-between gap-4 border-b border-gray-100 px-6 py-5">
                 <div>
-                  <h2 class="text-lg font-semibold text-gray-900">Galeria por carpetas</h2>
-                  <p class="text-sm text-gray-500">Explora tus carpetas y abre cada imagen en la barra lateral para editarla.</p>
+                  <h3 class="text-2xl font-semibold text-gray-900">Editar imagen</h3>
+                  <p class="mt-1 text-sm text-gray-500">Actualiza la carpeta o la vigencia de la imagen.</p>
+                </div>
+
+                <button mat-icon-button type="button" aria-label="Cerrar editor de imagen" (click)="cerrarEditorImagen()">
+                  <mat-icon [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
+                </button>
+              </div>
+
+              <div class="image-edit-modal__content space-y-5 px-6 py-5">
+                <div class="overflow-hidden rounded-2xl border border-gray-200 bg-gray-50">
+                  <img
+                    class="h-72 w-full object-cover"
+                    [src]="imagenEditandoControl.get('imagen_url')?.value"
+                    [alt]="imagenEditandoTitulo"
+                  />
+                </div>
+
+                <div class="rounded-2xl border border-gray-100 bg-white p-4">
+                  <p class="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">Editar informacion</p>
+
+                  <div class="mt-4 grid gap-4">
+                    <mat-form-field class="w-full">
+                      <mat-label>URL de imagen</mat-label>
+                      <input matInput [formControl]="imagenEditandoControl.get('imagen_url')" />
+                    </mat-form-field>
+
+                    <mat-form-field class="w-full">
+                      <mat-label>Carpeta</mat-label>
+                      <mat-select
+                        [value]="carpetaEditandoSeleccionadaId"
+                        (selectionChange)="onCarpetaImagenChange($event.value)"
+                      >
+                        @for (carpeta of carpetasParaSelector; track carpeta.id) {
+                          <mat-option [value]="carpeta.id">{{ carpeta.nombre }}</mat-option>
+                        }
+                      </mat-select>
+                    </mat-form-field>
+
+                    <div class="grid gap-4 sm:grid-cols-2">
+                      <mat-form-field class="w-full">
+                        <mat-label>Desde</mat-label>
+                        <input matInput type="date" [formControl]="imagenEditandoControl.get('vigencia_desde')" />
+                      </mat-form-field>
+
+                      <mat-form-field class="w-full">
+                        <mat-label>Hasta</mat-label>
+                        <input matInput type="date" [formControl]="imagenEditandoControl.get('vigencia_hasta')" />
+                      </mat-form-field>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div class="mb-6">
-                <app-folder-image-manager
-                  [title]="'Seleccion de imagen principal'"
-                  [subtitle]="'Navega por carpetas y abre una imagen para editarla o marcarla como principal.'"
-                  [folders]="galeriaCarpetas"
-                  [selectedImageId]="imagenSeleccionadaGestorId"
-                  [activeImageId]="imagenPrincipalSeleccionadaId"
-                  (addImage)="agregarImagen()"
-                  (folderSelected)="seleccionarCarpeta($event?.name ?? 'Todas')"
-                  (createFolder)="crearCarpetaActividad($event)"
-                  (renameFolder)="renombrarCarpetaActividad($event.folder, $event.name)"
-                  (deleteFolder)="eliminarCarpetaActividad($event)"
-                  (imageSelected)="seleccionarImagenPrincipalDesdeGestor($event)"
-                  (imageDroppedOnFolder)="solicitarMoverImagenDesdeGestor($event)"
-                />
+              <div class="flex flex-col gap-3 border-t border-gray-100 px-6 py-5 sm:flex-row sm:justify-end">
+                <button
+                  mat-stroked-button
+                  color="warn"
+                  type="button"
+                  (click)="eliminarImagenEditando()"
+                  [disabled]="guardandoImagenes || !puedeEliminarImagenEditando"
+                >
+                  Eliminar
+                </button>
+                <button
+                  mat-flat-button
+                  color="primary"
+                  type="button"
+                  (click)="guardarImagenEditando()"
+                  [disabled]="guardandoImagenes"
+                >
+                  {{ guardandoImagenes ? 'Guardando...' : 'Guardar' }}
+                </button>
               </div>
-            </section>
-          </mat-drawer-content>
-        </mat-drawer-container>
+            </div>
+          </div>
+        }
 
         @if (mostrarModalConfirmarEliminarCarpeta && carpetaAEliminar) {
           <div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
@@ -283,7 +224,7 @@
 
               @if (carpetaAEliminar.images.length) {
                 @if (modalEliminarCarpetaPaso === 'inicio') {
-                    <p class="mt-2 text-sm text-gray-600">
+                  <p class="mt-2 text-sm text-gray-600">
                     Esta carpeta tiene {{ carpetaAEliminar.images.length }} imagen{{ carpetaAEliminar.images.length === 1 ? '' : 'es' }}.
                     Todas esas imagenes se moveran solo desde esta carpeta.
                   </p>
@@ -381,6 +322,155 @@
                   </button>
                 </div>
               }
+            </div>
+          </div>
+        }
+
+        @if (mostrarModalTipoAgregarImagen) {
+          <div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
+            <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+              <h3 class="text-xl font-semibold text-gray-900">Agregar imagen</h3>
+              <p class="mt-2 text-sm text-gray-600">
+                Quieres agregar la imagen manualmente o cargar varias desde una carpeta de Drive?
+              </p>
+
+              <div class="mt-6 grid gap-2">
+                <button mat-flat-button color="primary" type="button" (click)="seleccionarAgregarImagenManual()">
+                  Si, agregar manualmente
+                </button>
+                <button mat-stroked-button type="button" (click)="seleccionarAgregarImagenDesdeDrive()">
+                  No, cargar desde Drive
+                </button>
+                <button mat-stroked-button type="button" (click)="cerrarModalTipoAgregarImagen()">
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+
+        @if (mostrarModalCargaDriveImagenes) {
+          <div class="modal-blocker drive-import-modal fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4 py-4">
+            <div class="drive-import-modal__dialog w-full max-w-3xl rounded-2xl bg-white p-6 shadow-2xl">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <h3 class="text-xl font-semibold text-gray-900">Cargar imagenes desde Drive</h3>
+                  <p class="mt-2 text-sm text-gray-600">
+                    Pega la URL o el ID de una carpeta de Drive, consulta sus carpetas y elige cuales quieres preparar para guardar.
+                  </p>
+                </div>
+
+                <button mat-icon-button type="button" aria-label="Cerrar modal de Drive" (click)="cerrarModalCargaDriveImagenes()">
+                  <mat-icon [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
+                </button>
+              </div>
+
+              <div class="drive-import-modal__content mt-5 grid gap-4">
+                <mat-form-field class="w-full">
+                  <mat-label>URL o ID de carpeta Drive</mat-label>
+                  <input
+                    matInput
+                    [value]="driveActividadUrl"
+                    (input)="driveActividadUrl = $any($event.target).value"
+                    placeholder="https://drive.google.com/drive/folders/ID_CARPETA"
+                  />
+                  <mat-hint>Puedes pegar la URL completa o solo el ID.</mat-hint>
+                </mat-form-field>
+
+                <div class="flex justify-end">
+                  <button
+                    mat-raised-button
+                    color="accent"
+                    type="button"
+                    (click)="consultarCarpetasDriveActividad()"
+                    [disabled]="consultandoDriveActividad || !driveActividadUrl?.trim()"
+                  >
+                    <mat-icon class="mr-2 icon-size-5">search</mat-icon>
+                    @if (consultandoDriveActividad) {
+                      Consultando...
+                    } @else {
+                      Consultar carpetas
+                    }
+                  </button>
+                </div>
+
+                @if (hayCarpetasDriveActividad) {
+                  <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p class="text-sm font-semibold text-gray-900">Carpetas encontradas</p>
+                        <p class="text-sm text-gray-500">
+                          Selecciona cuales quieres cargar. Las carpetas nuevas se prepararan con el mismo nombre.
+                        </p>
+                      </div>
+
+                      <div class="flex flex-wrap gap-2">
+                        <button mat-stroked-button type="button" (click)="toggleSeleccionTodasCarpetasDrive(true)">
+                          Cargar todas
+                        </button>
+                        <button mat-stroked-button type="button" (click)="toggleSeleccionTodasCarpetasDrive(false)">
+                          Quitar seleccion
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="drive-import-modal__folders mt-4 grid gap-3 sm:grid-cols-2">
+                      @for (carpeta of carpetasDriveActividad; track trackByDriveFolder($index, carpeta)) {
+                        <div class="drive-import-modal__folder-card rounded-2xl border border-gray-200 bg-white p-4">
+                          <div class="flex items-start gap-3">
+                            <input
+                              type="checkbox"
+                              class="mt-1 h-4 w-4 rounded border-gray-300"
+                              [checked]="carpeta.seleccionado"
+                              (change)="carpeta.seleccionado = $any($event.target).checked"
+                            />
+
+                            <div class="min-w-0 flex-1">
+                              <p class="font-semibold text-gray-900">{{ carpeta.nombre }}</p>
+                              <p class="text-sm text-gray-500">
+                                {{ carpeta.imagenes.length }} imagen{{ carpeta.imagenes.length === 1 ? '' : 'es' }}
+                              </p>
+                            </div>
+                          </div>
+
+                          <mat-form-field class="mt-3 w-full">
+                            <mat-label>Carpeta</mat-label>
+                            <mat-select
+                              [value]="carpeta.carpetaDestinoId"
+                              (selectionChange)="actualizarCarpetaDestinoDrive(carpeta.id, $event.value)"
+                            >
+                              @for (destino of carpetasParaSelector; track destino.id) {
+                                <mat-option [value]="destino.id">
+                                  {{ destino.nombre }}
+                                </mat-option>
+                              }
+                            </mat-select>
+                          </mat-form-field>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <div class="drive-import-modal__actions mt-6 flex justify-end gap-2">
+                <button mat-stroked-button type="button" (click)="cerrarModalCargaDriveImagenes()">
+                  Cancelar
+                </button>
+                <button
+                  mat-flat-button
+                  color="primary"
+                  type="button"
+                  (click)="cargarImagenesSeleccionadasDesdeDrive()"
+                  [disabled]="!totalImagenesDriveActividadSeleccionadas || aplicandoCargaDriveActividad || consultandoDriveActividad"
+                >
+                  @if (aplicandoCargaDriveActividad) {
+                    Preparando imagenes...
+                  } @else {
+                    Cargar seleccionadas
+                  }
+                </button>
+              </div>
             </div>
           </div>
         }

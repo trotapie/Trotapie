@@ -15,6 +15,21 @@ export interface IIdiomaPreviewAdmin {
   nombre: string;
 }
 
+export interface IDriveActividadImportImage {
+  publicImageUrl: string;
+  nombre?: string | null;
+  extension?: string | null;
+  mimeType?: string | null;
+  size?: number | null;
+  sizeFormatted?: string | null;
+}
+
+export interface IDriveActividadImportFolder {
+  id: string;
+  nombre: string;
+  imagenes: IDriveActividadImportImage[];
+}
+
 export interface ITraduccionPreviewAdmin {
   idioma_id: number;
   nombre: string;
@@ -54,6 +69,11 @@ export interface IActividadPreviewAdmin {
     carpeta_id?: number | null;
     carpeta_nombre?: string | null;
     carpeta?: string | null;
+    nombre?: string | null;
+    extension?: string | null;
+    mime_type?: string | null;
+    size?: number | null;
+    size_formatted?: string | null;
     activa: boolean;
     orden: number | null;
     vigencia_desde: string | null;
@@ -85,6 +105,8 @@ export interface IPreviewDestinoAdmin {
 export class SupabaseService {
   private readonly traduccionEndpoint =
     'https://script.google.com/macros/s/AKfycbwJ64gxjQiSsfZzixzr0tIe1na6tM81oAAW9Cjt8uuI53DDSaaAn_UMl2zgU69ZYyg3/exec';
+  private readonly driveActividadImagenesEndpoint =
+    'https://script.google.com/macros/s/AKfycbyJwRo6g4aDbB2Va0739BAMzF2QCUcMu1t4ss9cG2GsbbGC3cK_wpnfD_pOD6x3PTlm/exec';
   private client: SupabaseClient;
   private transloco = inject(TranslocoService);
 
@@ -130,6 +152,291 @@ export class SupabaseService {
     if (value === null || value === undefined || value === '') return null;
     const numberValue = Number(value);
     return Number.isFinite(numberValue) ? numberValue : null;
+  }
+
+  private parseBigint(value: number | string | null | undefined): number | null {
+    const numberValue = this.parseNumber(value);
+    if (numberValue === null) {
+      return null;
+    }
+
+    return Math.trunc(numberValue);
+  }
+
+  private extraerIdCarpetaDrive(value: string): string {
+    const limpio = String(value ?? '').trim();
+    if (!limpio) {
+      return '';
+    }
+
+    const matchFolders = limpio.match(/\/folders\/([a-zA-Z0-9_-]+)/);
+    if (matchFolders?.[1]) {
+      return matchFolders[1];
+    }
+
+    const matchIdDirecto = limpio.match(/^[a-zA-Z0-9_-]{10,}$/);
+    return matchIdDirecto ? limpio : '';
+  }
+
+  private extraerUrlDriveImagen(value: any): string | null {
+    if (typeof value === 'string') {
+      const url = value.trim();
+      return /^https?:\/\//i.test(url) ? url : null;
+    }
+
+    if (!value || typeof value !== 'object') {
+      return null;
+    }
+
+    const candidates = [
+      value.publicImageUrl,
+      value.public_image_url,
+      value.publicViewUrl,
+      value.public_view_url,
+      value.url,
+      value.imagen_url,
+      value.imageUrl,
+      value.src,
+      value.downloadUrl,
+      value.webViewLink,
+      value.webContentLink
+    ];
+
+    for (const candidate of candidates) {
+      if (typeof candidate === 'string' && /^https?:\/\//i.test(candidate.trim())) {
+        return candidate.trim();
+      }
+    }
+
+    return null;
+  }
+
+  private derivarExtensionImagen(nombre?: string | null, imagenUrl?: string | null): string | null {
+    const candidatos = [String(nombre ?? '').trim(), String(imagenUrl ?? '').trim()];
+
+    for (const candidato of candidatos) {
+      if (!candidato) {
+        continue;
+      }
+
+      const limpio = candidato.split('?')[0].split('#')[0];
+      const match = limpio.match(/\.([a-zA-Z0-9]{2,12})$/);
+      if (match?.[1]) {
+        return match[1].toLowerCase();
+      }
+    }
+
+    return null;
+  }
+
+  private formatearTamanoArchivo(size: number | null): string | null {
+    if (size === null || !Number.isFinite(size) || size < 0) {
+      return null;
+    }
+
+    if (size < 1024) {
+      return `${size} B`;
+    }
+
+    const units = ['KB', 'MB', 'GB', 'TB'];
+    let value = size / 1024;
+    let unitIndex = 0;
+
+    while (value >= 1024 && unitIndex < units.length - 1) {
+      value /= 1024;
+      unitIndex += 1;
+    }
+
+    return `${value.toFixed(2)} ${units[unitIndex]}`;
+  }
+
+  private normalizarImagenDrive(value: any): IDriveActividadImportImage | null {
+    const publicImageUrl = this.extraerUrlDriveImagen(value);
+    if (!publicImageUrl) {
+      return null;
+    }
+
+    const nombre =
+      typeof value === 'object' && value !== null
+        ? String(value.nombre ?? value.name ?? value.fileName ?? value.filename ?? value.title ?? '').trim() || null
+        : null;
+    const extension =
+      typeof value === 'object' && value !== null
+        ? String(value.extension ?? value.ext ?? '').trim().toLowerCase() || this.derivarExtensionImagen(nombre, publicImageUrl)
+        : this.derivarExtensionImagen(nombre, publicImageUrl);
+    const mimeType =
+      typeof value === 'object' && value !== null
+        ? String(value.mimeType ?? value.mime_type ?? value.type ?? '').trim() || null
+        : null;
+    const size =
+      typeof value === 'object' && value !== null
+        ? this.parseBigint(value.size ?? value.fileSize ?? value.bytes)
+        : null;
+    const sizeFormatted =
+      typeof value === 'object' && value !== null
+        ? String(value.sizeFormatted ?? value.size_formatted ?? '').trim() || this.formatearTamanoArchivo(size)
+        : this.formatearTamanoArchivo(size);
+
+    return {
+      publicImageUrl,
+      nombre,
+      extension,
+      mimeType,
+      size,
+      sizeFormatted
+    };
+  }
+
+  private recolectarImagenesDrive(node: any): IDriveActividadImportImage[] {
+    if (!node) {
+      return [];
+    }
+
+    if (Array.isArray(node)) {
+      const seen = new Set<string>();
+      return node
+        .flatMap((item) => this.recolectarImagenesDrive(item))
+        .filter((imagen) => {
+          const key = imagen.publicImageUrl;
+          if (seen.has(key)) {
+            return false;
+          }
+
+          seen.add(key);
+          return true;
+        });
+    }
+
+    const directa = this.normalizarImagenDrive(node);
+    if (directa) {
+      return [directa];
+    }
+
+    if (typeof node === 'object') {
+      const colecciones = [
+        node.imagenes,
+        node.images,
+        node.urls,
+        node.archivos,
+        node.files,
+        node.data
+      ].filter((item) => item !== undefined);
+
+      if (colecciones.length) {
+        const seen = new Set<string>();
+        return colecciones
+          .flatMap((item) => this.recolectarImagenesDrive(item))
+          .filter((imagen) => {
+            const key = imagen.publicImageUrl;
+            if (seen.has(key)) {
+              return false;
+            }
+
+            seen.add(key);
+            return true;
+          });
+      }
+    }
+
+    return [];
+  }
+
+  private normalizarCarpetasDriveActividad(result: any): IDriveActividadImportFolder[] {
+    const folders: IDriveActividadImportFolder[] = [];
+    const pushFolder = (nombreRaw: any, imagenesRaw: any, fallbackId: string) => {
+      const imagenes = this.recolectarImagenesDrive(imagenesRaw);
+      if (!imagenes.length) {
+        return;
+      }
+
+      const nombre = String(nombreRaw ?? '').trim() || 'General';
+      folders.push({
+        id: fallbackId,
+        nombre,
+        imagenes
+      });
+    };
+
+    const coleccionesAgrupadas = [
+      result?.data?.folders,
+      result?.data?.carpetas,
+      result?.folders,
+      result?.carpetas
+    ].find((item) => Array.isArray(item) && item.length);
+
+    if (Array.isArray(coleccionesAgrupadas)) {
+      coleccionesAgrupadas.forEach((item: any, index: number) => {
+        pushFolder(
+          item?.nombre ?? item?.name ?? item?.folderName ?? item?.carpeta ?? item?.title,
+          item?.imagenes ?? item?.images ?? item?.urls ?? item?.archivos ?? item?.files ?? item?.data ?? item,
+          String(item?.id ?? item?.folderId ?? index)
+        );
+      });
+    }
+
+    if (folders.length) {
+      return folders;
+    }
+
+    const objetoAgrupado = [result?.data?.folders, result?.data?.carpetas, result?.folders, result?.carpetas]
+      .find((item) => item && typeof item === 'object' && !Array.isArray(item));
+
+    if (objetoAgrupado && typeof objetoAgrupado === 'object') {
+      Object.entries(objetoAgrupado).forEach(([key, value], index) => {
+        pushFolder(key, value, `${key}-${index}`);
+      });
+    }
+
+    if (folders.length) {
+      return folders;
+    }
+
+    const imagenesPlanas = this.recolectarImagenesDrive(
+      result?.data?.imagenes
+      ?? result?.data?.images
+      ?? result?.data?.urls
+      ?? result?.data
+      ?? result?.imagenes
+      ?? result?.images
+      ?? result?.urls
+      ?? result
+    );
+
+    if (imagenesPlanas.length) {
+      return [{
+        id: 'general',
+        nombre: 'General',
+        imagenes: imagenesPlanas
+      }];
+    }
+
+    return [];
+  }
+
+  async obtenerImagenesActividadDesdeDrive(folderUrlOrId: string): Promise<IDriveActividadImportFolder[]> {
+    const folderId = this.extraerIdCarpetaDrive(folderUrlOrId);
+    if (!folderId) {
+      throw new Error('La URL de Drive no es valida. Verifica que incluya una carpeta.');
+    }
+
+    const url = `${this.driveActividadImagenesEndpoint}?folderId=${encodeURIComponent(folderId)}`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error('No se pudo consultar la carpeta de Drive.');
+    }
+
+    const result: any = await response.json();
+    if (result?.success === false || result?.ok === false) {
+      throw new Error(result?.message || 'No se pudieron obtener las imagenes desde Drive.');
+    }
+
+    const folders = this.normalizarCarpetasDriveActividad(result);
+    if (!folders.length) {
+      throw new Error('No se encontraron imagenes en esa carpeta de Drive.');
+    }
+
+    return folders;
   }
 
   private imagenEstaVigente(imagen: {
@@ -267,6 +574,13 @@ export class SupabaseService {
       carpeta_id?: number | null;
       carpeta_nombre?: string | null;
       carpeta?: string | null;
+      nombre?: string | null;
+      extension?: string | null;
+      mime_type?: string | null;
+      mimeType?: string | null;
+      size?: number | null;
+      size_formatted?: string | null;
+      sizeFormatted?: string | null;
       activa?: boolean;
       orden?: number | null;
       vigencia_desde?: string | null;
@@ -285,6 +599,13 @@ export class SupabaseService {
         carpeta_id: this.parseNumber(imagen?.carpeta_id),
         carpeta_nombre: this.normalizarNombreCarpeta(imagen?.carpeta_nombre ?? imagen?.carpeta),
         carpeta: this.normalizarNombreCarpeta(imagen?.carpeta_nombre ?? imagen?.carpeta),
+        nombre: String(imagen?.nombre ?? '').trim() || null,
+        extension: String(imagen?.extension ?? '').trim().toLowerCase() || this.derivarExtensionImagen(imagen?.nombre, imagen?.imagen_url),
+        mime_type: String(imagen?.mime_type ?? imagen?.mimeType ?? '').trim() || null,
+        size: this.parseBigint(imagen?.size),
+        size_formatted:
+          String(imagen?.size_formatted ?? imagen?.sizeFormatted ?? '').trim()
+          || this.formatearTamanoArchivo(this.parseBigint(imagen?.size)),
         activa: Boolean(imagen?.activa),
         orden: Number.isFinite(Number(imagen?.orden)) ? Number(imagen?.orden) : index + 1,
         vigencia_desde: this.normalizarFecha(imagen?.vigencia_desde),
@@ -316,14 +637,19 @@ export class SupabaseService {
       actividad_id: actividadId,
       imagen_activa_id_recibida: idActivaRecibida,
       indice_activa_final: indiceActivaFinal,
-      imagenes: limpias.map((imagen) => ({
-        id: imagen.id,
-        imagen_url: imagen.imagen_url,
-        activa: imagen.activa,
-        orden: imagen.orden,
-        carpeta_id: imagen.carpeta_id,
-        carpeta_nombre: imagen.carpeta_nombre,
-        carpeta: imagen.carpeta
+        imagenes: limpias.map((imagen) => ({
+          id: imagen.id,
+          imagen_url: imagen.imagen_url,
+          nombre: imagen.nombre,
+          extension: imagen.extension,
+          mime_type: imagen.mime_type,
+          size: imagen.size,
+          size_formatted: imagen.size_formatted,
+          activa: imagen.activa,
+          orden: imagen.orden,
+          carpeta_id: imagen.carpeta_id,
+          carpeta_nombre: imagen.carpeta_nombre,
+          carpeta: imagen.carpeta
       }))
     });
 
@@ -379,6 +705,11 @@ export class SupabaseService {
             imagen_url: imagen.imagen_url,
             carpeta_id: carpetaAsignada.id,
             carpeta: carpetaAsignada.nombre,
+            nombre: imagen.nombre,
+            extension: imagen.extension,
+            mime_type: imagen.mime_type,
+            size: imagen.size,
+            size_formatted: imagen.size_formatted,
             orden: imagen.orden,
             vigencia_desde: imagen.vigencia_desde,
             vigencia_hasta: imagen.vigencia_hasta
@@ -400,6 +731,11 @@ export class SupabaseService {
           imagen_url: imagen.imagen_url,
           carpeta_id: carpetaAsignada.id,
           carpeta: carpetaAsignada.nombre,
+          nombre: imagen.nombre,
+          extension: imagen.extension,
+          mime_type: imagen.mime_type,
+          size: imagen.size,
+          size_formatted: imagen.size_formatted,
           activa: false,
           orden: imagen.orden,
           vigencia_desde: imagen.vigencia_desde,
@@ -1381,9 +1717,28 @@ export class SupabaseService {
       const actividadIds = actividades.map((item: any) => item.id);
       if (actividadIds.length) {
         const [imagenesActividadResponse, carpetasActividadResponse] = await Promise.all([
-          this.client.rpc('obtener_atracciones_imagenes_admin', {
-            p_atraccion_ids: actividadIds
-          }),
+          this.client
+            .from('atracciones_imagenes')
+            .select(`
+              id,
+              atraccion_id,
+              imagen_url,
+              carpeta_id,
+              carpeta,
+              activa,
+              orden,
+              vigencia_desde,
+              vigencia_hasta,
+              created_at,
+              nombre,
+              extension,
+              mime_type,
+              size,
+              size_formatted
+            `)
+            .in('atraccion_id', actividadIds)
+            .order('orden', { ascending: true })
+            .order('id', { ascending: true }),
           this.client
             .from('atracciones_carpetas')
             .select('id, atraccion_id, nombre, orden, created_at, updated_at')
@@ -1398,7 +1753,7 @@ export class SupabaseService {
         if (imagenesActividadError) throw imagenesActividadError;
         if (carpetasActividadError) throw carpetasActividadError;
 
-        console.log('[Preview destino] Imagenes crudas de obtener_atracciones_imagenes_admin:', {
+        console.log('[Preview destino] Imagenes crudas desde atracciones_imagenes:', {
           destino_id: destinoId,
           detalle_id: detalleId,
           actividad_ids: actividadIds,
@@ -1527,6 +1882,11 @@ export class SupabaseService {
               carpeta_id: carpetaId,
               carpeta_nombre: nombreCarpetaNormalizado,
               carpeta: nombreCarpetaNormalizado,
+              nombre: imagen.nombre ?? null,
+              extension: imagen.extension ?? null,
+              mime_type: imagen.mime_type ?? null,
+              size: this.parseBigint(imagen.size),
+              size_formatted: imagen.size_formatted ?? null,
               activa: Boolean(imagen.activa),
               orden: imagen.orden ?? null,
               vigencia_desde: imagen.vigencia_desde ?? null,
@@ -1576,6 +1936,11 @@ export class SupabaseService {
             carpeta_id: this.parseNumber(imagen.carpeta_id),
             carpeta_nombre: this.normalizarNombreCarpeta(imagen.carpeta_nombre ?? imagen.carpeta) ?? null,
             carpeta: this.normalizarNombreCarpeta(imagen.carpeta_nombre ?? imagen.carpeta) ?? null,
+            nombre: imagen.nombre ?? null,
+            extension: imagen.extension ?? null,
+            mime_type: imagen.mime_type ?? null,
+            size: this.parseBigint(imagen.size),
+            size_formatted: imagen.size_formatted ?? null,
             activa: Boolean(imagen.activa),
             orden: imagen.orden ?? null,
             vigencia_desde: imagen.vigencia_desde ?? null,
@@ -1636,7 +2001,16 @@ export class SupabaseService {
       imagenes?: Array<{
         id?: number | null;
         imagen_url: string | null;
+        carpeta_id?: number | null;
+        carpeta_nombre?: string | null;
         carpeta?: string | null;
+        nombre?: string | null;
+        extension?: string | null;
+        mime_type?: string | null;
+        mimeType?: string | null;
+        size?: number | null;
+        size_formatted?: string | null;
+        sizeFormatted?: string | null;
         activa?: boolean;
         orden?: number | null;
         vigencia_desde?: string | null;
@@ -1895,6 +2269,13 @@ export class SupabaseService {
       carpeta_id?: number | null;
       carpeta_nombre?: string | null;
       carpeta?: string | null;
+      nombre?: string | null;
+      extension?: string | null;
+      mime_type?: string | null;
+      mimeType?: string | null;
+      size?: number | null;
+      size_formatted?: string | null;
+      sizeFormatted?: string | null;
       activa?: boolean;
       orden?: number | null;
       vigencia_desde?: string | null;
@@ -2037,6 +2418,13 @@ export class SupabaseService {
       carpeta_id?: number | null;
       carpeta_nombre?: string | null;
       carpeta?: string | null;
+      nombre?: string | null;
+      extension?: string | null;
+      mime_type?: string | null;
+      mimeType?: string | null;
+      size?: number | null;
+      size_formatted?: string | null;
+      sizeFormatted?: string | null;
       activa?: boolean;
       orden?: number | null;
       vigencia_desde?: string | null;
@@ -2067,15 +2455,20 @@ export class SupabaseService {
       actividad_id: payload.actividad_id,
       imagen_fondo: payload.imagen_fondo,
       imagen_activa_id: payload.imagen_activa_id ?? null,
-      imagenes: (payload.imagenes ?? []).map((imagen) => ({
-        id: imagen.id ?? null,
-        imagen_url: imagen.imagen_url,
-        carpeta_id: imagen.carpeta_id ?? null,
-        carpeta_nombre: imagen.carpeta_nombre ?? null,
-        carpeta: imagen.carpeta ?? null,
-        activa: imagen.activa ?? false,
-        orden: imagen.orden ?? null
-      }))
+        imagenes: (payload.imagenes ?? []).map((imagen) => ({
+          id: imagen.id ?? null,
+          imagen_url: imagen.imagen_url,
+          carpeta_id: imagen.carpeta_id ?? null,
+          carpeta_nombre: imagen.carpeta_nombre ?? null,
+          carpeta: imagen.carpeta ?? null,
+          nombre: imagen.nombre ?? null,
+          extension: imagen.extension ?? null,
+          mime_type: imagen.mime_type ?? imagen.mimeType ?? null,
+          size: imagen.size ?? null,
+          size_formatted: imagen.size_formatted ?? imagen.sizeFormatted ?? null,
+          activa: imagen.activa ?? false,
+          orden: imagen.orden ?? null
+        }))
     });
 
     await this.sincronizarImagenesActividad(payload.actividad_id, payload.imagenes, payload.imagen_activa_id);
@@ -2138,7 +2531,16 @@ export class SupabaseService {
     imagenes: Array<{
       id?: number | null;
       imagen_url: string | null;
+      carpeta_id?: number | null;
+      carpeta_nombre?: string | null;
       carpeta?: string | null;
+      nombre?: string | null;
+      extension?: string | null;
+      mime_type?: string | null;
+      mimeType?: string | null;
+      size?: number | null;
+      size_formatted?: string | null;
+      sizeFormatted?: string | null;
       activa?: boolean;
       orden?: number | null;
       vigencia_desde?: string | null;

@@ -1,9 +1,9 @@
 <div class="fm-shell">
-  <div class="fm-header">
-    <div>
+  <div class="fm-hero">
+    <div class="fm-hero-copy">
       <p class="fm-kicker">Administrador de archivos</p>
       <div class="fm-title-row">
-        <h3 class="fm-title">{{ title }}</h3>
+        <h5 class="fm-title">{{ title }}</h5>
         @if (activeImage) {
           <button
             mat-icon-button
@@ -19,141 +19,253 @@
       <p class="fm-subtitle">{{ subtitle }}</p>
     </div>
 
-    <div class="fm-summary">
-      <button mat-stroked-button type="button" (click)="openCreateFolder()">
-        <mat-icon class="mr-2 icon-size-4" [svgIcon]="'heroicons_outline:plus'"></mat-icon>
-        Nueva carpeta
-      </button>
-      <button mat-flat-button color="primary" type="button" (click)="emitAddImage()">
-        <mat-icon class="mr-2 icon-size-4 text-white" [svgIcon]="'heroicons_outline:photo'"></mat-icon>
-        Agregar imagen
-      </button>
+    <div class="fm-toolbar">
+      <label class="fm-search">
+        <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:magnifying-glass'"></mat-icon>
+        <input
+          type="text"
+          [value]="searchTerm"
+          (input)="setSearchTerm($any($event.target).value)"
+          placeholder="Buscar"
+        />
+      </label>
+
+      <div class="fm-tabs" role="tablist" aria-label="Filtros de galeria">
+        <button
+          type="button"
+          class="fm-tab"
+          [class.fm-tab--active]="activeView === 'all'"
+          (click)="setActiveView('all')"
+        >
+          Todos
+        </button>
+        <button
+          type="button"
+          class="fm-tab"
+          [class.fm-tab--active]="activeView === 'folders'"
+          (click)="setActiveView('folders')"
+        >
+          Carpetas
+        </button>
+        <button
+          type="button"
+          class="fm-tab"
+          [class.fm-tab--active]="activeView === 'images'"
+          (click)="setActiveView('images')"
+        >
+          Imagenes
+        </button>
+        <button
+          type="button"
+          class="fm-tab"
+          [class.fm-tab--active]="activeView === 'favorites'"
+          (click)="setActiveView('favorites')"
+        >
+          Imagen actual
+        </button>
+      </div>
+
+      <div class="fm-summary">
+        <button mat-stroked-button type="button" (click)="openCreateFolder()">
+          <mat-icon class="mr-2 icon-size-4" [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+          Nueva carpeta
+        </button>
+        <button mat-flat-button color="primary" type="button" (click)="emitAddImage()">
+          <mat-icon class="mr-2 icon-size-4 text-white" [svgIcon]="'heroicons_outline:photo'"></mat-icon>
+          Agregar imagen
+        </button>
+      </div>
     </div>
   </div>
 
+  
   @if (folders.length) {
-    <div class="fm-section">
-      <div class="fm-section-head fm-section-head--actions">
-        <div>
-          <h4>Carpetas</h4>
-          <p>Selecciona una carpeta para ver sus archivos.</p>
-        </div>
-      </div>
+    <div class="fm-layout" [class.fm-layout--with-detail]="showDetailPanel">
+      <div class="fm-main">
+        @if (shouldShowFoldersSection) {
+          <div class="fm-section">
+            <div class="fm-section-head">
+              <h4>Carpetas</h4>
+              <p>Selecciona una carpeta para ver sus archivos.</p>
+            </div>
 
-      @if (creatingFolder) {
-        <div class="fm-create-folder">
-          <mat-form-field class="w-full">
-            <mat-label>Nombre de carpeta</mat-label>
-            <input
-              id="folder-create-input"
-              matInput
-              [value]="newFolderName"
-              (input)="newFolderName = $any($event.target).value"
-              (keydown.enter)="confirmCreateFolder()"
-            />
-          </mat-form-field>
+            @if (filteredFolders.length) {
+              <div class="fm-folder-grid" role="list" aria-label="Carpetas">
+                @for (folder of filteredFolders; track trackByFolder($index, folder)) {
+                  <div
+                    class="fm-folder-card"
+                    [class.fm-folder-card--drop-target]="isDropTarget(folder)"
+                    [class.fm-folder-card--active]="folder.id === activeFolderId"
+                    role="button"
+                    tabindex="0"
+                    (click)="selectFolder(folder)"
+                    (keydown.enter)="selectFolder(folder)"
+                    (keydown.space)="$event.preventDefault(); selectFolder(folder)"
+                    (dragover)="onFolderDragOver(folder, $event)"
+                    (dragleave)="onFolderDragLeave(folder)"
+                    (drop)="onFolderDrop(folder, $event)"
+                  >
+                    <div class="fm-folder-collage">
+                      @if (getFolderPreviewImages(folder).length) {
+                        @for (preview of getFolderPreviewImages(folder); track trackByImage($index, preview)) {
+                          <div class="fm-folder-collage-tile" [class.fm-folder-collage-tile--accent]="isFolderPreviewAccent($index)">
+                            <img [src]="preview.imageUrl" [alt]="preview.name" />
+                          </div>
+                        }
+                      } @else {
+                        <div class="fm-folder-collage-empty">
+                          <mat-icon class="fm-folder-icon" [svgIcon]="'heroicons_solid:folder'"></mat-icon>
+                        </div>
+                      }
+                    </div>
 
-          <div class="flex items-center gap-2">
-            <button mat-flat-button color="primary" type="button" (click)="confirmCreateFolder()">
-              Crear
-            </button>
-            <button mat-stroked-button type="button" (click)="cancelCreateFolder()">
-              Cancelar
-            </button>
+                    <div class="fm-folder-actions-container">
+                      <button
+                        mat-icon-button
+                        type="button"
+                        class="fm-folder-actions-trigger"
+                        [attr.aria-label]="'Acciones de carpeta ' + folder.name"
+                        (click)="toggleFolderActions(folder, $event)"
+                      >
+                        <mat-icon class="icon-size-5 text-gray-600" [svgIcon]="'heroicons_outline:ellipsis-vertical'"></mat-icon>
+                      </button>
+
+                      @if (isFolderActionsOpen(folder)) {
+                        <div class="fm-folder-actions-popover" (click)="$event.stopPropagation()">
+                          <button type="button" class="fm-folder-actions-popover__item" (click)="startRenameFolder(folder, $event)">
+                            <mat-icon [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
+                            <span>Cambiar nombre</span>
+                          </button>
+                          <button type="button" class="fm-folder-actions-popover__item fm-folder-actions-popover__item--danger" (click)="requestDeleteFolder(folder, $event)">
+                            <mat-icon [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                            <span>Eliminar</span>
+                          </button>
+                        </div>
+                      }
+                    </div>
+
+                    <div class="fm-folder-meta">
+                      <div class="fm-folder-name">{{ folder.name }}</div>
+                      <div class="fm-folder-description">{{ folder.description || 'Sin descripcion' }}</div>
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="fm-empty-state">
+                <mat-icon class="icon-size-14 text-gray-300" [svgIcon]="'heroicons_outline:folder-open'"></mat-icon>
+                <p>No encontramos carpetas para esta vista.</p>
+              </div>
+            }
           </div>
-        </div>
-      }
+        }
 
-      <div class="fm-folder-grid" role="list" aria-label="Carpetas">
-        @for (folder of folders; track trackByFolder($index, folder)) {
-          <div
-            class="fm-folder-card"
-            [class.fm-folder-card--drop-target]="isDropTarget(folder)"
-            [class.fm-folder-card--active]="folder.id === activeFolderId"
-            role="button"
-            tabindex="0"
-            (click)="selectFolder(folder)"
-            (keydown.enter)="selectFolder(folder)"
-            (keydown.space)="$event.preventDefault(); selectFolder(folder)"
-            (dragover)="onFolderDragOver(folder, $event)"
-            (dragleave)="onFolderDragLeave(folder)"
-            (drop)="onFolderDrop(folder, $event)"
-          >
-            <div class="fm-folder-icon-wrap">
-              <mat-icon class="fm-folder-icon" [svgIcon]="'heroicons_solid:folder'"></mat-icon>
+        @if (shouldShowImagesSection) {
+          <div class="fm-section">
+            <div class="fm-section-head">
+              <h4>Archivos</h4>
+              <p>
+                @if (activeFolder) {
+                  {{ activeFolder.name }} · {{ getFileCountLabel(activeImages.length) }}
+                } @else {
+                  Selecciona una carpeta para ver sus archivos.
+                }
+              </p>
             </div>
 
-            <button
-              mat-icon-button
-              type="button"
-              class="fm-folder-actions-trigger"
-              [matMenuTriggerFor]="folderActionsMenu"
-              [matMenuTriggerData]="{ folder: folder }"
-              [attr.aria-label]="'Acciones de carpeta ' + folder.name"
-              (click)="$event.stopPropagation()"
-            >
-              <mat-icon class="icon-size-5 text-gray-600" [svgIcon]="'heroicons_outline:ellipsis-vertical'"></mat-icon>
-            </button>
-
-            <div class="fm-folder-meta">
-              <div class="fm-folder-name">{{ folder.name }}</div>
-              <div class="fm-folder-description">{{ folder.description || 'Sin descripcion' }}</div>
-            </div>
+            @if (activeImages.length) {
+              <div class="fm-image-grid">
+                @for (image of activeImages; track trackByImage($index, image)) {
+                  <button
+                    type="button"
+                    class="fm-image-card"
+                    [class.fm-image-card--selected]="isSelected(image)"
+                    draggable="true"
+                    (dragstart)="onImageDragStart(image, $event)"
+                    (dragend)="onImageDragEnd()"
+                    (click)="selectImage(image)"
+                  >
+                    <div class="fm-image-preview">
+                      <img class="fm-image-thumb" [src]="image.imageUrl" [alt]="image.name" />
+                      @if (isActiveImage(image)) {
+                        <div
+                          class="fm-active-star"
+                          aria-label="Imagen principal"
+                          matTooltip="Imagen principal"
+                          matTooltipPosition="above"
+                        >
+                          <mat-icon class="icon-size-4" [svgIcon]="'heroicons_solid:star'"></mat-icon>
+                        </div>
+                      }
+                    </div>
+                  </button>
+                }
+              </div>
+            } @else {
+              <div class="fm-empty-state">
+                <mat-icon class="icon-size-14 text-gray-300" [svgIcon]="'heroicons_outline:document'"></mat-icon>
+                <p>{{ emptyStateMessage }}</p>
+              </div>
+            }
           </div>
         }
       </div>
-    </div>
 
-    <div class="fm-section">
-      <div class="fm-section-head">
-        <h4>Archivos</h4>
-        <p>
-          @if (activeFolder) {
-            {{ activeFolder.name }} · {{ getFileCountLabel(activeImages.length) }}
+      @if (showDetailPanel) {
+        <aside class="fm-detail-card">
+          <h4>Detalles de la Imagen</h4>
+
+          @if (detailImage) {
+            <div class="fm-detail-preview">
+              <img [src]="detailImage.imageUrl" [alt]="detailImage.name" />
+            </div>
+
+            <dl class="fm-detail-list">
+              <div class="fm-detail-item">
+                <dt>Titulo</dt>
+                <dd>{{ detailImage.name }}</dd>
+              </div>
+              <div class="fm-detail-item">
+                <dt>Carpeta</dt>
+                <dd>{{ detailFolderName }}</dd>
+              </div>
+              <div class="fm-detail-item">
+                <dt>Estado</dt>
+                <dd>{{ detailStatusLabel }}</dd>
+              </div>
+              <div class="fm-detail-item">
+                <dt>Tipo</dt>
+                <dd>{{ getImageTypeLabel(detailImage) }}</dd>
+              </div>
+              @if (detailImage.sizeLabel) {
+                <div class="fm-detail-item">
+                  <dt>Tamano</dt>
+                  <dd>{{ detailImage.sizeLabel }}</dd>
+                </div>
+              }
+            </dl>
+
+            <div class="fm-detail-actions">
+              <button
+                mat-stroked-button
+                color="primary"
+                type="button"
+                (click)="requestMakePrimaryImage(detailImage)"
+                [disabled]="isActiveImage(detailImage)"
+              >
+                {{ isActiveImage(detailImage) ? 'Imagen principal actual' : 'Dejar como principal' }}
+              </button>
+              <button mat-flat-button color="primary" type="button" (click)="requestEditImage(detailImage)">
+                Editar
+              </button>
+            </div>
           } @else {
-            Selecciona una carpeta para ver sus archivos.
+            <div class="fm-detail-empty">
+              <mat-icon class="icon-size-12 text-gray-300" [svgIcon]="'heroicons_outline:photo'"></mat-icon>
+              <p>Selecciona una imagen para ver su detalle.</p>
+            </div>
           }
-        </p>
-      </div>
-
-      @if (activeImages.length) {
-        <div class="fm-image-grid">
-          @for (image of activeImages; track trackByImage($index, image)) {
-            <button
-              type="button"
-              class="fm-image-card"
-              [class.fm-image-card--selected]="isSelected(image)"
-              draggable="true"
-              (dragstart)="onImageDragStart(image, $event)"
-              (dragend)="onImageDragEnd()"
-              (click)="selectImage(image)"
-            >
-              <div class="fm-image-preview">
-                <img class="fm-image-thumb" [src]="image.imageUrl" [alt]="image.name" />
-                @if (isActiveImage(image)) {
-                  <div
-                    class="fm-active-star"
-                    aria-label="Imagen principal"
-                    matTooltip="Imagen principal"
-                    matTooltipPosition="above"
-                  >
-                    <mat-icon class="icon-size-4" [svgIcon]="'heroicons_solid:star'"></mat-icon>
-                  </div>
-                }
-                <!-- <span class="fm-file-type">{{ getImageTypeLabel(image) }}</span> -->
-              </div>
-
-              <div class="fm-image-meta">
-                <!-- <div class="fm-image-name">{{ image.name }}</div> -->
-              </div>
-            </button>
-          }
-        </div>
-      } @else {
-        <div class="fm-empty-state">
-          <mat-icon class="icon-size-14 text-gray-300" [svgIcon]="'heroicons_outline:document'"></mat-icon>
-          <p>No hay archivos dentro de esta carpeta.</p>
-        </div>
+        </aside>
       }
     </div>
   } @else {
@@ -194,7 +306,7 @@
           matInput
           [value]="editingFolderName"
           (input)="editingFolderName = $any($event.target).value"
-          (keydown.enter)="confirmRenameFolder(folderActionsTargetFolder!, $event)"
+          (keydown.enter)="confirmRenameFolder(folderActionsTargetFolder!)"
           (keydown.escape)="cancelRenameFolder()"
         />
       </mat-form-field>
@@ -209,15 +321,41 @@
   </div>
 }
 
-<mat-menu #folderActionsMenu="matMenu">
-  <ng-template matMenuContent let-folder="folder">
-    <button mat-menu-item type="button" (click)="startRenameFolder(folder)">
-      <mat-icon [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
-      <span>Cambiar nombre</span>
-    </button>
-    <button mat-menu-item type="button" (click)="requestDeleteFolder(folder)">
-      <mat-icon class="text-red-500" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
-      <span>Eliminar</span>
-    </button>
-  </ng-template>
-</mat-menu>
+@if (creatingFolder) {
+  <div class="fm-modal-backdrop">
+    <div class="fm-modal" role="dialog" aria-modal="true" aria-labelledby="folder-create-title">
+      <div class="fm-modal-head">
+        <div>
+          <p class="fm-modal-kicker">Nueva carpeta</p>
+          <h4 class="fm-modal-title" id="folder-create-title">Crea una nueva carpeta</h4>
+        </div>
+        <button mat-icon-button type="button" (click)="cancelCreateFolder()" [disabled]="isSavingFolder">
+          <mat-icon [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
+        </button>
+      </div>
+
+      <mat-form-field class="w-full">
+        <mat-label>Nombre de la carpeta</mat-label>
+        <input
+          id="folder-create-input"
+          matInput
+          [value]="newFolderName"
+          (input)="newFolderName = $any($event.target).value"
+          (keydown.enter)="!isSavingFolder && confirmCreateFolder()"
+          (keydown.escape)="!isSavingFolder && cancelCreateFolder()"
+          [disabled]="isSavingFolder"
+        />
+      </mat-form-field>
+
+      <div class="fm-modal-actions flex items-center justify-end gap-2">
+        @if (isSavingFolder) {
+          <mat-progress-spinner diameter="24" mode="indeterminate" class="mr-2"></mat-progress-spinner>
+        }
+        <button mat-stroked-button type="button" (click)="cancelCreateFolder()" [disabled]="isSavingFolder">Cancelar</button>
+        <button mat-flat-button color="primary" type="button" (click)="confirmCreateFolder()" [disabled]="isSavingFolder || !newFolderName.trim()">
+          Crear
+        </button>
+      </div>
+    </div>
+  </div>
+}

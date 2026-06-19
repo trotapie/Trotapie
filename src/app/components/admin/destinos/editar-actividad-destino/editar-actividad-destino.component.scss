@@ -1,22 +1,79 @@
-.actividad-drawer-container {
-  min-height: 36rem;
-  overflow: hidden;
-}
+/* Layout reverted to rely on folder-image-manager design */
 
-.actividad-drawer {
-  width: min(28rem, 38vw);
-  border-left: 1px solid #e5e7eb;
-  background: #ffffff;
-}
+:host {
+  .image-edit-modal {
+    max-height: min(92vh, 920px);
+    display: flex;
+    flex-direction: column;
+  }
 
-@media (max-width: 1024px) {
-  .actividad-drawer {
-    width: min(24rem, 46vw);
+  .image-edit-modal__content {
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .drive-import-modal__dialog {
+    max-height: min(90vh, 880px);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .drive-import-modal__content {
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+  }
+
+  .drive-import-modal__folders {
+    align-items: stretch;
+  }
+
+  .drive-import-modal__folder-card {
+    height: 100%;
+  }
+
+  .drive-import-modal__actions {
+    flex-wrap: wrap;
   }
 }
 
-@media (max-width: 768px) {
-  .actividad-drawer {
-    width: 100%;
+@media (max-width: 767px) {
+  :host {
+    .drive-import-modal {
+      align-items: flex-start;
+    }
+
+    .drive-import-modal__dialog {
+      max-height: calc(100vh - 2rem);
+      padding: 1rem;
+      border-radius: 1.25rem;
+    }
+
+    .image-edit-modal {
+      max-height: calc(100vh - 2rem);
+      border-radius: 1.5rem;
+    }
+
+    .image-edit-modal__content {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+
+    .drive-import-modal__content {
+      gap: 0.875rem;
+      padding-right: 0;
+    }
+
+    .drive-import-modal__folders {
+      grid-template-columns: 1fr;
+    }
+
+    .drive-import-modal__actions {
+      flex-direction: column-reverse;
+    }
+
+    .drive-import-modal__actions button {
+      width: 100%;
+    }
   }
 }

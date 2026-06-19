@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnChanges, OnDestroy, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, OnChanges, OnDestroy, Output, SimpleChanges } from '@angular/core';
 import { MaterialModule } from 'app/shared/material.module';
 
 export interface FolderImageManagerImage {
@@ -11,6 +11,9 @@ export interface FolderImageManagerImage {
   folderName?: string | null;
   subtitle?: string | null;
   typeLabel?: string | null;
+  extension?: string | null;
+  mimeType?: string | null;
+  sizeLabel?: string | null;
 }
 
 export interface FolderImageManagerFolder {
@@ -34,6 +37,8 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
   @Input() folders: FolderImageManagerFolder[] = [];
   @Input() selectedImageId: string | number | null = null;
   @Input() activeImageId: string | number | null = null;
+  @Input() showDetailPanel = true;
+  @Input() isSavingFolder = false;
 
   @Output() imageSelected = new EventEmitter<FolderImageManagerImage>();
   @Output() folderSelected = new EventEmitter<FolderImageManagerFolder | null>();
@@ -42,20 +47,38 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
   @Output() deleteFolder = new EventEmitter<FolderImageManagerFolder>();
   @Output() addImage = new EventEmitter<void>();
   @Output() imageDroppedOnFolder = new EventEmitter<{ image: FolderImageManagerImage; folder: FolderImageManagerFolder }>();
+  @Output() editImage = new EventEmitter<FolderImageManagerImage>();
+  @Output() makePrimaryImage = new EventEmitter<FolderImageManagerImage>();
 
   activeFolderId: string | number | null = null;
+  searchTerm = '';
+  activeView: 'all' | 'folders' | 'images' | 'favorites' = 'all';
   creatingFolder = false;
   newFolderName = '';
   editingFolderId: string | number | null = null;
   editingFolderName = '';
+  activeFolderActionsId: string | number | null = null;
   folderActionsTargetFolder: FolderImageManagerFolder | null = null;
   draggedImage: FolderImageManagerImage | null = null;
   dropTargetFolderId: string | number | null = null;
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.activeFolderActionsId = null;
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     const selectedImageChanged =
       !!changes['selectedImageId'] && changes['selectedImageId'].previousValue !== changes['selectedImageId'].currentValue;
     const foldersChanged = !!changes['folders'];
+
+    if (this.creatingFolder && changes['folders']) {
+      const prevLength = changes['folders'].previousValue?.length ?? 0;
+      const currLength = changes['folders'].currentValue?.length ?? 0;
+      if (currLength > prevLength) {
+        this.cancelCreateFolder();
+      }
+    }
 
     if (!this.folders.length) {
       this.activeFolderId = null;
@@ -87,12 +110,46 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
     return this.folders.reduce((total, folder) => total + folder.images.length, 0);
   }
 
+  get filteredFolders(): FolderImageManagerFolder[] {
+    const term = this.normalizedSearchTerm;
+    let folders = this.folders;
+
+    if (this.activeView === 'favorites') {
+      folders = folders.filter((folder) => folder.images.some((image) => this.isActiveImage(image)));
+    }
+
+    if (!term) {
+      return folders;
+    }
+
+    return folders.filter((folder) => {
+      const inFolder = folder.name.toLowerCase().includes(term) || (folder.description ?? '').toLowerCase().includes(term);
+      const inImages = folder.images.some((image) => this.matchesImageSearch(image, term));
+      return inFolder || inImages;
+    });
+  }
+
   get activeFolder(): FolderImageManagerFolder | null {
-    return this.folders.find((folder) => folder.id === this.activeFolderId) ?? null;
+    return this.filteredFolders.find((folder) => folder.id === this.activeFolderId)
+      ?? this.folders.find((folder) => folder.id === this.activeFolderId)
+      ?? null;
   }
 
   get activeImages(): FolderImageManagerImage[] {
-    return this.activeFolder?.images ?? [];
+    const images = this.activeFolder?.images ?? [];
+    const term = this.normalizedSearchTerm;
+
+    return images.filter((image) => {
+      if (this.activeView === 'favorites' && !this.isActiveImage(image)) {
+        return false;
+      }
+
+      if (!term) {
+        return true;
+      }
+
+      return this.matchesImageSearch(image, term);
+    });
   }
 
   get selectedImage(): FolderImageManagerImage | null {
@@ -109,6 +166,50 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
     }
 
     return this.findImageById(this.activeImageId);
+  }
+
+  get detailImage(): FolderImageManagerImage | null {
+    return this.selectedImage ?? this.activeImage ?? this.activeImages[0] ?? null;
+  }
+
+  get detailFolderName(): string {
+    return this.detailImage?.folderName ?? this.activeFolder?.name ?? 'Sin carpeta';
+  }
+
+  get detailStatusLabel(): string {
+    if (!this.detailImage) {
+      return 'Sin seleccion';
+    }
+
+    if (this.isActiveImage(this.detailImage)) {
+      return 'Imagen principal';
+    }
+
+    if (this.isSelected(this.detailImage)) {
+      return 'Seleccionada';
+    }
+
+    return 'Disponible';
+  }
+
+  get shouldShowFoldersSection(): boolean {
+    return this.activeView === 'all' || this.activeView === 'folders';
+  }
+
+  get shouldShowImagesSection(): boolean {
+    return this.activeView === 'all' || this.activeView === 'images' || this.activeView === 'favorites';
+  }
+
+  get emptyStateMessage(): string {
+    if (this.activeView === 'favorites') {
+      return 'No hay imagenes principales que coincidan con esta busqueda.';
+    }
+
+    if (this.normalizedSearchTerm) {
+      return 'No encontramos resultados para esta busqueda.';
+    }
+
+    return 'No hay archivos dentro de esta carpeta.';
   }
 
   isSelected(image: FolderImageManagerImage): boolean {
@@ -143,11 +244,25 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
     this.folderSelected.emit(folder);
   }
 
+  setSearchTerm(value: string): void {
+    this.searchTerm = value;
+    this.ensureActiveFolderVisible();
+  }
+
+  setActiveView(view: 'all' | 'folders' | 'images' | 'favorites'): void {
+    this.activeView = view;
+    this.ensureActiveFolderVisible();
+  }
+
   requestDeleteFolder(folder: FolderImageManagerFolder, event?: Event): void {
+    event?.stopPropagation();
+    this.activeFolderActionsId = null;
     this.deleteFolder.emit(folder);
   }
 
-  startRenameFolder(folder: FolderImageManagerFolder): void {
+  startRenameFolder(folder: FolderImageManagerFolder, event?: Event): void {
+    event?.stopPropagation();
+    this.activeFolderActionsId = null;
     this.folderActionsTargetFolder = folder;
     this.editingFolderId = null;
     this.editingFolderName = folder.name;
@@ -184,6 +299,31 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
 
   selectImage(image: FolderImageManagerImage): void {
     this.imageSelected.emit(image);
+  }
+
+  requestEditImage(image: FolderImageManagerImage | null): void {
+    if (!image) {
+      return;
+    }
+
+    this.editImage.emit(image);
+  }
+
+  requestMakePrimaryImage(image: FolderImageManagerImage | null): void {
+    if (!image || this.isActiveImage(image)) {
+      return;
+    }
+
+    this.makePrimaryImage.emit(image);
+  }
+
+  toggleFolderActions(folder: FolderImageManagerFolder, event: Event): void {
+    event.stopPropagation();
+    this.activeFolderActionsId = this.activeFolderActionsId === folder.id ? null : folder.id;
+  }
+
+  isFolderActionsOpen(folder: FolderImageManagerFolder): boolean {
+    return this.activeFolderActionsId === folder.id;
   }
 
   onImageDragStart(image: FolderImageManagerImage, event: DragEvent): void {
@@ -235,6 +375,7 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
 
   openCreateFolder(): void {
     this.creatingFolder = true;
+    this.setModalLocked(true);
     queueMicrotask(() => {
       const input = document.getElementById('folder-create-input') as HTMLInputElement | null;
       input?.focus();
@@ -248,6 +389,7 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
   cancelCreateFolder(): void {
     this.creatingFolder = false;
     this.newFolderName = '';
+    this.setModalLocked(false);
   }
 
   confirmCreateFolder(): void {
@@ -257,7 +399,6 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
     }
 
     this.createFolder.emit(nombre);
-    this.cancelCreateFolder();
   }
 
   trackByFolder(_: number, folder: FolderImageManagerFolder): string | number {
@@ -277,9 +418,19 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
   }
 
   getImageTypeLabel(image: FolderImageManagerImage): string {
+    const mimeType = (image.mimeType ?? '').trim();
+    if (mimeType) {
+      return mimeType;
+    }
+
     const explicitType = (image.typeLabel ?? '').trim();
     if (explicitType) {
       return explicitType.toUpperCase();
+    }
+
+    const extension = (image.extension ?? '').trim();
+    if (extension) {
+      return extension.toUpperCase();
     }
 
     const byName = image.name.split('.').pop()?.trim();
@@ -291,12 +442,21 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
     return (byUrl || 'IMG').toUpperCase();
   }
 
+  getFolderPreviewImages(folder: FolderImageManagerFolder): FolderImageManagerImage[] {
+    return folder.images.slice(0, 4);
+  }
+
+  isFolderPreviewAccent(index: number): boolean {
+    return index === 1;
+  }
+
   private activateInitialFolder(): void {
     const selectedFolder = this.findFolderBySelectedImage();
+    const sourceFolders = this.filteredFolders.length ? this.filteredFolders : this.folders;
     const nextFolder =
-      selectedFolder ??
-      this.folders.find((folder) => folder.images.length > 0) ??
-      this.folders[0];
+      selectedFolder && sourceFolders.some((folder) => folder.id === selectedFolder.id)
+        ? selectedFolder
+        : sourceFolders.find((folder) => folder.images.length > 0) ?? sourceFolders[0];
 
     if (nextFolder && nextFolder.id !== this.activeFolderId) {
       this.activeFolderId = nextFolder.id;
@@ -306,7 +466,7 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
 
   private activateFolderForSelectedImage(): void {
     const selectedFolder = this.findFolderBySelectedImage();
-    if (selectedFolder && selectedFolder.id !== this.activeFolderId) {
+    if (selectedFolder && this.filteredFolders.some((folder) => folder.id === selectedFolder.id) && selectedFolder.id !== this.activeFolderId) {
       this.activeFolderId = selectedFolder.id;
       this.folderSelected.emit(selectedFolder);
       return;
@@ -324,9 +484,33 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
 
     return (
       this.folders.find((folder) =>
-        folder.images.some((image) => image.id === this.selectedImageId)
+        folder.images.some((image) => this.idsMatch(image.id, this.selectedImageId))
       ) ?? null
     );
+  }
+
+  private ensureActiveFolderVisible(): void {
+    const activeFolderStillVisible = this.filteredFolders.some((folder) => folder.id === this.activeFolderId);
+    if (activeFolderStillVisible) {
+      return;
+    }
+
+    const nextFolder = this.filteredFolders.find((folder) => folder.images.length > 0) ?? this.filteredFolders[0] ?? null;
+    this.activeFolderId = nextFolder?.id ?? null;
+    this.folderSelected.emit(nextFolder);
+  }
+
+  private get normalizedSearchTerm(): string {
+    return this.searchTerm.trim().toLowerCase();
+  }
+
+  private matchesImageSearch(image: FolderImageManagerImage, term: string): boolean {
+    return [
+      image.name,
+      image.folderName ?? '',
+      image.subtitle ?? '',
+      image.typeLabel ?? ''
+    ].some((value) => value.toLowerCase().includes(term));
   }
 
   private setModalLocked(bloquear: boolean): void {

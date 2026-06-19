@@ -160,7 +160,7 @@
 
             <mat-form-field appearance="outline" class="w-full">
                 <mat-label>Email de acceso</mat-label>
-                <input matInput formControlName="email" type="email" maxlength="180" [readonly]="estaEditando" />
+                <input matInput formControlName="email" type="email" maxlength="180" />
                 @if (form.get('email')?.hasError('email') && form.get('email')?.touched) {
                 <mat-error>Ingresa un correo valido.</mat-error>
                 }

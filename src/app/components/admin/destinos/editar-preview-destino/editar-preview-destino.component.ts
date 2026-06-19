@@ -320,6 +320,22 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     }>;
   }
 
+  getImagenActivaActividad(index: number): {
+    id: number;
+    imagen_url: string;
+    activa: boolean;
+    orden: number | null;
+    vigencia_desde: string | null;
+    vigencia_hasta: string | null;
+    created_at: string | null;
+  } | null {
+    const imagenes = this.getImagenesActividad(index);
+    if (!imagenes || !imagenes.length) {
+      return null;
+    }
+    return imagenes.find((img) => img.activa) ?? imagenes[0];
+  }
+
   getImagenesActividadEditando(): Array<{
     id: number;
     imagen_url: string;

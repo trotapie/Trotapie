@@ -179,17 +179,15 @@
                       {{ actividad.get(['traducciones', 'es', 'nombre'])?.value || 'Sin nombre' }}
                     </td>
                     <td class="px-4 py-3">
-                      @if (getImagenesActividad(i).length > 0) {
+                      @if (getImagenActivaActividad(i); as imagen) {
                         <div class="flex flex-wrap items-center gap-2">
-                          @for (imagen of getImagenesActividad(i); track imagen.id) {
-                            <a [href]="imagen.imagen_url" target="_blank" rel="noopener noreferrer" class="block">
-                              <img
-                                [src]="imagen.imagen_url"
-                                alt="Imagen de actividad"
-                                class="h-10 w-14 rounded-md border border-gray-200 object-cover"
-                              />
-                            </a>
-                          }
+                          <a [href]="imagen.imagen_url" target="_blank" rel="noopener noreferrer" class="block">
+                            <img
+                              [src]="imagen.imagen_url"
+                              alt="Imagen de actividad"
+                              class="h-10 w-14 rounded-md border border-gray-200 object-cover"
+                            />
+                          </a>
                         </div>
                       } @else if (actividad.get('imagen_fondo')?.value) {
                         <a [href]="actividad.get('imagen_fondo')?.value" target="_blank" rel="noopener noreferrer" class="block">
