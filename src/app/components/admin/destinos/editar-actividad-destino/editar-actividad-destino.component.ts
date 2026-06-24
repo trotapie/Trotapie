@@ -1187,11 +1187,14 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const urlsExistentes = new Set(
-      (this.imagenesArray.controls as any[])
-        .map((control) => this.limpiarTexto(control.get('imagen_url')?.value))
-        .filter((url): url is string => !!url)
-    );
+    const imagenesExistentes = new Set<string>();
+    (this.imagenesArray.controls as any[]).forEach((control) => {
+      this.construirClavesIdentidadImagen({
+        url: control.get('imagen_url')?.value,
+        nombre: control.get('nombre')?.value,
+        size: control.get('size')?.value
+      }).forEach((clave) => imagenesExistentes.add(clave));
+    });
 
     this.aplicandoCargaDriveActividad = true;
     this.error = '';
@@ -1208,7 +1211,13 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
 
         carpeta.imagenes.forEach((imagen) => {
           const url = this.limpiarTexto(imagen.publicImageUrl);
-          if (!url || urlsExistentes.has(url)) {
+          const clavesImagen = this.construirClavesIdentidadImagen({
+            url,
+            nombre: imagen.nombre,
+            size: imagen.size
+          });
+
+          if (!url || clavesImagen.some((clave) => imagenesExistentes.has(clave))) {
             return;
           }
 
@@ -1233,7 +1242,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
             })
           );
 
-          urlsExistentes.add(url);
+          clavesImagen.forEach((clave) => imagenesExistentes.add(clave));
           insertadas += 1;
         });
       }
@@ -2127,6 +2136,89 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     const nombre = this.obtenerNombreArchivoDesdeUrl(imageUrl);
     const match = nombre?.match(/\.([a-zA-Z0-9]{2,12})$/);
     return match?.[1]?.toLowerCase() ?? null;
+  }
+
+  private construirClavesIdentidadImagen(input: {
+    url?: string | null | undefined;
+    nombre?: string | null | undefined;
+    size?: number | string | null | undefined;
+  }): string[] {
+    const claves = new Set<string>();
+    const urlNormalizada = this.normalizarUrlImagen(input.url);
+    const driveFileId = this.extraerDriveFileId(input.url);
+    const nombreArchivo = this.normalizarNombreArchivoComparacion(
+      input.nombre ?? this.obtenerNombreArchivoDesdeUrl(input.url ?? '')
+    );
+    const size = this.parseNumber(input.size);
+
+    if (urlNormalizada) {
+      claves.add(`url:${urlNormalizada}`);
+    }
+
+    if (driveFileId) {
+      claves.add(`drive:${driveFileId}`);
+    }
+
+    if (nombreArchivo) {
+      claves.add(`file:${nombreArchivo}`);
+    }
+
+    if (nombreArchivo && size !== null) {
+      claves.add(`file-size:${nombreArchivo}:${size}`);
+    }
+
+    return Array.from(claves);
+  }
+
+  private normalizarUrlImagen(value: string | null | undefined): string | null {
+    const limpio = this.limpiarTexto(value);
+    if (!limpio) {
+      return null;
+    }
+
+    try {
+      const url = new URL(limpio);
+      url.hash = '';
+      url.searchParams.sort();
+      return url.toString().replace(/\/$/, '').toLowerCase();
+    } catch {
+      return limpio.toLowerCase().replace(/\/$/, '');
+    }
+  }
+
+  private extraerDriveFileId(value: string | null | undefined): string | null {
+    const limpio = this.limpiarTexto(value);
+    if (!limpio) {
+      return null;
+    }
+
+    const patrones = [
+      /\/d\/([a-zA-Z0-9_-]{10,})/,
+      /[?&]id=([a-zA-Z0-9_-]{10,})/,
+      /\/folders\/([a-zA-Z0-9_-]{10,})/
+    ];
+
+    for (const patron of patrones) {
+      const match = limpio.match(patron);
+      if (match?.[1]) {
+        return match[1];
+      }
+    }
+
+    return null;
+  }
+
+  private normalizarNombreArchivoComparacion(value: string | null | undefined): string | null {
+    const limpio = this.limpiarTexto(value);
+    if (!limpio) {
+      return null;
+    }
+
+    try {
+      return decodeURIComponent(limpio).trim().toLowerCase();
+    } catch {
+      return limpio.trim().toLowerCase();
+    }
   }
 
   private formatearTamanoArchivo(size: number | null): string | null {
