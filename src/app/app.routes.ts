@@ -90,6 +90,11 @@ export const appRoutes: Route[] = [
                 canActivate: [ClearSessionGuard],
                 loadChildren: () => import('app/components/hoteles/hoteles.routes').then(m => m.default)
             },
+            // {
+            //     path: 'circuitos',
+            //     canActivate: [ClearSessionGuard],
+            //     loadChildren: () => import('app/components/circuitos/circuitos.routes').then(m => m.default)
+            // },
             {
                 path: 'cotizacion',
                 canActivate: [ClearSessionGuard],
