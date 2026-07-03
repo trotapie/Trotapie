@@ -1,0 +1,145 @@
+<div class="flex min-w-0 flex-auto flex-col bg-gray-50">
+    <div class="mx-auto flex w-full max-w-screen-2xl flex-col px-6 py-6 sm:px-8">
+        <div class="sticky top-0 z-[100] mb-4 w-full rounded-xl border border-transparent bg-transparent px-2 py-2 shadow-none backdrop-blur-md transition-all duration-300 md:px-4">
+            <div class="w-full md:flex md:items-center md:justify-between">
+                <div class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">
+                    {{ esCreacion ? 'Nuevo circuito' : 'Editar circuito' }}
+                </div>
+
+                <div class="my-2 flex items-center gap-3 md:my-0">
+                    <button mat-raised-button color="warn" type="button" class="text-white" (click)="solicitarRegresar()">
+                        <mat-icon class="icon-size-5 text-white" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
+                        Regresar
+                    </button>
+                    @if (!esCreacion) {
+                    <button mat-raised-button color="accent" type="button" class="text-white"
+                        [routerLink]="['/admin/circuitos/flyer', circuitoId]">
+                        <mat-icon class="icon-size-5 text-white" [svgIcon]="'heroicons_outline:photo'"></mat-icon>
+                        Crear Flyer
+                    </button>
+                    }
+                    <button mat-raised-button color="primary" type="submit" form="form-editar-circuito" class="text-white"
+                        [disabled]="guardando || !tieneCambiosPendientes">
+                        <mat-icon class="mr-2 icon-size-5 text-white">save</mat-icon>
+                        @if (guardando) {
+                        <span class="text-white">{{ esCreacion ? 'Creando...' : 'Guardando...' }}</span>
+                        } @else {
+                        <span class="text-white">{{ esCreacion ? 'Crear circuito' : 'Guardar cambios' }}</span>
+                        }
+                    </button>
+                </div>
+            </div>
+
+            <p class="mt-1 text-sm text-gray-500">
+                {{ esCreacion ? 'Captura la informacion general del circuito.' : 'Actualiza la informacion general del circuito.' }}
+            </p>
+        </div>
+
+        @if (cargando) {
+        <div class="rounded-2xl border border-gray-200 bg-white p-8 text-center">
+            <mat-progress-spinner class="mx-auto" diameter="36" mode="indeterminate"></mat-progress-spinner>
+            <p class="mt-4 text-sm text-gray-500">{{ esCreacion ? 'Preparando formulario...' : 'Cargando informacion del circuito...' }}</p>
+        </div>
+        } @else {
+        <form id="form-editar-circuito" [formGroup]="form" (ngSubmit)="guardar()"
+            class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
+            <div class="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+                <mat-form-field class="w-full">
+                    <mat-label>Nombre del circuito</mat-label>
+                    <input matInput formControlName="nombre" maxlength="200" />
+                    @if (form.get('nombre')?.invalid && form.get('nombre')?.touched) {
+                    <mat-error>El nombre del circuito es requerido.</mat-error>
+                    }
+                </mat-form-field>
+
+                <mat-form-field class="w-full">
+                    <mat-label>Precio total (MXN)</mat-label>
+                    <input matInput type="number" min="0" formControlName="precio_total" />
+                    @if (form.get('precio_total')?.invalid && form.get('precio_total')?.touched) {
+                    <mat-error>Ingresa un precio valido.</mat-error>
+                    }
+                </mat-form-field>
+
+                <mat-form-field class="w-full">
+                    <mat-label>Duracion (dias)</mat-label>
+                    <input matInput type="number" min="1" formControlName="duracion_dias" />
+                    @if (form.get('duracion_dias')?.invalid && form.get('duracion_dias')?.touched) {
+                    <mat-error>Minimo 1 dia.</mat-error>
+                    }
+                </mat-form-field>
+
+                <mat-form-field class="w-full">
+                    <mat-label>Duracion (noches)</mat-label>
+                    <input matInput type="number" min="0" formControlName="duracion_noches" />
+                </mat-form-field>
+
+                <div class="flex items-center gap-3">
+                    <mat-slide-toggle formControlName="activo">Circuito activo</mat-slide-toggle>
+                </div>
+
+                <mat-form-field class="w-full md:col-span-2 lg:col-span-3">
+                    <mat-label>Imagen principal (URL)</mat-label>
+                    <input matInput formControlName="imagen_principal" placeholder="https://dominio.com/imagen.jpg" />
+                </mat-form-field>
+
+                <mat-form-field class="w-full md:col-span-2 lg:col-span-3">
+                    <mat-label>Descripcion</mat-label>
+                    <textarea matInput rows="5" formControlName="descripcion"></textarea>
+                </mat-form-field>
+            </div>
+
+            @if (form.get('imagen_principal')?.value) {
+            <div class="mt-4 overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
+                <img [src]="form.get('imagen_principal')?.value" alt="Vista previa"
+                    class="h-48 w-full object-cover object-center" />
+            </div>
+            }
+
+            @if (error) {
+            <div class="mt-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {{ error }}
+            </div>
+            }
+        </form>
+        }
+    </div>
+</div>
+
+@if (mostrarModalExito) {
+<div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
+    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+        <h3 class="text-xl font-semibold text-gray-900">Operacion completada</h3>
+        <p class="mt-2 text-sm text-gray-600">{{ mensajeModalExito }}</p>
+        <div class="mt-6 flex justify-end">
+            <button mat-flat-button color="primary" class="text-white" (click)="cerrarModalExito()">Aceptar</button>
+        </div>
+    </div>
+</div>
+}
+
+@if (mostrarModalCambiosPendientes) {
+<div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
+    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+        <h3 class="text-xl font-semibold text-gray-900">Cambios pendientes</h3>
+        <p class="mt-2 text-sm text-gray-600">Tienes cambios pendientes. ¿Quieres guardar antes de regresar?</p>
+        <div class="mt-6 flex justify-end gap-2">
+            <button mat-stroked-button type="button" (click)="cerrarModalCambiosPendientes()">Cancelar</button>
+            <button mat-stroked-button type="button" (click)="descartarCambiosYRegresar()">Regresar sin guardar</button>
+            <button mat-flat-button color="primary" class="text-white" type="button"
+                [disabled]="guardando || !tieneCambiosPendientes"
+                (click)="guardarCambiosPendientesYRegresar()">Guardar cambios</button>
+        </div>
+    </div>
+</div>
+}
+
+@if (guardando) {
+<div class="fixed inset-0 z-[3500] flex items-center justify-center bg-black/50 px-4 backdrop-blur-[2px]">
+    <div class="w-full max-w-xs rounded-2xl bg-white p-6 shadow-2xl">
+        <div class="flex flex-col items-center gap-3 text-center">
+            <mat-progress-spinner diameter="44" mode="indeterminate"></mat-progress-spinner>
+            <p class="text-sm font-medium text-gray-700">{{ esCreacion ? 'Creando circuito...' : 'Guardando cambios...' }}</p>
+        </div>
+    </div>
+</div>
+}

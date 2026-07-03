@@ -1,0 +1,46 @@
+<div class="mx-auto flex w-full max-w-screen-xl flex-col px-4 py-8 sm:px-6">
+    <button type="button" (click)="regresar()"
+        class="mb-4 inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
+        <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
+        Volver a circuitos
+    </button>
+
+    @if (cargando) {
+    <div class="flex h-40 items-center justify-center">
+        <mat-progress-spinner diameter="36" mode="indeterminate"></mat-progress-spinner>
+    </div>
+    } @else if (error) {
+    <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-center text-sm text-red-700">
+        {{ error }}
+    </div>
+    } @else if (circuito) {
+    <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+        @if (circuito.imagen_principal) {
+        <div class="aspect-[21/9] overflow-hidden">
+            <img [src]="circuito.imagen_principal" [alt]="circuito.nombre"
+                class="h-full w-full object-cover" />
+        </div>
+        }
+
+        <div class="p-6 sm:p-8">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ circuito.nombre }}</h1>
+
+            <div class="mt-4 flex flex-wrap gap-4">
+                <span class="rounded-full bg-primary-50 px-4 py-1.5 text-sm font-medium text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">
+                    {{ circuito.duracion_dias }} días / {{ circuito.duracion_noches }} noches
+                </span>
+                <span class="text-2xl font-bold text-gray-900 dark:text-white">
+                    {{ circuito.precio_total | currency:'MXN':'symbol-narrow':'1.0-0' }}
+                </span>
+            </div>
+
+            @if (circuito.descripcion) {
+            <div class="mt-6">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Descripcion</h2>
+                <p class="mt-2 whitespace-pre-line text-gray-600 dark:text-gray-400">{{ circuito.descripcion }}</p>
+            </div>
+            }
+        </div>
+    </div>
+    }
+</div>

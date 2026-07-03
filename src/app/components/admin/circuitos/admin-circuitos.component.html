@@ -1,0 +1,102 @@
+<div class="flex min-w-0 flex-auto flex-col">
+    <div class="sticky top-0 z-[100] mx-6 mt-2 rounded-xl border border-transparent bg-transparent px-2 py-2 backdrop-blur-md transition-all duration-300 md:px-4">
+        <div class="w-full md:flex md:items-center md:justify-between">
+            <div class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">
+                Circuitos
+            </div>
+
+            <div class="my-2 flex items-center gap-3 md:my-0">
+                <button mat-raised-button color="primary" class="text-white" (click)="irACreacion()">
+                    <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+                    Crear circuito
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @if (error) {
+    <div class="mx-6 mt-3 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+        {{ error }}
+    </div>
+    }
+
+    <div class="m-3 flex-auto overflow-auto rounded-3xl bg-card" @fadeSlideIn>
+        @if (cargando) {
+        <div class="flex h-40 items-center justify-center">
+            <mat-progress-spinner diameter="36" mode="indeterminate"></mat-progress-spinner>
+        </div>
+        } @else if (!circuitos.length) {
+        <div class="p-8 text-center text-sm text-gray-500">
+            No hay circuitos registrados. Crea el primero.
+        </div>
+        } @else {
+        <table mat-table [dataSource]="circuitos">
+            <ng-container matColumnDef="nombre">
+                <th mat-header-cell *matHeaderCellDef>Nombre</th>
+                <td mat-cell *matCellDef="let item">{{ item.nombre }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="precio_total">
+                <th mat-header-cell *matHeaderCellDef>Precio</th>
+                <td mat-cell *matCellDef="let item">{{ item.precio_total | currency:'MXN':'symbol-narrow':'1.0-0' }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="duracion">
+                <th mat-header-cell *matHeaderCellDef>Duracion</th>
+                <td mat-cell *matCellDef="let item">{{ item.duracion_dias }}d / {{ item.duracion_noches }}n</td>
+            </ng-container>
+
+            <ng-container matColumnDef="activo">
+                <th mat-header-cell *matHeaderCellDef>Activo</th>
+                <td mat-cell *matCellDef="let item">
+                    <mat-slide-toggle [checked]="item.activo" (change)="toggleActivo(item)"></mat-slide-toggle>
+                </td>
+            </ng-container>
+
+            <ng-container matColumnDef="created_at">
+                <th mat-header-cell *matHeaderCellDef>Creado</th>
+                <td mat-cell *matCellDef="let item">{{ item.created_at | date:'dd/MM/yyyy' }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="acciones">
+                <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                <td mat-cell *matCellDef="let item">
+                    <div class="flex items-center justify-center gap-2">
+                        <button mat-icon-button [matTooltip]="'Editar circuito'" (click)="irAEdicion(item)">
+                            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
+                        </button>
+                        <button mat-icon-button [matTooltip]="'Eliminar circuito'" (click)="abrirModalEliminar(item)">
+                            <mat-icon class="icon-size-5 text-red-600">delete</mat-icon>
+                        </button>
+                    </div>
+                </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+        }
+    </div>
+</div>
+
+@if (mostrandoModalEliminar) {
+<div class="fixed inset-0 z-[3000] flex items-center justify-center px-4">
+    <div class="absolute inset-0 bg-black/50"></div>
+    <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+        <h3 class="text-xl font-semibold text-gray-900">Confirmar eliminacion</h3>
+        <p class="mt-2 text-sm text-gray-600">
+            Seguro que quieres eliminar el circuito
+            <span class="font-semibold text-gray-900">{{ circuitoAEliminar?.nombre }}</span>?
+        </p>
+
+        <div class="mt-6 flex justify-end gap-2">
+            <button mat-stroked-button type="button" (click)="cerrarModalEliminar()" [disabled]="eliminando">
+                Cancelar
+            </button>
+            <button mat-flat-button color="warn" type="button" (click)="confirmarEliminar()" [disabled]="eliminando">
+                @if (eliminando) { Eliminando... } @else { Eliminar }
+            </button>
+        </div>
+    </div>
+</div>
+}
