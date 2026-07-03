@@ -1,0 +1,104 @@
+{
+  "nombre": "Premium",
+  "descripcion": "Fondo oscuro con acentos dorados, tipografía serif, layout asimétrico exclusivo.",
+  "orientacion": "landscape",
+  "ancho": 1920,
+  "alto": 1080,
+  "thumbnail": "",
+  "categoria": "premium",
+  "config": {
+    "background": { "type": "color", "value": "#111827" },
+    "elements": [
+      {
+        "id": "gold_accent_top",
+        "type": "rectangle",
+        "fabricConfig": { "left": 0, "top": 0, "width": 1920, "height": 6, "fill": "#d4af37", "rx": 0, "ry": 0, "selectable": false, "evented": false }
+      },
+      {
+        "id": "gold_accent_bottom",
+        "type": "rectangle",
+        "fabricConfig": { "left": 0, "top": 1074, "width": 1920, "height": 6, "fill": "#d4af37", "rx": 0, "ry": 0, "selectable": false, "evented": false }
+      },
+      {
+        "id": "side_accent",
+        "type": "rectangle",
+        "fabricConfig": { "left": 920, "top": 0, "width": 1, "height": 1080, "fill": "#d4af37", "rx": 0, "ry": 0, "opacity": 0.3, "selectable": false, "evented": false }
+      },
+      {
+        "id": "logo_area",
+        "type": "rectangle",
+        "fabricConfig": { "left": 60, "top": 60, "width": 120, "height": 120, "fill": "#d4af37", "rx": 60, "ry": 60, "opacity": 0.2, "selectable": false }
+      },
+      {
+        "id": "logo_text",
+        "type": "text",
+        "fabricConfig": { "left": 75, "top": 100, "width": 90, "fontSize": 14, "fontFamily": "Georgia", "fill": "#d4af37", "fontWeight": "bold", "text": "TROTAPIE", "textAlign": "center", "charSpacing": 80 }
+      },
+      {
+        "id": "title_label",
+        "type": "text",
+        "fabricConfig": { "left": 60, "top": 240, "width": 700, "fontSize": 20, "fontFamily": "Arial", "fill": "#d4af37", "charSpacing": 200, "text": "CIRCUITO EXCLUSIVO", "textAlign": "left" }
+      },
+      {
+        "id": "title",
+        "type": "text",
+        "fabricConfig": { "left": 60, "top": 300, "width": 800, "fontSize": 72, "fontFamily": "Georgia", "fill": "#ffffff", "fontWeight": "bold", "text": "Nombre del\nCircuito", "textAlign": "left", "lineHeight": 1.1 }
+      },
+      {
+        "id": "divider_gold",
+        "type": "rectangle",
+        "fabricConfig": { "left": 60, "top": 480, "width": 80, "height": 3, "fill": "#d4af37", "rx": 2, "ry": 2, "selectable": false, "evented": false }
+      },
+      {
+        "id": "description",
+        "type": "text",
+        "fabricConfig": { "left": 60, "top": 520, "width": 700, "fontSize": 20, "fontFamily": "Georgia", "fill": "#9ca3af", "text": "Una experiencia curada para viajeros exigentes que buscan lo mejor de cada destino.", "textAlign": "left", "lineHeight": 1.6 }
+      },
+      {
+        "id": "price_value",
+        "type": "text",
+        "fabricConfig": { "left": 60, "top": 640, "width": 500, "fontSize": 48, "fontFamily": "Georgia", "fill": "#d4af37", "fontWeight": "bold", "text": "$22,500 MXN", "textAlign": "left" }
+      },
+      {
+        "id": "price_sub",
+        "type": "text",
+        "fabricConfig": { "left": 60, "top": 700, "width": 500, "fontSize": 16, "fontFamily": "Arial", "fill": "#6b7280", "text": "Por persona · 6 días / 5 noches", "textAlign": "left" }
+      },
+      {
+        "id": "destinations_box",
+        "type": "rectangle",
+        "fabricConfig": { "left": 1000, "top": 240, "width": 820, "height": 600, "fill": "#1f2937", "rx": 16, "ry": 16, "selectable": false }
+      },
+      {
+        "id": "destinations_title",
+        "type": "text",
+        "fabricConfig": { "left": 1060, "top": 280, "width": 700, "fontSize": 24, "fontFamily": "Georgia", "fill": "#d4af37", "fontWeight": "bold", "text": "Destinos", "textAlign": "left" }
+      },
+      {
+        "id": "destinations_list",
+        "type": "text",
+        "fabricConfig": { "left": 1060, "top": 340, "width": 700, "fontSize": 22, "fontFamily": "Arial", "fill": "#e5e7eb", "text": "1. Ciudad de México\n2. Querétaro\n3. San Miguel de Allende\n4. Guanajuato\n5. Zacatecas", "textAlign": "left", "lineHeight": 1.8 }
+      },
+      {
+        "id": "includes_title",
+        "type": "text",
+        "fabricConfig": { "left": 1060, "top": 620, "width": 700, "fontSize": 20, "fontFamily": "Georgia", "fill": "#d4af37", "text": "Incluye", "textAlign": "left" }
+      },
+      {
+        "id": "includes_list",
+        "type": "text",
+        "fabricConfig": { "left": 1060, "top": 660, "width": 700, "fontSize": 16, "fontFamily": "Arial", "fill": "#9ca3af", "text": "✓ Hoteles 5 estrellas  ✓ Transporte privado  ✓ Guía  ✓ Comidas", "textAlign": "left", "lineHeight": 1.8 }
+      },
+      {
+        "id": "footer_text",
+        "type": "text",
+        "fabricConfig": { "left": 60, "top": 1020, "width": 700, "fontSize": 14, "fontFamily": "Georgia", "fill": "#6b7280", "text": "trotapie.com  |  contacto@trotapie.com", "textAlign": "left" }
+      },
+      {
+        "id": "qr_box",
+        "type": "rectangle",
+        "fabricConfig": { "left": 1750, "top": 920, "width": 100, "height": 100, "fill": "#ffffff", "rx": 8, "ry": 8, "opacity": 0.9 }
+      }
+    ]
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "nombre": "Elegante",
+  "descripcion": "Fondo blanco, tipografía serif, detalles dorados. Ideal para circuitos premium.",
+  "orientacion": "portrait",
+  "ancho": 1080,
+  "alto": 1920,
+  "thumbnail": "",
+  "categoria": "premium",
+  "config": {
+    "background": { "type": "color", "value": "#ffffff" },
+    "elements": [
+      {
+        "id": "bg_accent",
+        "type": "rectangle",
+        "fabricConfig": { "left": 0, "top": 0, "width": 1080, "height": 200, "fill": "#1a1a2e", "rx": 0, "ry": 0, "selectable": false, "evented": false }
+      },
+      {
+        "id": "bg_footer",
+        "type": "rectangle",
+        "fabricConfig": { "left": 0, "top": 1720, "width": 1080, "height": 200, "fill": "#1a1a2e", "rx": 0, "ry": 0, "selectable": false, "evented": false }
+      },
+      {
+        "id": "accent_line_top",
+        "type": "rectangle",
+        "fabricConfig": { "left": 80, "top": 180, "width": 200, "height": 4, "fill": "#d4af37", "rx": 2, "ry": 2, "selectable": false, "evented": false }
+      },
+      {
+        "id": "accent_line_bottom",
+        "type": "rectangle",
+        "fabricConfig": { "left": 800, "top": 1740, "width": 200, "height": 4, "fill": "#d4af37", "rx": 2, "ry": 2, "selectable": false, "evented": false }
+      },
+      {
+        "id": "title",
+        "type": "text",
+        "fabricConfig": { "left": 80, "top": 280, "width": 920, "fontSize": 72, "fontFamily": "Georgia", "fill": "#1a1a2e", "fontWeight": "bold", "text": "Nombre del Circuito", "textAlign": "left" }
+      },
+      {
+        "id": "subtitle",
+        "type": "text",
+        "fabricConfig": { "left": 80, "top": 380, "width": 920, "fontSize": 28, "fontFamily": "Georgia", "fill": "#6b7280", "text": "Descubre una experiencia inolvidable", "textAlign": "left" }
+      },
+      {
+        "id": "price_bg",
+        "type": "rectangle",
+        "fabricConfig": { "left": 80, "top": 500, "width": 400, "height": 80, "fill": "#d4af37", "rx": 8, "ry": 8, "opacity": 0.15, "selectable": false }
+      },
+      {
+        "id": "price_label",
+        "type": "text",
+        "fabricConfig": { "left": 100, "top": 510, "width": 360, "fontSize": 18, "fontFamily": "Arial", "fill": "#6b7280", "text": "DESDE", "textAlign": "left", "charSpacing": 200 }
+      },
+      {
+        "id": "price_value",
+        "type": "text",
+        "fabricConfig": { "left": 100, "top": 535, "width": 360, "fontSize": 36, "fontFamily": "Georgia", "fill": "#1a1a2e", "fontWeight": "bold", "text": "$12,500 MXN", "textAlign": "left" }
+      },
+      {
+        "id": "divider",
+        "type": "line",
+        "fabricConfig": { "x1": 80, "y1": 660, "x2": 1000, "y2": 660, "stroke": "#e5e7eb", "strokeWidth": 1 }
+      },
+      {
+        "id": "destinations_title",
+        "type": "text",
+        "fabricConfig": { "left": 80, "top": 700, "width": 920, "fontSize": 24, "fontFamily": "Georgia", "fill": "#1a1a2e", "fontWeight": "bold", "text": "Itinerario", "textAlign": "left" }
+      },
+      {
+        "id": "destinations_list",
+        "type": "text",
+        "fabricConfig": { "left": 80, "top": 750, "width": 920, "fontSize": 20, "fontFamily": "Arial", "fill": "#4b5563", "text": "CDMX • Querétaro • San Miguel de Allende", "textAlign": "left", "lineHeight": 1.8 }
+      },
+      {
+        "id": "duration",
+        "type": "text",
+        "fabricConfig": { "left": 80, "top": 850, "width": 920, "fontSize": 18, "fontFamily": "Arial", "fill": "#9ca3af", "text": "4 días / 3 noches", "textAlign": "left" }
+      },
+      {
+        "id": "footer_text",
+        "type": "text",
+        "fabricConfig": { "left": 80, "top": 1760, "width": 920, "fontSize": 16, "fontFamily": "Georgia", "fill": "#ffffff", "text": "Trotapie — Tu agencia de viajes", "textAlign": "center" }
+      }
+    ]
+  }
+}

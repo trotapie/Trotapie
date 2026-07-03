@@ -1,0 +1,13 @@
+{
+  "nombre": "Familiar Colorido",
+  "descripcion": "Composicion horizontal amable y clara para productos familiares.",
+  "orientacion": "landscape",
+  "ancho": 1920,
+  "alto": 1080,
+  "thumbnail": "",
+  "categoria": "familiar",
+  "config": {
+    "background": { "type": "color", "value": "#1d4ed8" },
+    "elements": []
+  }
+}

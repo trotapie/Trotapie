@@ -1,0 +1,79 @@
+{
+  "nombre": "Moderno",
+  "descripcion": "Fondo con imagen, tipografía sans-serif moderna, ideal para redes sociales.",
+  "orientacion": "landscape",
+  "ancho": 1920,
+  "alto": 1080,
+  "thumbnail": "",
+  "categoria": "general",
+  "config": {
+    "background": { "type": "color", "value": "#0f172a" },
+    "elements": [
+      {
+        "id": "overlay",
+        "type": "rectangle",
+        "fabricConfig": { "left": 0, "top": 0, "width": 1920, "height": 1080, "fill": "#0f172a", "rx": 0, "ry": 0, "opacity": 0.6, "selectable": false, "evented": false }
+      },
+      {
+        "id": "accent_bar_left",
+        "type": "rectangle",
+        "fabricConfig": { "left": 0, "top": 0, "width": 12, "height": 1080, "fill": "#3b82f6", "rx": 0, "ry": 0, "selectable": false, "evented": false }
+      },
+      {
+        "id": "accent_bar_bottom",
+        "type": "rectangle",
+        "fabricConfig": { "left": 0, "top": 1000, "width": 1920, "height": 80, "fill": "#3b82f6", "rx": 0, "ry": 0, "opacity": 0.3, "selectable": false, "evented": false }
+      },
+      {
+        "id": "title",
+        "type": "text",
+        "fabricConfig": { "left": 80, "top": 120, "width": 1100, "fontSize": 72, "fontFamily": "Arial", "fill": "#ffffff", "fontWeight": "bold", "text": "Circuito", "textAlign": "left" }
+      },
+      {
+        "id": "subtitle",
+        "type": "text",
+        "fabricConfig": { "left": 80, "top": 210, "width": 1100, "fontSize": 48, "fontFamily": "Arial", "fill": "#60a5fa", "fontWeight": "bold", "text": "Nombre del Circuito", "textAlign": "left" }
+      },
+      {
+        "id": "description",
+        "type": "text",
+        "fabricConfig": { "left": 80, "top": 300, "width": 1000, "fontSize": 22, "fontFamily": "Arial", "fill": "#cbd5e1", "text": "Un viaje único por los destinos más increíbles", "textAlign": "left" }
+      },
+      {
+        "id": "price_badge",
+        "type": "rectangle",
+        "fabricConfig": { "left": 80, "top": 400, "width": 300, "height": 100, "fill": "#3b82f6", "rx": 12, "ry": 12, "selectable": false }
+      },
+      {
+        "id": "price_value",
+        "type": "text",
+        "fabricConfig": { "left": 100, "top": 425, "width": 260, "fontSize": 36, "fontFamily": "Arial", "fill": "#ffffff", "fontWeight": "bold", "text": "$15,800 MXN", "textAlign": "center" }
+      },
+      {
+        "id": "duration",
+        "type": "text",
+        "fabricConfig": { "left": 420, "top": 425, "width": 300, "fontSize": 28, "fontFamily": "Arial", "fill": "#94a3b8", "text": "5 días / 4 noches", "textAlign": "left" }
+      },
+      {
+        "id": "destinations_list",
+        "type": "text",
+        "fabricConfig": { "left": 80, "top": 560, "width": 1000, "fontSize": 20, "fontFamily": "Arial", "fill": "#e2e8f0", "text": "📍 CDMX → 📍 Querétaro → 📍 San Miguel → 📍 Guanajuato", "textAlign": "left", "lineHeight": 2 }
+      },
+      {
+        "id": "qr_placeholder",
+        "type": "rectangle",
+        "fabricConfig": { "left": 1700, "top": 860, "width": 140, "height": 140, "fill": "#ffffff", "rx": 8, "ry": 8, "opacity": 0.9, "selectable": false }
+      },
+      {
+        "id": "qr_label",
+        "type": "text",
+        "fabricConfig": { "left": 1700, "top": 820, "width": 140, "fontSize": 12, "fontFamily": "Arial", "fill": "#94a3b8", "text": "Escanea", "textAlign": "center" }
+      },
+      {
+        "id": "footer_text",
+        "type": "text",
+        "fabricConfig": { "left": 80, "top": 1010, "width": 500, "fontSize": 16, "fontFamily": "Arial", "fill": "#ffffff", "text": "trotapie.com", "textAlign": "left" }
+      }
+    ]
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "nombre": "Romantico Clean",
+  "descripcion": "Plantilla vertical ligera para experiencias en pareja y escapadas boutique.",
+  "orientacion": "portrait",
+  "ancho": 1080,
+  "alto": 1920,
+  "thumbnail": "",
+  "categoria": "romantico",
+  "config": {
+    "background": { "type": "color", "value": "#7f1d1d" },
+    "elements": []
+  }
+}

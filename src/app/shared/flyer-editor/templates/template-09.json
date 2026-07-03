@@ -1,0 +1,13 @@
+{
+  "nombre": "Promo Flash",
+  "descripcion": "Formato vertical orientado a campana, urgencia y precio visible.",
+  "orientacion": "portrait",
+  "ancho": 1080,
+  "alto": 1920,
+  "thumbnail": "",
+  "categoria": "promo",
+  "config": {
+    "background": { "type": "color", "value": "#7c2d12" },
+    "elements": []
+  }
+}

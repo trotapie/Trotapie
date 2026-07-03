@@ -1,0 +1,89 @@
+{
+  "nombre": "Aventura",
+  "descripcion": "Estilo vibrante con naturaleza, tipografía bold, ideal para circuitos de aventura.",
+  "orientacion": "portrait",
+  "ancho": 1080,
+  "alto": 1920,
+  "thumbnail": "",
+  "categoria": "aventura",
+  "config": {
+    "background": { "type": "color", "value": "#064e3b" },
+    "elements": [
+      {
+        "id": "header_bar",
+        "type": "rectangle",
+        "fabricConfig": { "left": 0, "top": 0, "width": 1080, "height": 400, "fill": "#047857", "rx": 0, "ry": 0, "selectable": false, "evented": false }
+      },
+      {
+        "id": "header_accent",
+        "type": "rectangle",
+        "fabricConfig": { "left": 0, "top": 380, "width": 1080, "height": 20, "fill": "#34d399", "rx": 0, "ry": 0, "selectable": false, "evented": false }
+      },
+      {
+        "id": "badge_aventura",
+        "type": "rectangle",
+        "fabricConfig": { "left": 80, "top": 80, "width": 180, "height": 40, "fill": "#34d399", "rx": 20, "ry": 20, "selectable": false }
+      },
+      {
+        "id": "badge_text",
+        "type": "text",
+        "fabricConfig": { "left": 110, "top": 88, "width": 120, "fontSize": 16, "fontFamily": "Arial", "fill": "#064e3b", "fontWeight": "bold", "text": "AVENTURA", "textAlign": "center", "charSpacing": 100 }
+      },
+      {
+        "id": "title",
+        "type": "text",
+        "fabricConfig": { "left": 80, "top": 160, "width": 920, "fontSize": 56, "fontFamily": "Impact", "fill": "#ffffff", "text": "NOMBRE DEL CIRCUITO", "textAlign": "left" }
+      },
+      {
+        "id": "subtitle",
+        "type": "text",
+        "fabricConfig": { "left": 80, "top": 240, "width": 920, "fontSize": 24, "fontFamily": "Arial", "fill": "#a7f3d0", "text": "Vive la experiencia al máximo", "textAlign": "left" }
+      },
+      {
+        "id": "image_placeholder",
+        "type": "rectangle",
+        "fabricConfig": { "left": 80, "top": 460, "width": 920, "height": 460, "fill": "#065f46", "rx": 16, "ry": 16, "stroke": "#34d399", "strokeWidth": 2, "strokeDashArray": [8, 4] }
+      },
+      {
+        "id": "image_icon",
+        "type": "text",
+        "fabricConfig": { "left": 440, "top": 640, "width": 200, "fontSize": 20, "fontFamily": "Arial", "fill": "#6ee7b7", "text": "🖼️ Imagen principal", "textAlign": "center" }
+      },
+      {
+        "id": "price_label",
+        "type": "text",
+        "fabricConfig": { "left": 80, "top": 970, "width": 920, "fontSize": 18, "fontFamily": "Arial", "fill": "#6ee7b7", "text": "PRECIO POR PERSONA", "textAlign": "left", "charSpacing": 100 }
+      },
+      {
+        "id": "price_value",
+        "type": "text",
+        "fabricConfig": { "left": 80, "top": 1010, "width": 500, "fontSize": 52, "fontFamily": "Impact", "fill": "#ffffff", "text": "$8,900 MXN", "textAlign": "left" }
+      },
+      {
+        "id": "duration_badge",
+        "type": "rectangle",
+        "fabricConfig": { "left": 620, "top": 1010, "width": 200, "height": 60, "fill": "#34d399", "rx": 8, "ry": 8, "selectable": false }
+      },
+      {
+        "id": "duration_text",
+        "type": "text",
+        "fabricConfig": { "left": 635, "top": 1025, "width": 170, "fontSize": 20, "fontFamily": "Arial", "fill": "#064e3b", "fontWeight": "bold", "text": "3 días / 2 noches", "textAlign": "center" }
+      },
+      {
+        "id": "activities_title",
+        "type": "text",
+        "fabricConfig": { "left": 80, "top": 1120, "width": 920, "fontSize": 24, "fontFamily": "Arial", "fill": "#ffffff", "fontWeight": "bold", "text": "Actividades incluidas", "textAlign": "left" }
+      },
+      {
+        "id": "activities_list",
+        "type": "text",
+        "fabricConfig": { "left": 80, "top": 1170, "width": 920, "fontSize": 18, "fontFamily": "Arial", "fill": "#a7f3d0", "text": "🏔️ Senderismo  |  🚴 Ciclismo  |  🧗 Escalada", "textAlign": "left", "lineHeight": 2 }
+      },
+      {
+        "id": "footer_text",
+        "type": "text",
+        "fabricConfig": { "left": 80, "top": 1850, "width": 920, "fontSize": 14, "fontFamily": "Arial", "fill": "#6ee7b7", "text": "Trotapie — Tu agencia de viajes · trotapie.com", "textAlign": "center" }
+      }
+    ]
+  }
+}

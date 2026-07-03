@@ -1,0 +1,13 @@
+{
+  "nombre": "Urbano Moderno",
+  "descripcion": "Diseno horizontal con energia urbana y acento contemporaneo.",
+  "orientacion": "landscape",
+  "ancho": 1920,
+  "alto": 1080,
+  "thumbnail": "",
+  "categoria": "urbano",
+  "config": {
+    "background": { "type": "color", "value": "#1f2937" },
+    "elements": []
+  }
+}

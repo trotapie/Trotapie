@@ -1,0 +1,13 @@
+{
+  "nombre": "Playa Tropical",
+  "descripcion": "Vertical fresca para promocionar circuitos de playa y descanso.",
+  "orientacion": "portrait",
+  "ancho": 1080,
+  "alto": 1920,
+  "thumbnail": "",
+  "categoria": "playa",
+  "config": {
+    "background": { "type": "color", "value": "#0c4a6e" },
+    "elements": []
+  }
+}
