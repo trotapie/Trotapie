@@ -6,6 +6,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FuseSplashScreenService } from '@fuse/services/splash-screen';
 import { AuthService } from 'app/core/auth/auth.service';
 import { SupabaseService } from 'app/core/supabase.service';
+import { CotizacionesService } from 'app/core/cotizaciones.service';
 import { ISolicitudCotizacionListado } from 'app/interface/solicitudes-cotizacion.interface';
 import { EstatusComponent } from 'app/shared/estatus/estatus.component';
 import { MaterialModule } from 'app/shared/material.module';
@@ -29,7 +30,8 @@ type ColumnFilterKey =
 export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
   private splashScreen = inject(FuseSplashScreenService);
   private authService = inject(AuthService);
-  private supabase = inject(SupabaseService);
+  private supabaseClient = inject(SupabaseService);
+  private cotizacionesService = inject(CotizacionesService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   readonly fechaMaximaFiltro = new Date();
@@ -84,7 +86,7 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
     this.splashScreen.show();
 
     try {
-      const data = await this.supabase.obtenerSolicitudesCotizacion();
+      const data = await this.cotizacionesService.obtenerSolicitudesCotizacion();
       this.dataSource.data = await this.filtrarSolicitudesPorUsuario(data ?? []);
       this.estatusOptions = this.obtenerOpcionesEstatus(this.dataSource.data);
 
@@ -102,12 +104,12 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
       return solicitudes;
     }
 
-    const { data, error } = await this.supabase.getClient().auth.getUser();
+    const { data, error } = await this.supabaseClient.getClient().auth.getUser();
     if (error || !data?.user?.id) {
       return [];
     }
 
-    const { data: empleado, error: empleadoError } = await this.supabase
+    const { data: empleado, error: empleadoError } = await this.supabaseClient
       .getClient()
       .from('empleados')
       .select('id')

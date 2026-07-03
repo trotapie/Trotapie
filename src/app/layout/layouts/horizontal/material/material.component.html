@@ -26,6 +26,16 @@
                         class="h-auto w-32 sm:w-40 md:w-48 lg:w-56 p-1 cursor-pointer" />
                     <languages></languages>
                 </div>
+                <!-- <button
+                    mat-icon-button
+                    type="button"
+                    class="ml-auto mr-2 rounded-full border border-black/10 bg-white/70 text-gray-700 transition hover:bg-white dark:border-white/10 dark:bg-gray-900/70 dark:text-gray-100"
+                    [attr.aria-label]="themeToggleLabel"
+                    [matTooltip]="themeToggleLabel"
+                    (click)="toggleScheme()"
+                >
+                    <mat-icon [svgIcon]="isDarkScheme ? 'heroicons_outline:sun' : 'heroicons_outline:moon'"></mat-icon>
+                </button> -->
                 <ng-container *transloco="let t">
                     <button mat-stroked-button class=" ml-auto flex items-center justify-end gap-2"
                         (click)="regresarInicio()">

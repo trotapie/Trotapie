@@ -4,20 +4,22 @@ import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { Router } from '@angular/router';
 import { FuseSplashScreenService } from '@fuse/services/splash-screen';
-import { SupabaseService } from 'app/core/supabase.service';
+import { CotizacionesService } from 'app/core/cotizaciones.service';
 import { ISolicitudCotizacionListado } from 'app/interface/solicitudes-cotizacion.interface';
 import { MaterialModule } from 'app/shared/material.module';
+import { fadeSlideIn } from 'app/shared/animations';
 
 @Component({
   selector: 'app-cotizaciones-multiples',
   standalone: true,
   imports: [MaterialModule],
   templateUrl: './cotizaciones-multiples.component.html',
-  styleUrl: './cotizaciones-multiples.component.scss'
+  styleUrl: './cotizaciones-multiples.component.scss',
+  animations: [fadeSlideIn]
 })
 export class CotizacionesMultiplesComponent implements OnInit, AfterViewInit {
   private splashScreen = inject(FuseSplashScreenService);
-  private supabase = inject(SupabaseService);
+  private supabase = inject(CotizacionesService);
   private router = inject(Router);
 
   displayedColumns: string[] = [

@@ -1,7 +1,7 @@
 
 
 <!DOCTYPE html>
-<html class="light" lang="es">
+<html lang="es">
 
 <head>
     <meta charset="utf-8" />
@@ -65,7 +65,7 @@
     </style>
 </head>
 
-<body class="min-h-screen bg-[#1e2124] flex flex-col md:flex-row overflow-x-hidden overflow-y-auto">
+<body class="min-h-screen bg-[#1e2124] dark:bg-[#111827] flex flex-col md:flex-row overflow-x-hidden overflow-y-auto text-slate-900 dark:text-slate-100">
   <aside
     class="hidden md:flex md:w-5/12 lg:w-1/2 relative bg-[#1e2124] items-center justify-center p-10 lg:p-12 overflow-hidden border-r border-white/5">
     <div class="absolute inset-0 abstract-security-graphic"></div>
@@ -129,25 +129,25 @@
   </aside>
 
   <main
-    class="w-full md:w-7/12 lg:w-1/2 bg-white flex flex-col justify-start md:justify-center items-center px-6 py-10 sm:px-10 md:p-16 lg:p-24 relative">
+    class="w-full md:w-7/12 lg:w-1/2 bg-white dark:bg-slate-950 flex flex-col justify-start md:justify-center items-center px-6 py-10 sm:px-10 md:p-16 lg:p-24 relative">
     
     <!-- Header móvil -->
     <div class="md:hidden w-full max-w-sm mb-10">
       <div class="flex items-center gap-2">
-        <span class="text-[#1e2124] font-bold text-2xl tracking-tighter">trotapie</span>
+          <span class="text-[#1e2124] dark:text-white font-bold text-2xl tracking-tighter">trotapie</span>
       </div>
       <div class="flex items-center gap-1.5 mt-1">
         <div class="w-1 h-1 rounded-full bg-accent"></div>
-        <span class="text-[#1e2124] text-[10px] font-bold uppercase tracking-widest">Admin</span>
+         <span class="text-[#1e2124] dark:text-slate-300 text-[10px] font-bold uppercase tracking-widest">Admin</span>
       </div>
     </div>
 
     <div class="w-full max-w-sm">
       <header class="mb-10 md:mb-12">
-        <h1 class="text-3xl sm:text-4xl font-extrabold text-[#1e2124] mb-3 sm:mb-4 tracking-tight">
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-[#1e2124] dark:text-white mb-3 sm:mb-4 tracking-tight">
           Bienvenido
         </h1>
-        <p class="text-gray-500 text-base sm:text-lg">Inicie sesión para continuar</p>
+        <p class="text-gray-500 dark:text-slate-400 text-base sm:text-lg">Inicie sesión para continuar</p>
       </header>
 
       <form class="mt-8" [formGroup]="signInForm" #signInNgForm="ngForm">
@@ -206,7 +206,7 @@
 
       <!-- Footer móvil “normal” -->
       <footer class="mt-10 text-center md:hidden">
-        <p class="text-[9px] text-gray-300 uppercase tracking-[0.3em] font-medium">
+        <p class="text-[9px] text-gray-300 dark:text-slate-500 uppercase tracking-[0.3em] font-medium">
           © {{ currentYear }} Trotapie
         </p>
       </footer>
@@ -214,7 +214,7 @@
 
     <!-- Footer desktop fijo -->
     <footer class="hidden md:block absolute bottom-10 left-0 right-0 text-center">
-      <p class="text-[9px] text-gray-300 uppercase tracking-[0.3em] font-medium">
+      <p class="text-[9px] text-gray-300 dark:text-slate-500 uppercase tracking-[0.3em] font-medium">
         © {{ currentYear }} Trotapie
       </p>
     </footer>

@@ -1,8 +1,9 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { SupabaseService } from 'app/core/supabase.service';
+import { EmpleadosService } from 'app/core/empleados.service';
 import { MaterialModule } from 'app/shared/material.module';
+import { backdropFade, modalScaleFade, listAnimation } from 'app/shared/animations';
 
 interface PermisoAdminItem {
   id: number;
@@ -12,13 +13,15 @@ interface PermisoAdminItem {
 
 @Component({
   selector: 'app-permisos-admin',
+  standalone: true,
   imports: [MaterialModule, RouterLink, ReactiveFormsModule],
   templateUrl: './permisos.component.html',
   styleUrl: './permisos.component.scss',
+  animations: [listAnimation, modalScaleFade, backdropFade],
 })
 export class PermisosAdminComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
-  private readonly supabase = inject(SupabaseService);
+  private readonly supabase = inject(EmpleadosService);
 
   permisos: PermisoAdminItem[] = [];
   permisosFiltrados: PermisoAdminItem[] = [];

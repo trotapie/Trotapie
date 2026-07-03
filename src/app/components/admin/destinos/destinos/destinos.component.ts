@@ -2,7 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { MaterialModule } from 'app/shared/material.module';
 import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
-import { SupabaseService } from 'app/core/supabase.service';
+import { DestinosService } from 'app/core/destinos.service';
 
 @Component({
   selector: 'app-destinos',
@@ -16,10 +16,10 @@ import { SupabaseService } from 'app/core/supabase.service';
   styleUrl: './destinos.component.scss'
 })
 export class DestinosComponent implements OnInit {
-  private supabase = inject(SupabaseService);
+  private supabase = inject(DestinosService);
   private router = inject(Router);
 
-  displayedColumns = ['orden', 'destino', 'tipoDestino', 'acciones'];
+  displayedColumns = ['orden', 'destino', 'tipoDestino', 'activo', 'acciones'];
 
   tipoVisible: 'NACIONAL' | 'INTERNACIONAL' = 'NACIONAL';
   destinosNacionales: any[] = [];
@@ -27,6 +27,7 @@ export class DestinosComponent implements OnInit {
   continentes: Array<{ id: number; nombre: string }> = [];
   filtroContinenteId: number | null = null;
   filtroPais: string | null = null;
+  filtroBusqueda = '';
   ordenOriginalNacionalesIds: number[] = [];
   ordenOriginalInternacionalesIds: number[] = [];
   hayCambiosOrden = false;
@@ -67,6 +68,20 @@ export class DestinosComponent implements OnInit {
     });
   }
 
+  get dataSourceFiltrada(): any[] {
+    const lista = this.dataSourceVisible;
+    if (!this.filtroBusqueda.trim()) {
+      return lista;
+    }
+
+    const termino = this.filtroBusqueda.trim().toLowerCase();
+    return lista.filter((item) => {
+      const nombre = String(item.destino ?? item.nombre ?? '').toLowerCase();
+      const destinoPadre = String(item.destino_padre ?? '').toLowerCase();
+      return nombre.includes(termino) || destinoPadre.includes(termino);
+    });
+  }
+
   get paisesDisponibles(): string[] {
     const filtrados = this.destinosInternacionales.filter((item) =>
       this.filtroContinenteId ? item.continente_id === this.filtroContinenteId : true
@@ -92,6 +107,10 @@ export class DestinosComponent implements OnInit {
 
   seleccionarPais(pais: string | null) {
     this.filtroPais = pais;
+  }
+
+  get draggableEnabled(): boolean {
+    return !this.filtroBusqueda.trim();
   }
 
   drop(event: CdkDragDrop<any[]>) {

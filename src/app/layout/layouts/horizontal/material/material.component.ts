@@ -1,6 +1,7 @@
 import { Component, inject, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
 import { FuseFullscreenComponent } from '@fuse/components/fullscreen';
 import { FuseLoadingBarComponent } from '@fuse/components/loading-bar';
@@ -9,6 +10,7 @@ import {
     FuseNavigationService,
     FuseVerticalNavigationComponent,
 } from '@fuse/components/navigation';
+import { FuseConfig, FuseConfigService, Scheme } from '@fuse/services/config';
 import { FuseMediaWatcherService } from '@fuse/services/media-watcher';
 import { NavigationService } from 'app/core/navigation/navigation.service';
 import { Navigation } from 'app/core/navigation/navigation.types';
@@ -25,6 +27,7 @@ import { TranslocoModule } from '@jsverse/transloco';
         FuseVerticalNavigationComponent,
         MatButtonModule,
         MatIconModule,
+        MatTooltipModule,
         LanguagesComponent,
         // FuseFullscreenComponent,
         //FuseHorizontalNavigationComponent,
@@ -34,9 +37,12 @@ import { TranslocoModule } from '@jsverse/transloco';
 })
 export class MaterialLayoutComponent implements OnInit, OnDestroy {
     private router = inject(Router);
+    private _fuseConfigService = inject(FuseConfigService);
 
     isScreenSmall: boolean;
     navigation: Navigation;
+    scheme: Scheme = 'light';
+    resolvedScheme: 'dark' | 'light' = 'light';
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
     /**
@@ -60,6 +66,14 @@ export class MaterialLayoutComponent implements OnInit, OnDestroy {
         return new Date().getFullYear();
     }
 
+    get isDarkScheme(): boolean {
+        return this.resolvedScheme === 'dark';
+    }
+
+    get themeToggleLabel(): string {
+        return this.isDarkScheme ? 'Activar modo claro' : 'Activar modo oscuro';
+    }
+
     // -----------------------------------------------------------------------------------------------------
     // @ Lifecycle hooks
     // -----------------------------------------------------------------------------------------------------
@@ -73,6 +87,13 @@ export class MaterialLayoutComponent implements OnInit, OnDestroy {
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((navigation: Navigation) => {
                 this.navigation = navigation;
+            });
+
+        this._fuseConfigService.config$
+            .pipe(takeUntil(this._unsubscribeAll))
+            .subscribe((config: FuseConfig) => {
+                this.scheme = config.scheme;
+                this.resolvedScheme = this._resolveScheme(config.scheme);
             });
 
         // Subscribe to media changes
@@ -125,6 +146,22 @@ export class MaterialLayoutComponent implements OnInit, OnDestroy {
         } else {
             this.router.navigate(['/inicio']);
         }
+    }
+
+    toggleScheme(): void {
+        const nextScheme: Scheme = this.resolvedScheme === 'dark' ? 'light' : 'dark';
+
+        this._fuseConfigService.config = { scheme: nextScheme };
+    }
+
+    private _resolveScheme(scheme: Scheme): 'dark' | 'light' {
+        if (scheme !== 'auto') {
+            return scheme;
+        }
+
+        return window.matchMedia('(prefers-color-scheme: dark)').matches
+            ? 'dark'
+            : 'light';
     }
 
 }

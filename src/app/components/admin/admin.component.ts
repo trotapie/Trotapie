@@ -1,11 +1,16 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { ApexOptions } from 'apexcharts';
 import { Router } from '@angular/router';
+import { FuseConfigService, Scheme } from '@fuse/services/config';
 import { AuthService } from 'app/core/auth/auth.service';
 import { CatalogosAdminService } from 'app/core/catalogos-admin.service';
 import { SupabaseService } from 'app/core/supabase.service';
+import { CotizacionesService } from 'app/core/cotizaciones.service';
+import { DestinosService } from 'app/core/destinos.service';
+import { EmpleadosService } from 'app/core/empleados.service';
 import { ISolicitudCotizacionListado } from 'app/interface/solicitudes-cotizacion.interface';
 import { MaterialModule } from 'app/shared/material.module';
+import { Subject, takeUntil } from 'rxjs';
 
 type RankingItem = { nombre: string; total: number };
 type SerieUltimosDias = { labels: string[]; series: number[]; fechas: string[] };
@@ -16,11 +21,17 @@ type SerieUltimosDias = { labels: string[]; series: number[]; fechas: string[] }
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.scss'
 })
-export class AdminComponent implements OnInit {
+export class AdminComponent implements OnInit, OnDestroy {
   private _supabase = inject(SupabaseService);
+  private _cotizacionesService = inject(CotizacionesService);
+  private _destinosService = inject(DestinosService);
+  private _empleadosService = inject(EmpleadosService);
   private _authService = inject(AuthService);
   private _catalogosAdmin = inject(CatalogosAdminService);
   private _router = inject(Router);
+  private _fuseConfigService = inject(FuseConfigService);
+  private _unsubscribeAll = new Subject<void>();
+  private _solicitudesActuales: ISolicitudCotizacionListado[] = [];
 
   isLoading = false;
   errorMessage = '';
@@ -66,6 +77,7 @@ export class AdminComponent implements OnInit {
   chartTopDestinos: ApexOptions = {};
   chartTopEmpleados: ApexOptions = {};
   private fechasTendencia30Dias: string[] = [];
+  private scheme: 'light' | 'dark' = 'light';
 
   get tituloDashboard(): string {
     return this._authService.isAdmin ? 'Dashboard General del Sitio' : 'Mi Dashboard';
@@ -82,7 +94,22 @@ export class AdminComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this._fuseConfigService.config$
+      .pipe(takeUntil(this._unsubscribeAll))
+      .subscribe((config) => {
+        this.scheme = this._resolveScheme(config.scheme);
+
+        if (this._solicitudesActuales.length > 0) {
+          this._prepararGraficas(this._solicitudesActuales);
+        }
+      });
+
     void this.recargarDashboard();
+  }
+
+  ngOnDestroy(): void {
+    this._unsubscribeAll.next();
+    this._unsubscribeAll.complete();
   }
 
   async recargarDashboard(): Promise<void> {
@@ -96,10 +123,11 @@ export class AdminComponent implements OnInit {
     try {
       const solicitudes = await this._safeCall(
         'solicitudes',
-        () => this._supabase.obtenerSolicitudesCotizacion(),
+        () => this._cotizacionesService.obtenerSolicitudesCotizacion(),
         [] as ISolicitudCotizacionListado[]
       );
       const listaSolicitudes = solicitudes ?? [];
+      this._solicitudesActuales = listaSolicitudes;
 
       if (this._authService.isAdmin) {
         const [
@@ -112,10 +140,10 @@ export class AdminComponent implements OnInit {
           tiposHabitacion,
           hotelesCount
         ] = await Promise.all([
-          this._safeCall('destinos', () => this._supabase.obtenerDestinosAdmin(), [] as any[]),
-          this._safeCall('tipos de destino', () => this._supabase.obtenerTiposDestinoAdmin(), [] as any[]),
+          this._safeCall('destinos', () => this._destinosService.obtenerDestinosAdmin(), [] as any[]),
+          this._safeCall('tipos de destino', () => this._destinosService.obtenerTiposDestinoAdmin(), [] as any[]),
           this._safeCall('empleados', async () => {
-            const { data, error } = await this._supabase.empleados({ incluirInhabilitados: true });
+            const { data, error } = await this._empleadosService.empleados({ incluirInhabilitados: true });
             if (error) throw error;
             return data ?? [];
           }, [] as any[]),
@@ -259,6 +287,9 @@ export class AdminComponent implements OnInit {
     const tendencia30 = this._serieUltimosDias(solicitudes, 30);
     this.fechasTendencia30Dias = tendencia30.fechas;
 
+    const tooltipTheme = this.scheme === 'dark' ? 'dark' : 'light';
+    const gridBorderColor = this.scheme === 'dark' ? 'rgba(241, 245, 249, 0.12)' : '#E2E8F0';
+
     this.chartResumen = {
       chart: {
         fontFamily: 'inherit',
@@ -272,7 +303,7 @@ export class AdminComponent implements OnInit {
         enabled: true,
         formatter: (value: number): string => `${value}`,
       },
-      grid: { borderColor: '#E2E8F0' },
+      grid: { borderColor: gridBorderColor },
       plotOptions: {
         bar: {
           borderRadius: 8,
@@ -296,7 +327,7 @@ export class AdminComponent implements OnInit {
         categories: ['Totales', 'Cotizadas', 'Pendientes', 'Canceladas', 'Ultimos 30 dias'],
       },
       yaxis: { min: 0, forceNiceScale: true },
-      tooltip: { theme: 'light' },
+      tooltip: { theme: tooltipTheme },
     };
 
     this.chartDistribucion = {
@@ -322,7 +353,7 @@ export class AdminComponent implements OnInit {
         pie: { donut: { size: '64%' } },
       },
       noData: { text: 'Sin datos disponibles' },
-      tooltip: { theme: 'light' },
+      tooltip: { theme: tooltipTheme },
     };
 
     this.chartTipoDestino = {
@@ -340,7 +371,7 @@ export class AdminComponent implements OnInit {
         pie: { donut: { size: '64%' } },
       },
       noData: { text: 'Sin datos disponibles' },
-      tooltip: { theme: 'light' },
+      tooltip: { theme: tooltipTheme },
     };
 
     this.chartSolicitudes30Dias = {
@@ -371,7 +402,7 @@ export class AdminComponent implements OnInit {
         strokeWidth: 2,
         hover: { size: 7, sizeOffset: 2 },
       },
-      grid: { borderColor: '#E2E8F0' },
+      grid: { borderColor: gridBorderColor },
       series: [
         {
           name: 'Solicitudes',
@@ -383,7 +414,7 @@ export class AdminComponent implements OnInit {
       },
       yaxis: { min: 0, forceNiceScale: true },
       tooltip: {
-        theme: 'light',
+        theme: tooltipTheme,
         intersect: true,
         shared: false,
       },
@@ -395,6 +426,9 @@ export class AdminComponent implements OnInit {
   }
 
   private _crearGraficaTop(nombreSerie: string, items: RankingItem[], color: string): ApexOptions {
+    const tooltipTheme = this.scheme === 'dark' ? 'dark' : 'light';
+    const gridBorderColor = this.scheme === 'dark' ? 'rgba(241, 245, 249, 0.12)' : '#E2E8F0';
+
     return {
       chart: {
         fontFamily: 'inherit',
@@ -422,10 +456,18 @@ export class AdminComponent implements OnInit {
         categories: items.map((x) => x.nombre),
       },
       yaxis: { labels: { maxWidth: 220 } },
-      grid: { borderColor: '#E2E8F0' },
-      tooltip: { theme: 'light' },
+      grid: { borderColor: gridBorderColor },
+      tooltip: { theme: tooltipTheme },
       noData: { text: 'Sin datos disponibles' },
     };
+  }
+
+  private _resolveScheme(scheme: Scheme): 'light' | 'dark' {
+    if (scheme !== 'auto') {
+      return scheme;
+    }
+
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   }
 
   private _contarPorCampo(

@@ -236,7 +236,7 @@
                                         </div>
                                         <div>
                                             <p class="text-xs font-bold uppercase text-[#147052]/60">Temp</p>
-                                            <p class="font-bold">{{ datosClima?.current_weather?.temperature }}°C</p>
+                                            <p class="font-bold">{{ temperaturaDisplay?.valor }}{{ temperaturaDisplay?.simbolo }}</p>
                                         </div>
                                     </li>
                                     <li *ngFor="let item of detallesDestino?.datos_rapidos"

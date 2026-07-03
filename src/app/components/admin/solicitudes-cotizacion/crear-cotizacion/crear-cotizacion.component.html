@@ -50,9 +50,9 @@
 
                     @if (tipoBusqueda === 'NACIONAL') {
                     <mat-form-field class="w-full">
-                        <mat-label>Destino nacional</mat-label>
-                        <mat-select [value]="destinoNacionalId" (valueChange)="seleccionarDestinoNacional($event)">
-                            <mat-option [value]="null">Selecciona destino</mat-option>
+                        <mat-label>Estado / area</mat-label>
+                        <mat-select [value]="divisionAreaNacionalId" (valueChange)="seleccionarDestinoNacional($event)">
+                            <mat-option [value]="null">Selecciona estado o area</mat-option>
                             @for (destino of destinosNacionales; track destino.id) {
                             <mat-option [value]="destino.id">{{ destino.nombre }}</mat-option>
                             }
@@ -61,20 +61,20 @@
                     } @else {
                     <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
                         <mat-form-field class="w-full">
-                            <mat-label>Continente</mat-label>
-                            <mat-select [value]="continenteSeleccionadoId" (valueChange)="seleccionarContinente($event)">
-                                <mat-option [value]="null">Selecciona continente</mat-option>
-                                @for (continente of continentes; track continente.id) {
+                            <mat-label>Region</mat-label>
+                            <mat-select [value]="regionSeleccionadaId" (valueChange)="seleccionarContinente($event)">
+                                <mat-option [value]="null">Selecciona region</mat-option>
+                                @for (continente of regiones; track continente.id) {
                                 <mat-option [value]="continente.id">{{ continente.nombre }}</mat-option>
                                 }
                             </mat-select>
                         </mat-form-field>
 
                         <mat-form-field class="w-full">
-                            <mat-label>Destino</mat-label>
+                            <mat-label>Pais</mat-label>
                             <mat-select [value]="paisSeleccionadoId" (valueChange)="seleccionarPais($event)"
-                                [disabled]="!continenteSeleccionadoId">
-                                <mat-option [value]="null">Selecciona destino</mat-option>
+                                [disabled]="!regionSeleccionadaId">
+                                <mat-option [value]="null">Selecciona pais</mat-option>
                                 @for (pais of paisesInternacionales; track pais.id) {
                                 <mat-option [value]="pais.id">{{ pais.nombre }}</mat-option>
                                 }
@@ -82,10 +82,10 @@
                         </mat-form-field>
 
                         <mat-form-field class="w-full">
-                            <mat-label>Ciudad</mat-label>
-                            <mat-select [value]="ciudadInternacionalId" (valueChange)="seleccionarCiudadInternacional($event)"
+                            <mat-label>Destino</mat-label>
+                            <mat-select [value]="destinoInternacionalId" (valueChange)="seleccionarCiudadInternacional($event)"
                                 [disabled]="!paisSeleccionadoId">
-                                <mat-option [value]="null">Selecciona ciudad</mat-option>
+                                <mat-option [value]="null">Selecciona destino</mat-option>
                                 @for (ciudad of ciudadesInternacionales; track ciudad.id) {
                                 <mat-option [value]="ciudad.id">{{ ciudad.nombre }}</mat-option>
                                 }
@@ -337,8 +337,8 @@
 </div>
 
 @if (modalClientesAbierto) {
-<div class="modal-backdrop" (click)="cerrarModalClientes()">
-    <section class="modal-panel" (click)="$event.stopPropagation()">
+<div class="modal-backdrop" @backdropFade (click)="cerrarModalClientes()">
+    <section class="modal-panel" @modalScaleFade (click)="$event.stopPropagation()">
         <div class="modal-header">
             <div>
                 <h3 class="section-title">Buscar cliente</h3>

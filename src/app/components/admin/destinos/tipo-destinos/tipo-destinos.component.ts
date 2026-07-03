@@ -1,7 +1,8 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { SupabaseService } from 'app/core/supabase.service';
+import { DestinosService } from 'app/core/destinos.service';
 import { MaterialModule } from 'app/shared/material.module';
+import { listAnimation } from 'app/shared/animations';
 
 interface ITipoDestino {
   id: number;
@@ -30,10 +31,11 @@ interface IConcentradoTipoDestino {
   standalone: true,
   imports: [MaterialModule, RouterLink],
   templateUrl: './tipo-destinos.component.html',
-  styleUrl: './tipo-destinos.component.scss'
+  styleUrl: './tipo-destinos.component.scss',
+  animations: [listAnimation]
 })
 export class TipoDestinosComponent implements OnInit {
-  private readonly supabase = inject(SupabaseService);
+  private readonly supabase = inject(DestinosService);
 
   cargando = true;
   error = '';

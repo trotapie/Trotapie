@@ -35,7 +35,7 @@
                 </mat-form-field>
             </div>
 
-            <div class="table-wrapper">
+            <div class="table-wrapper" @fadeSlideIn>
                 <table mat-table [dataSource]="dataSource" matSort>
                     <ng-container matColumnDef="id">
                         <th mat-header-cell *matHeaderCellDef mat-sort-header> ID </th>
@@ -140,8 +140,9 @@
 </div>
 
 @if (modalEmpleadoAbierto) {
-<div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 p-4">
-    <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900">
+<div class="fixed inset-0 z-[3000] flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50" @backdropFade></div>
+    <div class="relative z-10 w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900" @modalScaleFade>
         <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
             {{ estaEditando ? 'Editar empleado' : 'Nuevo empleado' }}
         </h2>
@@ -224,8 +225,9 @@
 }
 
 @if (modalQuitarAccesoAbierto && empleadoPendienteQuitarAcceso) {
-<div class="fixed inset-0 z-[3025] flex items-center justify-center bg-black/60 p-4">
-    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900">
+<div class="fixed inset-0 z-[3025] flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/60" @backdropFade></div>
+    <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900" @modalScaleFade>
         <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
             Confirmar quitar acceso
         </h3>
@@ -255,8 +257,9 @@
 }
 
 @if (modalContrasenaTemporalAbierto && contrasenaTemporal) {
-<div class="fixed inset-0 z-[3030] flex items-center justify-center bg-black/60 p-4">
-    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900">
+<div class="fixed inset-0 z-[3030] flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/60" @backdropFade></div>
+    <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900" @modalScaleFade>
         <div class="flex items-start gap-4">
             <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-amber-50">
                 <mat-icon class="text-amber-600">vpn_key</mat-icon>
@@ -294,8 +297,9 @@
 }
 
 @if (modalInhabilitarAbierto && empleadoPendienteInhabilitar) {
-<div class="fixed inset-0 z-[3010] flex items-center justify-center bg-black/60 p-4">
-    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900">
+<div class="fixed inset-0 z-[3010] flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/60" @backdropFade></div>
+    <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900" @modalScaleFade>
         <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
             Confirmar inhabilitacion
         </h3>
@@ -325,8 +329,9 @@
 }
 
 @if (modalEliminarAbierto && empleadoPendienteEliminar) {
-<div class="fixed inset-0 z-[3020] flex items-center justify-center bg-black/60 p-4">
-    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900">
+<div class="fixed inset-0 z-[3020] flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/60" @backdropFade></div>
+    <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900" @modalScaleFade>
         <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
             Confirmar eliminacion
         </h3>

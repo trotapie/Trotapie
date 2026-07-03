@@ -23,7 +23,7 @@
         }
 
         <article class="m-3 flex-1 min-h-0">
-            <div class="table-shell mat-elevation-z2">
+            <div class="table-shell mat-elevation-z2" @fadeSlideIn>
                 <div class="table-scroll px-4">
                     <table mat-table [dataSource]="dataSource" matSort class="pretty-table">
                         <ng-container matColumnDef="id">

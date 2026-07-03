@@ -2,13 +2,13 @@ import { AfterViewInit, Component, DoCheck, ElementRef, ViewChild, inject, OnDes
 import { UntypedFormArray, UntypedFormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
-import * as L from 'leaflet';
 import { Subscription } from 'rxjs';
 import {
   IIdiomaPreviewAdmin,
-  IPreviewDestinoAdmin,
-  SupabaseService
+  IPreviewDestinoAdmin
 } from 'app/core/supabase.service';
+import { DestinosService } from 'app/core/destinos.service';
+import { ActividadesService } from 'app/core/actividades.service';
 import { BlockingLoaderComponent } from 'app/shared/blocking-loader/blocking-loader.component';
 import { MaterialModule } from 'app/shared/material.module';
 
@@ -28,7 +28,8 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
   private static readonly ZOOM_VISTA_LEJANA = 12;
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly supabase = inject(SupabaseService);
+  private readonly destinosService = inject(DestinosService);
+  private readonly actividadesService = inject(ActividadesService);
   private readonly fb = inject(UntypedFormBuilder);
   @ViewChild('ubicacionMapPreview') private ubicacionMapElement?: ElementRef<HTMLDivElement>;
 
@@ -68,8 +69,9 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
   private bodyPaddingRightOriginal = '';
   private scrollBodyBloqueado = false;
   private ubicacionSub?: Subscription;
-  private mapaUbicacion?: L.Map;
-  private marcadorUbicacion?: L.Marker;
+  private L: any = null;
+  private mapaUbicacion?: any;
+  private marcadorUbicacion?: any;
 
   idiomas: IIdiomaPreviewAdmin[] = [];
   catalogoTiposDatoRapido: Array<{ id: number; clave: string; nombre: string }> = [];
@@ -153,8 +155,8 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     });
 
     try {
-      const data = await this.supabase.obtenerPreviewDestinoAdmin(id);
-      this.logRespuestaPreviewDestino(data);
+      this.L = await import('leaflet');
+      const data = await this.destinosService.obtenerPreviewDestinoAdmin(id);
       this.inicializarFormulario(data);
       this.actualizarPreviewUbicacion();
     } catch (error: any) {
@@ -180,47 +182,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     this.bloquearScrollBody(false);
   }
 
-  private logRespuestaPreviewDestino(data: IPreviewDestinoAdmin): void {
-    console.log('[Editar preview destino] Respuesta completa:', data);
-    console.log('[Editar preview destino] Resumen:', {
-      destino_id: data.destino_id,
-      destino_nombre: data.destino_nombre,
-      detalles_destinos_id: data.detalles_destinos_id,
-      total_idiomas: data.idiomas?.length ?? 0,
-      total_traducciones: data.traducciones?.length ?? 0,
-      total_detalles_rapidos: data.detalles_rapidos?.length ?? 0,
-      total_actividades: data.actividades?.length ?? 0,
-      total_imagenes_actividades: (data.actividades ?? []).reduce(
-        (acc, actividad) => acc + (actividad.imagenes?.length ?? 0),
-        0
-      )
-    });
-    console.table(
-      (data.idiomas ?? []).map((idioma) => ({
-        idioma_id: idioma.id,
-        codigo: idioma.codigo,
-        nombre: idioma.nombre
-      }))
-    );
-    console.table(
-      (data.actividades ?? []).map((actividad) => ({
-        actividad_id: actividad.id,
-        imagen_fondo_id: actividad.imagen_fondo_id ?? null,
-        imagen_fondo: actividad.imagen_fondo,
-        imagen_seleccionada_id: actividad.imagen_seleccionada_id ?? actividad.imagen_fondo_id ?? null,
-        imagen_seleccionada: actividad.imagen_seleccionada ?? actividad.imagen_fondo ?? '',
-        total_imagenes: actividad.imagenes?.length ?? 0,
-        imagen_activa_id:
-          actividad.imagenes?.find((imagen) => imagen.activa)?.id ??
-          actividad.imagenes?.[0]?.id ??
-          null,
-        imagen_activa:
-          actividad.imagenes?.find((imagen) => imagen.activa)?.imagen_url ??
-          actividad.imagenes?.[0]?.imagen_url ??
-          ''
-      }))
-    );
-  }
+
 
   async guardar() {
     if (this.form.invalid) {
@@ -242,7 +204,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
         }))
       }));
 
-      await this.supabase.guardarPreviewDestinoAdmin({
+      await this.destinosService.guardarPreviewDestinoAdmin({
         destino_id: this.destinoId,
         ubicacion: this.limpiarTexto(raw.ubicacion),
         traducciones: (raw.traducciones ?? []).map((item: any) => ({
@@ -536,7 +498,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
         return;
       }
 
-      const guardada = await this.supabase.guardarActividadDestinoAdmin({
+      const guardada = await this.actividadesService.guardarActividadDestinoAdmin({
         destino_id: this.destinoId,
         actividad_id: actividadId,
         imagen_fondo: imagenPrincipal,
@@ -727,7 +689,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     try {
       const actividadId = this.parseNumber(actividad.get('id')?.value);
       if (actividadId) {
-        await this.supabase.eliminarActividadDestinoAdmin({
+        await this.actividadesService.eliminarActividadDestinoAdmin({
           destino_id: this.destinoId,
           actividad_id: actividadId
         });
@@ -784,7 +746,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
         orden: index + 1
       }));
 
-      const resultado = await this.supabase.actualizarOrdenDatosRapidosDestinoAdmin(this.destinoId, payload);
+      const resultado = await this.destinosService.actualizarOrdenDatosRapidosDestinoAdmin(this.destinoId, payload);
       if (resultado.updated === 0) {
         this.error = 'Primero guarda el preview para crear los detalles rapidos y despues actualizar el orden.';
         return;
@@ -1261,15 +1223,15 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     }
 
     if (!this.mapaUbicacion) {
-      this.mapaUbicacion = L.map(element).setView(
+      this.mapaUbicacion = this.L.map(element).setView(
         [coordenadas.lat, coordenadas.lng],
         EditarPreviewDestinoComponent.ZOOM_VISTA_LEJANA
       );
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      this.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
       }).addTo(this.mapaUbicacion);
 
-      const icon = L.icon({
+      const icon = this.L.icon({
         iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
         shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
         iconSize: [25, 41],
@@ -1278,7 +1240,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
         shadowSize: [41, 41]
       });
 
-      this.marcadorUbicacion = L.marker([coordenadas.lat, coordenadas.lng], { icon })
+      this.marcadorUbicacion = this.L.marker([coordenadas.lat, coordenadas.lng], { icon })
         .addTo(this.mapaUbicacion)
         .bindTooltip('Ubicacion del destino', { permanent: true, direction: 'top', offset: [0, -40] });
     } else {

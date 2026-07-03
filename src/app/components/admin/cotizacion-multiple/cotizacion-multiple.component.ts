@@ -2,21 +2,19 @@
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { FuseSplashScreenService } from '@fuse/services/splash-screen';
-import { SupabaseService } from 'app/core/supabase.service';
+import {
+  DestinosService,
+  DestinoCatalogo,
+  DivisionAreaCatalogo,
+  PaisCatalogo,
+  RegionCatalogo
+} from 'app/core/destinos.service';
+import { EmpleadosService } from 'app/core/empleados.service';
+import { ClientesService } from 'app/core/clientes.service';
+import { HotelesService, IHotelAdminCatalogo } from 'app/core/hoteles.service';
+import { CotizacionesService } from 'app/core/cotizaciones.service';
 import { MaterialModule } from 'app/shared/material.module';
-
-interface IDestinoFiltro {
-  id: number;
-  nombre: string;
-  tipo_desino_id: number;
-  destino_padre_id: number | null;
-  continente_id?: number | null;
-}
-
-interface IContinente {
-  id: number;
-  nombre: string;
-}
+import { backdropFade, modalScaleFade } from 'app/shared/animations';
 
 interface IHotelAdmin {
   id: number;
@@ -25,6 +23,9 @@ interface IHotelAdmin {
   regimen: string;
   regimen_id: number | null;
   destino_id: number;
+  division_area_id?: number | null;
+  pais_id?: number | null;
+  catalogo_destino_id?: number | null;
 }
 
 interface IHotelComparativaDraft {
@@ -63,17 +64,24 @@ type Room = { adults: number; children: number; childAges: (number | null)[] };
   standalone: true,
   imports: [MaterialModule, RouterLink],
   templateUrl: './cotizacion-multiple.component.html',
-  styleUrl: './cotizacion-multiple.component.scss'
+  styleUrl: './cotizacion-multiple.component.scss',
+  animations: [modalScaleFade, backdropFade],
 })
 export class CotizacionMultipleComponent implements OnInit {
   private fb = inject(FormBuilder);
-  private supabase = inject(SupabaseService);
+  private destinosService = inject(DestinosService);
+  private empleadosService = inject(EmpleadosService);
+  private clientesService = inject(ClientesService);
+  private hotelesService = inject(HotelesService);
+  private cotizacionesService = inject(CotizacionesService);
   private router = inject(Router);
   private splashScreen = inject(FuseSplashScreenService);
 
   tipoBusqueda: 'NACIONAL' | 'INTERNACIONAL' = 'NACIONAL';
-  destinos: IDestinoFiltro[] = [];
-  continentes: IContinente[] = [];
+  regiones: RegionCatalogo[] = [];
+  divisionesNacionales: DivisionAreaCatalogo[] = [];
+  paisesInternacionalesTodos: PaisCatalogo[] = [];
+  destinosInternacionalesTodos: DestinoCatalogo[] = [];
   asesores: IAsesor[] = [];
   hoteles: IHotelAdmin[] = [];
   regimenes: IRegimen[] = [];
@@ -81,10 +89,10 @@ export class CotizacionMultipleComponent implements OnInit {
   hotelesComparativa: IHotelComparativaDraft[] = [];
   busquedaHotelTexto = '';
 
-  continenteSeleccionadoId: number | null = null;
+  regionSeleccionadaId: number | null = null;
   paisSeleccionadoId: number | null = null;
-  destinoNacionalId: number | null = null;
-  ciudadInternacionalId: number | null = null;
+  divisionAreaNacionalId: number | null = null;
+  destinoInternacionalId: number | null = null;
 
   cargando = true;
   cargandoHoteles = false;
@@ -132,14 +140,16 @@ export class CotizacionMultipleComponent implements OnInit {
 
     try {
       this.cargando = true;
-      const [destinos, continentesResponse, empleadosResponse] = await Promise.all([
-        this.supabase.obtenerDestinosAdmin(),
-        this.supabase.continentes(),
-        this.supabase.empleados()
+      const [divisionesNacionales, regiones, paisesInternacionales, empleadosResponse] = await Promise.all([
+        this.destinosService.obtenerCatalogoNacionalesDivisionAreas(),
+        this.destinosService.obtenerCatalogoInternacionalRegiones(),
+        this.destinosService.obtenerCatalogoInternacionalPaises(),
+        this.empleadosService.empleados()
       ]);
 
-      this.destinos = (destinos ?? []) as IDestinoFiltro[];
-      this.continentes = (continentesResponse?.data ?? []) as IContinente[];
+      this.divisionesNacionales = divisionesNacionales;
+      this.regiones = regiones;
+      this.paisesInternacionalesTodos = paisesInternacionales;
 
       if (empleadosResponse.error) {
         throw empleadosResponse.error;
@@ -163,28 +173,18 @@ export class CotizacionMultipleComponent implements OnInit {
     }
   }
 
-  get destinosNacionales(): IDestinoFiltro[] {
-    return this.destinos.filter(
-      (d) => d.destino_padre_id === null && Number(d.tipo_desino_id) !== 2
-    );
+  get destinosNacionales(): DivisionAreaCatalogo[] {
+    return this.divisionesNacionales;
   }
 
-  get paisesInternacionales(): IDestinoFiltro[] {
-    return this.destinos.filter(
-      (d) =>
-        Number(d.tipo_desino_id) === 2 &&
-        d.destino_padre_id === null &&
-        (this.continenteSeleccionadoId ? Number(d.continente_id) === this.continenteSeleccionadoId : true)
-    );
+  get paisesInternacionales(): PaisCatalogo[] {
+    if (!this.regionSeleccionadaId) return [];
+    return this.paisesInternacionalesTodos.filter((pais) => pais.region_id === this.regionSeleccionadaId);
   }
 
-  get ciudadesInternacionales(): IDestinoFiltro[] {
+  get ciudadesInternacionales(): DestinoCatalogo[] {
     if (!this.paisSeleccionadoId) return [];
-    return this.destinos.filter(
-      (d) =>
-        Number(d.tipo_desino_id) === 2 &&
-        Number(d.destino_padre_id) === this.paisSeleccionadoId
-    );
+    return this.destinosInternacionalesTodos.filter((destino) => destino.pais_id === this.paisSeleccionadoId);
   }
 
   get fechaSalida(): string {
@@ -220,7 +220,7 @@ export class CotizacionMultipleComponent implements OnInit {
   }
 
   get resumenDestinoLabel(): string {
-    return this.tipoBusqueda === 'NACIONAL' ? 'Destino nacional' : 'Destino';
+    return this.tipoBusqueda === 'NACIONAL' ? 'Estado / area' : 'Destino';
   }
 
   get resumenDestino(): string {
@@ -280,33 +280,38 @@ export class CotizacionMultipleComponent implements OnInit {
 
   cambiarTipoBusqueda(tipo: 'NACIONAL' | 'INTERNACIONAL') {
     this.tipoBusqueda = tipo;
-    this.continenteSeleccionadoId = null;
+    this.regionSeleccionadaId = null;
     this.paisSeleccionadoId = null;
-    this.destinoNacionalId = null;
-    this.ciudadInternacionalId = null;
+    this.divisionAreaNacionalId = null;
+    this.destinoInternacionalId = null;
+    this.destinosInternacionalesTodos = [];
     this.error = '';
   }
 
   async seleccionarDestinoNacional(destinoId: number | null) {
-    this.destinoNacionalId = destinoId;
+    this.divisionAreaNacionalId = destinoId;
     this.error = '';
   }
 
-  seleccionarContinente(continenteId: number | null) {
-    this.continenteSeleccionadoId = continenteId;
+  async seleccionarContinente(continenteId: number | null) {
+    this.regionSeleccionadaId = continenteId;
     this.paisSeleccionadoId = null;
-    this.ciudadInternacionalId = null;
+    this.destinoInternacionalId = null;
+    this.destinosInternacionalesTodos = [];
     this.error = '';
   }
 
-  seleccionarPais(paisId: number | null) {
+  async seleccionarPais(paisId: number | null) {
     this.paisSeleccionadoId = paisId;
-    this.ciudadInternacionalId = null;
+    this.destinoInternacionalId = null;
+    this.destinosInternacionalesTodos = paisId
+      ? await this.destinosService.obtenerCatalogoInternacionalDestinosPorPais(paisId)
+      : [];
     this.error = '';
   }
 
   async seleccionarCiudadInternacional(ciudadId: number | null) {
-    this.ciudadInternacionalId = ciudadId;
+    this.destinoInternacionalId = ciudadId;
     this.error = '';
   }
 
@@ -349,7 +354,7 @@ export class CotizacionMultipleComponent implements OnInit {
     this.buscandoClientes = true;
     this.clienteSeleccionadoBusqueda = null;
     try {
-      this.resultadosClientes = await this.supabase.buscarClientes({
+      this.resultadosClientes = await this.clientesService.buscarClientes({
         nombre,
         email,
         telefono
@@ -383,8 +388,8 @@ export class CotizacionMultipleComponent implements OnInit {
 
     this.cargandoHoteles = true;
     try {
-      const hoteles = await this.supabase.obtenerHotelesAdmin();
-      this.hoteles = (hoteles ?? []) as IHotelAdmin[];
+      const hoteles = await this.hotelesService.obtenerHotelesAdmin();
+      this.hoteles = (hoteles ?? []) as IHotelAdminCatalogo[];
     } catch (error: any) {
       this.error = error?.message ?? 'No se pudieron cargar los hoteles disponibles.';
     } finally {
@@ -394,11 +399,11 @@ export class CotizacionMultipleComponent implements OnInit {
 
   private destinoActualNombre(): string {
     if (this.tipoBusqueda === 'NACIONAL') {
-      const destino = this.destinosNacionales.find((item) => item.id === this.destinoNacionalId);
+      const destino = this.destinosNacionales.find((item) => item.id === this.divisionAreaNacionalId);
       return destino?.nombre ?? 'Destino';
     }
 
-    const ciudad = this.ciudadesInternacionales.find((item) => item.id === this.ciudadInternacionalId);
+    const ciudad = this.ciudadesInternacionales.find((item) => item.id === this.destinoInternacionalId);
     if (ciudad?.nombre) return ciudad.nombre;
 
     const pais = this.paisesInternacionales.find((item) => item.id === this.paisSeleccionadoId);
@@ -495,12 +500,19 @@ export class CotizacionMultipleComponent implements OnInit {
     const idsSeleccionados = new Set(this.hotelesComparativa.map((item) => item.hotel_id));
 
     return this.hoteles.filter((hotel) => {
+      const coincideDestino = this.tipoBusqueda === 'NACIONAL'
+        ? !this.divisionAreaNacionalId || hotel.division_area_id === this.divisionAreaNacionalId
+        : this.destinoInternacionalId
+          ? hotel.catalogo_destino_id === this.destinoInternacionalId
+          : this.paisSeleccionadoId
+            ? hotel.pais_id === this.paisSeleccionadoId
+            : true;
       const coincideTexto = !filtro ||
         [hotel.nombre_hotel, hotel.destino_nombre, hotel.regimen]
           .join(' ')
           .toLowerCase()
           .includes(filtro);
-      return coincideTexto && !idsSeleccionados.has(hotel.id);
+      return coincideDestino && coincideTexto && !idsSeleccionados.has(hotel.id);
     });
   }
 
@@ -584,8 +596,8 @@ export class CotizacionMultipleComponent implements OnInit {
 
     if (!this.destinoFinalValido()) {
       this.error = this.tipoBusqueda === 'NACIONAL'
-        ? 'Completa el destino nacional antes de guardar.'
-        : 'Completa continente, destino y ciudad antes de guardar.';
+        ? 'Completa el estado o area antes de guardar.'
+        : 'Completa region, pais y destino antes de guardar.';
       return;
     }
 
@@ -603,7 +615,7 @@ export class CotizacionMultipleComponent implements OnInit {
 
     this.guardando = true;
     try {
-      const cliente = await this.supabase.upsertCliente({
+      const cliente = await this.clientesService.upsertCliente({
         nombre: String(value.nombre ?? '').trim(),
         email: value.correo?.trim() ? String(value.correo).trim() : null,
         telefono: String(value.telefono ?? '').trim(),
@@ -614,7 +626,7 @@ export class CotizacionMultipleComponent implements OnInit {
       const peticionesEspeciales = value.especiales?.trim() ? String(value.especiales).trim() : null;
       const hotelPrincipal = this.hotelesComparativa[0];
 
-      const solicitud = await this.supabase.crearSolicitudCotizacion({
+      const solicitud = await this.cotizacionesService.crearSolicitudCotizacion({
         cliente_id: Number(cliente.id),
         hotel_id: hotelPrincipal?.hotel_id ?? 0,
         empleado_id: Number(value.asesor_id),
@@ -632,7 +644,7 @@ export class CotizacionMultipleComponent implements OnInit {
         throw new Error('No se pudo obtener el public_id de la cotizacion creada.');
       }
 
-      await this.supabase.actualizarCotizacionPublicaCompleta(solicitud.public_id, {
+      await this.cotizacionesService.actualizarCotizacionPublicaCompleta(solicitud.public_id, {
         precio: this.parseNumber(hotelPrincipal?.precio),
         precioConSeguro: this.parseNumber(hotelPrincipal?.precioConSeguro),
         precioMeses: this.parseNumber(hotelPrincipal?.precioMeses),
@@ -667,8 +679,8 @@ export class CotizacionMultipleComponent implements OnInit {
 
   private destinoFinalValido(): boolean {
     return this.tipoBusqueda === 'NACIONAL'
-      ? Boolean(this.destinoNacionalId)
-      : Boolean(this.continenteSeleccionadoId && this.paisSeleccionadoId && this.ciudadInternacionalId);
+      ? Boolean(this.divisionAreaNacionalId)
+      : Boolean(this.regionSeleccionadaId && this.paisSeleccionadoId && this.destinoInternacionalId);
   }
 
   private buildCotizacionMultiplePayload() {

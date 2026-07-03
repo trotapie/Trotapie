@@ -3,7 +3,8 @@
   height: 3rem;            /* h-12 */
   border-radius: 0.75rem;  /* rounded-xl */
   border: 2px solid;       /* border-2 */
-  background: transparent;
+  background: var(--fuse-bg-card);
+  color: var(--fuse-text-default);
 }
 
 /* Quita estilos default (fill) */
@@ -30,16 +31,16 @@
 
 /* Dark mode similar a tus clases */
 :host ::ng-deep .dark .tp-select .mat-mdc-text-field-wrapper {
-  background: rgb(30 41 59); /* slate-800 */
-  color: white;
+  background: var(--fuse-bg-card);
+  color: var(--fuse-text-default);
 }
 
 /* Bordes válidos / inválidos */
 :host ::ng-deep .tp-valid .mat-mdc-text-field-wrapper {
-  border-color: rgb(226 232 240); /* slate-200 */
+  border-color: var(--fuse-border);
 }
 :host ::ng-deep .dark .tp-valid .mat-mdc-text-field-wrapper {
-  border-color: rgb(51 65 85); /* slate-700 */
+  border-color: var(--fuse-border);
 }
 
 /* Focus: tu primary (si usas variable, cámbialo) */
@@ -63,10 +64,11 @@
 }
 
 .room-panel {
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--fuse-border);
   border-radius: 18px !important;
   overflow: hidden;
-  background: #fff;
+  background: var(--fuse-bg-card);
+  color: var(--fuse-text-default);
   box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
 }
 
@@ -94,12 +96,13 @@
 }
 
 .room-panel[open] .room-panel-summary {
-  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  border-bottom: 1px solid var(--fuse-border);
 }
 
 .room-panel-title {
   font-weight: 700;
   letter-spacing: 0.08em;
+  color: var(--fuse-text-default);
 }
 
 .room-panel-status {
@@ -112,6 +115,22 @@
 
 .room-panel-status.is-bad {
   color: #dc2626;
+}
+
+:host ::ng-deep .tp-room-tabs .mdc-tab {
+  color: var(--fuse-text-secondary);
+}
+
+:host ::ng-deep .tp-room-tabs .mdc-tab--active {
+  color: var(--fuse-text-default);
+}
+
+:host ::ng-deep .tp-room-tabs .mdc-tab-indicator__content--underline {
+  border-color: var(--primary, #00a67c) !important;
+}
+
+:host-context(.dark) .room-panel {
+  box-shadow: none;
 }
 
 .room-panel > div {

@@ -7,12 +7,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Hotel, IActividades, IAsesores, IDetalleHotel, IHoteles } from '../hoteles.interface';
 import { FuseMediaWatcherService } from '@fuse/services/media-watcher';
 import { firstValueFrom, Subject, takeUntil } from 'rxjs';
-import moment from 'moment';
 import { MapaComponent } from '../mapa/mapa.component';
 import { QRCodeComponent } from 'angularx-qrcode';
 import { TextTypewriterComponent } from 'app/text-typewriter.component';
 import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
-import { SupabaseService } from 'app/core/supabase.service';
+import { HotelesService } from 'app/core/hoteles.service';
 import { FuseSplashScreenService } from '@fuse/services/splash-screen';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { FooterComponent } from 'app/footer/footer.component';
@@ -34,7 +33,7 @@ type Room = { adults: number; children: number; childAges: (number | null)[] };
 export class DetalleHotelComponent {
     private router = inject(Router);
     private _fuseMediaWatcherService = inject(FuseMediaWatcherService)
-    private supabase = inject(SupabaseService);
+    private supabase = inject(HotelesService);
     private route = inject(ActivatedRoute)
     private splashScreen = inject(FuseSplashScreenService)
     private _translocoService = inject(TranslocoService);
@@ -76,7 +75,7 @@ export class DetalleHotelComponent {
         return d >= today;
     }
 
-    primeraSeleccion: moment.Moment | null = null;
+    primeraSeleccion: Date | null = null;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
     private scrollManual = true;

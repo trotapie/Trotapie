@@ -1,7 +1,7 @@
 ﻿import { Component, inject, OnInit } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { SupabaseService } from 'app/core/supabase.service';
+import { CotizacionesService } from 'app/core/cotizaciones.service';
 import { MaterialModule } from 'app/shared/material.module';
 import { Condicione, CotizacionMultipleItem, ICotizacion, IEstatusCotizacion, PoliticaHotel, PreciosYCondiciones } from './cotizacion.interface';
 import { DateI18nPipe } from 'app/core/i18n/date-i18n.pipe';
@@ -12,8 +12,6 @@ import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { EstatusComponent } from 'app/shared/estatus/estatus.component';
 import { CommonModule } from '@angular/common';
 import { ImagenesCarruselComponent } from 'app/shared/imagenes-carrusel/imagenes-carrusel.component';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
 import { find } from 'lodash';
 
 type Tile = { key: string; url: string; alt: string; class: string };
@@ -112,7 +110,7 @@ export class CotizacionComponent implements OnInit {
   private title = inject(Title);
   private meta = inject(Meta);
   private route = inject(ActivatedRoute)
-  private supabase = inject(SupabaseService);
+    private supabase = inject(CotizacionesService);
   private fb = inject(FormBuilder);
   private _translocoService = inject(TranslocoService);
   cargando = true;
@@ -937,7 +935,8 @@ export class CotizacionComponent implements OnInit {
   private async descargarPdfProformaCotizacion(
     publicId: string,
     options?: { descargar?: boolean }
-  ): Promise<jsPDF> {
+  ): Promise<any> {
+    const { jsPDF } = await import('jspdf');
     const cotizacion = this.informacionCotizacion;
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageWidth = pdf.internal.pageSize.getWidth();
@@ -1497,6 +1496,8 @@ export class CotizacionComponent implements OnInit {
   }
 
   private async descargarPdfVistaPublicaCotizacion(publicId: string): Promise<void> {
+    const { jsPDF } = await import('jspdf');
+    const html2canvas = (await import('html2canvas')).default;
     const iframe = document.createElement('iframe');
     iframe.style.position = 'fixed';
     iframe.style.left = '-10000px';

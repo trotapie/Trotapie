@@ -83,6 +83,15 @@
                 </mat-form-field>
                 }
 
+                <div class="flex items-center gap-3 lg:col-span-2">
+                    <mat-slide-toggle formControlName="activo" color="primary">
+                        Destino activo
+                    </mat-slide-toggle>
+                    <span class="text-sm text-gray-500">
+                        {{ form.get('activo')?.value ? 'Visible en el sitio publico' : 'Oculto del sitio publico' }}
+                    </span>
+                </div>
+
                 <div class="space-y-2">
                     <mat-form-field class="w-full">
                         <mat-label>Imagen del destino (URL)</mat-label>

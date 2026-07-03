@@ -50,7 +50,7 @@
 
                                 <section class="space-y-6 pt-4" [ngClass]="esEdicion ? 'max-w-4xl' : 'max-w-md'">
                                     <h1
-                                        class="text-5xl lg:text-6xl font-black text-[#1e3a5f] dark:text-white leading-tight">
+                                        class="text-5xl lg:text-6xl font-black text-slate-800 dark:text-slate-100 leading-tight">
                                         {{ t('reserva_viaje', { destino: informacionCotizacion.destino_nombre }) }}
                                     </h1>
 
@@ -127,13 +127,13 @@
                                                                 {{ t('precio_sin_seguro') }}
                                                             </p>
                                                             <p
-                                                                class="text-3xl font-black text-[#1e3a5f] dark:text-white tracking-tight">
+                                                                class="text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
                                                                 MXN {{ habitacionCotizacion.precioSinSeguro | currency }}
                                                             </p>
                                                         </div>
                                                         <div class="flex items-center justify-center sm:items-end sm:justify-end ">
                                                             <button (click)="contactarAgente('sin_seguro')"
-                                                                class="no-print bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
+                                                                class="no-print bg-slate-800 dark:bg-slate-700 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-900 dark:hover:bg-slate-600 transition-all shadow-lg shadow-slate-900/10 dark:shadow-none">
                                                                 {{ t('contactar_agente') }}
                                                             </button>
                                                         </div>
@@ -161,13 +161,13 @@
                                                                 {{ t('precio_con_seguro') }}
                                                             </p>
                                                             <p
-                                                                class="text-3xl font-black text-[#1e3a5f] dark:text-white tracking-tight">
+                                                                class="text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
                                                                 MXN {{ habitacionCotizacion.precioConSeguro | currency }}
                                                             </p>
                                                         </div>
                                                         <div class="flex items-center justify-center sm:items-end sm:justify-end ">
                                                             <button (click)="contactarAgente('con_seguro')"
-                                                                class="no-print bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
+                                                                class="no-print bg-slate-800 dark:bg-slate-700 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-900 dark:hover:bg-slate-600 transition-all shadow-lg shadow-slate-900/10 dark:shadow-none">
                                                                 {{ t('contactar_agente') }}
                                                             </button>
                                                         </div>
@@ -176,17 +176,17 @@
                                                     <div class="p-2 -mt-2 mb-2">
                                                         <div class="rounded-xl p-8 relative overflow-hidden ">
                                                             <div
-                                                                class="absolute top-0 right-0 w-64 h-64 bg-[#EAB308]/10 rounded-full -mr-32 -mt-32 blur-3xl">
+                                                                class="absolute top-0 right-0 w-64 h-64 bg-amber-400/10 dark:bg-amber-300/10 rounded-full -mr-32 -mt-32 blur-3xl">
                                                             </div>
                                                             <div
-                                                                class="absolute bottom-0 left-0 w-64 h-64 bg-[#EAB308]/5 rounded-full -ml-32 -mb-32 blur-3xl">
+                                                                class="absolute bottom-0 left-0 w-64 h-64 bg-amber-400/5 dark:bg-amber-300/10 rounded-full -ml-32 -mb-32 blur-3xl">
                                                             </div>
                                                             <div
                                                                 class="relative grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                                                 <div class="flex flex-col gap-4 group">
                                                                     <div class="flex items-center gap-3">
                                                                         <div
-                                                                            class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                                            class="flex items-center justify-center size-10 rounded-lg bg-amber-400/10 dark:bg-amber-300/10 border border-amber-400/20 dark:border-amber-300/30 text-amber-500 dark:text-amber-300 group-hover:bg-amber-400 dark:group-hover:bg-amber-300 group-hover:text-slate-950 transition-colors">
                                                                             <span
                                                                                 class="material-symbols-outlined text-2xl">confirmation_number</span>
                                                                         </div>
@@ -198,13 +198,13 @@
                                                                         <span
                                                                             class="text-3xl font-extrabold tracking-tight">{{(habitacionCotizacion.apartadoSeguro ?? 0) | currency}} MXN</span>
                                                                         <span
-                                                                            class="text-[#EAB308] text-xs font-medium mt-1">{{t('pagado')}}</span>
+                                                                            class="text-amber-500 dark:text-amber-300 text-xs font-medium mt-1">{{t('pagado')}}</span>
                                                                     </div>
                                                                 </div>
                                                                 <div class="flex flex-col gap-4 group">
                                                                     <div class="flex items-center gap-3">
                                                                         <div
-                                                                            class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                                            class="flex items-center justify-center size-10 rounded-lg bg-amber-400/10 dark:bg-amber-300/10 border border-amber-400/20 dark:border-amber-300/30 text-amber-500 dark:text-amber-300 group-hover:bg-amber-400 dark:group-hover:bg-amber-300 group-hover:text-slate-950 transition-colors">
                                                                             <span
                                                                                 class="material-symbols-outlined text-2xl">credit_score</span>
                                                                         </div>
@@ -222,7 +222,7 @@
                                                                 <div class="flex flex-col gap-4 group">
                                                                     <div class="flex items-center gap-3">
                                                                         <div
-                                                                            class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                                            class="flex items-center justify-center size-10 rounded-lg bg-amber-400/10 dark:bg-amber-300/10 border border-amber-400/20 dark:border-amber-300/30 text-amber-500 dark:text-amber-300 group-hover:bg-amber-400 dark:group-hover:bg-amber-300 group-hover:text-slate-950 transition-colors">
                                                                             <span
                                                                                 class="material-symbols-outlined text-2xl">event_upcoming</span>
                                                                         </div>
@@ -232,7 +232,7 @@
                                                                     </div>
                                                                     <div class="flex flex-col">
                                                                         <span
-                                                                            class="text-[#EAB308] text-3xl font-extrabold tracking-tight">{{habitacionCotizacion.fechaLimiteSeguro | dateI18n:'dd MMM yyyy':informacionCotizacion.idioma}}</span>
+                                                                            class="text-amber-500 dark:text-amber-300 text-3xl font-extrabold tracking-tight">{{habitacionCotizacion.fechaLimiteSeguro | dateI18n:'dd MMM yyyy':informacionCotizacion.idioma}}</span>
                                                                         <span
                                                                             class="text-slate-500 text-xs font-medium mt-1">{{t('ultimo_dia_pago')}}</span>
                                                                     </div>
@@ -263,13 +263,13 @@
                                                                 {{ t('precio_a_meses') }}
                                                             </p>
                                                             <p
-                                                                class="text-3xl font-black text-[#1e3a5f] dark:text-white tracking-tight">
+                                                                class="text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
                                                                 MXN {{ habitacionCotizacion.precioMeses | currency }}
                                                             </p>
                                                         </div>
                                                         <div class="flex items-center justify-center sm:items-end sm:justify-end ">
                                                             <button (click)="contactarAgente('a_meses')"
-                                                                class="no-print bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
+                                                                class="no-print bg-slate-800 dark:bg-slate-700 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-900 dark:hover:bg-slate-600 transition-all shadow-lg shadow-slate-900/10 dark:shadow-none">
                                                                 {{ t('contactar_agente') }}
                                                             </button>
                                                         </div>
@@ -278,17 +278,17 @@
                                                     <div class="p-2 -mt-2 mb-2">
                                                         <div class="rounded-xl p-8 relative overflow-hidden ">
                                                             <div
-                                                                class="absolute top-0 right-0 w-64 h-64 bg-[#EAB308]/10 rounded-full -mr-32 -mt-32 blur-3xl">
+                                                                class="absolute top-0 right-0 w-64 h-64 bg-amber-400/10 dark:bg-amber-300/10 rounded-full -mr-32 -mt-32 blur-3xl">
                                                             </div>
                                                             <div
-                                                                class="absolute bottom-0 left-0 w-64 h-64 bg-[#EAB308]/5 rounded-full -ml-32 -mb-32 blur-3xl">
+                                                                class="absolute bottom-0 left-0 w-64 h-64 bg-amber-400/5 dark:bg-amber-300/10 rounded-full -ml-32 -mb-32 blur-3xl">
                                                             </div>
                                                             <div
                                                                 class="relative grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                                                 <div class="flex flex-col gap-4 group">
                                                                     <div class="flex items-center gap-3">
                                                                         <div
-                                                                            class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                                            class="flex items-center justify-center size-10 rounded-lg bg-amber-400/10 dark:bg-amber-300/10 border border-amber-400/20 dark:border-amber-300/30 text-amber-500 dark:text-amber-300 group-hover:bg-amber-400 dark:group-hover:bg-amber-300 group-hover:text-slate-950 transition-colors">
                                                                             <span
                                                                                 class="material-symbols-outlined text-2xl">confirmation_number</span>
                                                                         </div>
@@ -300,13 +300,13 @@
                                                                         <span
                                                                             class="text-3xl font-extrabold tracking-tight">{{(habitacionCotizacion.apartadoMeses ?? 0) | currency}} MXN</span>
                                                                         <span
-                                                                            class="text-[#EAB308] text-xs font-medium mt-1">{{t('pagado')}}</span>
+                                                                            class="text-amber-500 dark:text-amber-300 text-xs font-medium mt-1">{{t('pagado')}}</span>
                                                                     </div>
                                                                 </div>
                                                                 <div class="flex flex-col gap-4 group">
                                                                     <div class="flex items-center gap-3">
                                                                         <div
-                                                                            class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                                            class="flex items-center justify-center size-10 rounded-lg bg-amber-400/10 dark:bg-amber-300/10 border border-amber-400/20 dark:border-amber-300/30 text-amber-500 dark:text-amber-300 group-hover:bg-amber-400 dark:group-hover:bg-amber-300 group-hover:text-slate-950 transition-colors">
                                                                             <span
                                                                                 class="material-symbols-outlined text-2xl">credit_score</span>
                                                                         </div>
@@ -325,7 +325,7 @@
                                                                 <div class="flex flex-col gap-4 group">
                                                                     <div class="flex items-center gap-3">
                                                                         <div
-                                                                            class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                                            class="flex items-center justify-center size-10 rounded-lg bg-amber-400/10 dark:bg-amber-300/10 border border-amber-400/20 dark:border-amber-300/30 text-amber-500 dark:text-amber-300 group-hover:bg-amber-400 dark:group-hover:bg-amber-300 group-hover:text-slate-950 transition-colors">
                                                                             <span
                                                                                 class="material-symbols-outlined text-2xl">event_upcoming</span>
                                                                         </div>
@@ -335,7 +335,7 @@
                                                                     </div>
                                                                     <div class="flex flex-col">
                                                                         <span
-                                                                            class="text-[#EAB308] text-3xl font-extrabold tracking-tight">{{habitacionCotizacion.fechaLimiteMeses | dateI18n:'dd MMM yyyy':informacionCotizacion.idioma}}</span>
+                                                                            class="text-amber-500 dark:text-amber-300 text-3xl font-extrabold tracking-tight">{{habitacionCotizacion.fechaLimiteMeses | dateI18n:'dd MMM yyyy':informacionCotizacion.idioma}}</span>
                                                                         <span
                                                                             class="text-slate-500 text-xs font-medium mt-1">{{t('ultimo_dia_pago')}}</span>
                                                                     </div>
@@ -400,13 +400,13 @@
                                                 <p class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
                                                     {{ t('precio_sin_seguro') }}
                                                 </p>
-                                                <p class="text-3xl font-black text-[#1e3a5f] dark:text-white tracking-tight">
+                                                <p class="text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
                                                     MXN {{ habitacionCotizacion.precioSinSeguro | currency }}
                                                 </p>
                                             </div>
                                             <div class="flex items-center justify-center sm:items-end sm:justify-end ">
                                                 <button (click)="contactarAgente('sin_seguro')"
-                                                    class="no-print bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
+                                                    class="no-print bg-slate-800 dark:bg-slate-700 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-900 dark:hover:bg-slate-600 transition-all shadow-lg shadow-slate-900/10 dark:shadow-none">
                                                     {{ t('contactar_agente') }}
                                                 </button>
                                             </div>
@@ -431,13 +431,13 @@
                                                 <p class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
                                                     {{ t('precio_con_seguro') }}
                                                 </p>
-                                                <p class="text-3xl font-black text-[#1e3a5f] dark:text-white tracking-tight">
+                                                <p class="text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
                                                     MXN {{ habitacionCotizacion.precioConSeguro | currency }}
                                                 </p>
                                             </div>
                                             <div class="flex items-center justify-center sm:items-end sm:justify-end ">
                                                 <button (click)="contactarAgente('con_seguro')"
-                                                    class="no-print bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
+                                                    class="no-print bg-slate-800 dark:bg-slate-700 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-900 dark:hover:bg-slate-600 transition-all shadow-lg shadow-slate-900/10 dark:shadow-none">
                                                     {{ t('contactar_agente') }}
                                                 </button>
                                             </div>
@@ -445,12 +445,12 @@
 
                                         <div class="p-2 -mt-2 mb-2">
                                             <div class="rounded-xl p-8 relative overflow-hidden ">
-                                                <div class="absolute top-0 right-0 w-64 h-64 bg-[#EAB308]/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
-                                                <div class="absolute bottom-0 left-0 w-64 h-64 bg-[#EAB308]/5 rounded-full -ml-32 -mb-32 blur-3xl"></div>
+                                                <div class="absolute top-0 right-0 w-64 h-64 bg-amber-400/10 dark:bg-amber-300/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+                                                <div class="absolute bottom-0 left-0 w-64 h-64 bg-amber-400/5 dark:bg-amber-300/10 rounded-full -ml-32 -mb-32 blur-3xl"></div>
                                                 <div class="relative grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                                     <div class="flex flex-col gap-4 group">
                                                         <div class="flex items-center gap-3">
-                                                            <div class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                            <div class="flex items-center justify-center size-10 rounded-lg bg-amber-400/10 dark:bg-amber-300/10 border border-amber-400/20 dark:border-amber-300/30 text-amber-500 dark:text-amber-300 group-hover:bg-amber-400 dark:group-hover:bg-amber-300 group-hover:text-slate-950 transition-colors">
                                                                 <span class="material-symbols-outlined text-2xl">confirmation_number</span>
                                                             </div>
                                                             <h3 class="text-xs font-bold uppercase tracking-widest">
@@ -459,12 +459,12 @@
                                                         </div>
                                                         <div class="flex flex-col">
                                                             <span class="text-3xl font-extrabold tracking-tight">{{(habitacionCotizacion.apartadoSeguro ?? 0) | currency}} MXN</span>
-                                                            <span class="text-[#EAB308] text-xs font-medium mt-1">{{t('pagado')}}</span>
+                                                            <span class="text-amber-500 dark:text-amber-300 text-xs font-medium mt-1">{{t('pagado')}}</span>
                                                         </div>
                                                     </div>
                                                     <div class="flex flex-col gap-4 group">
                                                         <div class="flex items-center gap-3">
-                                                            <div class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                            <div class="flex items-center justify-center size-10 rounded-lg bg-amber-400/10 dark:bg-amber-300/10 border border-amber-400/20 dark:border-amber-300/30 text-amber-500 dark:text-amber-300 group-hover:bg-amber-400 dark:group-hover:bg-amber-300 group-hover:text-slate-950 transition-colors">
                                                                 <span class="material-symbols-outlined text-2xl">credit_score</span>
                                                             </div>
                                                             <h3 class="text-xs font-bold uppercase tracking-widest">
@@ -478,7 +478,7 @@
                                                     </div>
                                                     <div class="flex flex-col gap-4 group">
                                                         <div class="flex items-center gap-3">
-                                                            <div class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                            <div class="flex items-center justify-center size-10 rounded-lg bg-amber-400/10 dark:bg-amber-300/10 border border-amber-400/20 dark:border-amber-300/30 text-amber-500 dark:text-amber-300 group-hover:bg-amber-400 dark:group-hover:bg-amber-300 group-hover:text-slate-950 transition-colors">
                                                                 <span class="material-symbols-outlined text-2xl">event_upcoming</span>
                                                             </div>
                                                             <h3 class="text-xs font-bold uppercase tracking-widest">
@@ -486,7 +486,7 @@
                                                             </h3>
                                                         </div>
                                                         <div class="flex flex-col">
-                                                            <span class="text-[#EAB308] text-3xl font-extrabold tracking-tight">{{habitacionCotizacion.fechaLimiteSeguro | dateI18n:'dd MMM yyyy':informacionCotizacion.idioma}}</span>
+                                                            <span class="text-amber-500 dark:text-amber-300 text-3xl font-extrabold tracking-tight">{{habitacionCotizacion.fechaLimiteSeguro | dateI18n:'dd MMM yyyy':informacionCotizacion.idioma}}</span>
                                                             <span class="text-slate-500 text-xs font-medium mt-1">{{t('ultimo_dia_pago')}}</span>
                                                         </div>
                                                     </div>
@@ -513,13 +513,13 @@
                                                 <p class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
                                                     {{ t('precio_a_meses') }}
                                                 </p>
-                                                <p class="text-3xl font-black text-[#1e3a5f] dark:text-white tracking-tight">
+                                                <p class="text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
                                                     MXN {{ habitacionCotizacion.precioMeses | currency }}
                                                 </p>
                                             </div>
                                             <div class="flex items-center justify-center sm:items-end sm:justify-end ">
                                                 <button (click)="contactarAgente('a_meses')"
-                                                    class="no-print bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
+                                                    class="no-print bg-slate-800 dark:bg-slate-700 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-900 dark:hover:bg-slate-600 transition-all shadow-lg shadow-slate-900/10 dark:shadow-none">
                                                     {{ t('contactar_agente') }}
                                                 </button>
                                             </div>
@@ -527,12 +527,12 @@
 
                                         <div class="p-2 -mt-2 mb-2">
                                             <div class="rounded-xl p-8 relative overflow-hidden ">
-                                                <div class="absolute top-0 right-0 w-64 h-64 bg-[#EAB308]/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
-                                                <div class="absolute bottom-0 left-0 w-64 h-64 bg-[#EAB308]/5 rounded-full -ml-32 -mb-32 blur-3xl"></div>
+                                                <div class="absolute top-0 right-0 w-64 h-64 bg-amber-400/10 dark:bg-amber-300/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+                                                <div class="absolute bottom-0 left-0 w-64 h-64 bg-amber-400/5 dark:bg-amber-300/10 rounded-full -ml-32 -mb-32 blur-3xl"></div>
                                                 <div class="relative grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                                     <div class="flex flex-col gap-4 group">
                                                         <div class="flex items-center gap-3">
-                                                            <div class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                            <div class="flex items-center justify-center size-10 rounded-lg bg-amber-400/10 dark:bg-amber-300/10 border border-amber-400/20 dark:border-amber-300/30 text-amber-500 dark:text-amber-300 group-hover:bg-amber-400 dark:group-hover:bg-amber-300 group-hover:text-slate-950 transition-colors">
                                                                 <span class="material-symbols-outlined text-2xl">confirmation_number</span>
                                                             </div>
                                                             <h3 class="text-xs font-bold uppercase tracking-widest">
@@ -541,12 +541,12 @@
                                                         </div>
                                                         <div class="flex flex-col">
                                                             <span class="text-3xl font-extrabold tracking-tight">{{(habitacionCotizacion.apartadoMeses ?? 0) | currency}} MXN</span>
-                                                            <span class="text-[#EAB308] text-xs font-medium mt-1">{{t('pagado')}}</span>
+                                                            <span class="text-amber-500 dark:text-amber-300 text-xs font-medium mt-1">{{t('pagado')}}</span>
                                                         </div>
                                                     </div>
                                                     <div class="flex flex-col gap-4 group">
                                                         <div class="flex items-center gap-3">
-                                                            <div class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                            <div class="flex items-center justify-center size-10 rounded-lg bg-amber-400/10 dark:bg-amber-300/10 border border-amber-400/20 dark:border-amber-300/30 text-amber-500 dark:text-amber-300 group-hover:bg-amber-400 dark:group-hover:bg-amber-300 group-hover:text-slate-950 transition-colors">
                                                                 <span class="material-symbols-outlined text-2xl">credit_score</span>
                                                             </div>
                                                             <h3 class="text-xs font-bold uppercase tracking-widest">
@@ -561,7 +561,7 @@
                                                     @if(habitacionCotizacion.tipoTarifaMeses === 'apartado') {
                                                     <div class="flex flex-col gap-4 group">
                                                         <div class="flex items-center gap-3">
-                                                            <div class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                            <div class="flex items-center justify-center size-10 rounded-lg bg-amber-400/10 dark:bg-amber-300/10 border border-amber-400/20 dark:border-amber-300/30 text-amber-500 dark:text-amber-300 group-hover:bg-amber-400 dark:group-hover:bg-amber-300 group-hover:text-slate-950 transition-colors">
                                                                 <span class="material-symbols-outlined text-2xl">event_upcoming</span>
                                                             </div>
                                                             <h3 class="text-xs font-bold uppercase tracking-widest">
@@ -569,7 +569,7 @@
                                                             </h3>
                                                         </div>
                                                         <div class="flex flex-col">
-                                                            <span class="text-[#EAB308] text-3xl font-extrabold tracking-tight">{{habitacionCotizacion.fechaLimiteMeses | dateI18n:'dd MMM yyyy':informacionCotizacion.idioma}}</span>
+                                                            <span class="text-amber-500 dark:text-amber-300 text-3xl font-extrabold tracking-tight">{{habitacionCotizacion.fechaLimiteMeses | dateI18n:'dd MMM yyyy':informacionCotizacion.idioma}}</span>
                                                             <span class="text-slate-500 text-xs font-medium mt-1">{{t('ultimo_dia_pago')}}</span>
                                                         </div>
                                                     </div>
@@ -702,7 +702,7 @@
                                                     {{ t('precio_sin_seguro') }}
                                                 </p>
                                                 <p
-                                                    class="text-3xl font-black text-[#1e3a5f] dark:text-white tracking-tight">
+                                                    class="text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
                                                     MXN {{ precioSinSeguro.precio | currency }}
                                                 </p>
                                                 }
@@ -751,7 +751,7 @@
                                                     class="flex items-center justify-center sm:items-end sm:justify-end ">
                                                     @if(!esEdicion && precioSinSeguro){
                                                     <button (click)="contactarAgente('sin_seguro')"
-                                                        class="no-print bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
+                                                        class="no-print bg-slate-800 dark:bg-slate-700 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-900 dark:hover:bg-slate-600 transition-all shadow-lg shadow-slate-900/10 dark:shadow-none">
                                                         {{ t('contactar_agente') }}
                                                     </button>
                                                     }
@@ -836,7 +836,7 @@
                                                     {{ t('precio_con_seguro') }}
                                                 </p>
                                                 <p
-                                                    class="text-3xl font-black text-[#1e3a5f] dark:text-white tracking-tight">
+                                                    class="text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
                                                     MXN {{ precioConSeguro.precio | currency }}
                                                 </p>
                                                 }
@@ -886,7 +886,7 @@
 
                                                     @if(!esEdicion && precioConSeguro){
                                                     <button (click)="contactarAgente('con_seguro')"
-                                                        class="no-print bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
+                                                        class="no-print bg-slate-800 dark:bg-slate-700 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-900 dark:hover:bg-slate-600 transition-all shadow-lg shadow-slate-900/10 dark:shadow-none">
                                                         {{ t('contactar_agente') }}
                                                     </button>
                                                     }
@@ -898,17 +898,17 @@
                                         <div class="p-2 -mt-2 mb-2">
                                             <div class="rounded-xl p-8 relative overflow-hidden ">
                                                 <div
-                                                    class="absolute top-0 right-0 w-64 h-64 bg-[#EAB308]/10 rounded-full -mr-32 -mt-32 blur-3xl">
+                                                    class="absolute top-0 right-0 w-64 h-64 bg-amber-400/10 dark:bg-amber-300/10 rounded-full -mr-32 -mt-32 blur-3xl">
                                                 </div>
                                                 <div
-                                                    class="absolute bottom-0 left-0 w-64 h-64 bg-[#EAB308]/5 rounded-full -ml-32 -mb-32 blur-3xl">
+                                                    class="absolute bottom-0 left-0 w-64 h-64 bg-amber-400/5 dark:bg-amber-300/10 rounded-full -ml-32 -mb-32 blur-3xl">
                                                 </div>
                                                 <div
                                                     class="relative grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                                     <div class="flex flex-col gap-4 group">
                                                         <div class="flex items-center gap-3">
                                                             <div
-                                                                class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                                class="flex items-center justify-center size-10 rounded-lg bg-amber-400/10 dark:bg-amber-300/10 border border-amber-400/20 dark:border-amber-300/30 text-amber-500 dark:text-amber-300 group-hover:bg-amber-400 dark:group-hover:bg-amber-300 group-hover:text-slate-950 transition-colors">
                                                                 <span
                                                                     class="material-symbols-outlined text-2xl">confirmation_number</span>
                                                             </div>
@@ -921,13 +921,13 @@
                                                                 class="text-3xl font-extrabold tracking-tight">{{edicionForm.get('cantidadApartado').value
                                                                 | currency}} MXN</span>
                                                             <span
-                                                                class="text-[#EAB308] text-xs font-medium mt-1">{{t('pagado')}}</span>
+                                                                class="text-amber-500 dark:text-amber-300 text-xs font-medium mt-1">{{t('pagado')}}</span>
                                                         </div>
                                                     </div>
                                                     <div class="flex flex-col gap-4 group">
                                                         <div class="flex items-center gap-3">
                                                             <div
-                                                                class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                                class="flex items-center justify-center size-10 rounded-lg bg-amber-400/10 dark:bg-amber-300/10 border border-amber-400/20 dark:border-amber-300/30 text-amber-500 dark:text-amber-300 group-hover:bg-amber-400 dark:group-hover:bg-amber-300 group-hover:text-slate-950 transition-colors">
                                                                 <span
                                                                     class="material-symbols-outlined text-2xl">credit_score</span>
                                                             </div>
@@ -947,7 +947,7 @@
                                                     <div class="flex flex-col gap-4 group">
                                                         <div class="flex items-center gap-3">
                                                             <div
-                                                                class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                                class="flex items-center justify-center size-10 rounded-lg bg-amber-400/10 dark:bg-amber-300/10 border border-amber-400/20 dark:border-amber-300/30 text-amber-500 dark:text-amber-300 group-hover:bg-amber-400 dark:group-hover:bg-amber-300 group-hover:text-slate-950 transition-colors">
                                                                 <span
                                                                     class="material-symbols-outlined text-2xl">event_upcoming</span>
                                                             </div>
@@ -957,7 +957,7 @@
                                                         </div>
                                                         <div class="flex flex-col">
                                                             <span
-                                                                class="text-[#EAB308] text-3xl font-extrabold tracking-tight">{{informacionCotizacion.fecha_limite_seguro
+                                                                class="text-amber-500 dark:text-amber-300 text-3xl font-extrabold tracking-tight">{{informacionCotizacion.fecha_limite_seguro
                                                                 |
                                                                 dateI18n:'dd MMM
                                                                 yyyy':informacionCotizacion.idioma}}</span>
@@ -1077,7 +1077,7 @@
                                                     {{ t('precio_a_meses') }}
                                                 </p>
                                                 <p
-                                                    class="text-3xl font-black text-[#1e3a5f] dark:text-white tracking-tight">
+                                                    class="text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
                                                     MXN {{ precioAMeses.precio | currency }}
                                                 </p>
                                                 }
@@ -1126,7 +1126,7 @@
                                                     class="flex items-center justify-center sm:items-end sm:justify-end ">
                                                     @if(!esEdicion && precioAMeses){
                                                     <button (click)="contactarAgente('a_meses')"
-                                                        class="no-print bg-[#2a3b58] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
+                                                        class="no-print bg-slate-800 dark:bg-slate-700 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-900 dark:hover:bg-slate-600 transition-all shadow-lg shadow-slate-900/10 dark:shadow-none">
                                                         {{ t('contactar_agente') }}
                                                     </button>
                                                     }
@@ -1143,17 +1143,17 @@
                                     <div class="p-2 -mt-2 mb-2">
                                         <div class="rounded-xl p-8 relative overflow-hidden ">
                                             <div
-                                                class="absolute top-0 right-0 w-64 h-64 bg-[#EAB308]/10 rounded-full -mr-32 -mt-32 blur-3xl">
+                                                class="absolute top-0 right-0 w-64 h-64 bg-amber-400/10 dark:bg-amber-300/10 rounded-full -mr-32 -mt-32 blur-3xl">
                                             </div>
                                             <div
-                                                class="absolute bottom-0 left-0 w-64 h-64 bg-[#EAB308]/5 rounded-full -ml-32 -mb-32 blur-3xl">
+                                                class="absolute bottom-0 left-0 w-64 h-64 bg-amber-400/5 dark:bg-amber-300/10 rounded-full -ml-32 -mb-32 blur-3xl">
                                             </div>
                                             <div
                                                 class="relative grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                                 <div class="flex flex-col gap-4 group">
                                                     <div class="flex items-center gap-3">
                                                         <div
-                                                            class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                            class="flex items-center justify-center size-10 rounded-lg bg-amber-400/10 dark:bg-amber-300/10 border border-amber-400/20 dark:border-amber-300/30 text-amber-500 dark:text-amber-300 group-hover:bg-amber-400 dark:group-hover:bg-amber-300 group-hover:text-slate-950 transition-colors">
                                                             <span
                                                                 class="material-symbols-outlined text-2xl">confirmation_number</span>
                                                         </div>
@@ -1166,13 +1166,13 @@
                                                             class="text-3xl font-extrabold tracking-tight">{{edicionForm.get('cantidadMeses').value
                                                             | currency}} MXN</span>
                                                         <span
-                                                            class="text-[#EAB308] text-xs font-medium mt-1">{{t('pagado')}}</span>
+                                                            class="text-amber-500 dark:text-amber-300 text-xs font-medium mt-1">{{t('pagado')}}</span>
                                                     </div>
                                                 </div>
                                                 <div class="flex flex-col gap-4 group">
                                                     <div class="flex items-center gap-3">
                                                         <div
-                                                            class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                            class="flex items-center justify-center size-10 rounded-lg bg-amber-400/10 dark:bg-amber-300/10 border border-amber-400/20 dark:border-amber-300/30 text-amber-500 dark:text-amber-300 group-hover:bg-amber-400 dark:group-hover:bg-amber-300 group-hover:text-slate-950 transition-colors">
                                                             <span
                                                                 class="material-symbols-outlined text-2xl">credit_score</span>
                                                         </div>
@@ -1192,7 +1192,7 @@
                                                 <div class="flex flex-col gap-4 group">
                                                     <div class="flex items-center gap-3">
                                                         <div
-                                                            class="flex items-center justify-center size-10 rounded-lg bg-[#EAB308]/10 border border-[#EAB308]/20 text-[#EAB308] group-hover:bg-[#EAB308] group-hover:text-black transition-colors">
+                                                            class="flex items-center justify-center size-10 rounded-lg bg-amber-400/10 dark:bg-amber-300/10 border border-amber-400/20 dark:border-amber-300/30 text-amber-500 dark:text-amber-300 group-hover:bg-amber-400 dark:group-hover:bg-amber-300 group-hover:text-slate-950 transition-colors">
                                                             <span
                                                                 class="material-symbols-outlined text-2xl">event_upcoming</span>
                                                         </div>
@@ -1202,7 +1202,7 @@
                                                     </div>
                                                     <div class="flex flex-col">
                                                         <span
-                                                            class="text-[#EAB308] text-3xl font-extrabold tracking-tight">{{informacionCotizacion.fecha_limite_meses
+                                                            class="text-amber-500 dark:text-amber-300 text-3xl font-extrabold tracking-tight">{{informacionCotizacion.fecha_limite_meses
                                                             |
                                                             dateI18n:'dd MMM yyyy':informacionCotizacion.idioma}}</span>
                                                         <span
@@ -1546,7 +1546,7 @@
                         </section>
 
                         <div class="flex items-center gap-4 mb-8">
-                            <h2 class="text-2xl font-black text-[#1e3a5f] dark:text-white">{{
+                            <h2 class="text-2xl font-black text-slate-800 dark:text-slate-100">{{
                                 t('alojamiento_seleccionado') }}</h2>
                             <div class="h-px flex-1 bg-slate-200 dark:bg-slate-800 opacity-50"></div>
                         </div>
@@ -1723,10 +1723,10 @@
                             @if(!esEdicion){
                             <!-- TODO: MANDAR COTIZACION AL AGENTE  -->
 
-                            <button class="no-print bg-[#1e3a5f] text-white
+                            <button class="no-print bg-slate-800 dark:bg-slate-700 text-white
                                px-6 sm:px-12 py-3 sm:py-4
                                rounded-2xl font-black text-xs uppercase tracking-widest
-                               hover:scale-[1.02] transition-all
+                               hover:scale-[1.02] hover:bg-slate-900 dark:hover:bg-slate-600 transition-all
                                shadow-xl shadow-blue-900/20
                                whitespace-nowrap" (click)="contactarAgente()">
                                 {{ t('contactar_agente') }}

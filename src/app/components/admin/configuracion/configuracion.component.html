@@ -11,7 +11,7 @@
     </div>
 
     <div class="mx-auto w-full max-w-screen-xl px-6 py-8 sm:px-8">
-        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             <a [routerLink]="['/admin/configuracion/permisos']"
                 class="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
                 <div class="relative aspect-[16/9] w-full overflow-hidden bg-white">
@@ -39,6 +39,30 @@
                     </p>
                 </div>
             </a>
+
+            <!-- <a [routerLink]="['/admin/configuracion/ip-information']"
+                class="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+                <div class="relative flex aspect-[16/9] items-center justify-center overflow-hidden bg-gradient-to-br from-slate-950 via-slate-800 to-cyan-900">
+                    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(34,211,238,0.26),transparent_40%),radial-gradient(circle_at_bottom_left,rgba(59,130,246,0.24),transparent_36%)]"></div>
+                    <div class="relative flex h-20 w-20 items-center justify-center rounded-3xl border border-white/10 bg-white/10 text-white shadow-2xl backdrop-blur-md">
+                        <mat-icon class="icon-size-8" svgIcon="heroicons_outline:globe-alt"></mat-icon>
+                    </div>
+                </div>
+
+                <div class="relative z-10 -mt-12 flex flex-1 flex-col p-6">
+                    <div class="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-cyan-700 shadow-lg transition-colors duration-300 group-hover:text-cyan-900">
+                        <mat-icon class="icon-size-8" svgIcon="heroicons_outline:wifi"></mat-icon>
+                    </div>
+
+                    <h2 class="text-2xl font-bold text-gray-900">
+                        IP Information
+                    </h2>
+
+                    <p class="mt-2 flex-1 text-base leading-6 text-gray-500">
+                        Revisa la IP pública actual o consulta una IP específica con sus señales de ubicación y riesgo.
+                    </p>
+                </div>
+            </a> -->
 
             <a [routerLink]="['/admin/configuracion/roles']"
                 class="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">

@@ -1,7 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { SupabaseService } from 'app/core/supabase.service';
+import { DestinosService } from 'app/core/destinos.service';
 import { BlockingLoaderComponent } from 'app/shared/blocking-loader/blocking-loader.component';
 import { MaterialModule } from 'app/shared/material.module';
 
@@ -30,7 +30,7 @@ interface IDestinoPadre {
 export class EditarDestinoComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly supabase = inject(SupabaseService);
+  private readonly supabase = inject(DestinosService);
   private readonly fb = inject(FormBuilder);
 
   destinoId!: number;
@@ -51,7 +51,8 @@ export class EditarDestinoComponent implements OnInit {
     destino_padre_id: [{ value: null as number | null, disabled: true }],
     continente_id: [{ value: null as number | null, disabled: true }],
     imagen_destino: [''],
-    imagen_cotizacion: ['']
+    imagen_cotizacion: [''],
+    activo: [true]
   });
 
   get esTipoDos(): boolean {
@@ -111,7 +112,8 @@ export class EditarDestinoComponent implements OnInit {
         destino_padre_id: esTipoDos ? (raw.destino_padre_id ?? null) : null,
         continente_id: esTipoDos ? (raw.continente_id ?? null) : null,
         imagen_destino: this.limpiarTexto(raw.imagen_destino),
-        imagen_cotizacion: this.limpiarTexto(raw.imagen_cotizacion)
+        imagen_cotizacion: this.limpiarTexto(raw.imagen_cotizacion),
+        activo: raw.activo ?? true
       };
 
       if (this.esCreacion) {
@@ -167,7 +169,8 @@ export class EditarDestinoComponent implements OnInit {
       destino_padre_id: data.destino_padre_id ?? null,
       continente_id: data.continente_id ?? null,
       imagen_destino: data.imagen_destino ?? '',
-      imagen_cotizacion: data.imagen_cotizacion ?? ''
+      imagen_cotizacion: data.imagen_cotizacion ?? '',
+      activo: data.activo ?? true
     });
 
     this.aplicarReglasPorTipo(Number(data.tipo_desino_id), false);

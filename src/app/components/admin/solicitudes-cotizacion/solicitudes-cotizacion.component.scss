@@ -1,7 +1,8 @@
 .table-shell {
     border-radius: 16px;
     overflow: hidden;
-    background: var(--mat-sys-surface, #fff);
+    background: var(--fuse-bg-card, var(--mat-sys-surface, #fff));
+    color: var(--fuse-text-default);
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -10,6 +11,15 @@
 
 :host {
     --filters-row-height: 88px;
+    --table-row-hover-bg: rgba(15, 23, 42, 0.03);
+    --table-row-alt-bg: rgba(15, 23, 42, 0.015);
+    --pill-bg: rgba(15, 23, 42, 0.06);
+}
+
+:host-context(.dark) {
+    --table-row-hover-bg: rgba(148, 163, 184, 0.08);
+    --table-row-alt-bg: rgba(148, 163, 184, 0.04);
+    --pill-bg: rgba(148, 163, 184, 0.14);
 }
 
 .table-scroll {
@@ -90,7 +100,7 @@
 .filter-row .mat-mdc-header-cell {
     padding-top: 8px !important;
     padding-bottom: 8px !important;
-    background: var(--mat-sys-surface, #fff);
+    background: var(--fuse-bg-card, var(--mat-sys-surface, #fff));
     height: var(--filters-row-height);
     min-height: var(--filters-row-height);
 }
@@ -112,7 +122,7 @@
 }
 
 :host ::ng-deep .main-header-row .mat-mdc-header-cell {
-    background: var(--mat-sys-surface, #fff);
+    background: var(--fuse-bg-card, var(--mat-sys-surface, #fff));
 }
 
 .filter-row.hidden .column-filter {
@@ -144,19 +154,20 @@
     transition: background 120ms ease;
 
     &:hover {
-        background: rgba(0, 0, 0, 0.03);
+        background: var(--table-row-hover-bg);
     }
 }
 
 /* zebra */
 .mat-mdc-row:nth-child(even) .mat-mdc-cell {
-    background: rgba(0, 0, 0, 0.015);
+    background: var(--table-row-alt-bg);
 }
 
 .mat-mdc-cell,
 .mat-mdc-header-cell {
     padding: 14px 16px !important;
-    border-bottom-color: rgba(0, 0, 0, 0.06) !important;
+    color: var(--fuse-text-default);
+    border-bottom-color: var(--fuse-border) !important;
 }
 
 .mono {
@@ -197,7 +208,8 @@
     border-radius: 999px;
     font-weight: 700;
     font-size: 12px;
-    background: rgba(0, 0, 0, 0.06);
+    background: var(--pill-bg);
+    color: var(--fuse-text-default);
 }
 
 .pill-ok {
@@ -246,7 +258,7 @@
 
 .table-footer {
     padding: 8px 8px 8px 8px;
-    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    border-top: 1px solid var(--fuse-border);
 }
 
 mat-form-field.search {

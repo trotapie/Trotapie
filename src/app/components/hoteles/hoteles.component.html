@@ -20,9 +20,13 @@
             <div class="mx-auto w-full max-w-screen-xl">
                 <section #anclaNacionales class="relative">
                     <div class="sticky top-0 z-30 shadow py-2 transition duration-300"
-                        [ngStyle]="{background: tipoDestino === 1 ? '#F0FDF4' : '#FEF7EC'}">
+                        [ngClass]="tipoDestino === 1
+                            ? 'bg-[#F0FDF4] dark:bg-emerald-950/80'
+                            : 'bg-[#FEF7EC] dark:bg-amber-950/70'">
                         <h2 class="text-center font-bold text-2xl"
-                            [ngStyle]="{color: tipoDestino === 1 ? '#166534' : '#F9B44B'}">
+                            [ngClass]="tipoDestino === 1
+                                ? 'text-[#166534] dark:text-emerald-300'
+                                : 'text-[#F9B44B] dark:text-amber-300'">
                             {{ tipoDestino === 1 ? t('destinos-nacionales')
                             : t('destinos-internacionales')
                             }}</h2>
@@ -107,7 +111,7 @@
 
                                 <div class="flex justify-center ">
                                     <button *ngIf="tipoDestino === 1" mat-stroked-button type="button" color="accent"
-                                        class="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-full hover:bg-gray-700 transition duration-200"
+                                        class="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-full hover:bg-gray-700 dark:bg-slate-900 dark:hover:bg-slate-800 transition duration-200"
                                         (click)="irA()">
                                         <div class="flex items-center">
                                             <img class="w-6 h-6 mr-2" src="assets/icons/destinos-internacionales.svg" />
@@ -152,7 +156,7 @@
 
                                         </h3>
 
-                                        <p class="text-base text-gray-400">
+                                        <p class="text-base text-gray-400 dark:text-gray-300">
                                             {{ t('hoteles-no-encontrados') }}
                                             <br>
                                             {{ t('seleccionar-nueva-ciudad') }}
@@ -252,8 +256,8 @@
 
                                 </h3>
 
-                                <p class="text-base text-gray-400">
-                                    {{ t('hoteles-no-encontrados') }}
+                                        <p class="text-base text-gray-400 dark:text-gray-300">
+                                            {{ t('hoteles-no-encontrados') }}
                                     <br>
                                     {{ t('seleccionar-nueva-ciudad') }}
                                 </p>
@@ -277,7 +281,7 @@
                                     </div>
                                 </div>
                                 <div
-                                    class="flex items-center gap-3 text-slate-400 group-hover:text-primary transition-colors">
+                                    class="flex items-center gap-3 text-slate-400 dark:text-slate-300 group-hover:text-primary transition-colors">
                                     <span class=" font-medium text-sm">{{ t('ver-mas') }}</span>
                                     <span
                                         class="material-icons-round chevron-icon transition-transform duration-300"><mat-icon
@@ -332,7 +336,7 @@
                                             <h4 class="text-lg font-bold text-slate-800 dark:text-white leading-tight">
                                                 {{ hotel.nombre_hotel }}
                                             </h4>
-                                            <div class="mt-2 flex items-center gap-2 text-primary font-medium text-sm">
+                                            <div class="mt-2 flex items-center gap-2 text-primary dark:text-emerald-300 font-medium text-sm">
                                                 Todo Incluido
                                             </div>
                                             <div class="mt-6 flex gap-2">
@@ -347,7 +351,7 @@
                                             class="md:col-span-3 sm:col-span-2 col-span-1 relative my-2">
 
                                             <button #toggleGrupoBtn type="button" class="absolute inset-0 flex items-center justify-center text-lg font-medium text-primary
-             cursor-pointer hover:underline select-none" (click)="toggleGrupo(grupo, toggleGrupoBtn)">
+             dark:text-emerald-300 cursor-pointer hover:underline select-none" (click)="toggleGrupo(grupo, toggleGrupoBtn)">
                                                 <mat-icon>
                                                     {{ estaExpandido(grupo) ? 'expand_less' : 'expand_more' }}
                                                 </mat-icon>

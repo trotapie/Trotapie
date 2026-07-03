@@ -1,6 +1,17 @@
+:host {
+    --client-result-hover-bg: rgba(13, 148, 136, 0.04);
+    --client-result-selected-bg: rgba(13, 148, 136, 0.08);
+}
+
+:host-context(.dark) {
+    --client-result-hover-bg: rgba(13, 148, 136, 0.12);
+    --client-result-selected-bg: rgba(13, 148, 136, 0.18);
+}
+
 .panel {
     border-radius: 16px;
-    background: var(--mat-sys-surface, #fff);
+    background: var(--fuse-bg-card, var(--mat-sys-surface, #fff));
+    color: var(--fuse-text-default);
     padding: 20px;
 }
 
@@ -10,11 +21,12 @@
 }
 
 .card {
-    border: 1px solid rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--fuse-border);
     border-radius: 14px;
     padding: 16px;
     display: grid;
     gap: 12px;
+    background: var(--fuse-bg-card, var(--mat-sys-surface, #fff));
 }
 
 .section-title {
@@ -25,18 +37,18 @@
 
 .summary-card {
     min-height: 56px;
-    border: 1px solid rgba(0, 0, 0, 0.12);
+    border: 1px solid var(--fuse-border);
     border-radius: 8px;
     padding: 10px 14px;
     display: grid;
     gap: 6px;
-    background: #fff;
+    background: var(--fuse-bg-card, #fff);
 }
 
 .summary-label {
     font-size: 12px;
     line-height: 1;
-    color: rgba(0, 0, 0, 0.6);
+    color: var(--fuse-text-secondary);
 }
 
 .summary-card strong,
@@ -48,7 +60,7 @@
     display: grid;
     gap: 3px;
     font-size: 12px;
-    color: rgba(0, 0, 0, 0.68);
+    color: var(--fuse-text-secondary);
 }
 
 .modal-backdrop {
@@ -66,7 +78,8 @@
     max-height: min(85vh, 900px);
     overflow: auto;
     border-radius: 18px;
-    background: #fff;
+    background: var(--fuse-bg-card, #fff);
+    color: var(--fuse-text-default);
     padding: 20px;
     display: grid;
     gap: 16px;
@@ -95,14 +108,14 @@
     width: 100%;
     flex: 1 1 auto;
     text-align: left;
-    border: 1px solid rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--fuse-border);
     border-radius: 12px;
     padding: 14px 16px;
     display: flex;
     align-items: center;
     justify-content: flex-start;
     gap: 12px;
-    background: #fff;
+    background: var(--fuse-bg-card, #fff);
     overflow: hidden;
     cursor: pointer;
     transition:
@@ -115,12 +128,12 @@
 
 .client-result-card:hover {
     border-color: rgba(13, 148, 136, 0.45);
-    background: #f8fffe;
+    background: var(--client-result-hover-bg);
 }
 
 .client-result-card-selected {
     border-color: rgba(13, 148, 136, 0.9);
-    background: #f0fdfa;
+    background: var(--client-result-selected-bg);
     box-shadow: 0 10px 24px rgba(13, 148, 136, 0.14);
 }
 
@@ -173,7 +186,7 @@
 
 .client-result-card span {
     font-size: 13px;
-    color: rgba(0, 0, 0, 0.68);
+    color: var(--fuse-text-secondary);
     overflow-wrap: anywhere;
 }
 
@@ -181,13 +194,13 @@
     min-height: 96px;
     display: grid;
     place-items: center;
-    border: 1px dashed rgba(0, 0, 0, 0.14);
+    border: 1px dashed var(--fuse-border);
     border-radius: 12px;
     padding: 16px;
 }
 
 .rooms-shell {
-    border: 1px solid rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--fuse-border);
     border-radius: 12px;
     padding: 12px;
     display: grid;
@@ -208,7 +221,7 @@
 }
 
 .room-card {
-    border: 1px solid rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--fuse-border);
     border-radius: 12px;
     padding: 12px;
     display: grid;
@@ -234,7 +247,7 @@
 
 .hint {
     font-size: 12px;
-    opacity: 0.75;
+    color: var(--fuse-text-secondary);
 }
 
 .counter {

@@ -36,6 +36,14 @@ export const compactNavigation: FuseNavigationItem[] = [
         link : '/admin/hoteles',
         meta : { permissions: ['hoteles.view'] }
     },
+    // {
+    //     id   : 'circuitos',
+    //     title: 'Circuitos',
+    //     type : 'basic',
+    //     icon : 'heroicons_outline:map',
+    //     link : '/admin/circuitos',
+    //     meta : { permissions: ['circuitos.view'] }
+    // },
     {
         id   : 'catalogos',
         title: 'Catalogos',
@@ -67,14 +75,14 @@ export const compactNavigation: FuseNavigationItem[] = [
         link : '/admin/empleados',
         meta : { permissions: ['empleados.manage'] }
     },
-    {
-        id   : 'configuracion',
-        title: 'Configuracion',
-        type : 'basic',
-        icon : 'heroicons_outline:cog-8-tooth',
-        link : '/admin/configuracion',
-        meta : { permissions: ['empleados.manage'] }
-    }
+    // {
+    //     id   : 'configuracion',
+    //     title: 'Configuracion',
+    //     type : 'basic',
+    //     icon : 'heroicons_outline:cog-8-tooth',
+    //     link : '/admin/configuracion',
+    //     meta : { permissions: ['empleados.manage'] }
+    // }
 ];
 export const futuristicNavigation: FuseNavigationItem[] = [
     {

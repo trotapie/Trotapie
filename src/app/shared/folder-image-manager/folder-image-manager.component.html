@@ -287,8 +287,8 @@
 </mat-menu>
 
 @if (editingFolderId !== null) {
-  <div class="fm-modal-backdrop">
-    <div class="fm-modal" role="dialog" aria-modal="true" aria-labelledby="folder-rename-title">
+  <div class="fm-modal-backdrop" @backdropFade>
+    <div class="fm-modal" @modalScaleFade role="dialog" aria-modal="true" aria-labelledby="folder-rename-title">
       <div class="fm-modal-head">
         <div>
           <p class="fm-modal-kicker">Renombrar carpeta</p>
@@ -322,8 +322,8 @@
 }
 
 @if (creatingFolder) {
-  <div class="fm-modal-backdrop">
-    <div class="fm-modal" role="dialog" aria-modal="true" aria-labelledby="folder-create-title">
+  <div class="fm-modal-backdrop" @backdropFade>
+    <div class="fm-modal" @modalScaleFade role="dialog" aria-modal="true" aria-labelledby="folder-create-title">
       <div class="fm-modal-head">
         <div>
           <p class="fm-modal-kicker">Nueva carpeta</p>

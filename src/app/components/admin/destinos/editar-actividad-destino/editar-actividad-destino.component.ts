@@ -7,8 +7,10 @@ import {
   IDriveActividadImportImage,
   IIdiomaPreviewAdmin,
   IPreviewDestinoAdmin,
-  SupabaseService
 } from 'app/core/supabase.service';
+import { DestinosService } from 'app/core/destinos.service';
+import { ActividadesService } from 'app/core/actividades.service';
+import { TraduccionesService } from 'app/core/traducciones.service';
 import { BlockingLoaderComponent } from 'app/shared/blocking-loader/blocking-loader.component';
 import {
   FolderImageManagerComponent,
@@ -16,6 +18,7 @@ import {
   FolderImageManagerImage
 } from 'app/shared/folder-image-manager/folder-image-manager.component';
 import { MaterialModule } from 'app/shared/material.module';
+import { backdropFade, modalScaleFade } from 'app/shared/animations';
 
 interface ILangConfig {
   code: string;
@@ -55,12 +58,15 @@ type ImagenActividadForm = {
   standalone: true,
   imports: [CommonModule, MaterialModule, ReactiveFormsModule, FolderImageManagerComponent, BlockingLoaderComponent],
   templateUrl: './editar-actividad-destino.component.html',
-  styleUrl: './editar-actividad-destino.component.scss'
+  styleUrl: './editar-actividad-destino.component.scss',
+  animations: [modalScaleFade, backdropFade],
 })
 export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly supabase = inject(SupabaseService);
+  private readonly destinosService = inject(DestinosService);
+  private readonly actividadesService = inject(ActividadesService);
+  private readonly traduccionesService = inject(TraduccionesService);
   private readonly fb = inject(UntypedFormBuilder);
 
   private readonly idiomasConfig: ILangConfig[] = [
@@ -413,30 +419,12 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     this.actividadId = actividadId;
 
     try {
-      const preview = await this.supabase.obtenerPreviewDestinoAdmin(destinoId);
+      const preview = await this.destinosService.obtenerPreviewDestinoAdmin(destinoId);
       const actividad = (preview.actividades ?? []).find((item) => Number(item.id) === actividadId);
-
-      console.log('[Editar actividad destino] Preview recibido:', {
-        destino_id: destinoId,
-        actividad_id: actividadId,
-        total_actividades: preview.actividades?.length ?? 0,
-        actividades: (preview.actividades ?? []).map((item: any) => ({
-          id: item.id,
-          total_imagenes: item.imagenes?.length ?? 0,
-          imagenes: item.imagenes
-        }))
-      });
 
       if (!actividad) {
         throw new Error('No se encontro la actividad solicitada.');
       }
-
-      console.log('[Editar actividad destino] Actividad seleccionada:', {
-        destino_id: destinoId,
-        actividad_id: actividadId,
-        total_imagenes: actividad.imagenes?.length ?? 0,
-        imagenes: actividad.imagenes
-      });
 
       this.destinoNombre = preview.destino_nombre;
       this.actividadNombre = this.obtenerNombreActividad(actividad, preview);
@@ -458,14 +446,6 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       this.normalizarOrdenImagenes();
       this.concentradoTraduccionesActividad = this.construirConcentradoTraduccionesDesdeActividad(actividad);
       this.ultimaLlaveTraduccionActividad = this.obtenerLlaveTraduccionEspanol();
-
-      console.log('[Editar actividad destino] FormArray de imagenes construido:', {
-        actividad_id: actividadId,
-        total_form_array: this.imagenesArray.length,
-        carpetas: this.carpetasDisponibles,
-        galeria_carpetas: this.galeriaCarpetas,
-        imagenes_form: this.imagenesArray.getRawValue()
-      });
     } catch (error: any) {
       this.error = error?.message ?? 'No se pudo cargar la actividad.';
     } finally {
@@ -505,14 +485,6 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
 
     this.establecerCarpetaPendiente(draftKey, carpetaId, carpetaNombre);
 
-    console.log('[Editar actividad destino] Carpeta de imagen marcada como pendiente:', {
-      imagen_index: this.imagenEditandoIndex,
-      valor_recibido: valor,
-      carpeta_id: carpetaId,
-      carpeta_nombre: carpetaNombre,
-      imagen: this.imagenEditandoControl.getRawValue(),
-      draft_key: draftKey
-    });
   }
 
   async crearCarpetaActividad(nombre: string) {
@@ -523,7 +495,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
 
     this.procesandoCrearCarpeta = true;
     try {
-      await this.supabase.crearCarpetaActividadAdmin({
+      await this.actividadesService.crearCarpetaActividadAdmin({
         destino_id: this.destinoId,
         actividad_id: this.actividadId,
         nombre: limpio
@@ -555,7 +527,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     }
 
     try {
-      const respuesta = await this.supabase.renombrarCarpetaActividadAdmin({
+      const respuesta = await this.actividadesService.renombrarCarpetaActividadAdmin({
         destino_id: this.destinoId,
         actividad_id: this.actividadId,
         carpeta_id: carpetaId,
@@ -610,7 +582,6 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   }
 
   solicitarMoverImagenDesdeGestor(evento: { image: FolderImageManagerImage; folder: FolderImageManagerFolder }): void {
-    console.log('imageneeeeeeen ',evento);
     
     const imagenId = this.parseNumber(evento.image.id);
     const carpetaOrigenId = this.parseNumber(evento.image.folderId ?? null);
@@ -679,7 +650,6 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     carpeta_destino_id: number;
     carpeta_destino_nombre: string;
   }): Promise<void> {
-   console.log(payload);
    
     const imagenId = payload.imagen_id;
     if (imagenId === null) {
@@ -695,7 +665,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     this.guardandoImagenes = true;
 
     try {
-      await this.supabase.moverImagenActividadAdmin({
+      await this.actividadesService.moverImagenActividadAdmin({
         destino_id: this.destinoId,
         actividad_id: this.actividadId,
         imagen_id: imagenId,
@@ -768,7 +738,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     this.error = '';
 
     try {
-      const respuesta: any = await this.supabase.administrarCarpetaActividadAdmin({
+      const respuesta: any = await this.actividadesService.administrarCarpetaActividadAdmin({
         destino_id: this.destinoId,
         actividad_id: this.actividadId,
         carpeta_id: carpetaId,
@@ -922,7 +892,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
 
     this.procesandoEliminarCarpeta = true;
     try {
-      await this.supabase.eliminarCarpetaConImagenesActividadAdmin({
+      await this.actividadesService.eliminarCarpetaConImagenesActividadAdmin({
         destino_id: this.destinoId,
         actividad_id: this.actividadId,
         carpeta_id: carpetaId
@@ -959,7 +929,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
 
     this.procesandoEliminarCarpeta = true;
     try {
-      await this.supabase.eliminarCarpetaActividadAdmin({
+      await this.actividadesService.eliminarCarpetaActividadAdmin({
         destino_id: this.destinoId,
         actividad_id: this.actividadId,
         carpeta_id: carpetaId
@@ -999,14 +969,14 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
 
     this.procesandoEliminarCarpeta = true;
     try {
-      await this.supabase.moverImagenesCarpetaActividadAdmin({
+      await this.actividadesService.moverImagenesCarpetaActividadAdmin({
         destino_id: this.destinoId,
         actividad_id: this.actividadId,
         carpeta_origen_id: carpetaId,
         carpeta_destino_id: carpetaDestinoId
       });
 
-      await this.supabase.eliminarCarpetaActividadAdmin({
+      await this.actividadesService.eliminarCarpetaActividadAdmin({
         destino_id: this.destinoId,
         actividad_id: this.actividadId,
         carpeta_id: carpetaId
@@ -1041,7 +1011,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
 
     this.procesandoEliminarCarpeta = true;
     try {
-      const nuevaCarpeta = await this.supabase.crearCarpetaActividadAdmin({
+      const nuevaCarpeta = await this.actividadesService.crearCarpetaActividadAdmin({
         destino_id: this.destinoId,
         actividad_id: this.actividadId,
         nombre
@@ -1056,14 +1026,14 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
         throw new Error('La nueva carpeta debe tener un nombre diferente.');
       }
 
-      await this.supabase.moverImagenesCarpetaActividadAdmin({
+      await this.actividadesService.moverImagenesCarpetaActividadAdmin({
         destino_id: this.destinoId,
         actividad_id: this.actividadId,
         carpeta_origen_id: carpetaId,
         carpeta_destino_id: nuevaCarpetaId
       });
 
-      await this.supabase.eliminarCarpetaActividadAdmin({
+      await this.actividadesService.eliminarCarpetaActividadAdmin({
         destino_id: this.destinoId,
         actividad_id: this.actividadId,
         carpeta_id: carpetaId
@@ -1129,7 +1099,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     this.error = '';
 
     try {
-      const folders = await this.supabase.obtenerImagenesActividadDesdeDrive(driveUrl);
+      const folders = await this.actividadesService.obtenerImagenesActividadDesdeDrive(driveUrl);
       const carpetaDefault = this.obtenerCarpetaDefaultActividad();
 
       this.carpetasDriveActividad = folders.map((folder, index) => {
@@ -1566,7 +1536,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     this.error = '';
 
     try {
-      await this.supabase.guardarTraduccionesActividadAdmin({
+      await this.actividadesService.guardarTraduccionesActividadAdmin({
         destino_id: this.destinoId,
         actividad_id: this.actividadId,
         traducciones
@@ -1614,20 +1584,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     this.error = '';
 
     try {
-      console.log('[Editar actividad destino] Imagen seleccionada para activar:', {
-        actividad_id: this.actividadId,
-        imagen_activa_id: imagenActivaId,
-        imagen_activa_url: imagenActiva?.imagen_url ?? null,
-        imagen_activa_carpeta: imagenActiva?.carpeta ?? imagenActiva?.carpeta_nombre ?? null,
-        imagenes: imagenes.map((imagen) => ({
-          id: imagen.id,
-          activa: imagen.activa,
-          carpeta: imagen.carpeta ?? imagen.carpeta_nombre,
-          imagen_url: imagen.imagen_url
-        }))
-      });
-
-      await this.supabase.guardarImagenesActividadAdmin({
+      await this.actividadesService.guardarImagenesActividadAdmin({
         destino_id: this.destinoId,
         actividad_id: this.actividadId,
         imagen_fondo: imagenPrincipal,
@@ -1995,7 +1952,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const traducciones = await this.supabase.traducirDesdeEspanol({
+    const traducciones = await this.traduccionesService.traducirDesdeEspanol({
       title: esNombre,
       description: esDescripcion
     });

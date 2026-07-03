@@ -4,10 +4,11 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
-import { SupabaseService } from 'app/core/supabase.service';
+import { EmpleadosService } from 'app/core/empleados.service';
 import { EstatusComponent } from 'app/shared/estatus/estatus.component';
 import { MaterialModule } from 'app/shared/material.module';
 import { EmpleadoToastComponent } from './empleado-toast.component';
+import { backdropFade, modalScaleFade, fadeSlideIn } from 'app/shared/animations';
 
 interface IEmpleadoAdmin {
   id: number;
@@ -29,13 +30,14 @@ interface IRolAdmin {
   standalone: true,
   imports: [MaterialModule, EstatusComponent],
   templateUrl: './empleados.component.html',
-  styleUrl: './empleados.component.scss'
+  styleUrl: './empleados.component.scss',
+  animations: [modalScaleFade, backdropFade, fadeSlideIn],
 })
 export class EmpleadosComponent implements OnInit, AfterViewInit {
   private readonly ESTATUS_ACTIVO = 1;
   private readonly ESTATUS_INHABILITADO = 2;
 
-  private supabase = inject(SupabaseService);
+  private supabase = inject(EmpleadosService);
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
 

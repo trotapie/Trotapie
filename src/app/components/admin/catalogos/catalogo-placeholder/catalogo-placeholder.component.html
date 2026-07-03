@@ -324,9 +324,10 @@
 </div>
 
 @if (modalEdicionAbierto && usaModalEdicion && !esCatalogoPoliticas && editingId !== null) {
-<div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 p-4">
+<div class="fixed inset-0 z-[3000] flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50" @backdropFade></div>
     <div
-        class="relative flex w-full max-h-[92vh] flex-col overflow-hidden rounded-2xl bg-white p-4 shadow-2xl dark:bg-gray-900 sm:p-6"
+        class="relative z-10 flex w-full max-h-[92vh] flex-col overflow-hidden rounded-2xl bg-white p-4 shadow-2xl dark:bg-gray-900 sm:p-6"
         [class.max-w-lg]="!esCatalogoTarifas"
         [class.max-w-4xl]="esCatalogoTarifas">
         <h2 class="shrink-0 text-xl font-semibold text-gray-900 dark:text-white">
@@ -964,8 +965,9 @@
 }
 
 @if (modalEdicionAbierto && esCatalogoPoliticas && editingId !== null) {
-<div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
-    <div class="relative flex h-[85vh] w-full max-w-4xl flex-col rounded-2xl bg-white p-6 shadow-2xl">
+<div class="fixed inset-0 z-[3000] flex items-center justify-center px-4">
+    <div class="absolute inset-0 bg-black/50" @backdropFade></div>
+    <div class="relative z-10 flex h-[85vh] w-full max-w-4xl flex-col rounded-2xl bg-white p-6 shadow-2xl" @modalScaleFade>
         <h2 class="shrink-0 text-xl font-semibold text-gray-900">
             {{ tituloModalEdicion }}
         </h2>
@@ -1093,8 +1095,9 @@
 }
 
 @if (modalEliminarAbierto && puedeEliminarRegistro && itemAEliminar) {
-<div class="fixed inset-0 z-[3010] flex items-center justify-center bg-black/60 p-4">
-    <div class="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900">
+<div class="fixed inset-0 z-[3010] flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/60" @backdropFade></div>
+    <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900" @modalScaleFade>
         <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
             {{ esCatalogoIdiomas ? 'Eliminar idioma' : (esCatalogoAmenidades ? 'Eliminar amenidad' : (esCatalogoPoliticas ? 'Eliminar politica' : (esCatalogoDescuentos ? 'Eliminar descuento' : (esCatalogoTarifas ? 'Eliminar tarifa' : (esCatalogoTipoImagen ? 'Eliminar tipo imagen' : (esCatalogoTiposHabitacion ? 'Eliminar habitacion' : 'Eliminar continente')))))) }}
         </h3>
@@ -1136,8 +1139,9 @@
 }
 
 @if (modalCrearAbierto && esCatalogoPoliticas) {
-<div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
-    <div class="relative flex h-[85vh] w-full max-w-4xl flex-col rounded-2xl bg-white p-6 shadow-2xl">
+<div class="fixed inset-0 z-[3000] flex items-center justify-center px-4">
+    <div class="absolute inset-0 bg-black/50" @backdropFade></div>
+    <div class="relative z-10 flex h-[85vh] w-full max-w-4xl flex-col rounded-2xl bg-white p-6 shadow-2xl" @modalScaleFade>
         <h2 class="shrink-0 text-xl font-semibold text-gray-900">
             {{ tituloModalCrear }}
         </h2>
@@ -1273,9 +1277,10 @@
 }
 
 @if (modalCrearAbierto && puedeCrearRegistro && !esCatalogoPoliticas) {
-<div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 p-4">
+<div class="fixed inset-0 z-[3000] flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50" @backdropFade></div>
     <div
-        class="relative flex w-full max-h-[92vh] flex-col overflow-hidden rounded-2xl bg-white p-4 shadow-2xl dark:bg-gray-900 sm:p-6"
+        class="relative z-10 flex w-full max-h-[92vh] flex-col overflow-hidden rounded-2xl bg-white p-4 shadow-2xl dark:bg-gray-900 sm:p-6"
         [class.max-w-lg]="!esCatalogoTarifas"
         [class.max-w-4xl]="esCatalogoTarifas">
         <h2 class="shrink-0 text-xl font-semibold text-gray-900 dark:text-white">
@@ -1808,8 +1813,9 @@
 }
 
 @if (mostrarModalExito) {
-<div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
-    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+<div class="fixed inset-0 z-[3000] flex items-center justify-center px-4">
+    <div class="absolute inset-0 bg-black/50" @backdropFade></div>
+    <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" @modalScaleFade>
         <h3 class="text-xl font-semibold text-gray-900">Actualizacion completada</h3>
         <p class="mt-2 text-sm text-gray-600">
             {{ mensajeModalExito }}

@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, HostListener, Input, OnChanges, OnDestroy, Output, SimpleChanges } from '@angular/core';
 import { MaterialModule } from 'app/shared/material.module';
+import { backdropFade, modalScaleFade } from 'app/shared/animations';
 
 export interface FolderImageManagerImage {
   id: string | number;
@@ -29,7 +30,8 @@ export interface FolderImageManagerFolder {
   standalone: true,
   imports: [CommonModule, MaterialModule],
   templateUrl: './folder-image-manager.component.html',
-  styleUrl: './folder-image-manager.component.scss'
+  styleUrl: './folder-image-manager.component.scss',
+  animations: [modalScaleFade, backdropFade],
 })
 export class FolderImageManagerComponent implements OnChanges, OnDestroy {
   @Input() title = 'Administrador de archivos';

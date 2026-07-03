@@ -63,6 +63,18 @@
     </div>
     }
 
+    <div class="mx-6 mb-2">
+        <mat-form-field class="w-full sm:w-72" subscriptSizing="dynamic">
+            <mat-icon matPrefix class="icon-size-5" [svgIcon]="'heroicons_solid:magnifying-glass'"></mat-icon>
+            <input matInput placeholder="Buscar destino..." [(ngModel)]="filtroBusqueda" />
+            @if (filtroBusqueda) {
+            <button matSibling mat-icon-button (click)="filtroBusqueda = ''">
+                <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
+            </button>
+            }
+        </mat-form-field>
+    </div>
+
     @if (errorOrden) {
     <div class="mx-6 mt-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
         {{ errorOrden }}
@@ -282,8 +294,8 @@
             </tbody>
         </table> -->
         <div class="w-full overflow-auto">
-            <table mat-table [dataSource]="dataSourceVisible" cdkDropList [cdkDropListData]="dataSourceVisible"
-                (cdkDropListDropped)="drop($event)">
+            <table mat-table [dataSource]="dataSourceFiltrada" cdkDropList [cdkDropListData]="dataSourceVisible"
+                [cdkDropListDisabled]="!draggableEnabled" (cdkDropListDropped)="drop($event)">
 
                 <ng-container matColumnDef="orden">
                     <th mat-header-cell *matHeaderCellDef>Orden</th>
@@ -303,6 +315,21 @@
                     <th mat-header-cell *matHeaderCellDef>Tipo Destino</th>
                     <td mat-cell *matCellDef="let item">
                         {{ item.tipo_destino }}
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="activo">
+                    <th mat-header-cell *matHeaderCellDef>Estado</th>
+                    <td mat-cell *matCellDef="let item">
+                        @if (item.activo) {
+                        <span class="inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-700 ring-1 ring-inset ring-green-600/20">
+                            Activo
+                        </span>
+                        } @else {
+                        <span class="inline-flex items-center rounded-full bg-gray-50 px-2.5 py-0.5 text-xs font-semibold text-gray-600 ring-1 ring-inset ring-gray-500/20">
+                            Inactivo
+                        </span>
+                        }
                     </td>
                 </ng-container>
 
@@ -328,8 +355,9 @@
                                 <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:eye'"></mat-icon>
                             </button>
 
-                            <button mat-icon-button [matTooltip]="'Reordenar'" cdkDragHandle>
-                                <mat-icon class="cursor-move">drag_indicator</mat-icon>
+                            <button mat-icon-button [matTooltip]="'Reordenar'" cdkDragHandle
+                                [disabled]="!draggableEnabled">
+                                <mat-icon class="cursor-move" [class.opacity-30]="!draggableEnabled">drag_indicator</mat-icon>
                             </button>
                         </div>
                     </td>
@@ -337,7 +365,7 @@
 
                 <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
 
-                <tr mat-row cdkDrag *matRowDef="let row; columns: displayedColumns">
+                <tr mat-row [cdkDrag]="draggableEnabled ? '' : null" *matRowDef="let row; columns: displayedColumns">
                 </tr>
 
             </table>

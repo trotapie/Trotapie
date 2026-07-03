@@ -1,20 +1,22 @@
 import { Component, ElementRef, inject, Input, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { MaterialModule } from '../material.module';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
-import { SupabaseService } from 'app/core/supabase.service';
+import { ImagenesService } from 'app/core/imagenes.service';
 import { Router } from '@angular/router';
 import { BotCotizadorComponent } from 'app/bot-cotizador/bot-cotizador.component';
 import { IDetalleHotel } from 'app/components/hoteles/hoteles.interface';
+import { backdropFade, modalScaleFade } from 'app/shared/animations';
 
 @Component({
   selector: 'app-imagenes-carrusel',
   imports: [MaterialModule, TranslocoModule, BotCotizadorComponent],
   templateUrl: './imagenes-carrusel.component.html',
-  styleUrl: './imagenes-carrusel.component.scss'
+  styleUrl: './imagenes-carrusel.component.scss',
+  animations: [modalScaleFade, backdropFade],
 })
 export class ImagenesCarruselComponent implements OnInit, OnDestroy {
   private _translocoService = inject(TranslocoService);
-  private supabase = inject(SupabaseService);
+    private supabase = inject(ImagenesService);
   private router = inject(Router)
   @Input() imagenesCargadas: any[] = [];
   @Input() hotel: IDetalleHotel;

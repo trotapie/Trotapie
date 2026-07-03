@@ -1,8 +1,9 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { SupabaseService } from 'app/core/supabase.service';
+import { EmpleadosService } from 'app/core/empleados.service';
 import { MaterialModule } from 'app/shared/material.module';
+import { backdropFade, modalScaleFade, listAnimation } from 'app/shared/animations';
 
 interface RolAdminItem {
   id: number;
@@ -21,10 +22,11 @@ interface PermisoDisponibleItem {
   imports: [MaterialModule, RouterLink, ReactiveFormsModule],
   templateUrl: './roles.component.html',
   styleUrl: './roles.component.scss',
+  animations: [modalScaleFade, backdropFade, listAnimation],
 })
 export class RolesAdminComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
-  private readonly supabase = inject(SupabaseService);
+  private readonly supabase = inject(EmpleadosService);
 
   roles: RolAdminItem[] = [];
   rolesFiltrados: RolAdminItem[] = [];

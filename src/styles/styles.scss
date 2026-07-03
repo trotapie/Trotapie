@@ -6,9 +6,96 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+    --tp-motion-duration-fast: 160ms;
+    --tp-motion-duration-medium: 240ms;
+    --tp-motion-duration-slow: 320ms;
+    --tp-motion-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --tp-motion-ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+    --tp-motion-shadow: 0 22px 60px rgba(15, 23, 42, 0.18);
+}
+
+@keyframes tp-motion-pop-in {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 14px, 0) scale(0.96);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+}
+
+@keyframes tp-motion-pop-out {
+    from {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: translate3d(0, 10px, 0) scale(0.98);
+    }
+}
+
+@keyframes tp-motion-glow {
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.14);
+    }
+
+    50% {
+        box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+    }
+}
+
+@keyframes tp-motion-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.tp-motion-pop-in {
+    animation: tp-motion-pop-in var(--tp-motion-duration-slow) var(--tp-motion-ease-out) both;
+}
+
+.tp-motion-pop-out {
+    animation: tp-motion-pop-out var(--tp-motion-duration-medium) var(--tp-motion-ease-in) both;
+}
+
+.tp-motion-glow {
+    animation: tp-motion-glow 2.4s ease-in-out infinite;
+}
+
+.tp-motion-dialog-backdrop {
+    animation: tp-motion-fade-in var(--tp-motion-duration-medium) ease-out both;
+}
+
 .cdk-overlay-container,
 .cdk-global-overlay-wrapper {
     z-index: 6000 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .tp-motion-pop-in,
+    .tp-motion-pop-out,
+    .tp-motion-glow {
+        animation: none !important;
+    }
 }
 
 .tp-select-panel.mat-mdc-select-panel {
@@ -795,4 +882,34 @@ fieldset {
 .radio:hover input[type="radio"]:checked + label {
   -webkit-box-shadow: #ecbb2930 0px 0px 0px 25px;
   box-shadow: #ecbb2930 0px 0px 0px 10px;
+}
+
+button:not(
+  [class*="mat-menu-item"]:not([class*="mat-calendar"]):not([class*="mat-paginator"]):not([class*="mat-datepicker"]):not([class*="mdc-tab"])
+),
+.mat-mdc-unelevated-button,
+.mat-mdc-raised-button,
+.mat-mdc-stroked-button,
+.mat-mdc-flat-button,
+.mat-mdc-icon-button,
+.mat-mdc-fab,
+.mat-mdc-mini-fab {
+  transition: transform var(--tp-motion-duration-fast) var(--tp-motion-ease-out),
+              box-shadow var(--tp-motion-duration-fast) var(--tp-motion-ease-out) !important;
+}
+
+button:not(:disabled):hover,
+.mat-mdc-unelevated-button:not(:disabled):hover,
+.mat-mdc-raised-button:not(:disabled):hover,
+.mat-mdc-stroked-button:not(:disabled):hover,
+.mat-mdc-flat-button:not(:disabled):hover {
+  transform: scale(1.02);
+}
+
+button:not(:disabled):active,
+.mat-mdc-unelevated-button:not(:disabled):active,
+.mat-mdc-raised-button:not(:disabled):active,
+.mat-mdc-stroked-button:not(:disabled):active,
+.mat-mdc-flat-button:not(:disabled):active {
+  transform: scale(0.98);
 }

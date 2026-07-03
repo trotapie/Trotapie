@@ -3,11 +3,13 @@ import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-
 import { Component, inject, OnInit } from '@angular/core';
 import { PageEvent } from '@angular/material/paginator';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { sanitizeSvg } from 'app/shared/utils/svg-sanitizer';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CatalogoAdminKey, CatalogosAdminService, IPoliticaTarifaAdmin } from 'app/core/catalogos-admin.service';
-import { SupabaseService } from 'app/core/supabase.service';
+import { TraduccionesService } from 'app/core/traducciones.service';
 import { EstatusComponent } from 'app/shared/estatus/estatus.component';
 import { MaterialModule } from 'app/shared/material.module';
+import { backdropFade, modalScaleFade } from 'app/shared/animations';
 
 interface IPoliticaTraduccionPreview {
   titulo: string;
@@ -40,13 +42,14 @@ interface CatalogoVistaConfig {
   standalone: true,
   imports: [CommonModule, MaterialModule, RouterLink, DragDropModule, EstatusComponent],
   templateUrl: './catalogo-placeholder.component.html',
-  styleUrl: './catalogo-placeholder.component.scss'
+  styleUrl: './catalogo-placeholder.component.scss',
+  animations: [modalScaleFade, backdropFade],
 })
 export class CatalogoPlaceholderComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly catalogosAdmin = inject(CatalogosAdminService);
-  private readonly supabase = inject(SupabaseService);
+  private readonly supabase = inject(TraduccionesService);
   private readonly sanitizer = inject(DomSanitizer);
 
   private readonly configuraciones: Record<CatalogoAdminKey, CatalogoVistaConfig> = {
@@ -2036,7 +2039,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
       return null;
     }
 
-    return this.sanitizer.bypassSecurityTrustHtml(contenido);
+    return this.sanitizer.bypassSecurityTrustHtml(sanitizeSvg(contenido));
   }
 
   esPoliticaTarifaSeleccionada(politicaId: number): boolean {

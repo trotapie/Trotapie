@@ -116,7 +116,7 @@ export class AuthSignInComponent implements OnInit {
     //     const { data, error } = await this.supabase.signIn(this.signInForm.get('email').value, this.signInForm.get('password').value);
 
     //     if (data) {
-    //         console.log('si entra');
+    //         
     //         this.accessToken = data.session.access_token;
 
     //         // Set the authenticated flag to true

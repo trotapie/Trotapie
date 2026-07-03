@@ -1,7 +1,7 @@
 <ng-container *transloco="let t">
     <div class="mt-10">
         @if(!esCotizacion){
-        <div class="text-2xl my-4 font-semibold leading-tight text-center">
+        <div class="text-2xl my-4 font-semibold leading-tight text-center text-slate-900 dark:text-white">
             {{t('ver-galeria')}}
         </div>
         <div class="grid grid-cols-3 gap-3
@@ -96,7 +96,7 @@
          sm:flex-row sm:gap-3
          z-30 max-w-[90vw]">
 
-                    <div class="text-white/90 w-20 text-sm md:text-lg px-2.5 py-1 rounded bg-black/40">
+                    <div class="text-white/90 w-20 text-sm md:text-lg px-2.5 py-1 rounded bg-black/40 dark:bg-slate-900/70">
                         {{ currentIndex + 1 }}/{{ imagenesFilter.length }}
                     </div>
 
@@ -129,19 +129,19 @@
 
                     <button mat-icon-button type="button" (click)="prev($event); detenerAutoplay();"
                         class="absolute left-3 md:left-6 top-1/2 -translate-y-1/2
-                                         p-2 md:p-3 rounded-full bg-white text-black
-                                         hover:bg-gray-100 focus:outline-none shadow-md transition-colors duration-200">
-                        <mat-icon class="text-black w-5 h-5" [svgIcon]="'heroicons_outline:arrow-left'">
+                                         p-2 md:p-3 rounded-full bg-white text-black dark:bg-slate-800 dark:text-white
+                                         hover:bg-gray-100 dark:hover:bg-slate-700 focus:outline-none shadow-md transition-colors duration-200">
+                        <mat-icon class="text-black dark:text-white w-5 h-5" [svgIcon]="'heroicons_outline:arrow-left'">
                         </mat-icon>
                     </button>
 
                     <button mat-icon-button class="absolute right-3 md:right-6 top-1/2 -translate-y-1/2
-                                                       rounded-full  bg-white text-black" (click)="next($event); detenerAutoplay();">
-                        <mat-icon class="icon-size-5 text-black" [svgIcon]="'heroicons_outline:arrow-right'"></mat-icon>
+                                                       rounded-full bg-white text-black dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700" (click)="next($event); detenerAutoplay();">
+                        <mat-icon class="icon-size-5 text-black dark:text-white" [svgIcon]="'heroicons_outline:arrow-right'"></mat-icon>
                     </button>
                     <div class="absolute top-3 right-3 md:top-6 md:right-6 flex items-center gap-2 z-20">
                         <button mat-raised-button class="rounded-full px-4 py-2 gap-1
-                                              bg-[#F9B44B]  hover:bg-[#e0a13a]
+                                              bg-[#F9B44B] dark:bg-amber-500 dark:hover:bg-amber-400 hover:bg-[#e0a13a]
                                                text-white backdrop-blur shadow-md
                                                transition [text-shadow:_0_2px_2px_rgba(0,0,0,0.50)]"
                             (click)="abrirModal()">
@@ -150,7 +150,7 @@
                             {{t('cotizar')}}
                         </button>
 
-                        <button mat-raised-button class="rounded-full bg-white/20 hover:bg-white/30
+                        <button mat-raised-button class="rounded-full bg-white/20 hover:bg-white/30 dark:bg-slate-800/80 dark:hover:bg-slate-700/90
                                                text-white backdrop-blur
                                                focus:outline-none" (click)="close()">
                             <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:x-mark'">
@@ -188,7 +188,7 @@
             </a>
         </div>
     </div>
-    <section *ngIf="mostrarBot">
+    <section *ngIf="mostrarBot" @modalScaleFade>
         <bot-cotizador [hotel]="hotel" (cerrar)="cerrarModal()"/>
     </section>
 </ng-container>

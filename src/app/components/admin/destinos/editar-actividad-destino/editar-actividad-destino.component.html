@@ -131,8 +131,9 @@
         </section>
 
         @if (editorImagenAbierto && imagenEditandoControl) {
-          <div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4 py-4">
-            <div class="image-edit-modal w-full max-w-2xl rounded-3xl bg-white shadow-2xl">
+          <div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center px-4 py-4">
+            <div class="absolute inset-0 bg-black/50" @backdropFade></div>
+            <div class="image-edit-modal relative z-10 w-full max-w-2xl rounded-3xl bg-white shadow-2xl" @modalScaleFade>
               <div class="flex items-start justify-between gap-4 border-b border-gray-100 px-6 py-5">
                 <div>
                   <h3 class="text-2xl font-semibold text-gray-900">Editar imagen</h3>
@@ -214,8 +215,9 @@
         }
 
         @if (mostrarModalConfirmarEliminarCarpeta && carpetaAEliminar) {
-          <div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
-            <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+          <div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center px-4">
+            <div class="absolute inset-0 bg-black/50" @backdropFade></div>
+            <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" @modalScaleFade>
               <h3 class="text-xl font-semibold text-gray-900">Confirmar eliminacion</h3>
               <p class="mt-2 text-sm text-gray-600">
                 Seguro que quieres eliminar la carpeta
@@ -327,8 +329,9 @@
         }
 
         @if (mostrarModalTipoAgregarImagen) {
-          <div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
-            <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+          <div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center px-4">
+            <div class="absolute inset-0 bg-black/50" @backdropFade></div>
+            <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" @modalScaleFade>
               <h3 class="text-xl font-semibold text-gray-900">Agregar imagen</h3>
               <p class="mt-2 text-sm text-gray-600">
                 Quieres agregar la imagen manualmente o cargar varias desde una carpeta de Drive?
@@ -350,8 +353,9 @@
         }
 
         @if (mostrarModalCargaDriveImagenes) {
-          <div class="modal-blocker drive-import-modal fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4 py-4">
-            <div class="drive-import-modal__dialog w-full max-w-3xl rounded-2xl bg-white p-6 shadow-2xl">
+          <div class="modal-blocker drive-import-modal fixed inset-0 z-[3000] flex items-center justify-center px-4 py-4">
+            <div class="absolute inset-0 bg-black/50" @backdropFade></div>
+            <div class="drive-import-modal__dialog relative z-10 w-full max-w-3xl rounded-2xl bg-white p-6 shadow-2xl" @modalScaleFade>
               <div class="flex items-start justify-between gap-3">
                 <div>
                   <h3 class="text-xl font-semibold text-gray-900">Cargar imagenes desde Drive</h3>
@@ -476,8 +480,9 @@
         }
 
         @if (mostrarModalConfirmarMoverImagen && imagenAReubicar) {
-          <div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
-            <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+          <div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center px-4">
+            <div class="absolute inset-0 bg-black/50" @backdropFade></div>
+            <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" @modalScaleFade>
               <h3 class="text-xl font-semibold text-gray-900">Mover imagen</h3>
               <p class="mt-2 text-sm text-gray-600">
                 La imagen quedara preparada para moverse a

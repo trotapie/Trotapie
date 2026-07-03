@@ -2,13 +2,17 @@ import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DatosService } from 'app/components/hoteles/hoteles.service';
 import { MapaComponent } from 'app/components/hoteles/mapa/mapa.component';
-import { SupabaseService } from 'app/core/supabase.service';
+import { DestinosService } from 'app/core/destinos.service';
+import { IpQueryService } from 'app/core/services/ip-query.service';
+import { TemperatureUnitsService } from 'app/core/services/temperature-units.service';
+import { celsiusToFahrenheit } from 'app/core/utils/temperature-utils';
 import { FooterComponent } from 'app/footer/footer.component';
 import { IClima } from 'app/interface/clima.interface';
 import { MaterialModule } from 'app/shared/material.module';
 import { IDetallesDestino } from './detalle-destino.interface';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { getDefaultLang } from 'app/lang.utils';
+import { log } from 'fabric/fabric-impl';
 
 @Component({
   selector: 'app-detalle-destino',
@@ -19,7 +23,9 @@ import { getDefaultLang } from 'app/lang.utils';
 export class DetalleDestinoComponent implements OnInit {
   private datosService = inject(DatosService);
   private router = inject(Router);
-  private supabase = inject(SupabaseService);
+  private supabase = inject(DestinosService);
+  private ipQueryService = inject(IpQueryService);
+  private temperatureUnitsService = inject(TemperatureUnitsService);
   private _translocoService = inject(TranslocoService);
   private route = inject(ActivatedRoute)
 
@@ -28,6 +34,9 @@ export class DetalleDestinoComponent implements OnInit {
   detallesDestino: IDetallesDestino;
 
   datosClima: IClima;
+  ipPublica = '';
+  paisCode = '';
+  tempUnit = { unit: 'celsius', symbol: '°C' };
   mostrarMapa = false;
   currentIndex = 0;
   intervalId: any;
@@ -36,10 +45,17 @@ export class DetalleDestinoComponent implements OnInit {
     const id = Number(this.route.snapshot.paramMap.get('id'));
 
     const informacionDestino = await this.supabase.obtenerDetalleDestino(id, getDefaultLang());
-    this.detallesDestino = informacionDestino[0];
-    if (!this.detallesDestino) {
+    if (!informacionDestino) {
       this.cargarInfo();
+      return;
     }
+    this.detallesDestino = informacionDestino[0];
+
+    this.ipQueryService.getCurrentIpInfo().subscribe((response) => {
+      this.ipPublica = response.ip;
+      this.paisCode = response.location.country_code;
+      this.tempUnit = this.temperatureUnitsService.getUnit(this.paisCode);
+    });
 
     const coordenadas = this.extraerCoordenadasDesdeUrl(this.detallesDestino.ubicacion);
     this.datosService.getWeather(coordenadas.lat, coordenadas.lng).subscribe(weather => {
@@ -82,6 +98,16 @@ export class DetalleDestinoComponent implements OnInit {
 
   regresar() {
     this.router.navigate(['/inicio']);
+  }
+
+  get temperaturaDisplay(): { valor: string; simbolo: string } | null {
+    const temp = this.datosClima?.current_weather?.temperature;
+    if (temp == null) return null;
+
+    if (this.tempUnit.unit === 'fahrenheit') {
+      return { valor: celsiusToFahrenheit(temp).toFixed(1), simbolo: this.tempUnit.symbol };
+    }
+    return { valor: String(temp), simbolo: this.tempUnit.symbol };
   }
 
   extraerCoordenadasDesdeUrl(url: string): { lat: number, lng: number } | null {

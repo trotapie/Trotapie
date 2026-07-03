@@ -110,6 +110,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
                 // Update the scheme and theme
                 this._updateScheme();
+                this._updateThemeColor();
                 this._updateTheme();
             });
 
@@ -226,6 +227,20 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
         // Add class name for the currently selected scheme
         this._document.body.classList.add(this.scheme);
+    }
+
+    /**
+     * Keep the browser chrome color aligned with the active scheme.
+     */
+    private _updateThemeColor(): void {
+        const themeColor = this.scheme === 'dark' ? '#0f172a' : '#0f766e';
+        const metaThemeColor = this._document.querySelector(
+            'meta[name="theme-color"]'
+        );
+
+        if (metaThemeColor) {
+            metaThemeColor.setAttribute('content', themeColor);
+        }
     }
 
     /**

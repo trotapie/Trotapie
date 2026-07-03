@@ -7,8 +7,10 @@ import {
 } from '@angular/core';
 import { LuxonDateAdapter } from '@angular/material-luxon-adapter';
 import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
+import { MAT_DIALOG_DEFAULT_OPTIONS, MatDialogConfig } from '@angular/material/dialog';
+import { MAT_SNACK_BAR_DEFAULT_OPTIONS } from '@angular/material/snack-bar';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { provideRouter, withInMemoryScrolling } from '@angular/router';
+import { provideRouter, withInMemoryScrolling, withPreloading, PreloadAllModules } from '@angular/router';
 import { provideFuse } from '@fuse';
 import { TranslocoService, provideTransloco } from '@jsverse/transloco';
 import { appRoutes } from 'app/app.routes';
@@ -35,7 +37,8 @@ export const appConfig: ApplicationConfig = {
         ),
         provideRouter(
             appRoutes,
-            withInMemoryScrolling({ scrollPositionRestoration: 'enabled' })
+            withInMemoryScrolling({ scrollPositionRestoration: 'enabled' }),
+            withPreloading(PreloadAllModules)
         ),
 
         // Material Date Adapter
@@ -64,6 +67,23 @@ export const appConfig: ApplicationConfig = {
         {
             provide: MatPaginatorIntl,
             useFactory: getSpanishPaginatorIntl,
+        },
+        {
+            provide: MAT_DIALOG_DEFAULT_OPTIONS,
+            useValue: {
+                autoFocus: 'dialog',
+                restoreFocus: true,
+                enterAnimationDuration: '320ms',
+                exitAnimationDuration: '220ms',
+                panelClass: 'tp-motion-dialog-pane',
+                backdropClass: 'tp-motion-dialog-backdrop',
+            } as MatDialogConfig,
+        },
+        {
+            provide: MAT_SNACK_BAR_DEFAULT_OPTIONS,
+            useValue: {
+                panelClass: 'tp-motion-snackbar',
+            },
         },
 
         // Transloco Config
