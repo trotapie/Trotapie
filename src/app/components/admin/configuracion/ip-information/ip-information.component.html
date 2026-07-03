@@ -1,0 +1,236 @@
+<div class="mx-auto flex min-w-0 w-full max-w-screen-xl flex-auto flex-col px-4 py-6 sm:px-6 lg:px-8">
+  <header class="ip-hero mb-6">
+    <div class="space-y-2">
+      <p class="ip-kicker">Red y privacidad</p>
+      <h1 class="text-3xl font-semibold tracking-tight text-gray-900 dark:text-white">
+        Información de IP
+      </h1>
+      <p class="max-w-3xl text-sm text-gray-600 dark:text-gray-400">
+        Consulta la IP pública actual del navegador o revisa una IP específica con una vista clara,
+        rápida y lista para móvil y escritorio.
+      </p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <button mat-stroked-button type="button" routerLink="/admin/configuracion">
+        <mat-icon class="mr-2 icon-size-5">arrow_back</mat-icon>
+        Volver
+      </button>
+      <button mat-flat-button color="primary" type="button" class="text-white" (click)="retryLastQuery()" [disabled]="loading()">
+        <mat-icon class="mr-2 icon-size-5">refresh</mat-icon>
+        Reintentar
+      </button>
+    </div>
+  </header>
+
+  <div class="grid gap-6 xl:grid-cols-[1.4fr_0.85fr]">
+    <mat-card class="ip-card p-0">
+      <div class="ip-card-header">
+        <div>
+          <p class="ip-section-label">Resultado actual</p>
+          <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+            {{ queryLabel() }}
+          </h2>
+          <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            Si vuelves a consultar una IP específica, esta vista se actualiza sin perder la estructura.
+          </p>
+        </div>
+
+        <div class="ip-badge">
+          <mat-icon class="icon-size-5">public</mat-icon>
+          <span>{{ hasData() ? 'Datos cargados' : 'Sin datos' }}</span>
+        </div>
+      </div>
+
+      @if (loading()) {
+        <div class="state-box state-box--loading">
+          <mat-progress-spinner diameter="34" mode="indeterminate"></mat-progress-spinner>
+          <div>
+            <p class="font-medium text-gray-900 dark:text-white">Consultando IP...</p>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Obteniendo datos desde ipquery.io.</p>
+          </div>
+        </div>
+      } @else if (errorMessage()) {
+        <div class="state-box state-box--error" role="alert" aria-live="polite">
+          <mat-icon>error_outline</mat-icon>
+          <div class="flex min-w-0 flex-1 flex-col gap-1">
+            <p class="font-medium">{{ errorMessage() }}</p>
+            <p class="text-sm opacity-90">Puedes intentar de nuevo o consultar una IP diferente.</p>
+          </div>
+          <button mat-stroked-button type="button" (click)="retryLastQuery()" [disabled]="loading()">
+            Reintentar
+          </button>
+        </div>
+      } @else {
+        @if (currentData(); as data) {
+          <section class="ip-highlight">
+            <div>
+              <p class="text-sm uppercase tracking-[0.24em] text-gray-500 dark:text-gray-400">IP pública</p>
+              <p class="mt-2 text-4xl font-semibold tracking-tight text-gray-900 dark:text-white">
+                {{ data.ip }}
+              </p>
+              <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                {{ locationSummary || 'Ubicación aproximada no disponible' }}
+              </p>
+            </div>
+
+            <div class="risk-score">
+              <span class="text-sm text-gray-500 dark:text-gray-400">Puntuación de riesgo</span>
+              <strong>{{ data.risk.risk_score }}</strong>
+              <span class="text-xs text-gray-500 dark:text-gray-400">Menor es mejor</span>
+            </div>
+          </section>
+
+          <div class="mt-6 grid gap-4 lg:grid-cols-2">
+            <section class="detail-panel">
+              <div class="detail-panel__head">
+                <mat-icon>location_on</mat-icon>
+                <h3>Ubicación</h3>
+              </div>
+              <dl class="detail-list">
+                <div>
+                  <dt>Ciudad</dt>
+                  <dd>{{ data.location.city || 'Sin dato' }}</dd>
+                </div>
+                <div>
+                  <dt>Estado</dt>
+                  <dd>{{ data.location.state || 'Sin dato' }}</dd>
+                </div>
+                <div>
+                  <dt>País</dt>
+                  <dd>{{ data.location.country || 'Sin dato' }}</dd>
+                </div>
+                <div>
+                  <dt>Código de país</dt>
+                  <dd>{{ data.location.country_code || 'Sin dato' }}</dd>
+                </div>
+                <div>
+                  <dt>Zona horaria</dt>
+                  <dd>{{ data.location.timezone || 'Sin dato' }}</dd>
+                </div>
+                <div>
+                  <dt>Local time</dt>
+                  <dd>{{ data.location.localtime || 'Sin dato' }}</dd>
+                </div>
+                <div>
+                  <dt>Código postal</dt>
+                  <dd>{{ data.location.zipcode || 'Sin dato' }}</dd>
+                </div>
+                <div>
+                  <dt>Latitud / Longitud</dt>
+                  <dd>{{ data.location.latitude }}, {{ data.location.longitude }}</dd>
+                </div>
+              </dl>
+            </section>
+
+            <section class="detail-panel">
+              <div class="detail-panel__head">
+                <mat-icon>dns</mat-icon>
+                <h3>Proveedor</h3>
+              </div>
+              <dl class="detail-list">
+                <div>
+                  <dt>ISP</dt>
+                  <dd>{{ data.isp.isp || 'Sin dato' }}</dd>
+                </div>
+                <div>
+                  <dt>Organización</dt>
+                  <dd>{{ data.isp.org || 'Sin dato' }}</dd>
+                </div>
+                <div>
+                  <dt>ASN</dt>
+                  <dd>{{ data.isp.asn || 'Sin dato' }}</dd>
+                </div>
+                <div>
+                  <dt>Conexión móvil</dt>
+                  <dd>{{ booleanLabel(data.risk.is_mobile) }}</dd>
+                </div>
+              </dl>
+            </section>
+
+            <section class="detail-panel lg:col-span-2">
+              <div class="detail-panel__head">
+                <mat-icon>security</mat-icon>
+                <h3>Indicadores de riesgo</h3>
+              </div>
+              <dl class="risk-grid">
+                <div>
+                  <dt>VPN</dt>
+                  <dd>{{ booleanLabel(data.risk.is_vpn) }}</dd>
+                </div>
+                <div>
+                  <dt>Proxy</dt>
+                  <dd>{{ booleanLabel(data.risk.is_proxy) }}</dd>
+                </div>
+                <div>
+                  <dt>Tor</dt>
+                  <dd>{{ booleanLabel(data.risk.is_tor) }}</dd>
+                </div>
+                <div>
+                  <dt>Centro de datos</dt>
+                  <dd>{{ booleanLabel(data.risk.is_datacenter) }}</dd>
+                </div>
+              </dl>
+            </section>
+          </div>
+        } @else {
+          <div class="state-box state-box--empty">
+            <mat-icon>hourglass_empty</mat-icon>
+            <div>
+              <p class="font-medium text-gray-900 dark:text-white">Preparando consulta</p>
+              <p class="text-sm text-gray-600 dark:text-gray-400">La información aparecerá en cuanto la solicitud termine.</p>
+            </div>
+          </div>
+        }
+      }
+    </mat-card>
+
+    <div class="space-y-6">
+      <mat-card class="ip-card">
+        <div class="space-y-2">
+          <p class="ip-section-label">Consulta manual</p>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Buscar una IP específica</h2>
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            Escribe una IP pública para revisar su ubicación aproximada y señales de riesgo.
+          </p>
+        </div>
+
+        <form class="mt-5 space-y-4" (ngSubmit)="consultSpecificIp()">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>IP a consultar</mat-label>
+            <input matInput [formControl]="ipControl" placeholder="8.8.8.8" autocomplete="off" />
+            <mat-hint>Se usará solo para esta consulta.</mat-hint>
+            @if (ipControl.touched && ipControl.invalid) {
+              <mat-error>Escribe una IP válida.</mat-error>
+            }
+          </mat-form-field>
+
+          <div class="flex flex-wrap gap-3">
+            <button mat-flat-button color="primary" type="submit" class="text-white" [disabled]="loading()">
+              <mat-icon class="mr-2 icon-size-5">search</mat-icon>
+              Consultar
+            </button>
+            <button mat-stroked-button type="button" (click)="resetSearch()" [disabled]="loading()">
+              Limpiar
+            </button>
+          </div>
+        </form>
+      </mat-card>
+
+      <mat-card class="ip-card privacy-card">
+        <div class="detail-panel__head">
+          <mat-icon>shield</mat-icon>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Privacidad</h2>
+        </div>
+        <p class="text-sm leading-6 text-gray-600 dark:text-gray-400">
+          La ubicación obtenida es aproximada y está basada en la dirección IP. No representa una
+          ubicación GPS ni una dirección exacta.
+        </p>
+        <p class="mt-4 text-sm leading-6 text-gray-600 dark:text-gray-400">
+          Los indicadores de riesgo ayudan a orientar decisiones, pero no deben usarse como único
+          criterio para bloquear usuarios.
+        </p>
+      </mat-card>
+    </div>
+  </div>
+</div>

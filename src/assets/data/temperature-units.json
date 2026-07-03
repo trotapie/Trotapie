@@ -1,0 +1,1201 @@
+{
+  "standard": "Unicode CLDR - preferencia de temperatura para clima",
+  "defaultUnit": "celsius",
+  "defaultSymbol": "°C",
+  "countries": [
+    {
+      "name": "Afganistán",
+      "code": "AF",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Albania",
+      "code": "AL",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Alemania",
+      "code": "DE",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Andorra",
+      "code": "AD",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Angola",
+      "code": "AO",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Antigua y Barbuda",
+      "code": "AG",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Arabia Saudí",
+      "code": "SA",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Argelia",
+      "code": "DZ",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Argentina",
+      "code": "AR",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Armenia",
+      "code": "AM",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Australia",
+      "code": "AU",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Austria",
+      "code": "AT",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Azerbaiyán",
+      "code": "AZ",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Bahamas",
+      "code": "BS",
+      "unit": "fahrenheit",
+      "symbol": "°F"
+    },
+    {
+      "name": "Bangladés",
+      "code": "BD",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Barbados",
+      "code": "BB",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Baréin",
+      "code": "BH",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Belice",
+      "code": "BZ",
+      "unit": "fahrenheit",
+      "symbol": "°F"
+    },
+    {
+      "name": "Benín",
+      "code": "BJ",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Bielorrusia",
+      "code": "BY",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Bolivia",
+      "code": "BO",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Bosnia y Herzegovina",
+      "code": "BA",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Botsuana",
+      "code": "BW",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Brasil",
+      "code": "BR",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Brunéi",
+      "code": "BN",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Bulgaria",
+      "code": "BG",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Burkina Faso",
+      "code": "BF",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Burundi",
+      "code": "BI",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Bután",
+      "code": "BT",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Bélgica",
+      "code": "BE",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Cabo Verde",
+      "code": "CV",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Camboya",
+      "code": "KH",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Camerún",
+      "code": "CM",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Canadá",
+      "code": "CA",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Catar",
+      "code": "QA",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Chad",
+      "code": "TD",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Chequia",
+      "code": "CZ",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Chile",
+      "code": "CL",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "China",
+      "code": "CN",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Chipre",
+      "code": "CY",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Ciudad del Vaticano",
+      "code": "VA",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Colombia",
+      "code": "CO",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Comoras",
+      "code": "KM",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Corea del Norte",
+      "code": "KP",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Corea del Sur",
+      "code": "KR",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Costa Rica",
+      "code": "CR",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Costa de Marfil",
+      "code": "CI",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Croacia",
+      "code": "HR",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Cuba",
+      "code": "CU",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Dinamarca",
+      "code": "DK",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Dominica",
+      "code": "DM",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Ecuador",
+      "code": "EC",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Egipto",
+      "code": "EG",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "El Salvador",
+      "code": "SV",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Emiratos Árabes Unidos",
+      "code": "AE",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Eritrea",
+      "code": "ER",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Eslovaquia",
+      "code": "SK",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Eslovenia",
+      "code": "SI",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "España",
+      "code": "ES",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Estados Unidos",
+      "code": "US",
+      "unit": "fahrenheit",
+      "symbol": "°F"
+    },
+    {
+      "name": "Estonia",
+      "code": "EE",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Esuatini",
+      "code": "SZ",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Etiopía",
+      "code": "ET",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Filipinas",
+      "code": "PH",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Finlandia",
+      "code": "FI",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Fiyi",
+      "code": "FJ",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Francia",
+      "code": "FR",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Gabón",
+      "code": "GA",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Gambia",
+      "code": "GM",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Georgia",
+      "code": "GE",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Ghana",
+      "code": "GH",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Granada",
+      "code": "GD",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Grecia",
+      "code": "GR",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Guatemala",
+      "code": "GT",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Guinea",
+      "code": "GN",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Guinea Ecuatorial",
+      "code": "GQ",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Guinea-Bisáu",
+      "code": "GW",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Guyana",
+      "code": "GY",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Haití",
+      "code": "HT",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Honduras",
+      "code": "HN",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Hungría",
+      "code": "HU",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "India",
+      "code": "IN",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Indonesia",
+      "code": "ID",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Irak",
+      "code": "IQ",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Irlanda",
+      "code": "IE",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Irán",
+      "code": "IR",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Islandia",
+      "code": "IS",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Islas Marshall",
+      "code": "MH",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Islas Salomón",
+      "code": "SB",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Israel",
+      "code": "IL",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Islas Caimán",
+      "code": "KY",
+      "unit": "fahrenheit",
+      "symbol": "°F"
+    },
+    {
+      "name": "Italia",
+      "code": "IT",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Jamaica",
+      "code": "JM",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Japón",
+      "code": "JP",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Jordania",
+      "code": "JO",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Kazajistán",
+      "code": "KZ",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Kenia",
+      "code": "KE",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Kirguistán",
+      "code": "KG",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Kiribati",
+      "code": "KI",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Kosovo",
+      "code": "XK",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Kuwait",
+      "code": "KW",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Laos",
+      "code": "LA",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Lesoto",
+      "code": "LS",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Letonia",
+      "code": "LV",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Liberia",
+      "code": "LR",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Libia",
+      "code": "LY",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Liechtenstein",
+      "code": "LI",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Lituania",
+      "code": "LT",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Luxemburgo",
+      "code": "LU",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Líbano",
+      "code": "LB",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Macedonia del Norte",
+      "code": "MK",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Madagascar",
+      "code": "MG",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Malasia",
+      "code": "MY",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Malaui",
+      "code": "MW",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Maldivas",
+      "code": "MV",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Mali",
+      "code": "ML",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Malta",
+      "code": "MT",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Marruecos",
+      "code": "MA",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Mauricio",
+      "code": "MU",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Mauritania",
+      "code": "MR",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Micronesia",
+      "code": "FM",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Moldavia",
+      "code": "MD",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Mongolia",
+      "code": "MN",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Montenegro",
+      "code": "ME",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Mozambique",
+      "code": "MZ",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Myanmar",
+      "code": "MM",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "México",
+      "code": "MX",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Mónaco",
+      "code": "MC",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Namibia",
+      "code": "NA",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Nauru",
+      "code": "NR",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Nepal",
+      "code": "NP",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Nicaragua",
+      "code": "NI",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Nigeria",
+      "code": "NG",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Noruega",
+      "code": "NO",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Nueva Zelanda",
+      "code": "NZ",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Níger",
+      "code": "NE",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Omán",
+      "code": "OM",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Pakistán",
+      "code": "PK",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Palaos",
+      "code": "PW",
+      "unit": "fahrenheit",
+      "symbol": "°F"
+    },
+    {
+      "name": "Palestina",
+      "code": "PS",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Panamá",
+      "code": "PA",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Papúa Nueva Guinea",
+      "code": "PG",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Paraguay",
+      "code": "PY",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Países Bajos",
+      "code": "NL",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Perú",
+      "code": "PE",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Polonia",
+      "code": "PL",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Portugal",
+      "code": "PT",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Puerto Rico",
+      "code": "PR",
+      "unit": "fahrenheit",
+      "symbol": "°F"
+    },
+    {
+      "name": "Reino Unido",
+      "code": "GB",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "República Centroafricana",
+      "code": "CF",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "República Democrática del Congo",
+      "code": "CD",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "República Dominicana",
+      "code": "DO",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "República del Congo",
+      "code": "CG",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Ruanda",
+      "code": "RW",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Rumanía",
+      "code": "RO",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Rusia",
+      "code": "RU",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Samoa",
+      "code": "WS",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "San Cristóbal y Nieves",
+      "code": "KN",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "San Marino",
+      "code": "SM",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "San Vicente y las Granadinas",
+      "code": "VC",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Santa Lucía",
+      "code": "LC",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Santo Tomé y Príncipe",
+      "code": "ST",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Senegal",
+      "code": "SN",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Serbia",
+      "code": "RS",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Seychelles",
+      "code": "SC",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Sierra Leona",
+      "code": "SL",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Singapur",
+      "code": "SG",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Siria",
+      "code": "SY",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Somalia",
+      "code": "SO",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Sri Lanka",
+      "code": "LK",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Sudáfrica",
+      "code": "ZA",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Sudán",
+      "code": "SD",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Sudán del Sur",
+      "code": "SS",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Suecia",
+      "code": "SE",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Suiza",
+      "code": "CH",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Surinam",
+      "code": "SR",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Tailandia",
+      "code": "TH",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Taiwán",
+      "code": "TW",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Tanzania",
+      "code": "TZ",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Tayikistán",
+      "code": "TJ",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Timor Oriental",
+      "code": "TL",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Togo",
+      "code": "TG",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Tonga",
+      "code": "TO",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Trinidad y Tobago",
+      "code": "TT",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Turkmenistán",
+      "code": "TM",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Turquía",
+      "code": "TR",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Tuvalu",
+      "code": "TV",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Túnez",
+      "code": "TN",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Ucrania",
+      "code": "UA",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Uganda",
+      "code": "UG",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Uruguay",
+      "code": "UY",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Uzbekistán",
+      "code": "UZ",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Vanuatu",
+      "code": "VU",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Venezuela",
+      "code": "VE",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Vietnam",
+      "code": "VN",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Yemen",
+      "code": "YE",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Yibuti",
+      "code": "DJ",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Zambia",
+      "code": "ZM",
+      "unit": "celsius",
+      "symbol": "°C"
+    },
+    {
+      "name": "Zimbabue",
+      "code": "ZW",
+      "unit": "celsius",
+      "symbol": "°C"
+    }
+  ]
+}
