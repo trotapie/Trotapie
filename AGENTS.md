@@ -95,3 +95,27 @@ Orden sugerido:
 
 Si varias aplican, combinalas sin duplicar reglas ni sobrecargar el resultado.
 
+## Progress
+
+### Circuitos Module (admin + public) + Flyer Editor
+
+#### Done
+- 10 editorial preset templates (5 portrait, 5 landscape) in `preset-templates.ts` + `template-01.json` thru `template-10.json`
+- `FlyerTemplateService` with Supabase CRUD + local preset fallback
+- `CircuitosService` with CRUD + replace pattern for junction tables
+- Admin circuitos list (`admin-circuitos.component`)
+- Edit/create form (`editar-circuito.component`) with dirty-check, unsaved-guard
+- Public circuitos listing (`circuitos.component`) and detail (`circuito-detalle.component`)
+- All routes registered (admin.routes.ts, app.routes.ts, sidebar nav)
+- "Crear Flyer" button wired to `/admin/circuitos/flyer/:circuitoId`
+- fabric.js type errors resolved (`_objectCache`, `FlyerTemplateConfig` import, bringForward/sendBackwards casts)
+- Canvas zoom: zoomIn, zoomOut, resetZoom, fitToScreen + Ctrl+scroll
+- Floating zoom controls (zoom %, +/-, 1:1, fit-screen buttons)
+- Template gallery with dynamic aspect-ratio cards (portrait vs landscape)
+- Build compiles cleanly (`ng build` passes with only canvg CommonJS warnings)
+
+#### Next Steps
+1. Serve: `ng serve --port 4000`
+2. Test flyer editor zoom, template loading, canvas interaction
+3. Wire full circuito itinerary builder as phase 2 (destinos/hoteles/actividades by day)
+
