@@ -633,26 +633,6 @@ export class SupabaseService {
       imagen.activa = index === indiceActivaFinal;
     });
 
-    console.log('[sincronizarImagenesActividad] Estado activo preparado:', {
-      actividad_id: actividadId,
-      imagen_activa_id_recibida: idActivaRecibida,
-      indice_activa_final: indiceActivaFinal,
-        imagenes: limpias.map((imagen) => ({
-          id: imagen.id,
-          imagen_url: imagen.imagen_url,
-          nombre: imagen.nombre,
-          extension: imagen.extension,
-          mime_type: imagen.mime_type,
-          size: imagen.size,
-          size_formatted: imagen.size_formatted,
-          activa: imagen.activa,
-          orden: imagen.orden,
-          carpeta_id: imagen.carpeta_id,
-          carpeta_nombre: imagen.carpeta_nombre,
-          carpeta: imagen.carpeta
-      }))
-    });
-
     const carpetasPorNombre = await this.asegurarCarpetasActividad(
       actividadId,
       limpias.map((imagen) => imagen.carpeta_nombre ?? imagen.carpeta)
@@ -808,11 +788,6 @@ export class SupabaseService {
       if (activarFinalError) throw activarFinalError;
     }
 
-    console.log('[sincronizarImagenesActividad] Imagen activa persistida:', {
-      actividad_id: actividadId,
-      imagen_activa_anterior_id: idImagenActivaAnterior,
-      imagen_activa_id: idImagenActivaFinal
-    });
   }
 
   // ===== AUTH =====
@@ -1753,13 +1728,7 @@ export class SupabaseService {
         if (imagenesActividadError) throw imagenesActividadError;
         if (carpetasActividadError) throw carpetasActividadError;
 
-        console.log('[Preview destino] Imagenes crudas desde atracciones_imagenes:', {
-          destino_id: destinoId,
-          detalle_id: detalleId,
-          actividad_ids: actividadIds,
-          total: imagenesActividadData?.length ?? 0,
-          imagenes: imagenesActividadData
-        });
+
 
         actividadesCarpetas = carpetasActividadData ?? [];
 
@@ -1904,17 +1873,7 @@ export class SupabaseService {
         const imagenFondoId = this.parseNumber(imagenFondoRegistro?.id);
         const recordTraducciones: Record<number, { nombre: string; descripcion: string }> = {};
 
-        console.log('[Preview destino] Imagenes devueltas para actividad:', {
-          destino_id: destinoId,
-          actividad_id: actividad.id,
-          total_crudas: imagenesActividad.length,
-          total_ordenadas: imagenesOrdenadas.length,
-          carpetas_actividad: carpetasActividad,
-          imagen_fondo_id: imagenFondoId,
-          imagen_fondo: imagenFondoUrl,
-          imagen_seleccionada: imagenSeleccionada,
-          imagenes: imagenesOrdenadas
-        });
+
 
         idiomas.forEach((idioma) => {
           recordTraducciones[idioma.id] = traduccionesActividad.get(idioma.id) ?? {
@@ -2322,21 +2281,6 @@ export class SupabaseService {
         .eq('detalles_destino_id', detallesDestinoId);
 
       if (actualizarActividadError) throw actualizarActividadError;
-      console.log('[guardarActividadDestinoAdmin] Antes de sincronizar imagenes:', {
-        destino_id: payload.destino_id,
-        actividad_id: actividadId,
-        imagen_fondo: payload.imagen_fondo,
-        imagen_activa_id: payload.imagen_activa_id ?? null,
-        imagenes: (payload.imagenes ?? []).map((imagen) => ({
-          id: imagen.id ?? null,
-          imagen_url: imagen.imagen_url,
-          carpeta_id: imagen.carpeta_id ?? null,
-          carpeta_nombre: imagen.carpeta_nombre ?? null,
-          carpeta: imagen.carpeta ?? null,
-          activa: imagen.activa ?? false,
-          orden: imagen.orden ?? null
-        }))
-      });
       await this.sincronizarImagenesActividad(actividadId, payload.imagenes, payload.imagen_activa_id);
     } else {
       const { data: nuevaActividad, error: crearActividadError } = await this.client
@@ -2350,21 +2294,6 @@ export class SupabaseService {
 
       if (crearActividadError) throw crearActividadError;
       actividadId = nuevaActividad.id;
-      console.log('[  ] Antes de sincronizar imagenes (nueva actividad):', {
-        destino_id: payload.destino_id,
-        actividad_id: actividadId,
-        imagen_fondo: payload.imagen_fondo,
-        imagen_activa_id: payload.imagen_activa_id ?? null,
-        imagenes: (payload.imagenes ?? []).map((imagen) => ({
-          id: imagen.id ?? null,
-          imagen_url: imagen.imagen_url,
-          carpeta_id: imagen.carpeta_id ?? null,
-          carpeta_nombre: imagen.carpeta_nombre ?? null,
-          carpeta: imagen.carpeta ?? null,
-          activa: imagen.activa ?? false,
-          orden: imagen.orden ?? null
-        }))
-      });
       await this.sincronizarImagenesActividad(actividadId, payload.imagenes, payload.imagen_activa_id);
     }
 
@@ -2449,27 +2378,6 @@ export class SupabaseService {
       .eq('detalles_destino_id', detalleExistente.id);
 
     if (actualizarActividadError) throw actualizarActividadError;
-
-    console.log('[guardarImagenesActividadAdmin] Antes de sincronizar imagenes:', {
-      destino_id: payload.destino_id,
-      actividad_id: payload.actividad_id,
-      imagen_fondo: payload.imagen_fondo,
-      imagen_activa_id: payload.imagen_activa_id ?? null,
-        imagenes: (payload.imagenes ?? []).map((imagen) => ({
-          id: imagen.id ?? null,
-          imagen_url: imagen.imagen_url,
-          carpeta_id: imagen.carpeta_id ?? null,
-          carpeta_nombre: imagen.carpeta_nombre ?? null,
-          carpeta: imagen.carpeta ?? null,
-          nombre: imagen.nombre ?? null,
-          extension: imagen.extension ?? null,
-          mime_type: imagen.mime_type ?? imagen.mimeType ?? null,
-          size: imagen.size ?? null,
-          size_formatted: imagen.size_formatted ?? imagen.sizeFormatted ?? null,
-          activa: imagen.activa ?? false,
-          orden: imagen.orden ?? null
-        }))
-    });
 
     await this.sincronizarImagenesActividad(payload.actividad_id, payload.imagenes, payload.imagen_activa_id);
     return { id: payload.actividad_id };
@@ -3513,6 +3421,22 @@ export class SupabaseService {
         descripcion: traduccionEs?.descripcion ?? `Regimen ${item.id}`
       };
     });
+  }
+
+  async obtenerTiposHabitacionAdmin() {
+    const { data, error } = await this.client
+      .from('tipos_habitacion')
+      .select('id, nombre_habitacion, capacidad_maxima, descripcion')
+      .order('id', { ascending: true });
+
+    if (error) throw error;
+
+    return (data ?? []).map((item: any) => ({
+      id: Number(item.id),
+      nombre_habitacion: item.nombre_habitacion ?? '',
+      capacidad_maxima: item.capacidad_maxima ?? null,
+      descripcion: item.descripcion ?? ''
+    }));
   }
 
   async obtenerHotelesAdminPorDestino(destinoId: number) {

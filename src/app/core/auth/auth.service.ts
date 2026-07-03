@@ -11,19 +11,20 @@ export class AuthService {
   private _permissions = new Set<string>();
   private _requiresPasswordChange = false;
   private _employeeStatusId: number | null = null;
+  private _accessToken = '';
 
   private _supabase = inject(SupabaseService);
   private _userService = inject(UserService);
 
   // ---------------------------------------------
-  // Access token (compatibilidad con Fuse)
+  // Access token (in-memory only)
   // ---------------------------------------------
   set accessToken(token: string) {
-    localStorage.setItem('accessToken', token);
+    this._accessToken = token;
   }
 
   get accessToken(): string {
-    return localStorage.getItem('accessToken') ?? '';
+    return this._accessToken;
   }
 
   get role(): string {
@@ -216,7 +217,7 @@ export class AuthService {
         return from(this._supabase.signOut()).pipe(
           switchMap(() => {
             this._authenticated = false;
-            localStorage.removeItem('accessToken');
+            this._accessToken = '';
             this._clearAccessState();
             return throwError(() => err);
           })
@@ -231,14 +232,13 @@ export class AuthService {
   signOut(): Observable<any> {
     return from(this._supabase.signOut()).pipe(
       map(() => {
-        localStorage.removeItem('accessToken');
+        this._accessToken = '';
         this._authenticated = false;
         this._clearAccessState();
         return true;
       }),
       catchError(() => {
-        // aunque falle, limpia local
-        localStorage.removeItem('accessToken');
+        this._accessToken = '';
         this._authenticated = false;
         this._clearAccessState();
         return of(true);
