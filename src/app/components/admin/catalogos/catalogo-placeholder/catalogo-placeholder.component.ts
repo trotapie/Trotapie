@@ -81,6 +81,17 @@ export class CatalogoPlaceholderComponent implements OnInit {
       tieneOrden: false,
       editableKeys: ['nombre']
     },
+    tratamientos: {
+      columnas: [
+        { key: 'id', label: 'ID' },
+        { key: 'nombre', label: 'Nombre' },
+        { key: 'abreviacion', label: 'Abreviacion' },
+        { key: 'estatus', label: 'Estatus' }
+      ],
+      tieneOrden: false,
+      editableKeys: ['nombre', 'abreviacion', 'estatus'],
+      booleanKeys: ['estatus']
+    },
     descuentos: {
       columnas: [
         { key: 'id', label: 'ID' },
@@ -136,6 +147,28 @@ export class CatalogoPlaceholderComponent implements OnInit {
       tieneOrden: false,
       editableKeys: ['codigo', 'categoria', 'activo'],
       booleanKeys: ['activo']
+    },
+    origen_reservacion: {
+      columnas: [
+        { key: 'id', label: 'ID' },
+        { key: 'clave', label: 'Clave' },
+        { key: 'nombre_cotizador', label: 'Nombre cotizador' },
+        { key: 'estatus', label: 'Estatus' }
+      ],
+      tieneOrden: false,
+      editableKeys: ['clave', 'nombre_cotizador', 'estatus'],
+      booleanKeys: ['estatus']
+    },
+    roles_empresa: {
+      columnas: [
+        { key: 'id', label: 'ID' },
+        { key: 'rol', label: 'Rol' },
+        { key: 'descripcion_rol', label: 'Descripcion del rol' },
+        { key: 'estatus', label: 'Estatus' }
+      ],
+      tieneOrden: false,
+      editableKeys: ['rol', 'descripcion_rol', 'estatus'],
+      booleanKeys: ['estatus']
     },
     regimen_hotel: {
       columnas: [
@@ -282,12 +315,24 @@ export class CatalogoPlaceholderComponent implements OnInit {
     return this.catalogoKey === 'conceptos';
   }
 
+  get esCatalogoTratamientos(): boolean {
+    return this.catalogoKey === 'tratamientos';
+  }
+
   get esCatalogoIdiomas(): boolean {
     return this.catalogoKey === 'idiomas';
   }
 
   get esCatalogoPoliticas(): boolean {
     return this.catalogoKey === 'politicas';
+  }
+
+  get esCatalogoOrigenReservacion(): boolean {
+    return this.catalogoKey === 'origen_reservacion';
+  }
+
+  get esCatalogoRolesEmpresa(): boolean {
+    return this.catalogoKey === 'roles_empresa';
   }
 
   get esCatalogoDescuentos(): boolean {
@@ -314,10 +359,13 @@ export class CatalogoPlaceholderComponent implements OnInit {
     return (
       this.catalogoKey === 'actividades' ||
       this.catalogoKey === 'conceptos' ||
+      this.catalogoKey === 'tratamientos' ||
       this.catalogoKey === 'continentes' ||
       this.catalogoKey === 'descuentos' ||
       this.catalogoKey === 'atracciones' ||
       this.catalogoKey === 'idiomas' ||
+      this.catalogoKey === 'origen_reservacion' ||
+      this.catalogoKey === 'roles_empresa' ||
       this.catalogoKey === 'politicas' ||
       this.catalogoKey === 'tipo_imagen' ||
       this.catalogoKey === 'tarifas' ||
@@ -329,10 +377,13 @@ export class CatalogoPlaceholderComponent implements OnInit {
     return (
       this.catalogoKey === 'actividades' ||
       this.catalogoKey === 'conceptos' ||
+      this.catalogoKey === 'tratamientos' ||
       this.catalogoKey === 'continentes' ||
       this.catalogoKey === 'descuentos' ||
       this.catalogoKey === 'atracciones' ||
       this.catalogoKey === 'idiomas' ||
+      this.catalogoKey === 'origen_reservacion' ||
+      this.catalogoKey === 'roles_empresa' ||
       this.catalogoKey === 'politicas' ||
       this.catalogoKey === 'tipo_imagen' ||
       this.catalogoKey === 'tarifas' ||
@@ -344,10 +395,13 @@ export class CatalogoPlaceholderComponent implements OnInit {
     return (
       this.catalogoKey === 'actividades' ||
       this.catalogoKey === 'conceptos' ||
+      this.catalogoKey === 'tratamientos' ||
       this.catalogoKey === 'continentes' ||
       this.catalogoKey === 'descuentos' ||
       this.catalogoKey === 'atracciones' ||
       this.catalogoKey === 'idiomas' ||
+      this.catalogoKey === 'origen_reservacion' ||
+      this.catalogoKey === 'roles_empresa' ||
       this.catalogoKey === 'politicas' ||
       this.catalogoKey === 'tipo_imagen' ||
       this.catalogoKey === 'tarifas' ||
@@ -515,6 +569,18 @@ export class CatalogoPlaceholderComponent implements OnInit {
       return 'Nuevo concepto';
     }
 
+    if (this.esCatalogoTratamientos) {
+      return 'Nuevo tratamiento';
+    }
+
+    if (this.esCatalogoOrigenReservacion) {
+      return 'Nuevo origen';
+    }
+
+    if (this.esCatalogoRolesEmpresa) {
+      return 'Nuevo rol';
+    }
+
     if (this.esCatalogoAmenidades) {
       return 'Nueva amenidad';
     }
@@ -553,6 +619,18 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
     if (this.esCatalogoConceptos) {
       return 'Captura descripcion e icono para crear el nuevo concepto.';
+    }
+
+    if (this.esCatalogoTratamientos) {
+      return 'Captura nombre y abreviacion para crear el nuevo tratamiento.';
+    }
+
+    if (this.esCatalogoOrigenReservacion) {
+      return 'Captura clave, nombre cotizador y estatus para crear el nuevo origen de reservacion.';
+    }
+
+    if (this.esCatalogoRolesEmpresa) {
+      return 'Captura el rol, la descripcion del rol y el estatus para crear el nuevo registro.';
     }
 
     if (this.esCatalogoAmenidades) {
@@ -595,6 +673,18 @@ export class CatalogoPlaceholderComponent implements OnInit {
       return 'Editar concepto';
     }
 
+    if (this.esCatalogoTratamientos) {
+      return 'Editar tratamiento';
+    }
+
+    if (this.esCatalogoOrigenReservacion) {
+      return 'Editar origen de reservacion';
+    }
+
+    if (this.esCatalogoRolesEmpresa) {
+      return 'Editar rol de empresa';
+    }
+
     if (this.esCatalogoAmenidades) {
       return 'Editar amenidad';
     }
@@ -633,6 +723,18 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
     if (this.esCatalogoConceptos) {
       return 'Actualiza descripcion e icono del concepto.';
+    }
+
+    if (this.esCatalogoTratamientos) {
+      return 'Actualiza nombre, abreviacion y estatus del tratamiento.';
+    }
+
+    if (this.esCatalogoOrigenReservacion) {
+      return 'Actualiza la clave, el nombre cotizador y el estatus del origen de reservacion.';
+    }
+
+    if (this.esCatalogoRolesEmpresa) {
+      return 'Actualiza el rol, la descripcion del rol y el estatus.';
     }
 
     if (this.esCatalogoAmenidades) {
@@ -675,6 +777,18 @@ export class CatalogoPlaceholderComponent implements OnInit {
       return 'Nuevo concepto';
     }
 
+    if (this.esCatalogoTratamientos) {
+      return 'Nuevo tratamiento';
+    }
+
+    if (this.esCatalogoOrigenReservacion) {
+      return 'Nuevo origen';
+    }
+
+    if (this.esCatalogoRolesEmpresa) {
+      return 'Nuevo rol';
+    }
+
     if (this.esCatalogoAmenidades) {
       return 'Nueva amenidad';
     }
@@ -713,6 +827,18 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
     if (this.esCatalogoConceptos) {
       return 'Crear concepto';
+    }
+
+    if (this.esCatalogoTratamientos) {
+      return 'Crear tratamiento';
+    }
+
+    if (this.esCatalogoOrigenReservacion) {
+      return 'Crear origen';
+    }
+
+    if (this.esCatalogoRolesEmpresa) {
+      return 'Crear rol';
     }
 
     if (this.esCatalogoAmenidades) {
@@ -755,6 +881,18 @@ export class CatalogoPlaceholderComponent implements OnInit {
       return 'Concepto guardado correctamente.';
     }
 
+    if (this.esCatalogoTratamientos) {
+      return 'Tratamiento guardado correctamente.';
+    }
+
+    if (this.esCatalogoOrigenReservacion) {
+      return 'Origen de reservacion guardado correctamente.';
+    }
+
+    if (this.esCatalogoRolesEmpresa) {
+      return 'Rol de empresa guardado correctamente.';
+    }
+
     if (this.esCatalogoAmenidades) {
       return 'Amenidad guardada correctamente.';
     }
@@ -789,6 +927,18 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
     if (this.esCatalogoConceptos) {
       return 'Concepto creado correctamente.';
+    }
+
+    if (this.esCatalogoTratamientos) {
+      return 'Tratamiento creado correctamente.';
+    }
+
+    if (this.esCatalogoOrigenReservacion) {
+      return 'Origen de reservacion creado correctamente.';
+    }
+
+    if (this.esCatalogoRolesEmpresa) {
+      return 'Rol de empresa creado correctamente.';
     }
 
     if (this.esCatalogoAmenidades) {
@@ -829,6 +979,18 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
     if (this.esCatalogoConceptos) {
       return 'Concepto eliminado correctamente.';
+    }
+
+    if (this.esCatalogoTratamientos) {
+      return 'Tratamiento eliminado correctamente.';
+    }
+
+    if (this.esCatalogoOrigenReservacion) {
+      return 'Origen de reservacion eliminado correctamente.';
+    }
+
+    if (this.esCatalogoRolesEmpresa) {
+      return 'Rol de empresa eliminado correctamente.';
     }
 
     if (this.esCatalogoAmenidades) {
@@ -1386,6 +1548,75 @@ export class CatalogoPlaceholderComponent implements OnInit {
             ? { ...current, ...payload }
             : current
         );
+      } else if (this.esCatalogoTratamientos) {
+        const nombre = String(this.editingDraft['nombre'] ?? '').trim();
+        const abreviacion = String(this.editingDraft['abreviacion'] ?? '').trim();
+        const estatus = Boolean(this.editingDraft['estatus']);
+
+        if (!nombre || !abreviacion) {
+          this.errorModalEdicion = 'Nombre y abreviacion son obligatorios para editar un tratamiento.';
+          this.guardandoEdicion = false;
+          return;
+        }
+
+        const payload = {
+          nombre,
+          abreviacion,
+          estatus
+        };
+
+        await this.catalogosAdmin.actualizarCatalogoAdmin('tratamientos', this.editingId, payload);
+        this.items = this.items.map((current) =>
+          Number(current.id) === this.editingId
+            ? { ...current, ...payload }
+            : current
+        );
+      } else if (this.esCatalogoOrigenReservacion) {
+        const clave = String(this.editingDraft['clave'] ?? '').trim();
+        const nombreCotizador = String(this.editingDraft['nombre_cotizador'] ?? '').trim();
+        const estatus = Boolean(this.editingDraft['estatus']);
+
+        if (!clave || !nombreCotizador) {
+          this.errorModalEdicion = 'Clave y nombre cotizador son obligatorios para editar un origen de reservacion.';
+          this.guardandoEdicion = false;
+          return;
+        }
+
+        const payload = {
+          clave,
+          nombre_cotizador: nombreCotizador,
+          estatus
+        };
+
+        await this.catalogosAdmin.actualizarCatalogoAdmin('origen_reservacion', this.editingId, payload);
+        this.items = this.items.map((current) =>
+          Number(current.id) === this.editingId
+            ? { ...current, ...payload }
+            : current
+        );
+      } else if (this.esCatalogoRolesEmpresa) {
+        const rol = String(this.editingDraft['rol'] ?? '').trim();
+        const descripcionRol = String(this.editingDraft['descripcion_rol'] ?? '').trim();
+        const estatus = Boolean(this.editingDraft['estatus']);
+
+        if (!rol || !descripcionRol) {
+          this.errorModalEdicion = 'Rol y descripcion del rol son obligatorios para editar un puesto o rol.';
+          this.guardandoEdicion = false;
+          return;
+        }
+
+        const payload = {
+          rol,
+          descripcion_rol: descripcionRol,
+          estatus
+        };
+
+        await this.catalogosAdmin.actualizarCatalogoAdmin('roles_empresa', this.editingId, payload);
+        this.items = this.items.map((current) =>
+          Number(current.id) === this.editingId
+            ? { ...current, ...payload }
+            : current
+        );
       } else if (this.esCatalogoAtracciones) {
         const clave = String(this.editingDraft['clave'] ?? '').trim();
         const icono = String(this.editingDraft['icono'] ?? '').trim();
@@ -1587,7 +1818,9 @@ export class CatalogoPlaceholderComponent implements OnInit {
       } else {
         const nombre = String(this.editingDraft['nombre'] ?? '').trim();
         if (!nombre) {
-          this.errorModalEdicion = 'El nombre del continente es obligatorio.';
+          this.errorModalEdicion = this.esCatalogoTratamientos
+            ? 'El nombre del tratamiento es obligatorio.'
+            : 'El nombre del continente es obligatorio.';
           this.guardandoEdicion = false;
           return;
         }
@@ -1639,6 +1872,27 @@ export class CatalogoPlaceholderComponent implements OnInit {
         ...this.nuevoRegistroDraft,
         descripcion: '',
         icono: ''
+      };
+    } else if (this.esCatalogoTratamientos) {
+      this.nuevoRegistroDraft = {
+        ...this.nuevoRegistroDraft,
+        nombre: '',
+        abreviacion: '',
+        estatus: true
+      };
+    } else if (this.esCatalogoOrigenReservacion) {
+      this.nuevoRegistroDraft = {
+        ...this.nuevoRegistroDraft,
+        clave: '',
+        nombre_cotizador: '',
+        estatus: true
+      };
+    } else if (this.esCatalogoRolesEmpresa) {
+      this.nuevoRegistroDraft = {
+        ...this.nuevoRegistroDraft,
+        rol: '',
+        descripcion_rol: '',
+        estatus: true
       };
     } else if (this.esCatalogoPoliticas) {
       this.nuevoRegistroDraft = {
@@ -1721,8 +1975,11 @@ export class CatalogoPlaceholderComponent implements OnInit {
     this.errorModalEliminar = '';
     const codigo = String(
       item?.tipo_descuento ??
+      item?.rol ??
+      item?.descripcion_rol ??
       item?.codigo ??
       item?.clave ??
+      item?.abreviacion ??
       item?.descripcion ??
       item?.nombre_habitacion ??
       item?.nombre ??
@@ -1815,6 +2072,54 @@ export class CatalogoPlaceholderComponent implements OnInit {
         await this.catalogosAdmin.crearCatalogoAdmin(this.catalogoKey, {
           descripcion,
           icono
+        });
+      } else if (this.esCatalogoTratamientos) {
+        const nombre = String(this.nuevoRegistroDraft['nombre'] ?? '').trim();
+        const abreviacion = String(this.nuevoRegistroDraft['abreviacion'] ?? '').trim();
+        const estatus = Boolean(this.nuevoRegistroDraft['estatus']);
+
+        if (!nombre || !abreviacion) {
+          this.errorModalCreacion = 'Nombre y abreviacion son obligatorios para crear un tratamiento.';
+          this.guardandoCreacion = false;
+          return;
+        }
+
+        await this.catalogosAdmin.crearCatalogoAdmin(this.catalogoKey, {
+          nombre,
+          abreviacion,
+          estatus
+        });
+      } else if (this.esCatalogoOrigenReservacion) {
+        const clave = String(this.nuevoRegistroDraft['clave'] ?? '').trim();
+        const nombreCotizador = String(this.nuevoRegistroDraft['nombre_cotizador'] ?? '').trim();
+        const estatus = Boolean(this.nuevoRegistroDraft['estatus']);
+
+        if (!clave || !nombreCotizador) {
+          this.errorModalCreacion = 'Clave y nombre cotizador son obligatorios para crear un origen de reservacion.';
+          this.guardandoCreacion = false;
+          return;
+        }
+
+        await this.catalogosAdmin.crearCatalogoAdmin(this.catalogoKey, {
+          clave,
+          nombre_cotizador: nombreCotizador,
+          estatus
+        });
+      } else if (this.esCatalogoRolesEmpresa) {
+        const rol = String(this.nuevoRegistroDraft['rol'] ?? '').trim();
+        const descripcionRol = String(this.nuevoRegistroDraft['descripcion_rol'] ?? '').trim();
+        const estatus = Boolean(this.nuevoRegistroDraft['estatus']);
+
+        if (!rol || !descripcionRol) {
+          this.errorModalCreacion = 'Rol y descripcion del rol son obligatorios para crear un puesto o rol.';
+          this.guardandoCreacion = false;
+          return;
+        }
+
+        await this.catalogosAdmin.crearCatalogoAdmin(this.catalogoKey, {
+          rol,
+          descripcion_rol: descripcionRol,
+          estatus
         });
       } else if (this.esCatalogoPoliticas) {
         const codigo = String(this.nuevoRegistroDraft['codigo'] ?? '').trim();
@@ -1949,13 +2254,25 @@ export class CatalogoPlaceholderComponent implements OnInit {
         });
       } else {
         const nombre = String(this.nuevoRegistroDraft['nombre'] ?? '').trim();
-        if (!nombre) {
-          this.errorModalCreacion = 'El nombre del continente es obligatorio.';
+        const abreviacion = String(this.nuevoRegistroDraft['abreviacion'] ?? '').trim();
+
+        if (this.esCatalogoTratamientos && (!nombre || !abreviacion)) {
+          this.errorModalCreacion = 'Nombre y abreviacion son obligatorios para crear un tratamiento.';
           this.guardandoCreacion = false;
           return;
         }
 
-        await this.catalogosAdmin.crearCatalogoAdmin(this.catalogoKey, { nombre });
+        if (!nombre) {
+          this.errorModalCreacion = this.esCatalogoTratamientos
+            ? 'El nombre del tratamiento es obligatorio.'
+            : 'El nombre del continente es obligatorio.';
+          this.guardandoCreacion = false;
+          return;
+        }
+
+        await this.catalogosAdmin.crearCatalogoAdmin(this.catalogoKey, this.esCatalogoTratamientos
+          ? { nombre, abreviacion }
+          : { nombre });
       }
 
       this.cerrarModalCrear();

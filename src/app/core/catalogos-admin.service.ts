@@ -12,11 +12,14 @@ export type CatalogoAdminKey =
   | 'estatus_cotizacion'
   | 'idiomas'
   | 'politicas'
+  | 'origen_reservacion'
+  | 'roles_empresa'
   | 'regimen_hotel'
   | 'tarifas'
   | 'tipo_imagen'
   | 'tipos_habitacion'
-  | 'atracciones';
+  | 'atracciones'
+  | 'tratamientos';
 
 export interface IPoliticaTarifaAdmin {
   id: number;
@@ -315,6 +318,24 @@ export class CatalogosAdminService {
           };
         });
       }
+      case 'origen_reservacion': {
+        const { data, error } = await this.client
+          .from('origen_reservacion')
+          .select('id, clave, nombre_cotizador, estatus')
+          .order('nombre_cotizador', { ascending: true })
+          .order('id', { ascending: true });
+        if (error) throw error;
+        return data ?? [];
+      }
+      case 'roles_empresa': {
+        const { data, error } = await this.client
+          .from('roles_empresa')
+          .select('id, rol, descripcion_rol, estatus')
+          .order('rol', { ascending: true })
+          .order('id', { ascending: true });
+        if (error) throw error;
+        return data ?? [];
+      }
       case 'regimen_hotel': {
         const { data, error } = await this.client
           .from('regimen')
@@ -501,6 +522,15 @@ export class CatalogosAdminService {
           };
         });
       }
+      case 'tratamientos': {
+        const { data, error } = await this.client
+          .from('tratamientos')
+          .select('id, nombre, abreviacion')
+          .order('nombre', { ascending: true })
+          .order('id', { ascending: true });
+        if (error) throw error;
+        return data ?? [];
+      }
       default:
         return [];
     }
@@ -523,11 +553,14 @@ export class CatalogosAdminService {
       estatus_cotizacion: 'estatus_cotizacion',
       idiomas: 'idiomas',
       politicas: null,
+      origen_reservacion: null,
+      roles_empresa: null,
       regimen_hotel: null,
       tarifas: null,
       tipo_imagen: 'tipos_imagen',
       tipos_habitacion: null,
-      atracciones: 'catalogo_atracciones'
+      atracciones: 'catalogo_atracciones',
+      tratamientos: null
     };
 
     const tabla = tablaPorCatalogo[catalogo];
@@ -601,6 +634,45 @@ export class CatalogosAdminService {
             icono: payload.icono ?? null
           })
           .select('id, descripcion, icono')
+          .single();
+        if (error) throw error;
+        return data;
+      }
+      case 'tratamientos': {
+        const { data, error } = await this.client
+          .from('tratamientos')
+          .insert({
+            nombre: payload.nombre ?? null,
+            abreviacion: payload.abreviacion ?? null,
+            estatus: payload.estatus ?? true
+          })
+          .select('id, nombre, abreviacion, estatus')
+          .single();
+        if (error) throw error;
+        return data;
+      }
+      case 'origen_reservacion': {
+        const { data, error } = await this.client
+          .from('origen_reservacion')
+          .insert({
+            clave: payload.clave ?? null,
+            nombre_cotizador: payload.nombre_cotizador ?? null,
+            estatus: payload.estatus ?? true
+          })
+          .select('id, clave, nombre_cotizador, estatus')
+          .single();
+        if (error) throw error;
+        return data;
+      }
+      case 'roles_empresa': {
+        const { data, error } = await this.client
+          .from('roles_empresa')
+          .insert({
+            rol: payload.rol ?? null,
+            descripcion_rol: payload.descripcion_rol ?? null,
+            estatus: payload.estatus ?? true
+          })
+          .select('id, rol, descripcion_rol, estatus')
           .single();
         if (error) throw error;
         return data;
@@ -874,6 +946,30 @@ export class CatalogosAdminService {
         if (error) throw error;
         return { deleted: 1 };
       }
+      case 'tratamientos': {
+        const { error } = await this.client
+          .from('tratamientos')
+          .delete()
+          .eq('id', id);
+        if (error) throw error;
+        return { deleted: 1 };
+      }
+      case 'origen_reservacion': {
+        const { error } = await this.client
+          .from('origen_reservacion')
+          .delete()
+          .eq('id', id);
+        if (error) throw error;
+        return { deleted: 1 };
+      }
+      case 'roles_empresa': {
+        const { error } = await this.client
+          .from('roles_empresa')
+          .delete()
+          .eq('id', id);
+        if (error) throw error;
+        return { deleted: 1 };
+      }
       case 'atracciones': {
         const { error: deleteTraduccionesError } = await this.client
           .from('catalogo_atracciones_traducciones')
@@ -939,6 +1035,20 @@ export class CatalogosAdminService {
         if (error) throw error;
         return data;
       }
+      case 'tratamientos': {
+        const { data, error } = await this.client
+          .from('tratamientos')
+          .update({
+            nombre: payload.nombre ?? null,
+            abreviacion: payload.abreviacion ?? null,
+            estatus: payload.estatus ?? null
+          })
+          .eq('id', id)
+          .select('id, nombre, abreviacion, estatus')
+          .maybeSingle();
+        if (error) throw error;
+        return data;
+      }
       case 'descuentos': {
         const { data, error } = await this.client
           .from('descuentos')
@@ -991,6 +1101,34 @@ export class CatalogosAdminService {
           })
           .eq('id', id)
           .select('id')
+          .maybeSingle();
+        if (error) throw error;
+        return data;
+      }
+      case 'origen_reservacion': {
+        const { data, error } = await this.client
+          .from('origen_reservacion')
+          .update({
+            clave: payload.clave ?? null,
+            nombre_cotizador: payload.nombre_cotizador ?? null,
+            estatus: payload.estatus ?? null
+          })
+          .eq('id', id)
+          .select('id, clave, nombre_cotizador, estatus')
+          .maybeSingle();
+        if (error) throw error;
+        return data;
+      }
+      case 'roles_empresa': {
+        const { data, error } = await this.client
+          .from('roles_empresa')
+          .update({
+            rol: payload.rol ?? null,
+            descripcion_rol: payload.descripcion_rol ?? null,
+            estatus: payload.estatus ?? null
+          })
+          .eq('id', id)
+          .select('id, rol, descripcion_rol, estatus')
           .maybeSingle();
         if (error) throw error;
         return data;

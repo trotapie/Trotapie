@@ -97,6 +97,26 @@ export default [
         }
     },
     {
+        path: 'origen-reservacion',
+        component: CatalogoPlaceholderComponent,
+        data: {
+            ...ADMIN_ONLY,
+            catalogoKey: 'origen_reservacion',
+            titulo: 'Origen de reservacion',
+            descripcion: 'Gestiona claves y nombres de cotizador para identificar el origen de cada reservacion.'
+        }
+    },
+    {
+        path: 'roles-empresa',
+        component: CatalogoPlaceholderComponent,
+        data: {
+            ...ADMIN_ONLY,
+            catalogoKey: 'roles_empresa',
+            titulo: 'Puestos o roles de la empresa',
+            descripcion: 'Gestiona roles internos como CEO, Director o Isla y su descripcion operativa.'
+        }
+    },
+    {
         path: 'regimen-hotel',
         component: CatalogoPlaceholderComponent,
         data: {
@@ -144,6 +164,16 @@ export default [
             catalogoKey: 'atracciones',
             titulo: 'Catalogo de atracciones',
             descripcion: 'Gestiona atracciones principales vinculadas a destinos.'
+        }
+    },
+    {
+        path: 'tratamientos',
+        component: CatalogoPlaceholderComponent,
+        data: {
+            ...ADMIN_ONLY,
+            catalogoKey: 'tratamientos',
+            titulo: 'Titulos y tratamientos',
+            descripcion: 'Gestiona titulos y tratamientos disponibles para clientes, solicitudes y cotizaciones.'
         }
     },
     {

@@ -233,7 +233,7 @@
                             (input)="actualizarTextoDraft(columna.key, $any($event.target).value)" />
                         }
                         } @else {
-                        @if (columna.key === 'activo') {
+                        @if (columna.key === 'activo' || columna.key === 'estatus') {
                         <app-status-badge [status]="item?.[columna.key] ? 'ACTIVO' : 'INACTIVO'"></app-status-badge>
                         } @else {
                         @if (columna.key === 'icono' && item?.[columna.key]) {
@@ -374,6 +374,75 @@
                     <mat-icon class="icon-size-10 text-gray-400">image</mat-icon>
                     }
                 </div>
+            </div>
+            }
+
+            @if (esCatalogoTratamientos) {
+            <div class="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Nombre</mat-label>
+                    <input matInput [value]="editingDraft['nombre'] ?? ''"
+                        (input)="actualizarTextoDraft('nombre', $any($event.target).value)" maxlength="50" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Abreviacion</mat-label>
+                    <input matInput [value]="editingDraft['abreviacion'] ?? ''"
+                        (input)="actualizarTextoDraft('abreviacion', $any($event.target).value)" maxlength="15" />
+                </mat-form-field>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <span class="text-sm font-medium text-gray-700">{{ !!editingDraft['estatus'] ? 'Activo' : 'Inactivo' }}</span>
+                <mat-slide-toggle [checked]="!!editingDraft['estatus']"
+                    (change)="actualizarBooleanDraft('estatus', $any($event.target).checked)">
+                </mat-slide-toggle>
+            </div>
+            }
+
+            @if (esCatalogoOrigenReservacion) {
+            <div class="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Clave</mat-label>
+                    <input matInput [value]="editingDraft['clave'] ?? ''"
+                        (input)="actualizarTextoDraft('clave', $any($event.target).value)" maxlength="20" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Nombre cotizador</mat-label>
+                    <input matInput [value]="editingDraft['nombre_cotizador'] ?? ''"
+                        (input)="actualizarTextoDraft('nombre_cotizador', $any($event.target).value)" maxlength="120" />
+                </mat-form-field>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <span class="text-sm font-medium text-gray-700">{{ !!editingDraft['estatus'] ? 'Activo' : 'Inactivo' }}</span>
+                <mat-slide-toggle [checked]="!!editingDraft['estatus']"
+                    (change)="actualizarBooleanDraft('estatus', $any($event.target).checked)">
+                </mat-slide-toggle>
+            </div>
+            }
+
+            @if (esCatalogoRolesEmpresa) {
+            <div class="mt-2 space-y-4">
+                <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Rol</mat-label>
+                    <input matInput [value]="editingDraft['rol'] ?? ''"
+                        (input)="actualizarTextoDraft('rol', $any($event.target).value)" maxlength="80" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Descripcion del rol</mat-label>
+                    <textarea matInput rows="4" [value]="editingDraft['descripcion_rol'] ?? ''"
+                        (input)="actualizarTextoDraft('descripcion_rol', $any($event.target).value)" maxlength="255"></textarea>
+                </mat-form-field>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <span class="text-sm font-medium text-gray-700">{{ !!editingDraft['estatus'] ? 'Activo' : 'Inactivo' }}</span>
+                <mat-slide-toggle [checked]="!!editingDraft['estatus']"
+                    (change)="actualizarBooleanDraft('estatus', $any($event.target).checked)">
+                </mat-slide-toggle>
             </div>
             }
 
@@ -850,7 +919,7 @@
             </div>
             }
 
-            @if (!esCatalogoPoliticas && !esCatalogoTarifas && !esCatalogoTiposHabitacion && !esCatalogoAmenidades && !esCatalogoDescuentos && !esCatalogoTipoImagen && !esCatalogoAtracciones && !esCatalogoConceptos) {
+            @if (!esCatalogoPoliticas && !esCatalogoTarifas && !esCatalogoTiposHabitacion && !esCatalogoAmenidades && !esCatalogoDescuentos && !esCatalogoTipoImagen && !esCatalogoAtracciones && !esCatalogoConceptos && !esCatalogoTratamientos && !esCatalogoOrigenReservacion && !esCatalogoRolesEmpresa) {
             <mat-form-field appearance="outline" class="w-full">
                 <mat-label>Nombre</mat-label>
                 <input matInput [value]="editingDraft['nombre'] ?? ''"
@@ -1099,7 +1168,7 @@
     <div class="absolute inset-0 bg-black/60" @backdropFade></div>
     <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900" @modalScaleFade>
         <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
-            {{ esCatalogoIdiomas ? 'Eliminar idioma' : (esCatalogoAmenidades ? 'Eliminar amenidad' : (esCatalogoPoliticas ? 'Eliminar politica' : (esCatalogoDescuentos ? 'Eliminar descuento' : (esCatalogoTarifas ? 'Eliminar tarifa' : (esCatalogoTipoImagen ? 'Eliminar tipo imagen' : (esCatalogoTiposHabitacion ? 'Eliminar habitacion' : 'Eliminar continente')))))) }}
+            {{ esCatalogoIdiomas ? 'Eliminar idioma' : (esCatalogoAmenidades ? 'Eliminar amenidad' : (esCatalogoPoliticas ? 'Eliminar politica' : (esCatalogoDescuentos ? 'Eliminar descuento' : (esCatalogoTarifas ? 'Eliminar tarifa' : (esCatalogoTipoImagen ? 'Eliminar tipo imagen' : (esCatalogoTiposHabitacion ? 'Eliminar habitacion' : (esCatalogoTratamientos ? 'Eliminar tratamiento' : (esCatalogoOrigenReservacion ? 'Eliminar origen de reservacion' : (esCatalogoRolesEmpresa ? 'Eliminar rol de empresa' : 'Eliminar continente'))))))))) }}
         </h3>
         <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
             Seguro que quieres eliminar
@@ -1360,6 +1429,75 @@
             </div>
             }
 
+            @if (esCatalogoTratamientos) {
+            <div class="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Nombre</mat-label>
+                    <input matInput [value]="nuevoRegistroDraft['nombre'] ?? ''"
+                        (input)="actualizarTextoCreacion('nombre', $any($event.target).value)" maxlength="50" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Abreviacion</mat-label>
+                    <input matInput [value]="nuevoRegistroDraft['abreviacion'] ?? ''"
+                        (input)="actualizarTextoCreacion('abreviacion', $any($event.target).value)" maxlength="15" />
+                </mat-form-field>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <span class="text-sm font-medium text-gray-700">{{ !!nuevoRegistroDraft['estatus'] ? 'Activo' : 'Inactivo' }}</span>
+                <mat-slide-toggle [checked]="!!nuevoRegistroDraft['estatus']"
+                    (change)="actualizarBooleanCreacion('estatus', $any($event.target).checked)">
+                </mat-slide-toggle>
+            </div>
+            }
+
+            @if (esCatalogoOrigenReservacion) {
+            <div class="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Clave</mat-label>
+                    <input matInput [value]="nuevoRegistroDraft['clave'] ?? ''"
+                        (input)="actualizarTextoCreacion('clave', $any($event.target).value)" maxlength="20" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Nombre cotizador</mat-label>
+                    <input matInput [value]="nuevoRegistroDraft['nombre_cotizador'] ?? ''"
+                        (input)="actualizarTextoCreacion('nombre_cotizador', $any($event.target).value)" maxlength="120" />
+                </mat-form-field>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <span class="text-sm font-medium text-gray-700">{{ !!nuevoRegistroDraft['estatus'] ? 'Activo' : 'Inactivo' }}</span>
+                <mat-slide-toggle [checked]="!!nuevoRegistroDraft['estatus']"
+                    (change)="actualizarBooleanCreacion('estatus', $any($event.target).checked)">
+                </mat-slide-toggle>
+            </div>
+            }
+
+            @if (esCatalogoRolesEmpresa) {
+            <div class="mt-2 space-y-4">
+                <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Rol</mat-label>
+                    <input matInput [value]="nuevoRegistroDraft['rol'] ?? ''"
+                        (input)="actualizarTextoCreacion('rol', $any($event.target).value)" maxlength="80" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Descripcion del rol</mat-label>
+                    <textarea matInput rows="4" [value]="nuevoRegistroDraft['descripcion_rol'] ?? ''"
+                        (input)="actualizarTextoCreacion('descripcion_rol', $any($event.target).value)" maxlength="255"></textarea>
+                </mat-form-field>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <span class="text-sm font-medium text-gray-700">{{ !!nuevoRegistroDraft['estatus'] ? 'Activo' : 'Inactivo' }}</span>
+                <mat-slide-toggle [checked]="!!nuevoRegistroDraft['estatus']"
+                    (change)="actualizarBooleanCreacion('estatus', $any($event.target).checked)">
+                </mat-slide-toggle>
+            </div>
+            }
+
             @if (esCatalogoAmenidades) {
             <div class="mt-2 space-y-4">
                 <mat-form-field appearance="outline" class="w-full">
@@ -1538,7 +1676,7 @@
             </div>
             }
 
-            @if (!esCatalogoPoliticas && !esCatalogoTarifas && !esCatalogoTiposHabitacion && !esCatalogoAmenidades && !esCatalogoDescuentos && !esCatalogoTipoImagen && !esCatalogoAtracciones && !esCatalogoConceptos ) {
+            @if (!esCatalogoPoliticas && !esCatalogoTarifas && !esCatalogoTiposHabitacion && !esCatalogoAmenidades && !esCatalogoDescuentos && !esCatalogoTipoImagen && !esCatalogoAtracciones && !esCatalogoConceptos && !esCatalogoTratamientos && !esCatalogoOrigenReservacion && !esCatalogoRolesEmpresa ) {
             <mat-form-field appearance="outline" class="w-full">
                 <mat-label>Nombre</mat-label>
                 <input matInput [value]="nuevoRegistroDraft['nombre'] ?? ''"

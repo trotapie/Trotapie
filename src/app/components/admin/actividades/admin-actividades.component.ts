@@ -75,6 +75,20 @@ export class AdminActividadesComponent {
       link: '/admin/catalogos/politicas'
     },
     {
+      titulo: 'Origen de reservacion',
+      descripcion: 'Gestiona la clave y el nombre cotizador del origen comercial de la reservacion.',
+      icono: 'heroicons_outline:bookmark-square',
+      imagen: 'https://images.unsplash.com/photo-1529070538774-1843cb3265df?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      link: '/admin/catalogos/origen-reservacion'
+    },
+    {
+      titulo: 'Puestos o roles de la empresa',
+      descripcion: 'Gestiona roles internos y su descripcion para organizar funciones dentro de la empresa.',
+      icono: 'heroicons_outline:briefcase',
+      imagen: 'https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      link: '/admin/catalogos/roles-empresa'
+    },
+    {
       titulo: 'Regimen de hotel',
       descripcion: 'Gestiona regimenes disponibles para hoteles.',
       icono: 'heroicons_outline:building-office',
@@ -108,6 +122,13 @@ export class AdminActividadesComponent {
       icono: 'heroicons_outline:sparkles',
       imagen: 'https://images.unsplash.com/photo-1561174356-638d86f24f04?q=80&w=1450&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
       link: '/admin/catalogos/atracciones'
+    },
+    {
+      titulo: 'Titulos y tratamientos',
+      descripcion: 'Gestiona tratamientos como Sr., Sra., Lic. o Dr. para clientes y cotizaciones.',
+      icono: 'heroicons_outline:identification',
+      imagen: 'https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      link: '/admin/catalogos/tratamientos'
     }
   ];
 }
