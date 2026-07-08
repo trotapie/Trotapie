@@ -27,6 +27,10 @@ export class AuthService {
     return this._accessToken;
   }
 
+  get authenticated(): boolean {
+    return this._authenticated;
+  }
+
   get role(): string {
     return this._role;
   }

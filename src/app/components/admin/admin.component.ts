@@ -680,13 +680,13 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   private async _navegarASolicitudesPorEstatus(estatus: string): Promise<void> {
-    await this._router.navigate(['/admin/solicitudes-cotizacion'], {
+    await this._router.navigate(['/admin/cotizaciones/solicitudes'], {
       queryParams: { estatus }
     });
   }
 
   private async _navegarASolicitudesPorFecha(fecha: string): Promise<void> {
-    await this._router.navigate(['/admin/solicitudes-cotizacion'], {
+    await this._router.navigate(['/admin/cotizaciones/solicitudes'], {
       queryParams: { fecha }
     });
   }

@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { CanActivateChildFn, CanActivateFn, Router } from '@angular/router';
 import { AuthService } from 'app/core/auth/auth.service';
-import { map } from 'rxjs';
+import { map, of } from 'rxjs';
 
 type AccessData = {
   roles?: string[];
@@ -12,7 +12,10 @@ export const AccessGuard: CanActivateFn | CanActivateChildFn = (route, state) =>
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  return authService.check().pipe(
+  // AuthGuard runs first and already sets auth state, skip duplicate check
+  const check$ = authService.authenticated ? of(true) : authService.check();
+
+  return check$.pipe(
     map((authenticated) => {
       if (!authenticated) {
         const redirectURL = state.url === '/sign-out' ? '' : `redirectURL=${state.url}`;

@@ -2,10 +2,18 @@ import { Component, computed, EventEmitter, inject, Input, OnInit, Output, signa
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { IAsesores, IDetalleHotel } from 'app/components/hoteles/hoteles.interface';
+import { TratamientoCliente } from 'app/core/cliente-nombre.util';
 import { SupabaseService } from 'app/core/supabase.service';
 import { MaterialModule } from 'app/shared/material.module';
 import { firstValueFrom } from 'rxjs';
 type Room = { adults: number; children: number; childAges: (number | null)[] };
+
+type BotPrefillCliente = {
+  tratamiento_id: number | null;
+  nombre_completo: string;
+  correo: string;
+  telefono: string;
+};
 
 
 
@@ -16,6 +24,7 @@ type Room = { adults: number; children: number; childAges: (number | null)[] };
   styleUrl: './bot-cotizador.component.scss'
 })
 export class BotCotizadorComponent implements OnInit {
+  private readonly botPrefillStorageKey = 'trotapie_bot_prefill_cliente';
   private formBuilder = inject(FormBuilder);
   private supabase = inject(SupabaseService);
   private _translocoService = inject(TranslocoService);
@@ -30,6 +39,7 @@ export class BotCotizadorComponent implements OnInit {
   error = '';
   otroId: number;
   asesores: IAsesores[] = [];
+  tratamientos: TratamientoCliente[] = [];
 
   readonly MAX_ROOMS = 5;
   readonly MAX_PER_ROOM = 6;
@@ -66,6 +76,7 @@ export class BotCotizadorComponent implements OnInit {
 
   ngOnInit(): void {
     this.obtenerEmpleados();
+    this.obtenerTratamientos();
     this.formulario();
   }
 
@@ -76,7 +87,8 @@ export class BotCotizadorComponent implements OnInit {
     // this.modalAbierto = true;
     this.reservacionForm = this.formBuilder.group({
       regimen: ['', [Validators.required]],
-      nombre: ['', [Validators.required]],
+      tratamiento_id: [''],
+      nombre_completo: ['', [Validators.required]],
       correo: ['', [Validators.email]],
       rangoFechas: this.formBuilder.group({
         start: [null],
@@ -91,6 +103,9 @@ export class BotCotizadorComponent implements OnInit {
     this.reservacionForm.get('rangoFechas')!.valueChanges.subscribe(range => {
       this.calcularNoches(range?.start, range?.end);
     });
+
+    this.hidratarPrefillCliente();
+    this.observarPrefillCliente();
 
     if (this.opcionesRegimen?.length === 1) {
       this.reservacionForm.get('regimen')?.patchValue(
@@ -110,6 +125,15 @@ export class BotCotizadorComponent implements OnInit {
           ? this._translocoService.translate('empleado_otro')
           : e.nombre
     }));
+  }
+
+  async obtenerTratamientos() {
+    try {
+      this.tratamientos = await this.supabase.obtenerTratamientosActivos();
+      this.hidratarPrefillCliente();
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudieron cargar los tratamientos.';
+    }
   }
 
   calcularNoches(start: Date | null, end: Date | null): void {
@@ -227,8 +251,9 @@ export class BotCotizadorComponent implements OnInit {
     const ciudad = sessionStorage.getItem('ciudad') ?? '';
 
     const {
-      regimen, rangoFechas, nombre, correo, telefono, asesor, especiales
+      regimen, rangoFechas, tratamiento_id, nombre_completo, correo, telefono, asesor, especiales
     } = this.reservacionForm.getRawValue();
+    const nombreLimpio = String(nombre_completo ?? '').trim();
 
     const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
@@ -243,7 +268,7 @@ export class BotCotizadorComponent implements OnInit {
     const totalRooms = rooms.length;
 
     const mensaje = await this.buildCotizacionMensaje({
-      nombre,
+      nombre: nombreLimpio,
       hotel: this.hotel.nombre_hotel,
       ciudad: this.hotel.destino.nombre,
       noches: this.noches,
@@ -264,7 +289,9 @@ export class BotCotizadorComponent implements OnInit {
     window.open(url, '_blank');
 
     this.guardarCliente({
-      nombre,
+      nombre: nombreLimpio,
+      tratamiento_id,
+      nombre_completo,
       hotel: this.hotel.nombre_hotel,
       ciudad,
       noches: this.noches,
@@ -342,11 +369,14 @@ export class BotCotizadorComponent implements OnInit {
   }
 
   async guardarCliente(mensaje) {
-    const { telefono, ofertas, nombre, correo } = this.reservacionForm.getRawValue();
+    const { telefono, ofertas, tratamiento_id, nombre_completo, correo } = this.reservacionForm.getRawValue();
+    const nombreLimpio = String(nombre_completo ?? '').trim();
 
     try {
       const nuevoCliente = {
-        nombre: nombre,
+        nombre: nombreLimpio,
+        nombre_completo: nombreLimpio,
+        tratamiento_id: this.parseTratamientoId(tratamiento_id),
         email: correo,
         telefono: telefono,
         recibir_ofertas: ofertas
@@ -397,5 +427,66 @@ export class BotCotizadorComponent implements OnInit {
       '',
       msgEs,
     ].join('\n');
+  }
+
+  private parseTratamientoId(tratamientoId: number | null | undefined): number | null {
+    const value = Number(tratamientoId);
+    return Number.isFinite(value) && value > 0 ? value : null;
+  }
+
+  private hidratarPrefillCliente() {
+    const prefill = this.leerPrefillCliente();
+    if (!prefill) {
+      return;
+    }
+
+    this.reservacionForm.patchValue({
+      tratamiento_id: prefill.tratamiento_id !== null ? String(prefill.tratamiento_id) : '',
+      nombre_completo: prefill.nombre_completo,
+      correo: prefill.correo,
+      telefono: prefill.telefono,
+    }, { emitEvent: false });
+  }
+
+  private observarPrefillCliente() {
+    this.reservacionForm.valueChanges.subscribe(() => {
+      const { tratamiento_id, nombre_completo, correo, telefono } = this.reservacionForm.getRawValue();
+
+      const payload: BotPrefillCliente = {
+        tratamiento_id: this.parseTratamientoId(tratamiento_id),
+        nombre_completo: String(nombre_completo ?? '').trim(),
+        correo: String(correo ?? '').trim(),
+        telefono: String(telefono ?? '').replace(/\D/g, ''),
+      };
+
+      this.guardarPrefillCliente(payload);
+    });
+  }
+
+  private leerPrefillCliente(): BotPrefillCliente | null {
+    try {
+      const raw = localStorage.getItem(this.botPrefillStorageKey);
+      if (!raw) {
+        return null;
+      }
+
+      const parsed = JSON.parse(raw) as Partial<BotPrefillCliente> | null;
+      if (!parsed || typeof parsed !== 'object') {
+        return null;
+      }
+
+      return {
+        tratamiento_id: this.parseTratamientoId(parsed.tratamiento_id ?? null),
+        nombre_completo: String(parsed.nombre_completo ?? '').trim(),
+        correo: String(parsed.correo ?? '').trim(),
+        telefono: String(parsed.telefono ?? '').replace(/\D/g, ''),
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  private guardarPrefillCliente(payload: BotPrefillCliente) {
+    localStorage.setItem(this.botPrefillStorageKey, JSON.stringify(payload));
   }
 }

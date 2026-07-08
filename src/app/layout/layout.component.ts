@@ -13,6 +13,11 @@ import { FuseMediaWatcherService } from '@fuse/services/media-watcher';
 import { FusePlatformService } from '@fuse/services/platform';
 import { FUSE_VERSION } from '@fuse/version';
 import { Subject, combineLatest, filter, map, takeUntil } from 'rxjs';
+import { NavigationService } from 'app/core/navigation/navigation.service';
+import { MessagesService } from 'app/layout/common/messages/messages.service';
+import { NotificationsService } from 'app/layout/common/notifications/notifications.service';
+import { QuickChatService } from 'app/layout/common/quick-chat/quick-chat.service';
+import { ShortcutsService } from 'app/layout/common/shortcuts/shortcuts.service';
 import { SettingsComponent } from './common/settings/settings.component';
 import { EmptyLayoutComponent } from './layouts/empty/empty.component';
 import { CenteredLayoutComponent } from './layouts/horizontal/centered/centered.component';
@@ -63,7 +68,12 @@ export class LayoutComponent implements OnInit, OnDestroy {
         private _router: Router,
         private _fuseConfigService: FuseConfigService,
         private _fuseMediaWatcherService: FuseMediaWatcherService,
-        private _fusePlatformService: FusePlatformService
+        private _fusePlatformService: FusePlatformService,
+        private _navigationService: NavigationService,
+        private _messagesService: MessagesService,
+        private _notificationsService: NotificationsService,
+        private _quickChatService: QuickChatService,
+        private _shortcutsService: ShortcutsService
     ) {}
 
     // -----------------------------------------------------------------------------------------------------
@@ -135,6 +145,13 @@ export class LayoutComponent implements OnInit, OnDestroy {
                 // Update the layout
                 this._updateLayout();
             });
+
+        // Load initial data without blocking route activation
+        this._navigationService.get().subscribe();
+        this._messagesService.getAll().subscribe();
+        this._notificationsService.getAll().subscribe();
+        this._quickChatService.getChats().subscribe();
+        this._shortcutsService.getAll().subscribe();
 
         // Set the app version
         this._renderer2.setAttribute(

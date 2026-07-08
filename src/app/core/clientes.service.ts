@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
+import { construirNombreClienteVisible } from './cliente-nombre.util';
 
 @Injectable({ providedIn: 'root' })
 export class ClientesService {
@@ -22,7 +23,20 @@ export class ClientesService {
   }) {
     let query = this.client
       .from('clientes')
-      .select('id, nombre, email, telefono, recibir_ofertas')
+      .select(`
+        id,
+        nombre,
+        nombre_completo,
+        tratamiento_id,
+        email,
+        telefono,
+        recibir_ofertas,
+        tratamiento:tratamiento_id (
+          id,
+          nombre,
+          abreviacion
+        )
+      `)
       .order('nombre', { ascending: true })
       .limit(100);
 
@@ -42,11 +56,21 @@ export class ClientesService {
 
     const { data, error } = await query;
     if (error) throw error;
-    return data ?? [];
+
+    return (data ?? []).map((item: any) => ({
+      ...item,
+      nombre: construirNombreClienteVisible({
+        tratamientoAbreviacion: item?.tratamiento?.abreviacion ?? null,
+        nombreCompleto: item?.nombre_completo ?? null,
+        nombreFallback: item?.nombre ?? null,
+      })
+    }));
   }
 
   async upsertCliente(cliente: {
     nombre: string;
+    nombre_completo: string;
+    tratamiento_id: number | null;
     email: string | null;
     telefono: string;
     recibir_ofertas: boolean;
@@ -54,7 +78,20 @@ export class ClientesService {
     const { data, error } = await this.client
       .from('clientes')
       .upsert(cliente, { onConflict: 'telefono' })
-      .select('id, nombre, email, telefono, recibir_ofertas')
+      .select(`
+        id,
+        nombre,
+        nombre_completo,
+        tratamiento_id,
+        email,
+        telefono,
+        recibir_ofertas,
+        tratamiento:tratamiento_id (
+          id,
+          nombre,
+          abreviacion
+        )
+      `)
       .single();
 
     if (error) throw error;

@@ -1,5 +1,5 @@
 export interface ISolicitudCotizacionListado {
-  id: number;
+  id: number | string;
   public_id?: string;
   empleado_id?: number;
   fecha_creacion?: string | Date;
@@ -19,4 +19,5 @@ export interface ISolicitudCotizacionListado {
         traduccion?: string | null;
       }
     | null;
+  solicitudes?: ISolicitudCotizacionListado[];
 }

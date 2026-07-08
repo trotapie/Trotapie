@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { AdminComponent } from './admin.component';
+import { CotizacionesComponent } from './cotizaciones/cotizaciones.component';
 
 export default [
     {
@@ -32,6 +33,18 @@ export default [
     {
         path: 'solicitudes-cotizacion',
         loadChildren: () => import('./solicitudes-cotizacion/solicitudes.routes'),
+    },
+    {
+        path: 'cotizaciones',
+        component: CotizacionesComponent,
+    },
+    {
+        path: 'cotizaciones/solicitudes',
+        loadChildren: () => import('./solicitudes-cotizacion/solicitudes.routes'),
+    },
+    {
+        path: 'cotizaciones/concentrado',
+        loadChildren: () => import('./cotizaciones-multiples/multiples.routes'),
     },
     {
         path: 'cotizaciones-multiples',

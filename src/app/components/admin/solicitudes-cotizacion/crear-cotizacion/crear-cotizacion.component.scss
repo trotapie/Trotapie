@@ -63,6 +63,18 @@
     color: var(--fuse-text-secondary);
 }
 
+.client-name-fields {
+    display: grid;
+    grid-template-columns: minmax(120px, 0.2fr) minmax(0, 0.8fr);
+    gap: 12px;
+    align-items: start;
+}
+
+.client-name-fields__prefix,
+.client-name-fields__name {
+    margin-bottom: 0;
+}
+
 .modal-backdrop {
     position: fixed;
     inset: 0;
@@ -299,6 +311,11 @@
 }
 
 @media (max-width: 640px) {
+    .client-name-fields {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
     .step-actions,
     .step-actions-between {
         flex-direction: column-reverse;

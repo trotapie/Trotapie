@@ -5,6 +5,7 @@ import { getDefaultLang } from 'app/lang.utils';
 import { TranslocoService } from '@jsverse/transloco';
 import { Observable } from 'rxjs';
 import { ISolicitudCotizacionListado } from 'app/interface/solicitudes-cotizacion.interface';
+import { construirNombreClienteVisible } from './cliente-nombre.util';
 
 const ES_ID = 1;
 const CODIGOS_IDIOMA_PREVIEW = ['es', 'en', 'pt', 'de', 'fr'] as const;
@@ -2912,7 +2913,20 @@ export class SupabaseService {
   }) {
     let query = this.client
       .from('clientes')
-      .select('id, nombre, email, telefono, recibir_ofertas')
+      .select(`
+        id,
+        nombre,
+        nombre_completo,
+        tratamiento_id,
+        email,
+        telefono,
+        recibir_ofertas,
+        tratamiento:tratamiento_id (
+          id,
+          nombre,
+          abreviacion
+        )
+      `)
       .order('nombre', { ascending: true })
       .limit(100);
 
@@ -2932,11 +2946,33 @@ export class SupabaseService {
 
     const { data, error } = await query;
     if (error) throw error;
+
+    return (data ?? []).map((item: any) => ({
+      ...item,
+      nombre: construirNombreClienteVisible({
+        tratamientoAbreviacion: item?.tratamiento?.abreviacion ?? null,
+        nombreCompleto: item?.nombre_completo ?? null,
+        nombreFallback: item?.nombre ?? null,
+      })
+    }));
+  }
+
+  async obtenerTratamientosActivos() {
+    const { data, error } = await this.client
+      .from('tratamientos')
+      .select('id, nombre, abreviacion')
+      .eq('estatus', true)
+      .order('nombre', { ascending: true })
+      .order('id', { ascending: true });
+
+    if (error) throw error;
     return data ?? [];
   }
 
   async upsertCliente(cliente: {
     nombre: string;
+    nombre_completo: string;
+    tratamiento_id: number | null;
     email: string | null;
     telefono: string;
     recibir_ofertas: boolean;
@@ -2944,7 +2980,20 @@ export class SupabaseService {
     const { data, error } = await this.client
       .from('clientes')
       .upsert(cliente, { onConflict: 'telefono' })
-      .select('id, nombre, email, telefono, recibir_ofertas')
+      .select(`
+        id,
+        nombre,
+        nombre_completo,
+        tratamiento_id,
+        email,
+        telefono,
+        recibir_ofertas,
+        tratamiento:tratamiento_id (
+          id,
+          nombre,
+          abreviacion
+        )
+      `)
       .single();
 
     if (error) throw error;
@@ -2975,6 +3024,321 @@ export class SupabaseService {
     return data; // { id, public_id }
   }
 
+  async guardarCotizacionMultiple(payload: {
+    cliente_id: number;
+    empleado_id: number;
+    nombre_persona: string;
+    correo: string | null;
+    telefono: string | null;
+    destino_id: number;
+    fecha_entrada: string;
+    fecha_salida: string;
+    noches: number;
+    total_personas: number;
+    total_habitaciones: number;
+    habitaciones: any;
+    peticiones_especiales: string | null;
+    estatus_clave?: string;
+    hoteles: Array<{
+      hotel_id: number;
+      regimen_id: number | null;
+      hotel_nombre: string;
+      destino_id: number;
+      destino_nombre: string;
+      orden: number;
+      es_principal: boolean;
+      precio?: number | null;
+      precio_con_seguro?: number | null;
+      precio_a_meses?: number | null;
+      condiciones_precio?: any[];
+      condiciones_precio_seguro?: any[];
+      condiciones_precio_meses?: any[];
+      porcentaje_seguro?: number | null;
+      porcentaje_meses?: number | null;
+      fecha_limite_seguro?: string | null;
+      fecha_limite_meses?: string | null;
+      tipo_tarifa?: string | null;
+    }>;
+  }) {
+    const estatusClave = payload.estatus_clave ?? 'pendiente';
+
+    const { data: cotizacionMultiple, error: errorPadre } = await this.client
+      .from('cotizaciones_multiples')
+      .insert({
+        cliente_id: payload.cliente_id,
+        empleado_id: payload.empleado_id,
+        nombre_persona: payload.nombre_persona,
+        correo: payload.correo,
+        telefono: payload.telefono,
+        fecha_entrada: payload.fecha_entrada,
+        fecha_salida: payload.fecha_salida,
+        noches: payload.noches,
+        total_personas: payload.total_personas,
+        total_habitaciones: payload.total_habitaciones,
+        habitaciones: payload.habitaciones,
+        peticiones_especiales: payload.peticiones_especiales,
+        estatus_clave: estatusClave
+      })
+      .select('id, public_id')
+      .single();
+
+    if (errorPadre) throw errorPadre;
+
+    const solicitudesCotizacion = (payload.hoteles ?? []).map((hotel) => ({
+      cliente_id: payload.cliente_id,
+      hotel_id: hotel.hotel_id,
+      empleado_id: payload.empleado_id,
+      regimen_id: hotel.regimen_id,
+      fecha_entrada: payload.fecha_entrada,
+      fecha_salida: payload.fecha_salida,
+      noches: payload.noches,
+      habitaciones: payload.habitaciones,
+      peticiones_especiales: payload.peticiones_especiales,
+      mostrar_en_concentrado: false,
+      recibir_ofertas: false,
+      mensaje: null,
+      precio_cotizacion: hotel.precio ?? null,
+      precio_con_seguro: hotel.precio_con_seguro ?? null,
+      precio_a_meses: hotel.precio_a_meses ?? null,
+      condiciones_precio: hotel.condiciones_precio ?? [],
+      condiciones_precio_seguro: hotel.condiciones_precio_seguro ?? [],
+      condiciones_precio_meses: hotel.condiciones_precio_meses ?? [],
+      porcentaje_seguro: hotel.porcentaje_seguro ?? null,
+      porcentaje_meses: hotel.porcentaje_meses ?? null,
+      fecha_limite_seguro: hotel.fecha_limite_seguro ?? null,
+      fecha_limite_meses: hotel.fecha_limite_meses ?? null,
+      cotizacion_multiple: {
+        cotizacion_multiple_id: cotizacionMultiple.id,
+        orden: hotel.orden,
+        es_principal: hotel.es_principal,
+        hotel_nombre: hotel.hotel_nombre,
+        destino_id: hotel.destino_id,
+        destino_nombre: hotel.destino_nombre,
+        tipo_tarifa: hotel.tipo_tarifa ?? null
+      }
+    }));
+
+    if (!solicitudesCotizacion.length) {
+      return cotizacionMultiple;
+    }
+
+    const { data: solicitudesCreadas, error: errorSolicitudes } = await this.client
+      .from('solicitudes_cotizacion')
+      .insert(solicitudesCotizacion)
+      .select('id');
+
+    if (errorSolicitudes) {
+      await this.client
+        .from('cotizaciones_multiples')
+        .delete()
+        .eq('id', cotizacionMultiple.id);
+      throw errorSolicitudes;
+    }
+
+    const relaciones = (solicitudesCreadas ?? []).map((solicitud: any) => ({
+      cotizacion_multiple_id: cotizacionMultiple.id,
+      solicitud_cotizacion_id: solicitud.id
+    }));
+
+    const { error: errorRelaciones } = await this.client
+      .from('cotizaciones_solicitudes')
+      .insert(relaciones);
+
+    if (errorRelaciones) {
+      const solicitudIds = (solicitudesCreadas ?? []).map((solicitud: any) => solicitud.id);
+      if (solicitudIds.length) {
+        await this.client
+          .from('solicitudes_cotizacion')
+          .delete()
+          .in('id', solicitudIds);
+      }
+
+      await this.client
+        .from('cotizaciones_multiples')
+        .delete()
+        .eq('id', cotizacionMultiple.id);
+      throw errorRelaciones;
+    }
+
+    return cotizacionMultiple;
+  }
+
+  private normalizarSolicitudesCotizacionMultiple(relaciones: any[] | null | undefined) {
+    return (relaciones ?? [])
+      .map((relacion: any) => {
+        const solicitud = relacion?.solicitudes_cotizacion ?? relacion?.solicitud ?? null;
+        if (!solicitud) return null;
+
+        const metadata = solicitud?.cotizacion_multiple ?? {};
+        const hotel = solicitud?.hotel ?? null;
+        const traduccionHotelEs = hotel?.traducciones?.find((x: any) => x.idioma_id === ES_ID);
+        const destino = hotel?.destino ?? null;
+        const imagenes = Array.isArray(hotel?.imagenes) ? hotel.imagenes : [];
+        const imagenPrincipal = imagenes
+          .map((imagen: any) => ({
+            url_imagen: imagen?.url_imagen ?? '',
+            tipo_imagen_id: imagen?.tipo_imagen_id ?? null
+          }))
+          .filter((imagen: any) => String(imagen.url_imagen ?? '').trim().length > 0)
+          [0]?.url_imagen ?? '';
+
+        return {
+          ...solicitud,
+          hotel_id: hotel?.id ?? solicitud?.hotel_id ?? null,
+          hotel_nombre: metadata?.hotel_nombre ?? traduccionHotelEs?.nombre_hotel ?? '',
+          destino_id: destino?.id ?? metadata?.destino_id ?? null,
+          destino_nombre: destino?.nombre ?? metadata?.destino_nombre ?? '',
+          tipo_destino: destino?.tipo_desino_id == null ? '' : Number(destino?.tipo_desino_id) === 2 ? 'INTERNACIONAL' : 'NACIONAL',
+          orden: metadata?.orden ?? relacion?.id ?? 0,
+          es_principal: Boolean(metadata?.es_principal),
+          precio: solicitud?.precio_cotizacion ?? null,
+          estrellas: hotel?.estrellas ?? null,
+          fondo: hotel?.fondo ?? null,
+          imagen_url: hotel?.fondo ?? imagenPrincipal,
+          imagenes,
+          tipo_tarifa: metadata?.tipo_tarifa ?? null,
+          estatus_clave: solicitud?.estatus?.clave ?? solicitud?.estatus_clave ?? 'pendiente',
+          estatus_nombre: solicitud?.estatus?.nombre ?? solicitud?.estatus?.clave ?? solicitud?.estatus_clave ?? 'pendiente'
+        };
+      })
+      .filter(Boolean);
+  }
+
+  /*
+    Cotizaciones multiples se guardan como solicitudes_cotizacion individuales y
+    se enlazan con cotizaciones_solicitudes.
+  */
+  private cotizacionMultipleSolicitudSelect() {
+    return `
+      id,
+      solicitud:solicitud_cotizacion_id (
+        id,
+        public_id,
+        hotel_id,
+        regimen_id,
+        precio_cotizacion,
+        precio_con_seguro,
+        precio_a_meses,
+        condiciones_precio,
+        condiciones_precio_seguro,
+        condiciones_precio_meses,
+        porcentaje_seguro,
+        porcentaje_meses,
+        fecha_limite_seguro,
+        fecha_limite_meses,
+        tipo_habitacion,
+        mostrar_en_concentrado,
+        cotizacion_multiple,
+        created_at,
+        hotel:hotel_id (
+          id,
+          estrellas,
+          fondo,
+          imagenes:imagenes_hoteles!imagenes_hoteles_hotel_id_fkey (
+            url_imagen,
+            tipo_imagen_id
+          ),
+          traducciones:hotel_traducciones (
+            idioma_id,
+            nombre_hotel
+          ),
+          destino:destino_id (
+            id,
+            nombre,
+            tipo_desino_id
+          )
+        ),
+        estatus:estatus_id (
+          clave,
+          nombre
+        ),
+        regimen:regimen_id (
+          id,
+          traducciones:regimen_traducciones (
+            idioma_id,
+            descripcion
+          )
+        )
+      )
+    `;
+  }
+
+  async agregarHotelACotizacionMultiple(payload: {
+    cotizacion_multiple_id: number;
+    cliente_id: number;
+    empleado_id: number;
+    fecha_entrada: string;
+    fecha_salida: string;
+    noches: number;
+    habitaciones: any;
+    peticiones_especiales?: string | null;
+    hotel: {
+      id: number;
+      nombre_hotel: string;
+      destino_id: number;
+      destino_nombre: string;
+      regimen_id: number | null;
+    };
+    orden: number;
+  }) {
+    const { data: solicitud, error: errorSolicitud } = await this.client
+      .from('solicitudes_cotizacion')
+      .insert({
+        cliente_id: payload.cliente_id,
+        hotel_id: payload.hotel.id,
+        empleado_id: payload.empleado_id,
+        regimen_id: payload.hotel.regimen_id,
+        fecha_entrada: payload.fecha_entrada,
+        fecha_salida: payload.fecha_salida,
+        noches: payload.noches,
+        habitaciones: payload.habitaciones,
+        peticiones_especiales: payload.peticiones_especiales ?? null,
+        mostrar_en_concentrado: false,
+        recibir_ofertas: false,
+        mensaje: null,
+        precio_cotizacion: null,
+        precio_con_seguro: null,
+        precio_a_meses: null,
+        condiciones_precio: [],
+        condiciones_precio_seguro: [],
+        condiciones_precio_meses: [],
+        porcentaje_seguro: null,
+        porcentaje_meses: null,
+        fecha_limite_seguro: null,
+        fecha_limite_meses: null,
+        cotizacion_multiple: {
+          cotizacion_multiple_id: payload.cotizacion_multiple_id,
+          orden: payload.orden,
+          es_principal: false,
+          hotel_nombre: payload.hotel.nombre_hotel,
+          destino_id: payload.hotel.destino_id,
+          destino_nombre: payload.hotel.destino_nombre,
+          tipo_tarifa: null
+        }
+      })
+      .select('id')
+      .single();
+
+    if (errorSolicitud) throw errorSolicitud;
+
+    const { error: errorRelacion } = await this.client
+      .from('cotizaciones_solicitudes')
+      .insert({
+        cotizacion_multiple_id: payload.cotizacion_multiple_id,
+        solicitud_cotizacion_id: solicitud.id
+      });
+
+    if (errorRelacion) {
+      await this.client
+        .from('solicitudes_cotizacion')
+        .delete()
+        .eq('id', solicitud.id);
+      throw errorRelacion;
+    }
+
+    return solicitud;
+  }
+
   async guardarHotelesComparativaSolicitud(payload: Array<{
     solicitud_id: number;
     hotel_id: number;
@@ -2991,6 +3355,24 @@ export class SupabaseService {
 
     if (error) throw error;
     return data ?? [];
+  }
+
+  async actualizarSolicitudCotizacion(
+    id: number,
+    payload: {
+      estatus_id?: number | null;
+      mensaje?: string | null;
+    }
+  ) {
+    const { data, error } = await this.client
+      .from('solicitudes_cotizacion')
+      .update(payload)
+      .eq('id', id)
+      .select('id')
+      .single();
+
+    if (error) throw error;
+    return data;
   }
 
   async enviarCorreoCotizacion(payload: {
@@ -3143,7 +3525,7 @@ export class SupabaseService {
 
     const { data: detalleHabitaciones, error: errorHabitaciones } = await this.client
       .from('solicitudes_cotizacion')
-      .select('id, empleado_id, habitaciones, created_at')
+      .select('id, empleado_id, habitaciones, created_at, mostrar_en_concentrado')
       .in('id', ids);
 
     if (errorHabitaciones) throw errorHabitaciones;
@@ -3161,7 +3543,12 @@ export class SupabaseService {
       (detalleHabitaciones ?? []).map((item: any) => [Number(item.id), item.created_at ?? null])
     );
 
-    return solicitudes.map((item) => ({
+    const solicitudesVisibles = solicitudes.filter((item) => {
+      const detalle = (detalleHabitaciones ?? []).find((detalleItem: any) => Number(detalleItem.id) === Number(item.id));
+      return detalle?.mostrar_en_concentrado !== false;
+    });
+
+    return solicitudesVisibles.map((item) => ({
       ...item,
       empleado_id: empleadoPorId.get(Number(item.id)) ?? (item as any).empleado_id ?? null,
       created_at: fechasPorId.get(Number(item.id)) ?? (item as any).created_at ?? null,
@@ -3176,47 +3563,152 @@ export class SupabaseService {
 
   async obtenerCotizacionesMultiples() {
     const { data, error } = await this.client
-      .rpc('obtener_cotizaciones_multiples');
+      .from('cotizaciones_multiples')
+      .select(`
+        id,
+        public_id,
+        cliente_id,
+        empleado_id,
+        nombre_persona,
+        correo,
+        telefono,
+        fecha_entrada,
+        fecha_salida,
+        noches,
+        habitaciones,
+        peticiones_especiales,
+        estatus_clave,
+        created_at,
+        updated_at,
+        cliente:cliente_id (
+          nombre,
+          nombre_completo,
+          tratamiento_id,
+          email,
+          telefono,
+          tratamiento:tratamiento_id (
+            abreviacion
+          )
+        ),
+        empleado:empleado_id (
+          nombre
+        ),
+        cotizaciones_solicitudes (
+          ${this.cotizacionMultipleSolicitudSelect()}
+        )
+      `)
+      .order('created_at', { ascending: false });
 
     if (error) throw error;
 
-    const cotizaciones = (data ?? []) as ISolicitudCotizacionListado[];
-    if (!cotizaciones.length) {
-      return cotizaciones;
+    const filas = (data ?? []) as any[];
+
+    return filas.map((item) => {
+      const clienteNombre = construirNombreClienteVisible({
+        tratamientoAbreviacion: item?.cliente?.tratamiento?.abreviacion ?? null,
+        nombreCompleto: item?.cliente?.nombre_completo ?? null,
+        nombreFallback: item?.cliente?.nombre ?? item?.nombre_persona ?? null,
+      });
+      const clienteEmail = item?.cliente?.email ?? item?.correo ?? '';
+      const clienteTelefono = item?.cliente?.telefono ?? item?.telefono ?? '';
+      const empleadoNombre = item?.empleado?.nombre ?? '';
+
+      const hoteles = this.normalizarSolicitudesCotizacionMultiple(item?.cotizaciones_solicitudes);
+
+      return {
+        id: item.id,
+        public_id: item.public_id ?? null,
+        fecha_creacion: item.created_at ?? null,
+        created_at: item.updated_at ?? item.created_at ?? null,
+        cliente_nombre: clienteNombre,
+        cliente_email: clienteEmail,
+        cliente_telefono: clienteTelefono,
+        hotel_nombre: '',
+        destino_nombre: '',
+        tipo_destino: '',
+        empleado_nombre: empleadoNombre,
+        estatus_nombre: String(item.estatus_clave ?? 'pendiente').trim(),
+        habitaciones: item.habitaciones ?? null,
+        solicitudes: hoteles
+      } as ISolicitudCotizacionListado;
+    });
+  }
+
+  async obtenerDetalleCotizacionMultiple(publicId: string) {
+    const id = String(publicId ?? '').trim();
+    if (!id) {
+      throw new Error('Public ID invalido.');
     }
 
-    const ids = cotizaciones
-      .map((item) => Number(item.id))
-      .filter((id) => Number.isFinite(id) && id > 0);
-
-    if (!ids.length) {
-      return cotizaciones;
-    }
-
-    const { data: detalleHabitaciones, error: errorHabitaciones } = await this.client
+    const { data, error } = await this.client
       .from('cotizaciones_multiples')
-      .select('id, habitaciones, created_at')
-      .in('id', ids);
+      .select(`
+        id,
+        public_id,
+        cliente_id,
+        empleado_id,
+        nombre_persona,
+        correo,
+        telefono,
+        fecha_entrada,
+        fecha_salida,
+        noches,
+        total_personas,
+        total_habitaciones,
+        habitaciones,
+        peticiones_especiales,
+        estatus_clave,
+        created_at,
+        updated_at,
+        cliente:cliente_id (
+          nombre,
+          nombre_completo,
+          tratamiento_id,
+          email,
+          telefono,
+          tratamiento:tratamiento_id (
+            abreviacion
+          )
+        ),
+        empleado:empleado_id (
+          nombre
+        ),
+        cotizaciones_solicitudes (
+          ${this.cotizacionMultipleSolicitudSelect()}
+        )
+      `)
+      .eq('public_id', id)
+      .maybeSingle();
 
-    if (errorHabitaciones) throw errorHabitaciones;
+    if (error) throw error;
+    if (!data) return null;
 
-    const habitacionesPorId = new Map<number, any>(
-      (detalleHabitaciones ?? []).map((item: any) => [Number(item.id), item.habitaciones ?? null])
-    );
-    const fechasPorId = new Map<number, string | Date | null>(
-      (detalleHabitaciones ?? []).map((item: any) => [Number(item.id), item.created_at ?? null])
-    );
+    const item = data as any;
+    const hoteles = this.normalizarSolicitudesCotizacionMultiple(item?.cotizaciones_solicitudes)
+      .sort((a: any, b: any) => Number(a?.orden ?? 0) - Number(b?.orden ?? 0));
+    const hotelesConRegimen = hoteles.map((hotel: any) => {
+      const regimenEs = hotel?.regimen?.traducciones?.find((x: any) => x.idioma_id === ES_ID);
 
-    return cotizaciones.map((item) => ({
+      return {
+        ...hotel,
+        regimen: regimenEs?.descripcion ?? ''
+      };
+    });
+
+    return {
       ...item,
-      created_at: fechasPorId.get(Number(item.id)) ?? (item as any).created_at ?? null,
-      fecha_creacion:
-        (item as any).fecha_creacion ??
-        fechasPorId.get(Number(item.id)) ??
-        (item as any).created_at ??
-        null,
-      habitaciones: habitacionesPorId.get(Number(item.id)) ?? item.habitaciones ?? null
-    }));
+      cliente_nombre: construirNombreClienteVisible({
+        tratamientoAbreviacion: item?.cliente?.tratamiento?.abreviacion ?? null,
+        nombreCompleto: item?.cliente?.nombre_completo ?? null,
+        nombreFallback: item?.cliente?.nombre ?? item?.nombre_persona ?? null,
+      }),
+      cliente_email: item?.cliente?.email ?? item?.correo ?? '',
+      cliente_telefono: item?.cliente?.telefono ?? item?.telefono ?? '',
+      empleado_nombre: item?.empleado?.nombre ?? '',
+      destino_nombre: hotelesConRegimen[0]?.destino_nombre ?? '',
+      tipo_destino: hotelesConRegimen[0]?.tipo_destino ?? '',
+      cotizacion: hotelesConRegimen
+    };
   }
 
   async obtenerCotizacionPorPublicId(publicId: string) {
@@ -3533,7 +4025,8 @@ export class SupabaseService {
         destinos:destino_id (
           id,
           nombre,
-          destino_padre_id
+          destino_padre_id,
+          tipo_desino_id
         ),
         traducciones:hotel_traducciones (
           idioma_id,
@@ -3562,6 +4055,7 @@ export class SupabaseService {
         regimen_id: item.regimen_id ?? null,
         destino_id: item.destino_id,
         destino_nombre: destino?.nombre ?? '',
+        tipo_desino_id: destino?.tipo_desino_id ?? null,
         nombre_hotel: traduccionEs?.nombre_hotel ?? '',
         regimen: regimenEs?.descripcion ?? ''
       };

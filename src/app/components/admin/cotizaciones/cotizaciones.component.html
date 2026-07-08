@@ -1,0 +1,71 @@
+<div class="flex min-w-0 flex-auto flex-col bg-gray-50">
+    <div class="mx-auto flex w-full max-w-screen-xl flex-col px-6 py-8 sm:px-8">
+        <div class="max-w-2xl">
+            <h1 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+                Cotizaciones
+            </h1>
+        </div>
+    </div>
+
+    <div class="mx-auto w-full max-w-screen-xl px-6 py-8 sm:px-8">
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+
+            <a [routerLink]="['/admin/cotizaciones/solicitudes']"
+                class="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+                <div class="relative aspect-[16/9] w-full overflow-hidden bg-white">
+                    <img src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=1470&auto=format&fit=crop"
+                        alt="Documentos de cotizacion sobre escritorio"
+                        class="block h-full w-full object-cover transition-transform duration-500 will-change-transform group-hover:scale-105" />
+
+                    <div
+                        class="pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-t from-white via-white/60 to-transparent">
+                    </div>
+                </div>
+
+                <div class="relative z-10 -mt-12 flex flex-1 flex-col p-6">
+                    <div
+                        class="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-gray-700 shadow-lg transition-colors duration-300 group-hover:text-white">
+                        <mat-icon class="icon-size-8" svgIcon="heroicons_outline:inbox-stack"></mat-icon>
+                    </div>
+
+                    <h2 class="text-2xl font-bold text-gray-900">
+                        Solicitudes de cotizacion
+                    </h2>
+
+                    <p class="mt-2 flex-1 text-base leading-6 text-gray-500">
+                        Revisa, filtra y da seguimiento a las solicitudes individuales de cotizacion generadas para cada cliente.
+                    </p>
+                </div>
+            </a>
+
+            <!-- <a [routerLink]="['/admin/cotizaciones/concentrado']"
+                class="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+                <div class="relative aspect-[16/9] w-full overflow-hidden bg-white">
+                    <img src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=1511&auto=format&fit=crop"
+                        alt="Comparativa de cotizaciones"
+                        class="block h-full w-full object-cover transition-transform duration-500 will-change-transform group-hover:scale-105" />
+
+                    <div
+                        class="pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-t from-white via-white/60 to-transparent">
+                    </div>
+                </div>
+
+                <div class="relative z-10 -mt-12 flex flex-1 flex-col p-6">
+                    <div
+                        class="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-gray-700 shadow-lg transition-colors duration-300 group-hover:text-white">
+                        <mat-icon class="icon-size-8" svgIcon="heroicons_outline:view-columns"></mat-icon>
+                    </div>
+
+                    <h2 class="text-2xl font-bold text-gray-900">
+                        Concentrado de cotizaciones multiples
+                    </h2>
+
+                    <p class="mt-2 flex-1 text-base leading-6 text-gray-500">
+                        Consulta las comparativas de hoteles, crea cotizaciones multiples y entra al detalle de cada concentrado.
+                    </p>
+                </div>
+            </a> -->
+
+        </div>
+    </div>
+</div>

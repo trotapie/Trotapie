@@ -3,14 +3,14 @@ import { inject, Injectable } from '@angular/core';
 import { FuseNavigationItem } from '@fuse/components/navigation';
 import { AuthService } from 'app/core/auth/auth.service';
 import { Navigation } from 'app/core/navigation/navigation.types';
-import { map, Observable, ReplaySubject, tap } from 'rxjs';
+import { BehaviorSubject, map, Observable, tap } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class NavigationService {
     private _httpClient = inject(HttpClient);
     private _authService = inject(AuthService);
-    private _navigation: ReplaySubject<Navigation> =
-        new ReplaySubject<Navigation>(1);
+    private _navigation: BehaviorSubject<Navigation> =
+        new BehaviorSubject<Navigation>({ compact: [], default: [], futuristic: [], horizontal: [] });
 
     // -----------------------------------------------------------------------------------------------------
     // @ Accessors

@@ -271,10 +271,25 @@
                     </div>
 
                     <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-                        <mat-form-field class="w-full">
-                            <mat-label>Nombre</mat-label>
-                            <input matInput formControlName="nombre" />
-                        </mat-form-field>
+                        <div class="client-name-fields md:col-span-2">
+                            <mat-form-field class="w-full client-name-fields__prefix">
+                                <mat-label>Tratamiento</mat-label>
+                                <mat-select formControlName="tratamiento_id">
+                                    <mat-option [value]="null">Sin tratamiento</mat-option>
+                                    @for (tratamiento of tratamientos; track tratamiento.id) {
+                                    <mat-option [value]="tratamiento.id">{{ tratamiento.abreviacion }}</mat-option>
+                                    }
+                                </mat-select>
+                            </mat-form-field>
+
+                            <mat-form-field class="w-full client-name-fields__name">
+                                <mat-label>Nombre completo</mat-label>
+                                <input matInput formControlName="nombre_completo" />
+                                @if (form.get('nombre_completo')?.invalid && (form.get('nombre_completo')?.touched || form.get('nombre_completo')?.dirty)) {
+                                <mat-error>Captura el nombre completo.</mat-error>
+                                }
+                            </mat-form-field>
+                        </div>
 
                         <mat-form-field class="w-full">
                             <mat-label>Telefono</mat-label>

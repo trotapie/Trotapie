@@ -1,5 +1,4 @@
 import { Route } from '@angular/router';
-import { initialDataResolver } from 'app/app.resolvers';
 import { AuthGuard } from 'app/core/auth/guards/auth.guard';
 import { AccessGuard } from 'app/core/auth/guards/access.guard';
 import { NoAuthGuard } from 'app/core/auth/guards/noAuth.guard';
@@ -71,9 +70,6 @@ export const appRoutes: Route[] = [
     {
         path: '',
         component: LayoutComponent,
-        resolve: {
-            initialData: initialDataResolver
-        },
         children: [
             {
                 path: 'inicio',
@@ -102,9 +98,18 @@ export const appRoutes: Route[] = [
                 loadChildren: () => import('app/components/admin/solicitudes-cotizacion/cotizacion/cotizacion.routes').then(m => m.default)
             },
             {
+                path: 'comparativa/:id',
+                data: { layout: 'empty' },
+                loadComponent: () => import('app/components/comparativa-publica/comparativa-publica.component').then(m => m.ComparativaPublicaComponent)
+            },
+            {
+                path: 'share/comparativa/:id',
+                data: { layout: 'empty' },
+                loadComponent: () => import('app/components/comparativa-publica/comparativa-publica.component').then(m => m.ComparativaPublicaComponent)
+            },
+            {
                 path: 'admin',
                 canActivate: [AuthGuard, AccessGuard],
-                canActivateChild: [AuthGuard, AccessGuard],
                 data: { layout: 'compact' },
                 loadChildren: () =>
                     import('app/components/admin/admin.routes').then(m => m.default)

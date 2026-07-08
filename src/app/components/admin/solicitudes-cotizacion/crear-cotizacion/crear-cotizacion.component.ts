@@ -2,6 +2,7 @@
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { FuseSplashScreenService } from '@fuse/services/splash-screen';
+import { TratamientoCliente } from 'app/core/cliente-nombre.util';
 import { SupabaseService } from 'app/core/supabase.service';
 import { MaterialModule } from 'app/shared/material.module';
 
@@ -39,6 +40,8 @@ interface IAsesor {
 interface IClienteBusqueda {
   id: number;
   nombre: string;
+  nombre_completo?: string | null;
+  tratamiento_id?: number | null;
   email: string | null;
   telefono: string | null;
   recibir_ofertas?: boolean | null;
@@ -65,6 +68,7 @@ export class CrearCotizacionComponent implements OnInit {
   asesores: IAsesor[] = [];
   hoteles: IHotelAdmin[] = [];
   regimenes: IRegimen[] = [];
+  tratamientos: TratamientoCliente[] = [];
 
   continenteSeleccionadoId: number | null = null;
   paisSeleccionadoId: number | null = null;
@@ -97,7 +101,7 @@ export class CrearCotizacionComponent implements OnInit {
   totalPeople = computed(() => this.rooms().reduce((a, r) => a + r.adults + r.children, 0));
   labelHabitaciones = computed(() => {
     const personas = this.totalPeople() === 1 ? 'persona' : 'personas';
-    return `${this.totalRooms()} hab. � ${this.totalPeople()} ${personas}`;
+    return `${this.totalRooms()} hab. · ${this.totalPeople()} ${personas}`;
   });
 
   form = this.fb.group({
@@ -108,7 +112,8 @@ export class CrearCotizacionComponent implements OnInit {
       end: [null as Date | null, [Validators.required]],
     }),
     asesor_id: [null as number | null, [Validators.required]],
-    nombre: ['', [Validators.required]],
+    tratamiento_id: [null as number | null],
+    nombre_completo: ['', [Validators.required]],
     correo: ['', [Validators.email]],
     telefono: ['', [Validators.required, Validators.minLength(10)]],
     especiales: ['']
@@ -119,14 +124,16 @@ export class CrearCotizacionComponent implements OnInit {
 
     try {
       this.cargando = true;
-      const [destinos, continentesResponse, empleadosResponse] = await Promise.all([
+      const [destinos, continentesResponse, empleadosResponse, tratamientos] = await Promise.all([
         this.supabase.obtenerDestinosAdmin(),
         this.supabase.continentes(),
-        this.supabase.empleados()
+        this.supabase.empleados(),
+        this.supabase.obtenerTratamientosActivos()
       ]);
 
       this.destinos = (destinos ?? []) as IDestinoFiltro[];
       this.continentes = (continentesResponse?.data ?? []) as IContinente[];
+      this.tratamientos = tratamientos;
 
       if (empleadosResponse.error) {
         throw empleadosResponse.error;
@@ -288,7 +295,7 @@ export class CrearCotizacionComponent implements OnInit {
     this.errorBusquedaClientes = '';
     this.resultadosClientes = [];
     this.clienteSeleccionadoBusqueda = null;
-    this.clienteBusquedaNombre = String(this.form.get('nombre')?.value ?? '').trim();
+    this.clienteBusquedaNombre = String(this.form.get('nombre_completo')?.value ?? '').trim();
     this.clienteBusquedaEmail = String(this.form.get('correo')?.value ?? '').trim();
     this.clienteBusquedaTelefono = String(this.form.get('telefono')?.value ?? '').trim();
   }
@@ -338,7 +345,8 @@ export class CrearCotizacionComponent implements OnInit {
     if (!cliente) return;
 
     this.form.patchValue({
-      nombre: String(cliente?.nombre ?? '').trim(),
+      tratamiento_id: this.parseTratamientoId(cliente?.tratamiento_id),
+      nombre_completo: String(cliente?.nombre_completo ?? cliente?.nombre ?? '').trim(),
       correo: cliente?.email ? String(cliente.email).trim() : '',
       telefono: cliente?.telefono ? String(cliente.telefono).replace(/\D/g, '') : ''
     });
@@ -543,8 +551,12 @@ export class CrearCotizacionComponent implements OnInit {
 
     this.guardando = true;
     try {
+      const nombreCompleto = String(value.nombre_completo ?? '').trim();
+      const tratamientoId = this.parseTratamientoId(value.tratamiento_id);
       const cliente = await this.supabase.upsertCliente({
-        nombre: String(value.nombre ?? '').trim(),
+        nombre: nombreCompleto,
+        nombre_completo: nombreCompleto,
+        tratamiento_id: tratamientoId,
         email: value.correo?.trim() ? String(value.correo).trim() : null,
         telefono: String(value.telefono ?? '').trim(),
         recibir_ofertas: false
@@ -585,15 +597,15 @@ export class CrearCotizacionComponent implements OnInit {
       parts.push(`${room.adults} ${room.adults === 1 ? 'adulto' : 'adultos'}`);
 
       if (room.children > 0) {
-        const childrenText = `${room.children} ${room.children === 1 ? 'ni�o' : 'ni�os'}`;
+        const childrenText = `${room.children} ${room.children === 1 ? 'nino' : 'ninos'}`;
         if (room.childAges?.length) {
-          parts.push(`${childrenText} � edades: ${room.childAges.join(', ')}`);
+          parts.push(`${childrenText} · edades: ${room.childAges.join(', ')}`);
         } else {
           parts.push(childrenText);
         }
       }
 
-      return `Habitaci�n ${index + 1}: ${parts.join(' � ')}`;
+      return `Habitacion ${index + 1}: ${parts.join(' · ')}`;
     });
 
     return {
@@ -625,6 +637,11 @@ export class CrearCotizacionComponent implements OnInit {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  }
+
+  private parseTratamientoId(value: number | null | undefined): number | null {
+    const tratamientoId = Number(value);
+    return Number.isFinite(tratamientoId) && tratamientoId > 0 ? tratamientoId : null;
   }
 }
 

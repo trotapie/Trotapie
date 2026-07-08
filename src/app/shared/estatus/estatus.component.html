@@ -1,27 +1,29 @@
 <div class="relative inline-block" *ngIf="status">
     <div class="absolute -top-1 left-0 right-0 h-1 blur-md rounded-full" [ngClass]="{
-      'bg-yellow-400/40': estatusYellow.includes(status),
-      'bg-sky-400/40': estatusSky.includes(status),
-      'bg-green-400/40': estatusGreen.includes(status),
-      'bg-orange-400/40': estatusOrange.includes(status),
-      'bg-red-400/40': estatusRed.includes(status),
-      'bg-amber-700': estatusBrown.includes(status),
-      'bg-purple-400/40': estatusPurple.includes(status),
+      'bg-yellow-400/40': estatusYellow.includes(normalizedStatus),
+      'bg-sky-400/40': estatusSky.includes(normalizedStatus),
+      'bg-green-400/40': estatusGreen.includes(normalizedStatus),
+      'bg-orange-400/40': estatusOrange.includes(normalizedStatus),
+      'bg-red-400/40': estatusRed.includes(normalizedStatus),
+      'bg-amber-700': estatusBrown.includes(normalizedStatus),
+      'bg-purple-400/40': estatusPurple.includes(normalizedStatus),
     }"></div>
     <span
         class="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium shadow-inner border border-white/10 backdrop-blur-sm"
         [ngClass]="{
-      'bg-yellow-500/10 text-yellow-600': estatusYellow.includes(status),
-      'bg-sky-500/10 text-sky-600': estatusSky.includes(status),
-      'bg-green-500/10 text-green-600': estatusGreen.includes(status),
-      'bg-orange-500/10 text-orange-600': estatusOrange.includes(status),
-      'bg-red-500/10 text-red-600': estatusRed.includes(status),
-      'bg-amber-700/10 text-amber-700': estatusBrown.includes(status),
-      'bg-purple-500/10 text-purple-600': estatusPurple.includes(status),
+      'bg-yellow-500/10 text-yellow-600': estatusYellow.includes(normalizedStatus),
+      'bg-sky-500/10 text-sky-600': estatusSky.includes(normalizedStatus),
+      'bg-green-500/10 text-green-600': estatusGreen.includes(normalizedStatus),
+      'bg-orange-500/10 text-orange-600': estatusOrange.includes(normalizedStatus),
+      'bg-red-500/10 text-red-600': estatusRed.includes(normalizedStatus),
+      'bg-amber-700/10 text-amber-700': estatusBrown.includes(normalizedStatus),
+      'bg-purple-500/10 text-purple-600': estatusPurple.includes(normalizedStatus),
     }">
 
-        <ng-container [ngSwitch]="status">
+        <ng-container [ngSwitch]="normalizedStatus">
             <mat-icon *ngSwitchCase="'Pendiente'" class="w-5 h-5 text-yellow-600 slow-spin"
+                [svgIcon]="'heroicons_outline:clock'"></mat-icon>
+            <mat-icon *ngSwitchCase="'PENDIENTE'" class="w-5 h-5 text-yellow-600 slow-spin"
                 [svgIcon]="'heroicons_outline:clock'"></mat-icon>
             <mat-icon *ngSwitchCase="'Nuevo'" class="w-5 h-5 text-yellow-600 slow-spin"
                 [svgIcon]="'heroicons_outline:clock'"></mat-icon>
@@ -115,7 +117,7 @@
             </svg>
 
             <ng-container *ngSwitchDefault>
-                <svg *ngIf="status === 'Cancelado'"
+                <svg *ngIf="normalizedStatus === 'CANCELADO'"
                     xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-red-700" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10" />
@@ -130,7 +132,7 @@
 
                 </svg>
 
-                <svg *ngIf="status === 'Cotizado' || status === 'ACTIVO'"
+                <svg *ngIf="normalizedStatus === 'COTIZADO' || normalizedStatus === 'ACTIVO'"
                     xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-green-600" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10" />
@@ -139,7 +141,7 @@
                         repeatCount="indefinite" />
                     </path>
                 </svg>
-                <svg *ngIf="status === 'Confirmada' || status === 'CONFIRMADA' || status === 'Cerrado'"
+                <svg *ngIf="normalizedStatus === 'CONFIRMADA' || normalizedStatus === 'Cerrado' || normalizedStatus === 'CERRADO'"
                     xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-purple-600" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10" />
@@ -149,7 +151,7 @@
                     </path>
                 </svg>
 
-                <svg *ngIf="status === 'APLICADO'"
+                <svg *ngIf="normalizedStatus === 'APLICADO'"
                 xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-blue-500" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10" />
@@ -160,7 +162,7 @@
                     </path>
                 </svg>
 
-                <mat-icon *ngIf="status === 'CONSIGNADA' || status === 'ASIGNADA'"
+                <mat-icon *ngIf="normalizedStatus === 'CONSIGNADA' || normalizedStatus === 'ASIGNADA'"
                     class="w-4 h-4 text-orange-400 animate" [svgIcon]="'heroicons_outline:document-text'"></mat-icon>
 
 
@@ -168,7 +170,7 @@
 
         </ng-container>
 
-        <span class="capitalize">{{ status }}</span>
+        <span class="capitalize">{{ statusLabel }}</span>
     </span>
 </div>
 

@@ -53,11 +53,11 @@ export const compactNavigation: FuseNavigationItem[] = [
         meta : { roles: ['admin'] }
     },
     {
-        id   : 'example',
-        title: 'Solicitudes cotizacion',
+        id   : 'cotizaciones',
+        title: 'Cotizaciones',
         type : 'basic',
         icon : 'heroicons_outline:inbox-stack',
-        link : '/admin/solicitudes-cotizacion',
+        link : '/admin/cotizaciones',
         meta : { permissions: ['cotizaciones.view'] }
     },
     // {
