@@ -1,0 +1,132 @@
+@if (cargando) {
+<div class="public-loading">
+  <mat-progress-spinner diameter="40" mode="indeterminate"></mat-progress-spinner>
+</div>
+} @else if (error) {
+<div class="public-error">
+  <img src="assets/images/logos/trotapie.png" alt="Trotapie">
+  <p>{{ error }}</p>
+</div>
+} @else if (cotizacion) {
+<div class="public-page">
+  <header class="public-topbar">
+    <div class="topbar-inner">
+      <img src="assets/images/logos/trotapie.png" alt="Trotapie">
+      <div class="topbar-meta">
+        <span>Comparativa</span>
+        <strong>{{ cotizacion.created_at | date:'dd MMM yyyy' }}</strong>
+      </div>
+    </div>
+  </header>
+
+  <section class="proposal-card">
+    <main class="proposal-main">
+      <section
+        class="hero"
+        [style.background-image]="'linear-gradient(180deg, rgba(15,23,42,0.10), rgba(15,23,42,0.78)), url(' + heroImage + ')'">
+        <div class="hero-panel">
+          <span class="client-chip">
+            <mat-icon>stars</mat-icon>
+            {{ clienteNombre }}
+          </span>
+          <h1>Tu Propuesta de Viaje Personalizada</h1>
+          <p class="hero-subtitle">Comparamos estas opciones para que elijas el hotel ideal para tu viaje.</p>
+          <div class="hero-facts">
+            <span>
+              <mat-icon>calendar_month</mat-icon>
+              {{ obtenerFechasResumen() }}
+            </span>
+            <span>
+              <mat-icon>nights_stay</mat-icon>
+              {{ cotizacion.noches || 0 }} noches
+            </span>
+            <span>
+              <mat-icon>group</mat-icon>
+              {{ textoViajeros }}
+            </span>
+            <span>
+              <mat-icon>bed</mat-icon>
+              {{ textoHabitaciones }}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-heading">
+        <div>
+          <h2>Comparativa de Hoteles</h2>
+          <p>{{ destinosResumen }}</p>
+        </div>
+      </section>
+
+      <section class="hotel-grid">
+        @for (hotel of hoteles; track hotel.id; let i = $index) {
+        <article class="hotel-card">
+          <div class="hotel-image">
+            <img [src]="obtenerImagenHotel(hotel, i)" [alt]="hotel.hotel_nombre || 'Hotel'">
+          </div>
+
+          <div class="hotel-body">
+            <div class="hotel-title">
+              <div>
+                <h3>{{ hotel.hotel_nombre || 'Hotel sin nombre' }}</h3>
+                <p>
+                  <mat-icon>location_on</mat-icon>
+                  {{ hotel.destino_nombre || 'Destino por confirmar' }}
+                </p>
+              </div>
+
+              <div class="stars" [attr.aria-label]="obtenerEstrellas(hotel) + ' estrellas'">
+                @for (_ of obtenerEstrellasArray(hotel); track $index) {
+                <mat-icon>star</mat-icon>
+                }
+              </div>
+            </div>
+
+            <div class="hotel-detail">
+              <p>
+                <mat-icon>restaurant</mat-icon>
+                {{ obtenerRegimenHotel(hotel) }}
+              </p>
+              <p>
+                <mat-icon>verified</mat-icon>
+                Opcion seleccionada por tu asesor
+              </p>
+              <p>
+                <mat-icon>support_agent</mat-icon>
+                Seguimiento personalizado
+              </p>
+            </div>
+
+            <div class="price-row">
+              <span>Total por {{ cotizacion.noches || 0 }} noches</span>
+              <strong>{{ obtenerPrecio(hotel) }}</strong>
+            </div>
+          </div>
+        </article>
+        }
+      </section>
+    </main>
+  </section>
+
+  <footer class="bottom-bar">
+    <div class="bottom-inner">
+      <div>
+        <p>Lista para reservar, {{ clienteNombre }}?</p>
+        <span>Tu asesor puede ayudarte a confirmar disponibilidad y precio final.</span>
+      </div>
+
+      <div class="bottom-actions">
+        <button type="button" class="secondary-action" (click)="imprimir()">
+          <mat-icon>download</mat-icon>
+          Descargar PDF
+        </button>
+        <button type="button" class="primary-action" (click)="contactarAgente()">
+          <mat-icon>support_agent</mat-icon>
+          Contactar Agente
+        </button>
+      </div>
+    </div>
+  </footer>
+</div>
+}

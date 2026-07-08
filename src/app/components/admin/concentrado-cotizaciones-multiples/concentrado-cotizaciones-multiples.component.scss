@@ -1,0 +1,209 @@
+.table-shell {
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--mat-sys-surface, #fff);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+:host {
+    --filters-row-height: 88px;
+}
+
+.table-scroll {
+    overflow: auto;
+    flex: 1;
+    min-height: 0;
+}
+
+.pretty-table {
+    width: 100%;
+}
+
+.mat-mdc-header-cell {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+:host ::ng-deep .mat-mdc-button-base.mat-primary {
+    color: #fff !important;
+}
+
+:host ::ng-deep .filter-toggle-btn,
+:host ::ng-deep .filter-toggle-btn .mat-icon {
+    color: #fff !important;
+}
+
+.filter-row .mat-mdc-header-cell {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+    background: var(--mat-sys-surface, #fff);
+    height: var(--filters-row-height);
+    min-height: var(--filters-row-height);
+}
+
+:host ::ng-deep .filter-row {
+    position: sticky;
+    top: 0 !important;
+    z-index: 12 !important;
+}
+
+:host ::ng-deep .main-header-row {
+    position: sticky;
+    top: 0 !important;
+    z-index: 11 !important;
+}
+
+:host ::ng-deep .pretty-table.filters-visible .main-header-row {
+    top: var(--filters-row-height) !important;
+}
+
+:host ::ng-deep .main-header-row .mat-mdc-header-cell {
+    background: var(--mat-sys-surface, #fff);
+}
+
+.filter-row.hidden .column-filter {
+    opacity: 0;
+    pointer-events: none;
+}
+
+:host ::ng-deep .filter-row.hidden {
+    display: none !important;
+}
+
+.column-filter {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    margin: 0;
+}
+
+.column-filter .mat-mdc-form-field-subscript-wrapper {
+    display: none;
+}
+
+:host ::ng-deep .column-filter .mat-mdc-form-field-infix {
+    width: auto;
+    min-width: 0;
+}
+
+.row {
+    transition: background 120ms ease;
+
+    &:hover {
+        background: rgba(0, 0, 0, 0.03);
+    }
+}
+
+.parent-row .mat-mdc-cell {
+    background: rgba(15, 23, 42, 0.025);
+}
+
+.child-row .mat-mdc-cell {
+    background: rgba(59, 130, 246, 0.035);
+    color: rgba(15, 23, 42, 0.82);
+}
+
+.mat-mdc-row:nth-child(even) .mat-mdc-cell {
+    background: rgba(0, 0, 0, 0.015);
+}
+
+.mat-mdc-row.child-row:nth-child(even) .mat-mdc-cell {
+    background: rgba(59, 130, 246, 0.055);
+}
+
+.mat-mdc-cell,
+.mat-mdc-header-cell {
+    padding: 14px 16px !important;
+    border-bottom-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+.mono {
+    font-variant-numeric: tabular-nums;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+        monospace;
+}
+
+.cell-title {
+    display: block;
+    font-weight: 700;
+}
+
+.cell-subtitle {
+    display: block;
+    margin-top: 2px;
+    font-size: 12px;
+    color: rgba(15, 23, 42, 0.56);
+}
+
+.tree-id-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 88px;
+}
+
+.tree-id-cell.child {
+    padding-left: 32px;
+}
+
+.expand-btn {
+    width: 32px;
+    height: 32px;
+}
+
+.tree-branch {
+    width: 20px;
+    height: 1px;
+    background: rgba(15, 23, 42, 0.28);
+}
+
+.pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 12px;
+    background: rgba(0, 0, 0, 0.06);
+}
+
+.actions-col {
+    width: 104px;
+    min-width: 104px;
+    text-align: right;
+}
+
+td.actions-col {
+    white-space: nowrap;
+}
+
+td.actions-col .mat-mdc-icon-button {
+    display: inline-flex;
+    vertical-align: middle;
+}
+
+.empty {
+    padding: 24px !important;
+}
+
+.empty-state {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+
+    .empty-title {
+        font-weight: 800;
+    }
+
+    .empty-subtitle {
+        font-size: 12px;
+    }
+}
+
+.table-footer {
+    padding: 8px;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+}

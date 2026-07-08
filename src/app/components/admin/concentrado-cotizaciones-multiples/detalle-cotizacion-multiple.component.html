@@ -1,0 +1,270 @@
+<div class="absolute inset-0 flex min-w-0 flex-col overflow-y-auto" cdkScrollable>
+  <div class="mx-6 my-6 flex min-w-0 flex-auto flex-col gap-4">
+    <div class="sticky top-0 z-[100] rounded-xl border border-transparent bg-transparent px-2 py-2 backdrop-blur-md transition-all duration-300 md:px-4">
+      <div class="w-full md:flex md:items-center md:justify-between">
+        <div>
+          <h1 class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">Detalle de comparativa</h1>
+          <p class="text-secondary">Comparativa de hoteles seleccionados para esta cotizacion multiple.</p>
+        </div>
+
+        <div class="my-2 flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3 md:my-0">
+          <button
+            mat-raised-button
+            color="warn"
+            class="w-full text-white sm:w-auto"
+            [routerLink]="['/admin/cotizaciones/concentrado']">
+            <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
+            Regresar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    @if (error) {
+    <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+      {{ error }}
+    </div>
+    }
+
+    @if (cargando) {
+    <div class="flex h-40 items-center justify-center">
+      <mat-progress-spinner diameter="36" mode="indeterminate"></mat-progress-spinner>
+    </div>
+    } @else if (cotizacion) {
+    <section class="proposal-shell">
+      <div class="proposal-title">
+        <div>
+          <!-- <p>Preparado especialmente para esta cotizacion multiple.</p> -->
+        </div>
+
+        <app-status-badge [status]="estatusVisual"></app-status-badge>
+      </div>
+
+      <div class="proposal-summary">
+        <article class="summary-item summary-client">
+          <span class="summary-icon">
+            <mat-icon>person</mat-icon>
+          </span>
+          <div>
+            <p>Cliente</p>
+            <strong>{{ cotizacion.cliente_nombre || 'Sin cliente' }}</strong>
+            <small>{{ cotizacion.cliente_email || cotizacion.cliente_telefono || 'Sin contacto' }}</small>
+          </div>
+        </article>
+
+        <article class="summary-item">
+          <span class="summary-icon muted">
+            <mat-icon>calendar_month</mat-icon>
+          </span>
+          <div>
+            <p>Fechas</p>
+            <strong>{{ obtenerFechasResumen() }}</strong>
+            <small>{{ cotizacion.noches || 0 }} noches</small>
+          </div>
+        </article>
+
+        <article class="summary-item">
+          <span class="summary-icon muted">
+            <mat-icon>support_agent</mat-icon>
+          </span>
+          <div>
+            <p>Asesor</p>
+            <strong>{{ cotizacion.empleado_nombre || 'Sin asesor' }}</strong>
+            <small>{{ hoteles.length }} hoteles seleccionados</small>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="comparison-section">
+      <div class="comparison-heading">
+        <div>
+          <h2>
+            <mat-icon>compare_arrows</mat-icon>
+            Opciones Seleccionadas
+          </h2>
+          <p>{{ hoteles.length }} registros en la comparativa</p>
+        </div>
+
+        <div class="comparison-actions">
+          <button mat-stroked-button color="primary" type="button" (click)="compartirComparativa()">
+            <mat-icon class="mr-2 icon-size-5" [svgIcon]="'heroicons_outline:share'"></mat-icon>
+            Compartir comparativa
+          </button>
+
+          <button mat-stroked-button color="primary" type="button" (click)="abrirSelectorHotel()">
+            <mat-icon class="mr-2 icon-size-5">add</mat-icon>
+            Agregar hotel
+          </button>
+        </div>
+      </div>
+
+      @if (!hoteles.length) {
+      <div class="empty-state">
+        Esta cotizacion multiple no tiene hoteles registrados.
+      </div>
+      } @else {
+      <div class="hotel-grid">
+        @for (hotel of hoteles; track hotel.id; let i = $index) {
+        <article class="hotel-card">
+          <div class="hotel-image">
+            <img [src]="obtenerImagenHotel(hotel, i)" [alt]="hotel.hotel_nombre || 'Hotel'">
+          </div>
+
+          <div class="hotel-content">
+            <div class="hotel-title-row">
+              <div class="hotel-avatar">{{ obtenerInicialHotel(hotel) }}</div>
+              <div class="hotel-name-block">
+                <h3>{{ hotel.hotel_nombre || 'Hotel sin nombre' }}</h3>
+                <p>
+                  <mat-icon>location_on</mat-icon>
+                  {{ hotel.destino_nombre || 'Sin destino' }}
+                </p>
+              </div>
+            </div>
+
+            <div class="rating-row" [attr.aria-label]="obtenerEstrellas(hotel) + ' estrellas'">
+              @for (_ of obtenerEstrellasArray(hotel); track $index) {
+              <mat-icon>star</mat-icon>
+              }
+              <span>{{ obtenerEstrellas(hotel) }}.0</span>
+            </div>
+
+            <div class="hotel-meta">
+              <p>Regimen</p>
+              <strong>
+                <mat-icon>hotel</mat-icon>
+                {{ obtenerRegimenHotel(hotel) }}
+              </strong>
+            </div>
+
+            <div class="hotel-footer">
+              <div>
+                <p>Precio total</p>
+                <strong>{{ obtenerPrecio(hotel) }}</strong>
+              </div>
+
+              <div class="hotel-actions">
+                <app-status-badge [status]="obtenerEstatusFila(hotel)"></app-status-badge>
+                <button
+                  mat-stroked-button
+                  color="primary"
+                  type="button"
+                  [routerLink]="'/admin/edicion-cotizacion/' + hotel.public_id">
+                  Editar
+                </button>
+              </div>
+            </div>
+          </div>
+        </article>
+        }
+      </div>
+      }
+    </section>
+    }
+  </div>
+</div>
+
+@if (selectorHotelAbierto) {
+<div class="modal-backdrop" (click)="cerrarSelectorHotel()">
+  <section class="modal-panel" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h2 class="modal-title">Agregar hotel a la comparativa</h2>
+        <p class="modal-subtitle">Selecciona un destino {{ tipoComparativaLabel | lowercase }} y después el hotel.</p>
+      </div>
+
+      <button mat-icon-button type="button" [disabled]="guardandoHotel" (click)="cerrarSelectorHotel()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <div class="modal-content">
+      @if (confirmarAgregarOtroHotel) {
+      <div class="success-panel">
+        <mat-icon class="success-icon">check_circle</mat-icon>
+        <div>
+          <h3>Hotel agregado correctamente</h3>
+          <p>Desea agregar otro hotel nuevo?</p>
+        </div>
+      </div>
+      } @else {
+      <mat-form-field class="w-full">
+        <mat-label>Destino {{ tipoComparativaLabel }}</mat-label>
+        <mat-select [value]="destinoSeleccionadoId" [disabled]="guardandoHotel || !destinosParaAgregar.length"
+          (selectionChange)="onDestinoAgregarChange($event.value)">
+          <mat-option [value]="null">Selecciona destino</mat-option>
+          @for (destino of destinosParaAgregar; track destino.id) {
+          <mat-option [value]="destino.id">{{ destino.nombre }}</mat-option>
+          }
+        </mat-select>
+        @if (!destinosParaAgregar.length) {
+        <mat-hint>No hay destinos disponibles del mismo tipo para agregar hoteles.</mat-hint>
+        }
+      </mat-form-field>
+
+      <mat-form-field class="w-full">
+        <mat-label>Hotel</mat-label>
+        <mat-select [(ngModel)]="hotelSeleccionadoId" [disabled]="guardandoHotel || !destinoSeleccionadoId || !hotelesParaAgregar.length">
+          <mat-option [value]="null">Selecciona hotel</mat-option>
+          @for (hotel of hotelesParaAgregar; track hotel.id) {
+          <mat-option [value]="hotel.id">
+            {{ hotel.nombre_hotel }} - {{ hotel.destino_nombre }}
+          </mat-option>
+          }
+        </mat-select>
+        @if (destinoSeleccionadoId && !hotelesParaAgregar.length) {
+        <mat-hint>No hay hoteles disponibles para este destino.</mat-hint>
+        } @else if (!destinoSeleccionadoId) {
+        <mat-hint>Selecciona un destino para ver hoteles.</mat-hint>
+        }
+      </mat-form-field>
+
+      @if (hotelSeleccionado) {
+      <div class="modal-summary-grid">
+        <div class="modal-summary-item">
+          <p>Destino</p>
+          <strong>{{ hotelSeleccionado.destino_nombre }}</strong>
+        </div>
+        <div class="modal-summary-item">
+          <p>Regimen</p>
+          <strong>{{ hotelSeleccionado.regimen || 'Sin regimen' }}</strong>
+        </div>
+        <div class="modal-summary-item">
+          <p>Orden</p>
+          <strong>{{ hoteles.length + 1 }}</strong>
+        </div>
+      </div>
+      }
+      }
+    </div>
+
+    <div class="modal-actions">
+      @if (confirmarAgregarOtroHotel) {
+      <button mat-stroked-button type="button" (click)="terminarAgregarHoteles()">
+        No
+      </button>
+
+      <button mat-raised-button color="primary" class="text-white" type="button" (click)="agregarOtroHotel()">
+        Si, agregar otro
+      </button>
+      } @else {
+      <button mat-stroked-button type="button" [disabled]="guardandoHotel" (click)="cerrarSelectorHotel()">
+        Cancelar
+      </button>
+
+      <button mat-raised-button color="primary" class="text-white" type="button"
+        [disabled]="guardandoHotel || !hotelSeleccionado"
+        (click)="agregarHotelComparativa()">
+        <mat-icon class="mr-2 icon-size-5 text-white">add</mat-icon>
+        @if (guardandoHotel) {
+        Agregando...
+        } @else {
+        Agregar hotel
+        }
+      </button>
+      }
+    </div>
+  </section>
+</div>
+}

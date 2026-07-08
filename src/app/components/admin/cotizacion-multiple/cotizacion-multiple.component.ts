@@ -13,20 +13,12 @@ import { EmpleadosService } from 'app/core/empleados.service';
 import { ClientesService } from 'app/core/clientes.service';
 import { HotelesService, IHotelAdminCatalogo } from 'app/core/hoteles.service';
 import { CotizacionesService } from 'app/core/cotizaciones.service';
+import { TratamientoCliente } from 'app/core/cliente-nombre.util';
 import { MaterialModule } from 'app/shared/material.module';
 import { backdropFade, modalScaleFade } from 'app/shared/animations';
+import { SupabaseService } from 'app/core/supabase.service';
 
-interface IHotelAdmin {
-  id: number;
-  nombre_hotel: string;
-  destino_nombre: string;
-  regimen: string;
-  regimen_id: number | null;
-  destino_id: number;
-  division_area_id?: number | null;
-  pais_id?: number | null;
-  catalogo_destino_id?: number | null;
-}
+type IHotelAdmin = IHotelAdminCatalogo;
 
 interface IHotelComparativaDraft {
   hotel_id: number;
@@ -52,6 +44,8 @@ interface IAsesor {
 interface IClienteBusqueda {
   id: number;
   nombre: string;
+  nombre_completo?: string | null;
+  tratamiento_id?: number | null;
   email: string | null;
   telefono: string | null;
   recibir_ofertas?: boolean | null;
@@ -74,6 +68,7 @@ export class CotizacionMultipleComponent implements OnInit {
   private clientesService = inject(ClientesService);
   private hotelesService = inject(HotelesService);
   private cotizacionesService = inject(CotizacionesService);
+  private supabase = inject(SupabaseService);
   private router = inject(Router);
   private splashScreen = inject(FuseSplashScreenService);
 
@@ -85,9 +80,9 @@ export class CotizacionMultipleComponent implements OnInit {
   asesores: IAsesor[] = [];
   hoteles: IHotelAdmin[] = [];
   regimenes: IRegimen[] = [];
+  tratamientos: TratamientoCliente[] = [];
   hotelSeleccionadoId: number | null = null;
   hotelesComparativa: IHotelComparativaDraft[] = [];
-  busquedaHotelTexto = '';
 
   regionSeleccionadaId: number | null = null;
   paisSeleccionadoId: number | null = null;
@@ -129,7 +124,8 @@ export class CotizacionMultipleComponent implements OnInit {
       end: [null as Date | null, [Validators.required]],
     }),
     asesor_id: [null as number | null, [Validators.required]],
-    nombre: ['', [Validators.required]],
+    tratamiento_id: [null as number | null],
+    nombre_completo: ['', [Validators.required]],
     correo: ['', [Validators.email]],
     telefono: ['', [Validators.required, Validators.minLength(10)]],
     especiales: ['']
@@ -140,16 +136,18 @@ export class CotizacionMultipleComponent implements OnInit {
 
     try {
       this.cargando = true;
-      const [divisionesNacionales, regiones, paisesInternacionales, empleadosResponse] = await Promise.all([
+      const [divisionesNacionales, regiones, paisesInternacionales, empleadosResponse, tratamientos] = await Promise.all([
         this.destinosService.obtenerCatalogoNacionalesDivisionAreas(),
         this.destinosService.obtenerCatalogoInternacionalRegiones(),
         this.destinosService.obtenerCatalogoInternacionalPaises(),
-        this.empleadosService.empleados()
+        this.empleadosService.empleados(),
+        this.supabase.obtenerTratamientosActivos()
       ]);
 
       this.divisionesNacionales = divisionesNacionales;
       this.regiones = regiones;
       this.paisesInternacionalesTodos = paisesInternacionales;
+      this.tratamientos = tratamientos;
 
       if (empleadosResponse.error) {
         throw empleadosResponse.error;
@@ -227,6 +225,10 @@ export class CotizacionMultipleComponent implements OnInit {
     return this.destinoActualNombre();
   }
 
+  get resumenTipoBusqueda(): string {
+    return this.tipoBusqueda === 'NACIONAL' ? 'Nacional' : 'Internacional';
+  }
+
   get resumenHotel(): string {
     if (!this.hotelesComparativa.length) {
       return 'Sin hoteles';
@@ -237,6 +239,23 @@ export class CotizacionMultipleComponent implements OnInit {
     }
 
     return `${this.hotelesComparativa.length} hoteles seleccionados`;
+  }
+
+  get hotelSeleccionadoActual(): IHotelAdmin | null {
+    const id = Number(this.hotelSeleccionadoId);
+    if (!Number.isFinite(id) || id <= 0) {
+      return null;
+    }
+
+    return this.hoteles.find((item) => item.id === id) ?? null;
+  }
+
+  get regimenSeleccionado(): string {
+    return this.hotelSeleccionadoActual?.regimen ?? '';
+  }
+
+  get comparativaBloqueada(): boolean {
+    return this.hotelesComparativa.length > 0;
   }
 
   get resumenRegimen(): string {
@@ -255,16 +274,19 @@ export class CotizacionMultipleComponent implements OnInit {
     return this.rooms().length > 0 && !this.hasMissingAges();
   }
 
+  rangoFechasValido(): boolean {
+    return this.form.get('rangoFechas')?.valid === true;
+  }
+
   hotelesCotizacionValida(): boolean {
-    return this.hotelesComparativa.length > 0 &&
-      this.hotelesComparativa.every((hotel) => this.hotelComparativaCompleta(hotel));
+    return this.destinoFinalValido() && this.hotelesComparativa.length >= 2;
   }
 
   datosFinalesValida(): boolean {
     return this.destinoFinalValido() &&
-      this.form.get('rangoFechas')?.valid === true &&
+      this.rangoFechasValido() &&
       this.form.get('asesor_id')?.valid === true &&
-      this.form.get('nombre')?.valid === true &&
+      this.form.get('nombre_completo')?.valid === true &&
       this.form.get('telefono')?.valid === true;
   }
 
@@ -326,7 +348,7 @@ export class CotizacionMultipleComponent implements OnInit {
     this.errorBusquedaClientes = '';
     this.resultadosClientes = [];
     this.clienteSeleccionadoBusqueda = null;
-    this.clienteBusquedaNombre = String(this.form.get('nombre')?.value ?? '').trim();
+    this.clienteBusquedaNombre = String(this.form.get('nombre_completo')?.value ?? '').trim();
     this.clienteBusquedaEmail = String(this.form.get('correo')?.value ?? '').trim();
     this.clienteBusquedaTelefono = String(this.form.get('telefono')?.value ?? '').trim();
   }
@@ -376,7 +398,8 @@ export class CotizacionMultipleComponent implements OnInit {
     if (!cliente) return;
 
     this.form.patchValue({
-      nombre: String(cliente?.nombre ?? '').trim(),
+      tratamiento_id: this.parseTratamientoId(cliente?.tratamiento_id),
+      nombre_completo: String(cliente?.nombre_completo ?? cliente?.nombre ?? '').trim(),
       correo: cliente?.email ? String(cliente.email).trim() : '',
       telefono: cliente?.telefono ? String(cliente.telefono).replace(/\D/g, '') : ''
     });
@@ -395,6 +418,12 @@ export class CotizacionMultipleComponent implements OnInit {
     } finally {
       this.cargandoHoteles = false;
     }
+  }
+
+  private destinoSeleccionadoId(): number | null {
+    return this.tipoBusqueda === 'NACIONAL'
+      ? this.divisionAreaNacionalId
+      : this.destinoInternacionalId;
   }
 
   private destinoActualNombre(): string {
@@ -496,8 +525,12 @@ export class CotizacionMultipleComponent implements OnInit {
   }
 
   get hotelesFiltrados(): IHotelAdmin[] {
-    const filtro = this.busquedaHotelTexto.trim().toLowerCase();
+    const destinoId = this.destinoSeleccionadoId();
     const idsSeleccionados = new Set(this.hotelesComparativa.map((item) => item.hotel_id));
+
+    if (!destinoId) {
+      return [];
+    }
 
     return this.hoteles.filter((hotel) => {
       const coincideDestino = this.tipoBusqueda === 'NACIONAL'
@@ -507,12 +540,7 @@ export class CotizacionMultipleComponent implements OnInit {
           : this.paisSeleccionadoId
             ? hotel.pais_id === this.paisSeleccionadoId
             : true;
-      const coincideTexto = !filtro ||
-        [hotel.nombre_hotel, hotel.destino_nombre, hotel.regimen]
-          .join(' ')
-          .toLowerCase()
-          .includes(filtro);
-      return coincideDestino && coincideTexto && !idsSeleccionados.has(hotel.id);
+      return coincideDestino && !idsSeleccionados.has(hotel.id);
     });
   }
 
@@ -537,6 +565,13 @@ export class CotizacionMultipleComponent implements OnInit {
 
     const hotel = this.hoteles.find((item) => item.id === id);
     if (!hotel) {
+      return;
+    }
+
+    if (hotel.tipo_catalogo !== this.tipoBusqueda) {
+      this.error = this.tipoBusqueda === 'NACIONAL'
+        ? 'Solo puedes agregar hoteles nacionales en esta comparativa.'
+        : 'Solo puedes agregar hoteles internacionales en esta comparativa.';
       return;
     }
 
@@ -590,7 +625,7 @@ export class CotizacionMultipleComponent implements OnInit {
     }
 
     if (!this.hotelesCotizacionValida()) {
-      this.error = 'Selecciona al menos un hotel y completa sus tres precios.';
+      this.error = 'Selecciona al menos dos hoteles.';
       return;
     }
 
@@ -612,11 +647,16 @@ export class CotizacionMultipleComponent implements OnInit {
 
     const fechaEntrada = this.formatDate(start);
     const fechaSalida = this.formatDate(end);
+    const destinoId = this.destinoSeleccionadoId();
 
     this.guardando = true;
     try {
+      const nombreCompleto = String(value.nombre_completo ?? '').trim();
+      const tratamientoId = this.parseTratamientoId(value.tratamiento_id);
       const cliente = await this.clientesService.upsertCliente({
-        nombre: String(value.nombre ?? '').trim(),
+        nombre: nombreCompleto,
+        nombre_completo: nombreCompleto,
+        tratamiento_id: tratamientoId,
         email: value.correo?.trim() ? String(value.correo).trim() : null,
         telefono: String(value.telefono ?? '').trim(),
         recibir_ofertas: false
@@ -625,19 +665,24 @@ export class CotizacionMultipleComponent implements OnInit {
       const habitaciones = this.formatHabitaciones(this.rooms());
       const peticionesEspeciales = value.especiales?.trim() ? String(value.especiales).trim() : null;
       const hotelPrincipal = this.hotelesComparativa[0];
+      const regimenId = hotelPrincipal?.regimen_id ?? null;
+
+      if (!hotelPrincipal) {
+        throw new Error('Selecciona al menos un hotel para crear la cotizacion.');
+      }
 
       const solicitud = await this.cotizacionesService.crearSolicitudCotizacion({
         cliente_id: Number(cliente.id),
-        hotel_id: hotelPrincipal?.hotel_id ?? 0,
+        hotel_id: Number(hotelPrincipal.hotel_id),
         empleado_id: Number(value.asesor_id),
         idioma: 'es',
-        regimen_id: hotelPrincipal?.regimen_id ?? null,
+        regimen_id: regimenId,
         fecha_entrada: fechaEntrada,
         fecha_salida: fechaSalida,
         noches: this.noches,
         habitaciones,
         peticiones_especiales: peticionesEspeciales,
-        recibir_ofertas: false,
+        recibir_ofertas: false
       });
 
       if (!solicitud?.public_id) {
@@ -677,18 +722,23 @@ export class CotizacionMultipleComponent implements OnInit {
     }));
   }
 
-  private destinoFinalValido(): boolean {
+  destinoFinalValido(): boolean {
     return this.tipoBusqueda === 'NACIONAL'
       ? Boolean(this.divisionAreaNacionalId)
       : Boolean(this.regionSeleccionadaId && this.paisSeleccionadoId && this.destinoInternacionalId);
   }
 
   private buildCotizacionMultiplePayload() {
+    const destinoId = this.destinoSeleccionadoId() ?? 0;
+    const destinoNombre = this.destinoActualNombre();
+
     return this.hotelesComparativa.map((hotel, index) => ({
       hotel_id: hotel.hotel_id,
       hotel_nombre: hotel.hotel_nombre,
       regimen_id: hotel.regimen_id,
       regimen: hotel.regimen,
+      destino_id: destinoId,
+      destino_nombre: destinoNombre,
       precio: this.parseNumber(hotel.precio),
       precio_con_seguro: this.parseNumber(hotel.precioConSeguro),
       precio_a_meses: this.parseNumber(hotel.precioMeses),
@@ -703,6 +753,11 @@ export class CotizacionMultipleComponent implements OnInit {
       orden: index + 1,
       es_principal: index === 0
     }));
+  }
+
+  private parseTratamientoId(value: number | null | undefined): number | null {
+    const tratamientoId = Number(value);
+    return Number.isFinite(tratamientoId) && tratamientoId > 0 ? tratamientoId : null;
   }
 
   private parseNumber(value: number | string | null | undefined): number | null {
