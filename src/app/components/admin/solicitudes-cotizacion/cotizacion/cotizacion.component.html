@@ -694,6 +694,15 @@
                                                     [ngClass]="precioInvalido
                                                             ? 'border-red-500 focus:border-red-500'
                                                             : 'border-slate-200 dark:border-slate-700 focus:border-primary'" importeMxnBlur />
+                                                <mat-form-field appearance="fill" class="tp-select w-full mt-3">
+                                                    <mat-label>Origen de reservacion</mat-label>
+                                                    <mat-select formControlName="origenReservacionPrecio">
+                                                        <mat-option [value]="null">Sin seleccionar</mat-option>
+                                                        @for (origen of origenReservacionOpciones; track origen.id) {
+                                                        <mat-option [value]="origen.id">{{ origen.nombre_cotizador }}</mat-option>
+                                                        }
+                                                    </mat-select>
+                                                </mat-form-field>
                                                 }
 
                                                 @if (!esEdicion && precioSinSeguro) {
@@ -828,6 +837,15 @@
                                                             porcentajeBlur placeholder="0%" />
                                                     </div>
                                                 </div>
+                                                <mat-form-field appearance="fill" class="tp-select w-full mt-3">
+                                                    <mat-label>Origen de reservacion</mat-label>
+                                                    <mat-select formControlName="origenReservacionConSeguro">
+                                                        <mat-option [value]="null">Sin seleccionar</mat-option>
+                                                        @for (origen of origenReservacionOpciones; track origen.id) {
+                                                        <mat-option [value]="origen.id">{{ origen.nombre_cotizador }}</mat-option>
+                                                        }
+                                                    </mat-select>
+                                                </mat-form-field>
                                                 }
 
                                                 @if (!esEdicion && precioConSeguro) {
@@ -1069,6 +1087,15 @@
                                                             porcentajeBlur placeholder="0%" />
                                                     </div>
                                                 </div>
+                                                <mat-form-field appearance="fill" class="tp-select w-full mt-3">
+                                                    <mat-label>Origen de reservacion</mat-label>
+                                                    <mat-select formControlName="origenReservacionMeses">
+                                                        <mat-option [value]="null">Sin seleccionar</mat-option>
+                                                        @for (origen of origenReservacionOpciones; track origen.id) {
+                                                        <mat-option [value]="origen.id">{{ origen.nombre_cotizador }}</mat-option>
+                                                        }
+                                                    </mat-select>
+                                                </mat-form-field>
                                                 }
 
                                                 @if (!esEdicion && precioAMeses) {
@@ -1301,6 +1328,15 @@
                                                         <input type="tel" formControlName="precio" inputmode="numeric"
                                                             class="w-full h-12 px-4 border-2 rounded-xl focus:outline-none transition-colors dark:bg-slate-800 dark:text-white border-slate-200 dark:border-slate-700 focus:border-primary"
                                                             importeMxnBlur />
+                                                        <mat-form-field appearance="fill" class="tp-select w-full mt-3">
+                                                            <mat-label>Origen de reservacion</mat-label>
+                                                            <mat-select formControlName="origenReservacionPrecio">
+                                                                <mat-option [value]="null">Sin seleccionar</mat-option>
+                                                                @for (origen of origenReservacionOpciones; track origen.id) {
+                                                                <mat-option [value]="origen.id">{{ origen.nombre_cotizador }}</mat-option>
+                                                                }
+                                                            </mat-select>
+                                                        </mat-form-field>
                                                     </div>
                                                     <div>
                                                         <p
@@ -1365,6 +1401,15 @@
                                                                     porcentajeBlur placeholder="0%" />
                                                             </div>
                                                         </div>
+                                                        <mat-form-field appearance="fill" class="tp-select w-full mt-3">
+                                                            <mat-label>Origen de reservacion</mat-label>
+                                                            <mat-select formControlName="origenReservacionConSeguro">
+                                                                <mat-option [value]="null">Sin seleccionar</mat-option>
+                                                                @for (origen of origenReservacionOpciones; track origen.id) {
+                                                                <mat-option [value]="origen.id">{{ origen.nombre_cotizador }}</mat-option>
+                                                                }
+                                                            </mat-select>
+                                                        </mat-form-field>
                                                     </div>
                                                     <div>
                                                         <p
@@ -1457,6 +1502,15 @@
                                                                     porcentajeBlur placeholder="0%" />
                                                             </div>
                                                         </div>
+                                                        <mat-form-field appearance="fill" class="tp-select w-full mt-3">
+                                                            <mat-label>Origen de reservacion</mat-label>
+                                                            <mat-select formControlName="origenReservacionMeses">
+                                                                <mat-option [value]="null">Sin seleccionar</mat-option>
+                                                                @for (origen of origenReservacionOpciones; track origen.id) {
+                                                                <mat-option [value]="origen.id">{{ origen.nombre_cotizador }}</mat-option>
+                                                                }
+                                                            </mat-select>
+                                                        </mat-form-field>
                                                     </div>
                                                     <div>
                                                         <p

@@ -49,6 +49,9 @@ export interface CotizacionMultipleItem {
     fecha_limite_seguro?: string | null;
     fecha_limite_meses?: string | null;
     tipo_tarifa?: string | null;
+    origen_reservacion_precio_id?: number | null;
+    origen_reservacion_con_seguro_id?: number | null;
+    origen_reservacion_meses_id?: number | null;
 }
 
 export interface Habitaciones {

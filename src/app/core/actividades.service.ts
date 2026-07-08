@@ -1287,7 +1287,7 @@ export class ActividadesService {
   async obtenerActividadesAdmin() {
     const { data, error } = await this.client
       .from('actividades')
-      .select('id, descripcion, activo, orden')
+      .select('id, descripcion, icono, activo, orden')
       .order('orden', { ascending: true })
       .order('id', { ascending: true });
 
@@ -1296,6 +1296,7 @@ export class ActividadesService {
     return (data ?? []).map((item: any) => ({
       id: Number(item.id),
       descripcion: item.descripcion ?? `Actividad ${item.id}`,
+      icono: item.icono ?? null,
       activo: item.activo ?? true,
       orden: item.orden ?? null
     }));

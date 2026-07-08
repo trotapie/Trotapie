@@ -179,6 +179,7 @@ export class CatalogosAdminService {
             id,
             descripcion,
             clave,
+            icono,
             activo,
             orden,
             traducciones:actividades_traducciones (
@@ -605,10 +606,11 @@ export class CatalogosAdminService {
           .insert({
             descripcion: payload.descripcion ?? null,
             clave: payload.clave ?? null,
+            icono: payload.icono ?? null,
             activo: payload.activo ?? true,
             orden: siguienteOrden
           })
-          .select('id, descripcion, clave, activo, orden')
+          .select('id, descripcion, clave, icono, activo, orden')
           .single();
 
         if (error) throw error;
@@ -1001,10 +1003,11 @@ export class CatalogosAdminService {
           .update({
             descripcion: payload.descripcion ?? null,
             clave: payload.clave ?? null,
+            icono: payload.icono ?? null,
             activo: payload.activo ?? null
           })
           .eq('id', id)
-          .select('id')
+          .select('id, descripcion, clave, icono, activo, orden')
           .maybeSingle();
         if (error) throw error;
         await this.guardarTraduccionesActividad(id, payload.descripcion ?? '');
