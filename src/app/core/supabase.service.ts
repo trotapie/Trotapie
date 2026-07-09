@@ -54,6 +54,7 @@ export interface IDetalleRapidoPreviewAdmin {
 export interface IActividadPreviewAdmin {
   id: number | null;
   imagen_fondo: string;
+  icono?: string | null;
   imagen_fondo_id?: number | null;
   imagen_seleccionada?: string;
   imagen_seleccionada_id?: number | null;
@@ -4153,7 +4154,7 @@ export class SupabaseService {
   async obtenerActividadesAdmin() {
     const { data, error } = await this.client
       .from('actividades')
-      .select('id, descripcion, activo, orden')
+      .select('id, descripcion, icono, activo, orden')
       .order('orden', { ascending: true })
       .order('id', { ascending: true });
 
@@ -4162,6 +4163,7 @@ export class SupabaseService {
     return (data ?? []).map((item: any) => ({
       id: Number(item.id),
       descripcion: item.descripcion ?? `Actividad ${item.id}`,
+      icono: item.icono ?? null,
       activo: item.activo ?? true,
       orden: item.orden ?? null
     }));

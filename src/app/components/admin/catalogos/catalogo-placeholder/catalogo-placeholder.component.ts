@@ -58,10 +58,11 @@ export class CatalogoPlaceholderComponent implements OnInit {
         { key: 'id', label: 'ID' },
         { key: 'descripcion', label: 'Descripcion' },
         { key: 'clave', label: 'Clave' },
-        { key: 'activo', label: 'Activo' }
+        { key: 'activo', label: 'Activo' },
+        { key: 'icono', label: 'Icono' }
       ],
       tieneOrden: false,
-      editableKeys: ['descripcion', 'clave', 'activo'],
+      editableKeys: ['descripcion', 'clave', 'icono', 'activo'],
       booleanKeys: ['activo']
     },
     conceptos: {
@@ -582,7 +583,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
     }
 
     if (this.esCatalogoAmenidades) {
-      return 'Nueva amenidad';
+      return 'Nueva actividad';
     }
 
     if (this.esCatalogoAtracciones) {
@@ -634,7 +635,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
     }
 
     if (this.esCatalogoAmenidades) {
-      return 'Captura descripcion, clave y estatus para crear la nueva amenidad.';
+      return 'Captura descripcion, clave, icono y estatus para crear la nueva actividad.';
     }
 
     if (this.esCatalogoAtracciones) {
@@ -686,7 +687,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
     }
 
     if (this.esCatalogoAmenidades) {
-      return 'Editar amenidad';
+      return 'Editar actividad';
     }
 
     if (this.esCatalogoAtracciones) {
@@ -738,7 +739,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
     }
 
     if (this.esCatalogoAmenidades) {
-      return 'Actualiza descripcion, clave y estatus de la amenidad.';
+      return 'Actualiza descripcion, clave, icono y estatus de la actividad.';
     }
 
     if (this.esCatalogoAtracciones) {
@@ -790,7 +791,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
     }
 
     if (this.esCatalogoAmenidades) {
-      return 'Nueva amenidad';
+      return 'Nueva actividad';
     }
 
     if (this.esCatalogoAtracciones) {
@@ -842,7 +843,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
     }
 
     if (this.esCatalogoAmenidades) {
-      return 'Crear amenidad';
+      return 'Crear actividad';
     }
 
     if (this.esCatalogoAtracciones) {
@@ -894,7 +895,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
     }
 
     if (this.esCatalogoAmenidades) {
-      return 'Amenidad guardada correctamente.';
+      return 'Actividad guardada correctamente.';
     }
 
     if (this.esCatalogoAtracciones) {
@@ -942,7 +943,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
     }
 
     if (this.esCatalogoAmenidades) {
-      return 'Amenidad creada correctamente.';
+      return 'Actividad creada correctamente.';
     }
 
     if (this.esCatalogoAtracciones) {
@@ -994,7 +995,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
     }
 
     if (this.esCatalogoAmenidades) {
-      return 'Amenidad eliminada correctamente.';
+      return 'Actividad eliminada correctamente.';
     }
 
     if (this.esCatalogoAtracciones) {
@@ -1153,6 +1154,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
         ...this.editingDraft,
         descripcion: item?.descripcion ?? '',
         clave: item?.clave ?? '',
+        icono: item?.icono ?? '',
         activo: Boolean(item?.activo)
       };
       this.traduccionesAmenidadPreview = item?.traducciones_preview ?? {};
@@ -1467,7 +1469,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
       this.traduccionesAmenidadPreview = concentrado;
       this.ultimaLlaveTraduccionAmenidad = descripcion;
     } catch (error: any) {
-      this.error = error?.message ?? 'No se pudo traducir la amenidad.';
+      this.error = error?.message ?? 'No se pudo traducir la actividad.';
     } finally {
       this.traduciendoAmenidad = false;
     }
@@ -1508,9 +1510,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
       } else if (this.esCatalogoAmenidades) {
         const descripcion = String(this.editingDraft['descripcion'] ?? '').trim();
         const clave = String(this.editingDraft['clave'] ?? '').trim();
+        const icono = String(this.editingDraft['icono'] ?? '').trim();
 
         if (!descripcion || !clave) {
-          this.errorModalEdicion = 'Descripcion y clave son obligatorias para editar una amenidad.';
+          this.errorModalEdicion = 'Descripcion y clave son obligatorias para editar una actividad.';
           this.guardandoEdicion = false;
           return;
         }
@@ -1518,6 +1521,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
         const payload = {
           descripcion,
           clave,
+          icono,
           activo: Boolean(this.editingDraft['activo'])
         };
 
@@ -1865,6 +1869,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
         ...this.nuevoRegistroDraft,
         descripcion: '',
         clave: '',
+        icono: '',
         activo: true
       };
     } else if (this.esCatalogoConceptos) {
@@ -2208,9 +2213,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
       } else if (this.esCatalogoAmenidades) {
         const descripcion = String(this.nuevoRegistroDraft['descripcion'] ?? '').trim();
         const clave = String(this.nuevoRegistroDraft['clave'] ?? '').trim();
+        const icono = String(this.nuevoRegistroDraft['icono'] ?? '').trim();
 
         if (!descripcion || !clave) {
-          this.errorModalCreacion = 'Descripcion y clave son obligatorias para crear una amenidad.';
+          this.errorModalCreacion = 'Descripcion y clave son obligatorias para crear una actividad.';
           this.guardandoCreacion = false;
           return;
         }
@@ -2218,6 +2224,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
         await this.catalogosAdmin.crearCatalogoAdmin(this.catalogoKey, {
           descripcion,
           clave,
+          icono,
           activo: Boolean(this.nuevoRegistroDraft['activo'])
         });
       } else if (this.esCatalogoTarifas) {
