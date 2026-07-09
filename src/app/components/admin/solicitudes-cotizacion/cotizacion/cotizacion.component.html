@@ -44,6 +44,337 @@
             <form [formGroup]="edicionForm">
                 <div class="text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-200 px-5">
                     <main class="max-w-7xl mx-auto px-4 py-2 pb-32">
+                        @if (!esEdicion) {
+                        <section class="public-quote-hero mb-14">
+                            <div class="space-y-8">
+                                <section class="space-y-5 pt-4 max-w-2xl">
+                                    <p class="text-[11px] uppercase tracking-[0.28em] font-black text-emerald-700 dark:text-emerald-300">
+                                        {{ t('cotizacion-s') }} personalizada
+                                    </p>
+                                    <h1 class="text-5xl lg:text-6xl font-black text-slate-900 dark:text-white leading-tight tracking-tight">
+                                        Reserva con protección y flexibilidad
+                                    </h1>
+                                    <p class="text-sm text-slate-600 dark:text-slate-300 max-w-xl leading-relaxed">
+                                        {{ t('descripcion_cotizacion')}}
+                                    </p>
+                                </section>
+
+                                <div class="quote-glass-card p-7 sm:p-8">
+                                    <div class="flex items-center gap-4">
+                                        <div class="quote-icon-card">
+                                            <mat-icon class="icon-size-5 icon-thick" [svgIcon]="'heroicons_outline:calendar-days'"></mat-icon>
+                                        </div>
+                                        <div>
+                                            <p class="quote-eyebrow">{{ t('fechas_viaje') }}</p>
+                                            <p class="font-black text-slate-950 dark:text-white text-base sm:text-lg capitalize">
+                                                {{ informacionCotizacion.fecha_entrada | dateI18n:'dd MMM yyyy':informacionCotizacion.idioma }} -
+                                                {{informacionCotizacion.fecha_salida | dateI18n:'dd MMM yyyy':informacionCotizacion.idioma}}
+                                            </p>
+                                            <p class="text-xs font-semibold text-slate-500 dark:text-slate-300 mt-1">
+                                                {{ t('noches-s', { noches: informacionCotizacion.noches }) }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="relative h-[420px] lg:h-[550px] rounded-[2.5rem] overflow-hidden shadow-2xl shadow-slate-900/15">
+                                <img alt="Imagen destino" class="w-full h-full object-cover"
+                                    [src]="informacionCotizacion.imagen_cotizacion || fallback" />
+                                <div class="absolute inset-0 bg-gradient-to-t from-slate-950/35 via-transparent to-white/10"></div>
+                                <div class="absolute bottom-6 left-6 right-6 p-6 bg-white/20 backdrop-blur-xl rounded-3xl border border-white/40 text-white shadow-2xl">
+                                    <p class="text-[10px] uppercase tracking-[0.24em] font-black mb-1 opacity-85">
+                                        {{ t('destino_destacado') }}
+                                    </p>
+                                    <p class="text-2xl font-black tracking-tight">
+                                        {{informacionCotizacion.destino_nombre}}
+                                    </p>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="space-y-8 mb-16">
+                            @if (habitacionesCotizacionPublicaVista.length > 1) {
+                                @if (mostrarTotalPorCampo('precio')) {
+                                <article class="quote-rate-card">
+                                    <div class="quote-rate-header">
+                                        <div>
+                                            <p class="quote-eyebrow">Tarifa</p>
+                                            <h2>{{ t('precio_sin_seguro') }}</h2>
+                                        </div>
+                                        <p class="quote-rate-total">MXN {{ totalPorCampoPublico('precio') | currency }}</p>
+                                    </div>
+                                    <div class="quote-rate-table-wrap">
+                                        <table class="quote-rate-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Habitación</th>
+                                                    <th>Acomodo</th>
+                                                    <th>Categoría</th>
+                                                    <th>Tarifa</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @for (habitacionCotizacion of habitacionesCotizacionPublicaVista; track $index) {
+                                                @if (habitacionCotizacion.precioSinSeguro !== null) {
+                                                <tr>
+                                                    <td data-label="Habitación">{{ getEtiquetaCotizacionMultiple(habitacionCotizacion) }}</td>
+                                                    <td data-label="Acomodo">{{ habitacionCotizacion.detalleHabitacion || '-' }}</td>
+                                                    <td data-label="Categoría">{{ habitacionCotizacion.tipoHabitacion || habitacionCotizacion.hotelNombre || '-' }}</td>
+                                                    <td data-label="Tarifa" class="quote-money">MXN {{ habitacionCotizacion.precioSinSeguro | currency }}</td>
+                                                </tr>
+                                                }
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="quote-policy-panel">
+                                        <p>Políticas de reserva</p>
+                                        <div class="quote-policy-list">
+                                            @for (e of politicasPorCampoPublico('precio'); track e.id) {
+                                            <span>{{ e.descripcion }}</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </article>
+                                }
+
+                                @if (mostrarTotalPorCampo('precioConSeguro')) {
+                                <article class="quote-rate-card">
+                                    <div class="quote-rate-header">
+                                        <div>
+                                            <p class="quote-eyebrow">Tarifa</p>
+                                            <h2>{{ t('precio_con_seguro') }}</h2>
+                                        </div>
+                                        <p class="quote-rate-total">MXN {{ totalPorCampoPublico('precioConSeguro') | currency }}</p>
+                                    </div>
+                                    <div class="quote-rate-table-wrap">
+                                        <table class="quote-rate-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Habitación</th>
+                                                    <th>Acomodo</th>
+                                                    <th>Categoría</th>
+                                                    <th>Tarifa</th>
+                                                    <th>Apartado</th>
+                                                    <th>Pague después</th>
+                                                    <th>Fecha límite</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @for (habitacionCotizacion of habitacionesCotizacionPublicaVista; track $index) {
+                                                @if (habitacionCotizacion.precioConSeguro !== null) {
+                                                <tr>
+                                                    <td data-label="Habitación">{{ getEtiquetaCotizacionMultiple(habitacionCotizacion) }}</td>
+                                                    <td data-label="Acomodo">{{ habitacionCotizacion.detalleHabitacion || '-' }}</td>
+                                                    <td data-label="Categoría">{{ habitacionCotizacion.tipoHabitacion || habitacionCotizacion.hotelNombre || '-' }}</td>
+                                                    <td data-label="Tarifa" class="quote-money">MXN {{ habitacionCotizacion.precioConSeguro | currency }}</td>
+                                                    <td data-label="Apartado">{{ habitacionCotizacion.apartadoSeguro | currency }} MXN</td>
+                                                    <td data-label="Pague después">{{ habitacionCotizacion.pagueDespuesSeguro | currency }} MXN</td>
+                                                    <td data-label="Fecha límite">{{ habitacionCotizacion.fechaLimiteSeguro | dateI18n:'dd MMM yyyy':informacionCotizacion.idioma }}</td>
+                                                </tr>
+                                                }
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="quote-policy-panel">
+                                        <p>Políticas de reserva</p>
+                                        <div class="quote-policy-list">
+                                            @for (e of politicasPorCampoPublico('precioConSeguro'); track e.id) {
+                                            <span>{{ e.descripcion }}</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </article>
+                                }
+
+                                @if (mostrarTotalPorCampo('precioMeses')) {
+                                <article class="quote-rate-card">
+                                    <div class="quote-rate-header">
+                                        <div>
+                                            <p class="quote-eyebrow">Tarifa</p>
+                                            <h2>{{ t('precio_a_meses') }}</h2>
+                                        </div>
+                                        <p class="quote-rate-total">MXN {{ totalPorCampoPublico('precioMeses') | currency }}</p>
+                                    </div>
+                                    <div class="quote-rate-table-wrap">
+                                        <table class="quote-rate-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Habitación</th>
+                                                    <th>Acomodo</th>
+                                                    <th>Categoría</th>
+                                                    <th>Tarifa</th>
+                                                    <th>Apartado</th>
+                                                    <th>Pague después</th>
+                                                    <th>Fecha límite</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @for (habitacionCotizacion of habitacionesCotizacionPublicaVista; track $index) {
+                                                @if (habitacionCotizacion.precioMeses !== null) {
+                                                <tr>
+                                                    <td data-label="Habitación">{{ getEtiquetaCotizacionMultiple(habitacionCotizacion) }}</td>
+                                                    <td data-label="Acomodo">{{ habitacionCotizacion.detalleHabitacion || '-' }}</td>
+                                                    <td data-label="Categoría">{{ habitacionCotizacion.tipoHabitacion || habitacionCotizacion.hotelNombre || '-' }}</td>
+                                                    <td data-label="Tarifa" class="quote-money">MXN {{ habitacionCotizacion.precioMeses | currency }}</td>
+                                                    <td data-label="Apartado">{{ habitacionCotizacion.apartadoMeses | currency }} MXN</td>
+                                                    <td data-label="Pague después">{{ habitacionCotizacion.pagueDespuesMeses | currency }} MXN</td>
+                                                    <td data-label="Fecha límite">{{ habitacionCotizacion.fechaLimiteMeses | dateI18n:'dd MMM yyyy':informacionCotizacion.idioma }}</td>
+                                                </tr>
+                                                }
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="quote-policy-panel">
+                                        <p>Políticas de reserva</p>
+                                        <div class="quote-policy-list">
+                                            @for (e of politicasPorCampoPublico('precioMeses'); track e.id) {
+                                            <span>{{ e.descripcion }}</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </article>
+                                }
+                            } @else {
+                                @if (precioSinSeguro) {
+                                <article class="quote-rate-card">
+                                    <div class="quote-rate-header">
+                                        <div>
+                                            <p class="quote-eyebrow">Tarifa</p>
+                                            <h2>{{ t('precio_sin_seguro') }}</h2>
+                                        </div>
+                                        <p class="quote-rate-total">MXN {{ precioSinSeguro.precio | currency }}</p>
+                                    </div>
+                                    <div class="quote-rate-table-wrap">
+                                        <table class="quote-rate-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Habitación</th>
+                                                    <th>Acomodo</th>
+                                                    <th>Categoría</th>
+                                                    <th>Tarifa</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td data-label="Habitación">Habitación 1</td>
+                                                    <td data-label="Acomodo">{{informacionCotizacion.idioma ==='es' ? informacionCotizacion.habitaciones.es : informacionCotizacion.habitaciones.traduccion}}</td>
+                                                    <td data-label="Categoría">{{ displayHabitacion(edicionForm.get('tipoHabitacion')?.value) || '-' }}</td>
+                                                    <td data-label="Tarifa" class="quote-money">MXN {{ precioSinSeguro.precio | currency }}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="quote-policy-panel">
+                                        <p>Políticas de reserva</p>
+                                        <div class="quote-policy-list">
+                                            @for (e of precioSinSeguro.condiciones; track e.id) {
+                                            <span>{{ e.descripcion }}</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </article>
+                                }
+
+                                @if (precioConSeguro) {
+                                <article class="quote-rate-card">
+                                    <div class="quote-rate-header">
+                                        <div>
+                                            <p class="quote-eyebrow">Tarifa</p>
+                                            <h2>{{ t('precio_con_seguro') }}</h2>
+                                        </div>
+                                        <p class="quote-rate-total">MXN {{ precioConSeguro.precio | currency }}</p>
+                                    </div>
+                                    <div class="quote-rate-table-wrap">
+                                        <table class="quote-rate-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Habitación</th>
+                                                    <th>Acomodo</th>
+                                                    <th>Categoría</th>
+                                                    <th>Tarifa</th>
+                                                    <th>Apartado</th>
+                                                    <th>Pague después</th>
+                                                    <th>Fecha límite</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td data-label="Habitación">Habitación 1</td>
+                                                    <td data-label="Acomodo">{{informacionCotizacion.idioma ==='es' ? informacionCotizacion.habitaciones.es : informacionCotizacion.habitaciones.traduccion}}</td>
+                                                    <td data-label="Categoría">{{ displayHabitacion(edicionForm.get('tipoHabitacion')?.value) || '-' }}</td>
+                                                    <td data-label="Tarifa" class="quote-money">MXN {{ precioConSeguro.precio | currency }}</td>
+                                                    <td data-label="Apartado">{{ edicionForm.get('cantidadApartado')?.value | currency }} MXN</td>
+                                                    <td data-label="Pague después">{{ edicionForm.get('pagueDespuesApartado')?.value | currency }} MXN</td>
+                                                    <td data-label="Fecha límite">{{ informacionCotizacion.fecha_limite_seguro | dateI18n:'dd MMM yyyy':informacionCotizacion.idioma }}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="quote-policy-panel">
+                                        <p>Políticas de reserva</p>
+                                        <div class="quote-policy-list">
+                                            @for (e of precioConSeguro.condiciones; track e.id) {
+                                            <span>{{ e.descripcion }}</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </article>
+                                }
+
+                                @if (precioAMeses) {
+                                <article class="quote-rate-card">
+                                    <div class="quote-rate-header">
+                                        <div>
+                                            <p class="quote-eyebrow">Tarifa</p>
+                                            <h2>{{ t('precio_a_meses') }}</h2>
+                                        </div>
+                                        <p class="quote-rate-total">MXN {{ precioAMeses.precio | currency }}</p>
+                                    </div>
+                                    <div class="quote-rate-table-wrap">
+                                        <table class="quote-rate-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Habitación</th>
+                                                    <th>Acomodo</th>
+                                                    <th>Categoría</th>
+                                                    <th>Tarifa</th>
+                                                    <th>Apartado</th>
+                                                    <th>Pague después</th>
+                                                    <th>Fecha límite</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td data-label="Habitación">Habitación 1</td>
+                                                    <td data-label="Acomodo">{{informacionCotizacion.idioma ==='es' ? informacionCotizacion.habitaciones.es : informacionCotizacion.habitaciones.traduccion}}</td>
+                                                    <td data-label="Categoría">{{ displayHabitacion(edicionForm.get('tipoHabitacion')?.value) || '-' }}</td>
+                                                    <td data-label="Tarifa" class="quote-money">MXN {{ precioAMeses.precio | currency }}</td>
+                                                    <td data-label="Apartado">{{ edicionForm.get('cantidadMeses')?.value | currency }} MXN</td>
+                                                    <td data-label="Pague después">{{ edicionForm.get('pagueDespuesMeses')?.value | currency }} MXN</td>
+                                                    <td data-label="Fecha límite">{{ informacionCotizacion.fecha_limite_meses | dateI18n:'dd MMM yyyy':informacionCotizacion.idioma }}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="quote-policy-panel">
+                                        <p>Políticas de reserva</p>
+                                        <div class="quote-policy-list">
+                                            @for (e of precioAMeses.condiciones; track e.id) {
+                                            <span>{{ e.descripcion }}</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </article>
+                                }
+                            }
+                        </section>
+                        }
+
+                        @if (esEdicion) {
                         <section class="grid grid-cols-1 gap-12 mb-16 items-start"
                             [ngClass]="esEdicion ? 'lg:grid-cols-1' : 'lg:grid-cols-2'">
                             <div [ngClass]="esEdicion ? 'w-full' : ''">
@@ -1544,6 +1875,7 @@
                             </div>
                             }
                         </section>
+                        }
 
                         <div class="flex items-center gap-4 mb-8">
                             <h2 class="text-2xl font-black text-slate-800 dark:text-slate-100">{{

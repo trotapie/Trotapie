@@ -141,6 +141,305 @@
   display: none !important;
 }
 
+.public-quote-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.96fr);
+  gap: 3rem;
+  align-items: start;
+}
+
+.quote-glass-card,
+.quote-rate-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(203, 213, 225, 0.68);
+  background:
+    radial-gradient(circle at 12% 10%, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0) 34%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(226, 232, 240, 0.76));
+  box-shadow: 0 26px 70px rgba(15, 23, 42, 0.09);
+  backdrop-filter: blur(18px);
+}
+
+.quote-glass-card {
+  border-radius: 2rem;
+}
+
+.quote-rate-card {
+  border-radius: 2.25rem;
+  padding: 1.25rem;
+}
+
+.quote-rate-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(120deg, rgba(0, 128, 105, 0.10), rgba(255, 255, 255, 0) 38%);
+}
+
+.quote-icon-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  flex: 0 0 auto;
+  border-radius: 1rem;
+  color: #087f6f;
+  background: rgba(236, 253, 245, 0.92);
+  border: 1px solid rgba(16, 185, 129, 0.16);
+}
+
+.quote-eyebrow {
+  margin-bottom: 0.35rem;
+  font-size: 0.64rem;
+  line-height: 1rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.quote-rate-header {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 0.5rem 0.5rem 1.25rem;
+}
+
+.quote-rate-header h2 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2vw, 2rem);
+  line-height: 1.05;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+}
+
+.quote-rate-total {
+  margin: 0;
+  white-space: nowrap;
+  font-size: clamp(1.05rem, 1.8vw, 1.5rem);
+  font-weight: 900;
+  color: #087f6f;
+}
+
+.quote-rate-table-wrap {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  border-radius: 1.35rem;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.quote-rate-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #0f172a;
+}
+
+.quote-rate-table thead {
+  background:
+    radial-gradient(circle at 14% 0%, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0) 36%),
+    linear-gradient(135deg, rgba(241, 245, 249, 0.98), rgba(203, 213, 225, 0.78));
+  color: #0f172a;
+}
+
+.quote-rate-table th,
+.quote-rate-table td {
+  padding: 1rem;
+  text-align: left;
+  vertical-align: top;
+  font-size: 0.82rem;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.88);
+}
+
+.quote-rate-table th {
+  font-size: 0.68rem;
+  line-height: 1rem;
+  font-weight: 900;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.quote-rate-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.quote-rate-table tbody tr:nth-child(even) {
+  background: rgba(248, 250, 252, 0.78);
+}
+
+.quote-money {
+  white-space: nowrap;
+  font-weight: 900;
+  color: #087f6f;
+}
+
+.quote-policy-list {
+  display: grid;
+  gap: 0.35rem;
+  color: #475569;
+}
+
+.quote-policy-panel {
+  position: relative;
+  z-index: 1;
+  margin-top: 0.9rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid rgba(226, 232, 240, 0.88);
+  border-radius: 1.25rem;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.quote-policy-panel p {
+  margin: 0 0 0.45rem;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #087f6f;
+}
+
+.quote-policy-list span {
+  display: flex;
+  gap: 0.4rem;
+  line-height: 1.35;
+}
+
+.quote-policy-list span::before {
+  content: '';
+  width: 0.35rem;
+  height: 0.35rem;
+  flex: 0 0 auto;
+  margin-top: 0.42rem;
+  border-radius: 999px;
+  background: #087f6f;
+}
+
+:host-context(.dark) .quote-glass-card,
+:host-context(.dark) .quote-rate-card {
+  border-color: rgba(51, 65, 85, 0.86);
+  background:
+    radial-gradient(circle at 12% 10%, rgba(51, 65, 85, 0.74), rgba(15, 23, 42, 0) 34%),
+    linear-gradient(135deg, rgba(30, 41, 59, 0.96), rgba(15, 23, 42, 0.88));
+  box-shadow: none;
+}
+
+:host-context(.dark) .quote-rate-header h2,
+:host-context(.dark) .quote-rate-table {
+  color: #f8fafc;
+}
+
+:host-context(.dark) .quote-rate-table-wrap {
+  border-color: rgba(51, 65, 85, 0.9);
+  background: rgba(15, 23, 42, 0.74);
+}
+
+:host-context(.dark) .quote-rate-table tbody tr:nth-child(even) {
+  background: rgba(30, 41, 59, 0.6);
+}
+
+:host-context(.dark) .quote-rate-table th,
+:host-context(.dark) .quote-rate-table td {
+  border-bottom-color: rgba(51, 65, 85, 0.9);
+}
+
+:host-context(.dark) .quote-rate-table thead {
+  background:
+    radial-gradient(circle at 14% 0%, rgba(71, 85, 105, 0.86), rgba(30, 41, 59, 0) 36%),
+    linear-gradient(135deg, rgba(51, 65, 85, 0.96), rgba(15, 23, 42, 0.86));
+  color: #f8fafc;
+}
+
+:host-context(.dark) .quote-policy-panel {
+  border-color: rgba(51, 65, 85, 0.9);
+  background: rgba(15, 23, 42, 0.46);
+}
+
+:host-context(.dark) .quote-policy-list {
+  color: #cbd5e1;
+}
+
+@media (max-width: 1024px) {
+  .public-quote-hero {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .quote-rate-card {
+    padding: 1rem;
+    border-radius: 1.75rem;
+  }
+
+  .quote-rate-header {
+    align-items: start;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .quote-rate-total {
+    white-space: normal;
+  }
+
+  .quote-rate-table-wrap {
+    border: 0;
+    background: transparent;
+  }
+
+  .quote-rate-table,
+  .quote-rate-table tbody,
+  .quote-rate-table tr,
+  .quote-rate-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .quote-rate-table thead {
+    display: none;
+  }
+
+  .quote-rate-table tr {
+    margin-bottom: 0.85rem;
+    overflow: hidden;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-radius: 1.15rem;
+    background: rgba(255, 255, 255, 0.86);
+  }
+
+  .quote-rate-table tr:last-child {
+    margin-bottom: 0;
+  }
+
+  .quote-rate-table td {
+    display: grid;
+    grid-template-columns: 7.5rem 1fr;
+    gap: 0.85rem;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.82);
+  }
+
+  .quote-rate-table td::before {
+    content: attr(data-label);
+    font-size: 0.66rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #64748b;
+  }
+
+  :host-context(.dark) .quote-rate-table tr {
+    border-color: rgba(51, 65, 85, 0.9);
+    background: rgba(15, 23, 42, 0.76);
+  }
+}
+
 @media print {
   .no-print {
     display: none !important;

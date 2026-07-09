@@ -705,6 +705,33 @@ export class CotizacionComponent implements OnInit {
     return item.hotelNombre?.trim() || item.tipoHabitacion?.trim() || `Hotel ${item.indice}`;
   }
 
+  mostrarTotalPorCampo(campo: 'precio' | 'precioConSeguro' | 'precioMeses'): boolean {
+    return this.totalPorCampoPublico(campo) !== null;
+  }
+
+  totalPorCampoPublico(campo: 'precio' | 'precioConSeguro' | 'precioMeses'): number | null {
+    const tipo = campo === 'precio'
+      ? 'sin_seguro'
+      : campo === 'precioConSeguro'
+        ? 'con_seguro'
+        : 'a_meses';
+
+    return this.totalPublicoPorTarifa(tipo);
+  }
+
+  politicasPorCampoPublico(campo: 'precio' | 'precioConSeguro' | 'precioMeses'): Condicione[] {
+    const habitacion = this.habitacionesCotizacionPublicaVista.find((item) => {
+      if (campo === 'precio') return item.precioSinSeguro !== null;
+      if (campo === 'precioConSeguro') return item.precioConSeguro !== null;
+      return item.precioMeses !== null;
+    });
+
+    if (!habitacion) return [];
+    if (campo === 'precio') return habitacion.condicionesSinSeguro;
+    if (campo === 'precioConSeguro') return habitacion.condicionesConSeguro;
+    return habitacion.condicionesMeses;
+  }
+
   private obtenerPayloadEdicion(): any {
     const cotizacionMultiple = this.habitacionesAdicionales.length > 0
       ? this.obtenerCotizacionMultiple()
@@ -938,84 +965,26 @@ export class CotizacionComponent implements OnInit {
   ): Promise<any> {
     const { jsPDF } = await import('jspdf');
     const cotizacion = this.informacionCotizacion;
-    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdf: any = new jsPDF('p', 'mm', 'a4');
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
-    const margin = 14;
+    const margin = 8;
+    const contentWidth = pageWidth - margin * 2;
+    const footerHeight = 10;
     let y = margin;
 
-    const pageBgColor: [number, number, number] = [244, 246, 250];
-    const primaryColor: [number, number, number] = [15, 44, 77];
-    const mainBoxColor: [number, number, number] = [11, 35, 64];
-    const headerAccentColor: [number, number, number] = [255, 184, 28];
-    const lightColor: [number, number, number] = [233, 239, 247];
-    const textColor: [number, number, number] = [17, 34, 51];
-    const mutedColor: [number, number, number] = [100, 116, 139];
-
-    const paintPageBackground = (): void => {
-      pdf.setFillColor(...pageBgColor);
-      pdf.rect(0, 0, pageWidth, pageHeight, 'F');
-    };
-
-    paintPageBackground();
-
-    const ensureSpace = (requiredHeight: number): void => {
-      if (y + requiredHeight <= pageHeight - margin) return;
-      pdf.addPage();
-      paintPageBackground();
-      y = margin;
-    };
-
-    const drawBlockTitle = (title: string): void => {
-      ensureSpace(11);
-      pdf.setFillColor(...lightColor);
-      pdf.roundedRect(margin, y, pageWidth - margin * 2, 8.5, 1.6, 1.6, 'F');
-      pdf.setTextColor(...primaryColor);
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(10.3);
-      pdf.text(title, margin + 3, y + 5.8);
-      y += 10.6;
-    };
-
-    const drawKeyValue = (label: string, value: string, x: number, yPos: number): number => {
-      pdf.setFont('helvetica', 'bold');
-      pdf.setTextColor(...mutedColor);
-      pdf.setFontSize(8.8);
-      pdf.text(label, x, yPos);
-
-      const wrappedValue = pdf.splitTextToSize(value || '-', 200);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setTextColor(...textColor);
-      pdf.setFontSize(9.6);
-      pdf.text(wrappedValue, x, yPos + 4.3);
-
-      return 4.3 + wrappedValue.length * 4.2;
-    };
-
-    const drawKeyValueWrapped = (
-      label: string,
-      value: string,
-      x: number,
-      yPos: number,
-      maxWidth: number
-    ): number => {
-      pdf.setFont('helvetica', 'bold');
-      pdf.setTextColor(...mutedColor);
-      pdf.setFontSize(8.8);
-      pdf.text(label, x, yPos);
-
-      const wrappedValue = pdf.splitTextToSize(value || '-', maxWidth);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setTextColor(...textColor);
-      pdf.setFontSize(9.6);
-      pdf.text(wrappedValue, x, yPos + 4.3);
-
-      return 4.3 + wrappedValue.length * 4.2;
-    };
+    const green: [number, number, number] = [0, 132, 106];
+    const greenDark: [number, number, number] = [0, 104, 85];
+    const greenSoft: [number, number, number] = [230, 247, 242];
+    const navy: [number, number, number] = [14, 28, 56];
+    const textColor: [number, number, number] = [22, 33, 53];
+    const mutedColor: [number, number, number] = [87, 101, 123];
+    const borderColor: [number, number, number] = [218, 226, 232];
+    const pageBgColor: [number, number, number] = [249, 250, 247];
 
     const moneda = (valor?: number | null): string => {
       const numero = Number(valor ?? 0);
-      if (!Number.isFinite(numero)) return 'MXN 0';
+      if (!Number.isFinite(numero)) return '$0';
       return new Intl.NumberFormat('es-MX', {
         style: 'currency',
         currency: 'MXN',
@@ -1036,371 +1005,376 @@ export class CotizacionComponent implements OnInit {
 
     const limpiar = (value: unknown): string => (value ?? '').toString().trim();
 
+    const fechaHora = (value?: string | Date | null): string => {
+      if (!value) return '-';
+      const parsed = value instanceof Date ? value : new Date(value);
+      if (Number.isNaN(parsed.getTime())) return '-';
+      return new Intl.DateTimeFormat('es-MX', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(parsed);
+    };
+
+    const split = (text: string, width: number): string[] => pdf.splitTextToSize(text || '-', width);
+
+    const drawText = (
+      text: string | string[],
+      x: number,
+      yPos: number,
+      options?: { size?: number; bold?: boolean; color?: [number, number, number]; align?: 'left' | 'center' | 'right'; maxWidth?: number }
+    ): void => {
+      pdf.setFont('helvetica', options?.bold ? 'bold' : 'normal');
+      pdf.setFontSize(options?.size ?? 8);
+      pdf.setTextColor(...(options?.color ?? textColor));
+      pdf.text(text, x, yPos, { align: options?.align ?? 'left', maxWidth: options?.maxWidth });
+    };
+
+    const drawIcon = (
+      name: 'spark' | 'calendar' | 'moon' | 'home' | 'users' | 'mail' | 'phone' | 'bed' | 'card' | 'check',
+      x: number,
+      yPos: number,
+      color: [number, number, number] = greenDark,
+      scale = 1
+    ): void => {
+      pdf.setDrawColor(...color);
+      pdf.setFillColor(...color);
+      pdf.setLineWidth(0.35 * scale);
+
+      if (name === 'spark') {
+        pdf.line(x, yPos + 1.7 * scale, x + 3.4 * scale, yPos + 1.7 * scale);
+        pdf.line(x + 1.7 * scale, yPos, x + 1.7 * scale, yPos + 3.4 * scale);
+        pdf.circle(x + 1.7 * scale, yPos + 1.7 * scale, 0.35 * scale, 'F');
+        return;
+      }
+
+      if (name === 'calendar') {
+        pdf.roundedRect(x, yPos, 4.6 * scale, 4.2 * scale, 0.4 * scale, 0.4 * scale, 'S');
+        pdf.line(x, yPos + 1.3 * scale, x + 4.6 * scale, yPos + 1.3 * scale);
+        pdf.line(x + 1.1 * scale, yPos - 0.45 * scale, x + 1.1 * scale, yPos + 0.7 * scale);
+        pdf.line(x + 3.5 * scale, yPos - 0.45 * scale, x + 3.5 * scale, yPos + 0.7 * scale);
+        return;
+      }
+
+      if (name === 'moon') {
+        pdf.circle(x + 2.2 * scale, yPos + 2 * scale, 1.8 * scale, 'S');
+        pdf.setDrawColor(...pageBgColor);
+        pdf.setFillColor(...pageBgColor);
+        pdf.circle(x + 3 * scale, yPos + 1.5 * scale, 1.7 * scale, 'F');
+        return;
+      }
+
+      if (name === 'home') {
+        pdf.line(x, yPos + 2.2 * scale, x + 2.4 * scale, yPos);
+        pdf.line(x + 2.4 * scale, yPos, x + 4.8 * scale, yPos + 2.2 * scale);
+        pdf.rect(x + 0.8 * scale, yPos + 2.1 * scale, 3.2 * scale, 2.5 * scale, 'S');
+        return;
+      }
+
+      if (name === 'users') {
+        pdf.circle(x + 1.4 * scale, yPos + 1.2 * scale, 0.9 * scale, 'S');
+        pdf.circle(x + 3.6 * scale, yPos + 1.4 * scale, 0.75 * scale, 'S');
+        pdf.arc?.(x + 0.2 * scale, yPos + 4.1 * scale, x + 2.7 * scale, yPos + 2.2 * scale, 180, 360, 'S');
+        pdf.arc?.(x + 2.7 * scale, yPos + 4.1 * scale, x + 4.8 * scale, yPos + 2.5 * scale, 180, 360, 'S');
+        return;
+      }
+
+      if (name === 'mail') {
+        pdf.roundedRect(x, yPos, 5 * scale, 3.4 * scale, 0.4 * scale, 0.4 * scale, 'S');
+        pdf.line(x, yPos, x + 2.5 * scale, yPos + 1.9 * scale);
+        pdf.line(x + 5 * scale, yPos, x + 2.5 * scale, yPos + 1.9 * scale);
+        return;
+      }
+
+      if (name === 'phone') {
+        pdf.roundedRect(x + 1.2 * scale, yPos, 2.6 * scale, 5 * scale, 0.7 * scale, 0.7 * scale, 'S');
+        pdf.circle(x + 2.5 * scale, yPos + 4.2 * scale, 0.25 * scale, 'F');
+        return;
+      }
+
+      if (name === 'bed') {
+        pdf.rect(x, yPos + 1.8 * scale, 5 * scale, 2 * scale, 'S');
+        pdf.rect(x + 0.4 * scale, yPos + 0.8 * scale, 1.6 * scale, 1 * scale, 'S');
+        pdf.line(x, yPos + 3.8 * scale, x, yPos + 4.5 * scale);
+        pdf.line(x + 5 * scale, yPos + 3.8 * scale, x + 5 * scale, yPos + 4.5 * scale);
+        return;
+      }
+
+      if (name === 'card') {
+        pdf.roundedRect(x, yPos, 5 * scale, 3.5 * scale, 0.4 * scale, 0.4 * scale, 'S');
+        pdf.line(x, yPos + 1.1 * scale, x + 5 * scale, yPos + 1.1 * scale);
+        pdf.line(x + 0.7 * scale, yPos + 2.4 * scale, x + 2.2 * scale, yPos + 2.4 * scale);
+        return;
+      }
+
+      pdf.circle(x + 2 * scale, yPos + 2 * scale, 1.9 * scale, 'S');
+      pdf.line(x + 1.1 * scale, yPos + 2 * scale, x + 1.8 * scale, yPos + 2.7 * scale);
+      pdf.line(x + 1.8 * scale, yPos + 2.7 * scale, x + 3.1 * scale, yPos + 1.3 * scale);
+    };
+
+    const drawFooter = (): void => {
+      pdf.setFillColor(...green);
+      pdf.rect(0, pageHeight - footerHeight, pageWidth, footerHeight, 'F');
+      drawIcon('mail', pageWidth / 2 - 56, pageHeight - 6.8, [255, 255, 255], 0.85);
+      drawText('reservas@trotapie.com', pageWidth / 2 - 28, pageHeight - 3.8, { size: 7, color: [255, 255, 255], align: 'center' });
+      drawIcon('phone', pageWidth / 2 + 13, pageHeight - 7.3, [255, 255, 255], 0.82);
+      drawText('+52 618 803 2093', pageWidth / 2 + 34, pageHeight - 3.8, { size: 7, color: [255, 255, 255], align: 'center' });
+      pdf.setDrawColor(255, 255, 255);
+      pdf.setLineWidth(0.12);
+      pdf.line(pageWidth / 2, pageHeight - 8, pageWidth / 2, pageHeight - 2.2);
+    };
+
+    const paintPage = (): void => {
+      pdf.setFillColor(...pageBgColor);
+      pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+      drawFooter();
+    };
+
+    const ensureSpace = (requiredHeight: number, header = true): void => {
+      if (y + requiredHeight <= pageHeight - footerHeight - 7) return;
+      pdf.addPage();
+      paintPage();
+      y = margin;
+      if (header) {
+        drawText('Cotizacion de hospedaje', margin, y + 6, { size: 14, bold: true, color: navy });
+        drawText(`Folio: ${publicId}`, pageWidth - margin, y + 6, { size: 8, color: mutedColor, align: 'right' });
+        y += 13;
+      }
+    };
+
+    const roundedBox = (x: number, yPos: number, w: number, h: number, fill: [number, number, number] = [255, 255, 255]): void => {
+      pdf.setDrawColor(...borderColor);
+      pdf.setFillColor(...fill);
+      pdf.roundedRect(x, yPos, w, h, 3, 3, 'FD');
+    };
+
+    const drawPill = (text: string, x: number, yPos: number, w: number): void => {
+      pdf.setFillColor(...greenSoft);
+      pdf.roundedRect(x, yPos, w, 7, 2, 2, 'F');
+      drawIcon('spark', x + 4, yPos + 1.8, greenDark, 0.8);
+      drawText(text, x + 9, yPos + 4.7, { size: 7, bold: true, color: greenDark });
+    };
+
+    const drawLabelValue = (label: string, value: string, x: number, yPos: number, w: number): number => {
+      drawText(label, x, yPos, { size: 6.4, bold: true, color: greenDark });
+      const lines = split(value || '-', w);
+      drawText(lines, x, yPos + 4, { size: 7, color: textColor });
+      return 4 + lines.length * 3.4;
+    };
+
+    paintPage();
+
+    const logoDataUrl = await this.obtenerImagenComoDataURL('/assets/images/logos/trotapie.png');
+    const hotelImageSource =
+      limpiar((cotizacion as any)?.imagen_cotizacion) ||
+      limpiar(cotizacion?.fondo) ||
+      limpiar(cotizacion?.imagenes?.[0]?.url);
+    const hotelImageDataUrl = hotelImageSource ? await this.obtenerImagenComoDataURL(hotelImageSource) : null;
+
     const precios = cotizacion.precios ?? [];
     const precioSinSeguro = precios.find((p) => p.tipo === 'sin_seguro');
     const precioConSeguro = precios.find((p) => p.tipo === 'con_seguro');
     const precioMeses = precios.find((p) => p.tipo === 'a_meses');
-
-    const opcionesPrecio = [
-      {
-        tipo: 'Tarifa sin seguro',
-        precio: moneda(precioSinSeguro?.precio),
-      },
-      {
-        tipo: 'Tarifa con seguro',
-        precio: moneda(precioConSeguro?.precio),
-      },
-      {
-        tipo: 'Tarifa a meses',
-        precio: moneda(precioMeses?.precio),
-      },
-    ].filter((item) => item.precio !== moneda(0) || item.tipo === 'Tarifa sin seguro');
-
-    const politicas = precios
-      .flatMap((item) => item.condiciones ?? [])
-      .map((item) => limpiar(item.descripcion))
-      .filter((item, index, self) => item && self.indexOf(item) === index);
-
     const habitacionesFuente =
       limpiar(cotizacion?.habitaciones?.es) ||
       limpiar(cotizacion?.habitaciones?.traduccion);
     const detalleHabitaciones = this.obtenerDetalleHabitacionesPdf(habitacionesFuente);
     const habitacionesCotizacion = this.construirHabitacionesCotizacionVista();
+    const habitacionesVista: HabitacionCotizacionPublicaVista[] = habitacionesCotizacion.length
+      ? habitacionesCotizacion
+      : [{
+        indice: 1,
+        tipoHabitacion: this.obtenerNombreTipoHabitacion(cotizacion?.tipo_habitacion as number | null),
+        hotelNombre: cotizacion?.nombre_hotel ?? null,
+        detalleHabitacion: this.formatearDetalleHabitacionTexto(detalleHabitaciones[0]) || habitacionesFuente || null,
+        precioSinSeguro: this.obtenerNumeroLimpio(precioSinSeguro?.precio),
+        precioConSeguro: this.obtenerNumeroLimpio(precioConSeguro?.precio),
+        precioMeses: this.obtenerNumeroLimpio(precioMeses?.precio),
+        porcentajeSeguro: this.obtenerNumeroLimpio(precioConSeguro?.porcentaje) ?? this.obtenerNumeroLimpio(cotizacion?.porcentaje_seguro),
+        porcentajeMeses: this.obtenerNumeroLimpio(precioMeses?.porcentaje) ?? this.obtenerNumeroLimpio(cotizacion?.porcentaje_meses),
+        fechaLimiteSeguro: cotizacion?.fecha_limite_seguro ?? null,
+        fechaLimiteMeses: cotizacion?.fecha_limite_meses ?? null,
+        tipoTarifaMeses: null,
+        condicionesSinSeguro: precioSinSeguro?.condiciones ?? [],
+        condicionesConSeguro: precioConSeguro?.condiciones ?? [],
+        condicionesMeses: precioMeses?.condiciones ?? [],
+        apartadoSeguro: this.calcularMontoApartado(this.obtenerNumeroLimpio(precioConSeguro?.precio), this.obtenerNumeroLimpio(precioConSeguro?.porcentaje) ?? this.obtenerNumeroLimpio(cotizacion?.porcentaje_seguro)),
+        pagueDespuesSeguro: this.calcularMontoPendiente(
+          this.obtenerNumeroLimpio(precioConSeguro?.precio),
+          this.calcularMontoApartado(this.obtenerNumeroLimpio(precioConSeguro?.precio), this.obtenerNumeroLimpio(precioConSeguro?.porcentaje) ?? this.obtenerNumeroLimpio(cotizacion?.porcentaje_seguro))
+        ),
+        apartadoMeses: this.calcularMontoApartado(this.obtenerNumeroLimpio(precioMeses?.precio), this.obtenerNumeroLimpio(precioMeses?.porcentaje) ?? this.obtenerNumeroLimpio(cotizacion?.porcentaje_meses)),
+        pagueDespuesMeses: this.calcularMontoPendiente(
+          this.obtenerNumeroLimpio(precioMeses?.precio),
+          this.calcularMontoApartado(this.obtenerNumeroLimpio(precioMeses?.precio), this.obtenerNumeroLimpio(precioMeses?.porcentaje) ?? this.obtenerNumeroLimpio(cotizacion?.porcentaje_meses))
+        )
+      }];
     const regimenCotizacion = limpiar(cotizacion?.regimen) || '-';
 
-    pdf.setFillColor(...mainBoxColor);
-    pdf.roundedRect(margin, y, pageWidth - margin * 2, 26, 2.5, 2.5, 'F');
-    pdf.setFillColor(...headerAccentColor);
-    pdf.roundedRect(margin + 2.5, y + 23.8, pageWidth - margin * 2 - 5, 0.9, 0.3, 0.3, 'F');
-
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(16);
-    pdf.text('COTIZACION', margin + 4, y + 10);
-
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(9.5);
-    pdf.text(`Folio: ${publicId}`, margin + 4, y + 16);
-    pdf.text(`ID cotizacion: ${cotizacion?.id ?? '-'}`, margin + 4, y + 22);
-    pdf.text(`Fecha: ${fecha(cotizacion.fecha_creacion)}`, margin + 48, y + 22);
-
-    const logoDataUrl = await this.obtenerImagenComoDataURL('/assets/images/logos/trotapie.png');
+    drawText('Cotizacion de hospedaje', margin, y + 8, { size: 18, bold: true, color: navy });
     if (logoDataUrl) {
-      pdf.addImage(logoDataUrl, 'PNG', pageWidth - margin - 53, y + 4, 48, 18, undefined, 'FAST');
-    }
-
-    y += 33;
-
-    drawBlockTitle('Datos del cliente');
-    ensureSpace(34);
-    const contentX = margin + 3;
-    const contentW = pageWidth - margin * 2 - 6;
-    const twoColGap = 8;
-    const twoColW = (contentW - twoColGap) / 2;
-    const sectionContentPadY = 3;
-    y += sectionContentPadY;
-
-    const nombreH = drawKeyValueWrapped(
-      'Nombre',
-      limpiar(cotizacion.cliente_nombre) || '-',
-      contentX,
-      y,
-      twoColW
-    );
-    const correoH = drawKeyValueWrapped(
-      'Correo',
-      limpiar(cotizacion.cliente_email) || '-',
-      contentX + twoColW + twoColGap,
-      y,
-      twoColW
-    );
-    y += Math.max(nombreH, correoH) + 4;
-
-    const telefonoH = drawKeyValueWrapped(
-      'Telefono',
-      limpiar(cotizacion.cliente_telefono) || '-',
-      contentX,
-      y,
-      contentW
-    );
-    y += telefonoH + 4 + sectionContentPadY;
-
-    drawBlockTitle('Informacion de viaje');
-    ensureSpace(44);
-    y += sectionContentPadY;
-    const destinoH = drawKeyValueWrapped(
-      'Destino',
-      limpiar(cotizacion.destino_nombre) || '-',
-      contentX,
-      y,
-      twoColW
-    );
-    const estatusH = drawKeyValueWrapped(
-      'Estatus',
-      limpiar(cotizacion.estatus) || '-',
-      contentX + twoColW + twoColGap,
-      y,
-      twoColW
-    );
-    y += Math.max(destinoH, estatusH) + 4;
-
-    const hotelH = drawKeyValueWrapped(
-      'Hotel',
-      limpiar(cotizacion.nombre_hotel) || '-',
-      contentX,
-      y,
-      contentW
-    );
-    y += hotelH + 4;
-
-    const threeColGap = 6;
-    const threeColW = (contentW - threeColGap * 2) / 3;
-    const entradaH = drawKeyValueWrapped(
-      'Entrada',
-      fecha(cotizacion.fecha_entrada),
-      contentX,
-      y,
-      threeColW
-    );
-    const salidaH = drawKeyValueWrapped(
-      'Salida',
-      fecha(cotizacion.fecha_salida),
-      contentX + threeColW + threeColGap,
-      y,
-      threeColW
-    );
-    const nochesH = drawKeyValueWrapped(
-      'Noches',
-      `${cotizacion.noches ?? 0}`,
-      contentX + (threeColW + threeColGap) * 2,
-      y,
-      threeColW
-    );
-    y += Math.max(entradaH, salidaH, nochesH) + 6 + sectionContentPadY;
-
-        drawBlockTitle('Detalle por habitacion');
-    if (!detalleHabitaciones.length && !habitacionesCotizacion.length) {
-      ensureSpace(8);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setTextColor(...mutedColor);
-      pdf.setFontSize(9.2);
-      pdf.text('- Sin detalle de habitaciones', margin + 3, y + 4);
-      y += 10;
-    } else if (habitacionesCotizacion.length) {
-      for (let i = 0; i < habitacionesCotizacion.length; i++) {
-        const habitacion = habitacionesCotizacion[i];
-        const detalleViajeros = detalleHabitaciones[i];
-
-        const precioSinSeguroHabitacion =
-          habitacion.precioSinSeguro ??
-          (i === 0 ? this.obtenerNumeroLimpio(precioSinSeguro?.precio) : null);
-        const precioConSeguroHabitacion =
-          habitacion.precioConSeguro ??
-          (i === 0 ? this.obtenerNumeroLimpio(precioConSeguro?.precio) : null);
-        const precioMesesHabitacion =
-          habitacion.precioMeses ??
-          (i === 0 ? this.obtenerNumeroLimpio(precioMeses?.precio) : null);
-
-        const viajeros = `${detalleViajeros?.adultos ?? 0} adulto(s), ${detalleViajeros?.ninos ?? 0} nino(s)`;
-        const edades = limpiar(detalleViajeros?.extra);
-        const tipoHabitacionTexto = limpiar(habitacion.tipoHabitacion) || '-';
-
-        const opcionesHabitacion = [
-          {
-            nombre: 'Tarifa sin seguro',
-            precio: precioSinSeguroHabitacion,
-            condiciones: habitacion.condicionesSinSeguro,
-            extra: ''
-          },
-          {
-            nombre: 'Tarifa con seguro',
-            precio: precioConSeguroHabitacion,
-            condiciones: habitacion.condicionesConSeguro,
-            extra:
-              habitacion.apartadoSeguro !== null || habitacion.pagueDespuesSeguro !== null
-                ? `Anticipo: ${moneda(habitacion.apartadoSeguro)} | Pendiente: ${moneda(habitacion.pagueDespuesSeguro)}`
-                : ''
-          },
-          {
-            nombre: 'Tarifa a meses',
-            precio: precioMesesHabitacion,
-            condiciones: habitacion.condicionesMeses,
-            extra:
-              habitacion.apartadoMeses !== null || habitacion.pagueDespuesMeses !== null
-                ? `Anticipo: ${moneda(habitacion.apartadoMeses)} | Pendiente: ${moneda(habitacion.pagueDespuesMeses)}`
-                : ''
-          }
-        ].filter((item) => item.precio !== null);
-
-        const alturaOpcionesBase = opcionesHabitacion.reduce((acc, opcion) => {
-          const lineasDescripcion = pdf.splitTextToSize(
-            opcion.extra || '',
-            pageWidth - margin * 2 - 20
-          ).length;
-          const totalCondiciones = opcion.condiciones?.length ?? 0;
-          return acc + 6 + (lineasDescripcion > 1 ? (lineasDescripcion - 1) * 3.7 : 0) + totalCondiciones * 3.7;
-        }, 0);
-        const alturaBloque = 30 + Math.max(alturaOpcionesBase, 4);
-        ensureSpace(alturaBloque + 4);
-
-        pdf.setDrawColor(218, 226, 236);
-        pdf.setFillColor(250, 252, 255);
-        pdf.roundedRect(margin, y, pageWidth - margin * 2, alturaBloque, 2, 2, 'FD');
-
-        let yBloque = y + 5;
-        pdf.setFont('helvetica', 'bold');
-        pdf.setTextColor(...primaryColor);
-        pdf.setFontSize(10);
-        pdf.text(`Habitacion ${habitacion.indice}`, margin + 3, yBloque);
-
-        const metaY = yBloque + 4.2;
-        const colGapHabitacion = 5;
-        const colWHabitacion = (pageWidth - margin * 2 - 6 - colGapHabitacion * 2) / 3;
-        const tipoH = drawKeyValueWrapped('Tipo de habitacion', tipoHabitacionTexto, margin + 3, metaY, colWHabitacion);
-        const regimenH = drawKeyValueWrapped(
-          'Regimen',
-          regimenCotizacion,
-          margin + 3 + colWHabitacion + colGapHabitacion,
-          metaY,
-          colWHabitacion
-        );
-        const viajerosH = drawKeyValueWrapped(
-          'Viajeros',
-          edades ? `${viajeros} (${edades})` : viajeros,
-          margin + 3 + (colWHabitacion + colGapHabitacion) * 2,
-          metaY,
-          colWHabitacion
-        );
-        const metaBottom = metaY + Math.max(tipoH, regimenH, viajerosH);
-        pdf.setDrawColor(226, 232, 240);
-        pdf.line(margin + 3, metaBottom + 1.4, pageWidth - margin - 3, metaBottom + 1.4);
-        yBloque = metaBottom + 6;
-
-        for (const opcion of opcionesHabitacion) {
-          pdf.setFont('helvetica', 'bold');
-          pdf.setTextColor(...textColor);
-          pdf.setFontSize(9.2);
-          pdf.text(opcion.nombre, margin + 3, yBloque);
-          pdf.text(moneda(opcion.precio), pageWidth - margin - 3, yBloque, { align: 'right' });
-          yBloque += 4.4;
-
-          if (opcion.extra) {
-            const extraLineas = pdf.splitTextToSize(opcion.extra, pageWidth - margin * 2 - 20);
-            pdf.setFont('helvetica', 'normal');
-            pdf.setTextColor(...mutedColor);
-            pdf.setFontSize(8.5);
-            pdf.text(extraLineas, margin + 7, yBloque);
-            yBloque += extraLineas.length * 3.7;
-          }
-
-          for (const condicion of opcion.condiciones ?? []) {
-            const textoCondicion = limpiar(condicion?.descripcion);
-            if (!textoCondicion) continue;
-            const condLineas = pdf.splitTextToSize(`- ${textoCondicion}`, pageWidth - margin * 2 - 20);
-            pdf.setFont('helvetica', 'normal');
-            pdf.setTextColor(...mutedColor);
-            pdf.setFontSize(8.5);
-            pdf.text(condLineas, margin + 7, yBloque);
-            yBloque += condLineas.length * 3.7;
-          }
-
-          yBloque += 1;
-        }
-
-        y += alturaBloque + 3;
-      }
+      pdf.addImage(logoDataUrl, 'PNG', pageWidth - margin - 64, y, 56, 20, undefined, 'FAST');
     } else {
-      for (const detalle of detalleHabitaciones) {
-        const bloque = `${detalle.habitacion}: ${detalle.adultos} adulto(s) - ${detalle.ninos} nino(s)`;
-        const lineas = pdf.splitTextToSize(bloque, pageWidth - margin * 2 - 6);
-        const alto = lineas.length * 4.6 + 2;
-        ensureSpace(alto + 2);
-
-        pdf.setFont('helvetica', 'bold');
-        pdf.setTextColor(...textColor);
-        pdf.setFontSize(9.4);
-        pdf.text(lineas, margin + 3, y + 4);
-
-        if (detalle.extra) {
-          const extraLineas = pdf.splitTextToSize(detalle.extra, pageWidth - margin * 2 - 10);
-          const extraAlto = extraLineas.length * 4.3 + 1.5;
-          ensureSpace(extraAlto + 2);
-          pdf.setFont('helvetica', 'normal');
-          pdf.setTextColor(...mutedColor);
-          pdf.setFontSize(8.8);
-          pdf.text(extraLineas, margin + 7, y + alto + 1.8);
-          y += alto + extraAlto + 2;
-        } else {
-          y += alto + 2;
-        }
-      }
+      drawText('trotapie', pageWidth - margin, y + 12, { size: 24, bold: true, color: green, align: 'right' });
     }
+    y += 24;
+    drawText(limpiar(cotizacion.destino_nombre) || '-', margin + 2, y, { size: 10, bold: true, color: greenDark });
+    drawText(limpiar(cotizacion.cliente_nombre) || 'Cliente', margin + 2, y + 8, { size: 11, color: textColor });
+    drawText(`Folio: ${publicId}`, margin + 62, y + 8, { size: 7, color: mutedColor });
+    drawPill('Ya casi tienes listo tu viaje', margin + 2, y + 13, 58);
 
-    if (!habitacionesCotizacion.length) {
-      drawBlockTitle('Opciones de tarifa');
-      ensureSpace(14);
-      const tableX = margin;
-      const tableW = pageWidth - margin * 2;
-      const rowH = 8.5;
-      const colTypeW = 108;
+    roundedBox(pageWidth - margin - 67, y - 6, 67, 24);
+    drawText(`Te atendio: ${limpiar(cotizacion.empleado_nombre) || 'Trotapie'}`, pageWidth - margin - 34, y + 1, { size: 7, bold: true, color: navy, align: 'center' });
+    drawText('Contacto agente', pageWidth - margin - 34, y + 7, { size: 6, color: mutedColor, align: 'center' });
+    drawText(fechaHora(cotizacion.fecha_creacion), pageWidth - margin - 34, y + 15, { size: 6.4, color: textColor, align: 'center' });
+    y += 28;
 
-      pdf.setFillColor(...primaryColor);
-      pdf.rect(tableX, y, tableW, rowH, 'F');
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(9.3);
-      pdf.text('Concepto', tableX + 3, y + 5.5);
-      pdf.text('Precio', tableX + colTypeW + 3, y + 5.5);
-      y += rowH;
+    const hotelBoxH = 58;
+    roundedBox(margin, y, contentWidth, hotelBoxH);
+    if (hotelImageDataUrl) {
+      pdf.addImage(hotelImageDataUrl, 'JPEG', margin + 5, y + 6, 100, 46, undefined, 'FAST');
+    } else {
+      pdf.setFillColor(225, 236, 232);
+      pdf.roundedRect(margin + 5, y + 6, 100, 46, 2, 2, 'F');
+      drawText('Imagen del hotel', margin + 55, y + 30, { size: 8, bold: true, color: greenDark, align: 'center' });
+    }
+    const hotelX = margin + 110;
+    drawText(limpiar(cotizacion.nombre_hotel) || 'Hotel seleccionado', hotelX, y + 12, { size: 12, bold: true, color: navy, maxWidth: contentWidth - 116 });
+    drawIcon('calendar', hotelX, y + 22, greenDark, 0.85);
+    drawText(`${fecha(cotizacion.fecha_entrada)} - ${fecha(cotizacion.fecha_salida)}`, hotelX + 7, y + 25, { size: 7.2, color: textColor });
+    drawIcon('moon', hotelX, y + 29, greenDark, 0.85);
+    drawText(`${cotizacion.noches ?? 0} noches`, hotelX + 7, y + 32, { size: 7.2, color: textColor });
+    drawIcon('home', hotelX, y + 36, greenDark, 0.85);
+    drawText(regimenCotizacion, hotelX + 7, y + 39, { size: 7.2, color: textColor });
+    drawIcon('users', hotelX, y + 43, greenDark, 0.85);
+    drawText(habitacionesVista[0]?.detalleHabitacion || habitacionesFuente || '-', hotelX + 7, y + 46, { size: 7.2, color: textColor, maxWidth: contentWidth - 123 });
+    y += hotelBoxH + 6;
 
-      pdf.setFont('helvetica', 'normal');
-      pdf.setTextColor(...textColor);
-      opcionesPrecio.forEach((opcion, index) => {
-        ensureSpace(rowH + 1);
-        if (index % 2 === 0) {
-          pdf.setFillColor(246, 248, 252);
-          pdf.rect(tableX, y, tableW, rowH, 'F');
+    type PdfOption = {
+      title: string;
+      subtitle: string;
+      total: number | null;
+      field: 'precioSinSeguro' | 'precioConSeguro' | 'precioMeses';
+      conditionsField: 'condicionesSinSeguro' | 'condicionesConSeguro' | 'condicionesMeses';
+      payment?: (habitacion: HabitacionCotizacionPublicaVista) => string[];
+    };
+
+    const sumBy = (field: PdfOption['field']): number | null => {
+      const values = habitacionesVista.map((item) => item[field]).filter((value): value is number => value !== null);
+      return values.length ? values.reduce((acc, value) => acc + value, 0) : null;
+    };
+
+    const opcionesBase: PdfOption[] = [
+      {
+        title: 'Opcion 1 - No reembolsable',
+        subtitle: 'Mejor precio',
+        total: sumBy('precioSinSeguro'),
+        field: 'precioSinSeguro',
+        conditionsField: 'condicionesSinSeguro'
+      },
+      {
+        title: 'Opcion 2 - Apartado',
+        subtitle: 'Reserva con anticipo',
+        total: sumBy('precioConSeguro'),
+        field: 'precioConSeguro',
+        conditionsField: 'condicionesConSeguro',
+        payment: (habitacion) => [
+          `Anticipo para reservar: ${moneda(habitacion.apartadoSeguro)}`,
+          `Saldo pendiente: ${moneda(habitacion.pagueDespuesSeguro)}`,
+          `Fecha limite de pago: ${fecha(habitacion.fechaLimiteSeguro)}`
+        ]
+      },
+      {
+        title: 'Opcion 3 - Pago a meses',
+        subtitle: 'Facilidad de pago',
+        total: sumBy('precioMeses'),
+        field: 'precioMeses',
+        conditionsField: 'condicionesMeses',
+        payment: (habitacion) => [
+          `Anticipo para reservar: ${moneda(habitacion.apartadoMeses)}`,
+          `Saldo pendiente: ${moneda(habitacion.pagueDespuesMeses)}`,
+          `Fecha limite de pago: ${fecha(habitacion.fechaLimiteMeses)}`
+        ]
+      }
+    ];
+    const opciones = opcionesBase.filter((opcion) => opcion.total !== null);
+
+    const drawOptionCard = (opcion: PdfOption, x: number, yPos: number, w: number, h: number): void => {
+      roundedBox(x, yPos, w, h);
+      pdf.setFillColor(...greenDark);
+      pdf.roundedRect(x, yPos, w, 12, 3, 3, 'F');
+      drawText(opcion.title, x + w / 2, yPos + 7.6, { size: 7, bold: true, color: [255, 255, 255], align: 'center' });
+      drawText(opcion.subtitle, x + w / 2, yPos + 20, { size: 6.2, bold: true, color: greenDark, align: 'center' });
+      drawIcon('bed', x + 4, yPos + 25.3, greenDark, 0.8);
+      drawText('Resumen de hospedaje', x + 11, yPos + 29, { size: 6.2, bold: true, color: greenDark });
+
+      let yy = yPos + 35;
+      habitacionesVista.forEach((habitacion) => {
+        const precio = habitacion[opcion.field];
+        if (precio === null) return;
+        drawIcon('bed', x + 4, yy - 3.3, mutedColor, 0.58);
+        drawText(limpiar(habitacion.tipoHabitacion) || limpiar(habitacion.hotelNombre) || `Habitacion ${habitacion.indice}`, x + 8, yy, { size: 6.3, color: textColor, maxWidth: w - 38 });
+        drawText(moneda(precio), x + w - 4, yy, { size: 6.6, bold: true, color: greenDark, align: 'right' });
+        yy += 4.2;
+        if (habitacion.detalleHabitacion) {
+          drawText(habitacion.detalleHabitacion, x + 7, yy, { size: 5.8, color: mutedColor, maxWidth: w - 11 });
+          yy += 4.2;
         }
-        pdf.text(opcion.tipo, tableX + 3, y + 5.5);
-        pdf.text(opcion.precio, tableX + colTypeW + 3, y + 5.5);
-        y += rowH;
       });
 
-      pdf.setDrawColor(208, 217, 230);
-      pdf.rect(tableX, y - (rowH * (opcionesPrecio.length + 1)), tableW, rowH * (opcionesPrecio.length + 1));
-      pdf.line(tableX + colTypeW, y - (rowH * (opcionesPrecio.length + 1)), tableX + colTypeW, y);
-      y += 8;
-    }
-
-    drawBlockTitle('Politicas y condiciones');
-    if (!politicas.length) {
-      ensureSpace(8);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setTextColor(...mutedColor);
-      pdf.setFontSize(9.2);
-      pdf.text('- Sin politicas registradas', margin + 3, y + 4);
-      y += 10;
-    } else {
-      pdf.setTextColor(...textColor);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(9.2);
-      for (const item of politicas) {
-        const wrapped = pdf.splitTextToSize(`- ${item}`, pageWidth - margin * 2 - 6);
-        const blockHeight = wrapped.length * 4.8 + 1.4;
-        ensureSpace(blockHeight + 1);
-        pdf.text(wrapped, margin + 3, y + 4);
-        y += blockHeight;
+      if (opcion.payment) {
+        yy += 2;
+        drawIcon('card', x + 4, yy - 3.2, greenDark, 0.78);
+        drawText('Esquema de pago', x + 11, yy, { size: 6.2, bold: true, color: greenDark });
+        yy += 4;
+        for (const line of opcion.payment(habitacionesVista[0])) {
+          drawText(line, x + 4, yy, { size: 5.8, color: textColor, maxWidth: w - 8 });
+          yy += 3.8;
+        }
       }
+
+      pdf.setDrawColor(...borderColor);
+      pdf.line(x + 4, yy + 2, x + w - 4, yy + 2);
+      drawText('Total:', x + 4, yy + 8, { size: 7, bold: true, color: textColor });
+      drawText(moneda(opcion.total), x + 4, yy + 18, { size: 17, bold: true, color: greenDark });
+      drawText('MXN', x + w - 8, yy + 18, { size: 7, bold: true, color: greenDark, align: 'right' });
+      yy += 29;
+
+      drawText('Politicas de reserva', x + 4, yy, { size: 6.3, bold: true, color: greenDark });
+      yy += 4;
+      const condiciones = habitacionesVista
+        .flatMap((habitacion) => habitacion[opcion.conditionsField] ?? [])
+        .map((condicion) => limpiar(condicion?.descripcion))
+        .filter((item, index, self) => item && self.indexOf(item) === index);
+      const politicas = condiciones.length ? condiciones : ['Pago total para confirmar', 'No permite cambios ni cancelaciones'];
+      for (const politica of politicas.slice(0, 5)) {
+        drawIcon('check', x + 4, yy - 3.1, greenDark, 0.58);
+        const lines = split(politica, w - 13);
+        drawText(lines, x + 10, yy, { size: 5.7, color: textColor });
+        yy += lines.length * 3.3 + 1;
+      }
+    };
+
+    const cardGap = 5;
+    let optionIndex = 0;
+    while (optionIndex < opciones.length) {
+      const rowOptions = opciones.slice(optionIndex, optionIndex + 3);
+      const rowCount = rowOptions.length;
+      const cardW = (contentWidth - cardGap * (rowCount - 1)) / rowCount;
+      const cardH = 127;
+      ensureSpace(cardH + 6, optionIndex > 0);
+      rowOptions.forEach((opcion, idx) => drawOptionCard(opcion, margin + idx * (cardW + cardGap), y, cardW, cardH));
+      y += cardH + 7;
+      optionIndex += 3;
     }
 
-    ensureSpace(22);
-    pdf.setDrawColor(193, 204, 219);
-    pdf.line(margin, y + 3, pageWidth - margin, y + 3);
-    pdf.setTextColor(...mutedColor);
-    pdf.setFontSize(8.8);
-    pdf.setFont('helvetica', 'normal');
-    pdf.text('Documento generado por Trotapie. Esta proforma no constituye confirmacion de reserva.', margin, y + 9);
-    pdf.text(`URL de cotizacion: ${window.location.origin}/cotizacion/${publicId}`, margin, y + 14);
+    ensureSpace(24);
+    roundedBox(margin, y, contentWidth, 18);
+    drawText('Informacion importante', margin + 4, y + 6, { size: 8, bold: true, color: navy });
+    drawText('Los precios son informativos, sujetos a disponibilidad del producto.', margin + 4, y + 11, { size: 5.9, color: textColor });
+    drawText('No podemos garantizar estos precios y/o producto sigan disponibles al momento de la contratacion.', margin + 4, y + 15, { size: 5.9, color: textColor });
 
     if (options?.descargar !== false) {
       pdf.save(`cotizacion-${publicId}.pdf`);
