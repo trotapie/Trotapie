@@ -198,7 +198,7 @@
                           />
                         </a>
                       } @else {
-                        <span class="text-sm text-gray-400">-</span>
+                        <span class="text-sm text-amber-700">Sin imagen cargada</span>
                       }
                     </td>
                     <td class="px-4 py-3">
@@ -396,18 +396,18 @@
 
       <div class="mt-4 flex-1 overflow-y-auto pr-1">
         <form [formGroup]="formActividad" class="space-y-4">
-          <mat-form-field class="w-full">
-            <mat-label>Imagen principal / respaldo (URL)</mat-label>
-            <input matInput formControlName="imagen_fondo" />
-          </mat-form-field>
-
-          @if (formActividad.get('imagen_fondo')?.value) {
-            <div class="overflow-hidden rounded-xl border border-gray-200 bg-gray-50 p-2">
-              <img [src]="formActividad.get('imagen_fondo')?.value" alt="Preview imagen fondo" class="h-48 w-full rounded-lg object-cover" />
-            </div>
-          }
-
           @if (mostrarModalEditarActividad) {
+            <mat-form-field class="w-full">
+              <mat-label>Imagen principal / respaldo (URL)</mat-label>
+              <input matInput formControlName="imagen_fondo" />
+            </mat-form-field>
+
+            @if (formActividad.get('imagen_fondo')?.value) {
+              <div class="overflow-hidden rounded-xl border border-gray-200 bg-gray-50 p-2">
+                <img [src]="formActividad.get('imagen_fondo')?.value" alt="Preview imagen fondo" class="h-48 w-full rounded-lg object-cover" />
+              </div>
+            }
+
             <div class="rounded-xl border border-gray-200 bg-gray-50 p-4">
               <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
                 <div>
@@ -434,16 +434,9 @@
               </div>
             </div>
           } @else {
-            <mat-form-field class="w-full">
-              <mat-label>Imagen principal / respaldo (URL)</mat-label>
-              <input matInput formControlName="imagen_fondo" />
-            </mat-form-field>
-
-            @if (formActividad.get('imagen_fondo')?.value) {
-              <div class="overflow-hidden rounded-xl border border-gray-200 bg-gray-50 p-2">
-                <img [src]="formActividad.get('imagen_fondo')?.value" alt="Preview imagen fondo" class="h-48 w-full rounded-lg object-cover" />
-              </div>
-            }
+            <div class="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
+              Puedes crear la actividad sin imagen. Al guardarla, agrega las imágenes desde el editor de imágenes.
+            </div>
           }
 
           <div formGroupName="traducciones" class="space-y-4">

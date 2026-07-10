@@ -228,7 +228,7 @@ export class ActividadesService {
         return;
       }
 
-      const nombre = String(nombreRaw ?? '').trim() || 'General';
+      const nombre = String(nombreRaw ?? '').trim();
       folders.push({
         id: fallbackId,
         nombre,
@@ -281,15 +281,9 @@ export class ActividadesService {
       ?? result
     );
 
-    if (imagenesPlanas.length) {
-      return [{
-        id: 'general',
-        nombre: 'General',
-        imagenes: imagenesPlanas
-      }];
-    }
-
-    return [];
+    return imagenesPlanas.length
+      ? [{ id: 'sin-carpeta', nombre: '', imagenes: imagenesPlanas }]
+      : [];
   }
 
   async obtenerImagenesActividadDesdeDrive(folderUrlOrId: string): Promise<IDriveActividadImportFolder[]> {
@@ -1231,6 +1225,16 @@ export class ActividadesService {
       p_accion: payload.accion,
       p_carpeta_destino_id: payload.carpeta_destino_id ?? null,
       p_nueva_carpeta_nombre: payload.nueva_carpeta_nombre ?? null
+    });
+
+    if (error) throw error;
+    return data;
+  }
+
+  async eliminarGaleriaActividadAdmin(payload: { destino_id: number; actividad_id: number }) {
+    const { data, error } = await this.client.rpc('eliminar_galeria_actividad_admin', {
+      p_destino_id: payload.destino_id,
+      p_actividad_id: payload.actividad_id
     });
 
     if (error) throw error;

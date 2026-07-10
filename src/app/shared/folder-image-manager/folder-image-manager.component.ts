@@ -41,6 +41,8 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
   @Input() activeImageId: string | number | null = null;
   @Input() showDetailPanel = true;
   @Input() isSavingFolder = false;
+  @Input() showDeleteAllImages = false;
+  @Input() isDeletingAllImages = false;
 
   @Output() imageSelected = new EventEmitter<FolderImageManagerImage>();
   @Output() folderSelected = new EventEmitter<FolderImageManagerFolder | null>();
@@ -48,6 +50,7 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
   @Output() renameFolder = new EventEmitter<{ folder: FolderImageManagerFolder; name: string }>();
   @Output() deleteFolder = new EventEmitter<FolderImageManagerFolder>();
   @Output() addImage = new EventEmitter<void>();
+  @Output() deleteAllImages = new EventEmitter<void>();
   @Output() imageDroppedOnFolder = new EventEmitter<{ image: FolderImageManagerImage; folder: FolderImageManagerFolder }>();
   @Output() editImage = new EventEmitter<FolderImageManagerImage>();
   @Output() makePrimaryImage = new EventEmitter<FolderImageManagerImage>();

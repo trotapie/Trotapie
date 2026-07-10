@@ -493,11 +493,6 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
         this.limpiarTexto(raw.imagen_fondo)
       );
 
-      if (!imagenPrincipal && !imagenes.length) {
-        this.error = 'Agrega al menos una imagen o captura una imagen de fondo.';
-        return;
-      }
-
       const guardada = await this.actividadesService.guardarActividadDestinoAdmin({
         destino_id: this.destinoId,
         actividad_id: actividadId,
@@ -527,22 +522,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
           id: guardada.id,
           imagen_fondo: imagenPrincipal ?? ''
         });
-        actividadForm.setControl(
-          'imagenes',
-          this.buildImagenesFormArray(
-                imagenes.length
-                  ? imagenes
-                  : [{
-                  id: null,
-                  imagen_url: imagenPrincipal ?? '',
-                  activa: true,
-                  orden: 1,
-                  vigencia_desde: null,
-                  vigencia_hasta: null,
-                  created_at: null
-                }]
-          )
-        );
+        actividadForm.setControl('imagenes', this.buildImagenesFormArray(imagenes));
 
         this.idiomas.forEach((idioma) => {
           actividadExistente.get(['traducciones', idioma.codigo, 'nombre'])?.setValue(
@@ -556,14 +536,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
         const actividadGroup = this.buildActividadGroup({
           id: guardada.id,
           imagen_fondo: imagenPrincipal ?? '',
-          imagenes: imagenes.length ? imagenes : [{
-            id: null,
-            imagen_url: imagenPrincipal ?? '',
-            activa: true,
-            orden: 1,
-            vigencia_desde: null,
-            vigencia_hasta: null
-          }],
+          imagenes,
           traducciones: raw.traducciones ?? {}
         });
         this.actividadesArray.push(actividadGroup);

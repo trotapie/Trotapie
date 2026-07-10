@@ -30,6 +30,7 @@ type DriveActividadFolderDraft = {
   nombre: string;
   imagenes: IDriveActividadImportImage[];
   seleccionado: boolean;
+  requiereNombreCarpeta: boolean;
   carpetaDestinoId: number | null;
   carpetaDestinoNombre: string;
 };
@@ -106,6 +107,8 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   procesandoEliminarCarpeta = false;
   procesandoCrearCarpeta = false;
   mostrarModalConfirmarMoverImagen = false;
+  mostrarModalConfirmarEliminarGaleria = false;
+  eliminandoGaleria = false;
   imagenAReubicar: {
     draft_key: string;
     imagen_id: number | null;
@@ -1050,11 +1053,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   }
 
   agregarImagen() {
-    if (!this.obtenerCarpetaDefaultActividad()) {
-      this.error = 'Crea una carpeta antes de agregar imagenes.';
-      return;
-    }
-
+    this.error = '';
     this.mostrarModalTipoAgregarImagen = true;
     this.setModalLocked(true);
   }
@@ -1100,10 +1099,9 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
 
     try {
       const folders = await this.actividadesService.obtenerImagenesActividadDesdeDrive(driveUrl);
-      const carpetaDefault = this.obtenerCarpetaDefaultActividad();
 
       this.carpetasDriveActividad = folders.map((folder, index) => {
-        const nombreNormalizado = this.normalizarCarpeta(folder.nombre) || `Carpeta ${index + 1}`;
+        const nombreNormalizado = this.normalizarCarpeta(folder.nombre);
         const carpetaDestino = this.obtenerCarpetaPorNombre(nombreNormalizado);
 
         return {
@@ -1111,7 +1109,8 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
           nombre: nombreNormalizado,
           imagenes: folder.imagenes,
           seleccionado: true,
-          carpetaDestinoId: carpetaDestino?.id ?? carpetaDefault?.id ?? null,
+          requiereNombreCarpeta: !nombreNormalizado,
+          carpetaDestinoId: carpetaDestino?.id ?? null,
           carpetaDestinoNombre: carpetaDestino?.nombre ?? nombreNormalizado
         };
       });
@@ -1146,14 +1145,33 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     });
   }
 
+  actualizarNombreCarpetaDrive(folderId: string, nombre: string): void {
+    const nombreNormalizado = this.normalizarCarpeta(nombre);
+
+    this.carpetasDriveActividad = this.carpetasDriveActividad.map((carpeta) =>
+      carpeta.id === folderId
+        ? {
+            ...carpeta,
+            nombre: nombreNormalizado,
+            carpetaDestinoNombre: nombreNormalizado
+          }
+        : carpeta
+    );
+  }
+
   trackByDriveFolder(_: number, folder: DriveActividadFolderDraft): string {
-    return `${folder.id}-${folder.nombre}`;
+    return folder.id;
   }
 
   async cargarImagenesSeleccionadasDesdeDrive(): Promise<void> {
     const carpetasSeleccionadas = this.carpetasDriveActividad.filter((carpeta) => carpeta.seleccionado && carpeta.imagenes.length);
     if (!carpetasSeleccionadas.length) {
       this.error = 'Selecciona al menos una carpeta de Drive para cargar.';
+      return;
+    }
+
+    if (carpetasSeleccionadas.some((carpeta) => !this.normalizarCarpeta(carpeta.carpetaDestinoNombre))) {
+      this.error = 'Escribe el nombre de la carpeta que se creara para las imagenes sin carpeta en Drive.';
       return;
     }
 
@@ -1365,6 +1383,54 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       this.editorImagenAbierto = true;
     }
     this.normalizarOrdenImagenes();
+  }
+
+  abrirModalConfirmarEliminarGaleria(): void {
+    if (!this.imagenesArray.length && !this.carpetasActividad.length) {
+      return;
+    }
+
+    this.mostrarModalConfirmarEliminarGaleria = true;
+    this.setModalLocked(true);
+  }
+
+  cerrarModalConfirmarEliminarGaleria(): void {
+    if (this.eliminandoGaleria) {
+      return;
+    }
+
+    this.mostrarModalConfirmarEliminarGaleria = false;
+    this.setModalLocked(false);
+  }
+
+  async eliminarGaleriaActividad(): Promise<void> {
+    if (this.eliminandoGaleria || this.guardandoImagenes || this.guardandoTraducciones) {
+      return;
+    }
+
+    this.eliminandoGaleria = true;
+    this.error = '';
+
+    try {
+      await this.actividadesService.eliminarGaleriaActividadAdmin({
+        destino_id: this.destinoId,
+        actividad_id: this.actividadId
+      });
+
+      this.pendientesImagenesCarpeta.clear();
+      this.imagenEditandoIndex = null;
+      this.imagenSeleccionadaIndex = null;
+      this.editorImagenAbierto = false;
+      this.carpetasActividad = [];
+      this.form.setControl('imagenes', this.fb.array([]));
+      this.carpetaActiva = 'Todas';
+      this.mostrarModalConfirmarEliminarGaleria = false;
+      this.setModalLocked(false);
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudieron eliminar las imagenes y carpetas de la actividad.';
+    } finally {
+      this.eliminandoGaleria = false;
+    }
   }
 
   moverImagen(index: number, delta: number) {

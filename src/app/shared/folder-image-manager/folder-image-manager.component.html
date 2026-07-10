@@ -74,6 +74,12 @@
           <mat-icon class="mr-2 icon-size-4 text-white" [svgIcon]="'heroicons_outline:photo'"></mat-icon>
           Agregar imagen
         </button>
+        @if (showDeleteAllImages) {
+          <button mat-stroked-button color="warn" type="button" (click)="deleteAllImages.emit()" [disabled]="isDeletingAllImages">
+            <mat-icon class="mr-2 icon-size-4" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+            Eliminar todas
+          </button>
+        }
       </div>
     </div>
   </div>

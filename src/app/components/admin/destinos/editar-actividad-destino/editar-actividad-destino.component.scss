@@ -1,6 +1,12 @@
 /* Layout reverted to rely on folder-image-manager design */
 
 :host {
+  .modal-blocker {
+    // The routed admin shell starts 24px below the viewport in some layouts.
+    // Extend fixed modals upward so their backdrop always covers that strip.
+    top: -1.5rem;
+  }
+
   .image-edit-modal {
     max-height: min(92vh, 920px);
     display: flex;
