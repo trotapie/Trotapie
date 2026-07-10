@@ -1,3 +1,5 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.56.0';
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -26,6 +28,7 @@ const DEFAULT_REMITENTE_NOMBRE = 'Trotapie';
 const DEFAULT_TITULO_CORREO = 'Tu cotizacion esta lista';
 const DEFAULT_MENSAJE_CORREO = 'Te compartimos tu cotizacion en PDF.';
 const LOG_PREFIX = '[enviar-correo]';
+const APP_URL = 'https://app.trotapie.com';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -69,7 +72,6 @@ Deno.serve(async (req) => {
     const noches = Number(body.noches ?? 0);
     const pdfBase64 = body.pdf_base64?.trim() || '';
     const pdfFilename = body.pdf_filename?.trim() || 'cotizacion.pdf';
-
     const correos = splitEmails(correoRaw);
     console.log(
       `${LOG_PREFIX}[${requestId}] Payload recibido. public_id=${publicId || 'N/A'} correos=${correos.length} pdfAdjunto=${pdfBase64 ? 'si' : 'no'}`
@@ -121,9 +123,11 @@ Deno.serve(async (req) => {
     const mensajeFinal = mensaje || DEFAULT_MENSAJE_CORREO;
     const replyTo = Deno.env.get('MAILEROO_REPLY_TO') || DEFAULT_REPLY_TO;
     const remitenteNombre = DEFAULT_REMITENTE_NOMBRE;
+    const firma = publicId ? await obtenerFirmaEmpleado(publicId) : null;
+    const firmaHtml = construirFirmaHtml(firma);
 
     const html = `
-      <div style="font-family: Arial, sans-serif; color: #111827; max-width: 600px; margin: 0 auto;">
+      <div style="font-family: Arial, sans-serif; color: #111827; width: 100%; max-width: none; margin: 0;">
         <div style="padding: 24px; border: 1px solid #e5e7eb; border-radius: 14px;">
           <h2 style="margin: 0 0 12px 0; color: #111827;">
             ${escapeHtml(tituloCorreo)}
@@ -139,9 +143,7 @@ Deno.serve(async (req) => {
 
           <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
 
-          <p style="font-size: 13px; color: #6b7280;">
-            Este correo fue enviado por ${escapeHtml(remitenteNombre)}.
-          </p>
+          ${firmaHtml}
         </div>
       </div>
     `;
@@ -153,7 +155,7 @@ Hola ${nombre},
 
 ${mensajeFinal}
 
-Este correo fue enviado por ${remitenteNombre}.
+Te atendio: ${firma?.nombre || remitenteNombre}.
     `.trim();
 
     const googleScriptResult = await enviarPrimeroConGoogleScript({
@@ -167,6 +169,7 @@ Este correo fue enviado por ${remitenteNombre}.
       replyTo,
       pdfBase64,
       pdfNombre: pdfFilename,
+      firmaHtml,
       requestId
     });
 
@@ -345,6 +348,91 @@ function escapeHtml(value: string): string {
     .replaceAll("'", '&#039;');
 }
 
+type FirmaEmpleado = {
+  nombre: string;
+  cargo: string;
+  email: string;
+  telefono: string;
+};
+
+async function obtenerFirmaEmpleado(publicId: string): Promise<FirmaEmpleado | null> {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.warn(`${LOG_PREFIX} No se pudo cargar la firma: faltan credenciales de Supabase.`);
+    return null;
+  }
+
+  const client = createClient(supabaseUrl, serviceRoleKey);
+  const { data: solicitud, error: solicitudError } = await client
+    .from('solicitudes_cotizacion')
+    .select('empleado_id')
+    .eq('public_id', publicId)
+    .maybeSingle();
+
+  if (solicitudError || !solicitud?.empleado_id) {
+    if (solicitudError) console.warn(`${LOG_PREFIX} No se pudo localizar la solicitud para la firma.`);
+    return null;
+  }
+
+  const { data: empleado, error: empleadoError } = await client
+    .from('empleados')
+    .select('nombre, cargo, email, telefono')
+    .eq('id', solicitud.empleado_id)
+    .maybeSingle();
+
+  if (empleadoError || !empleado) {
+    if (empleadoError) console.warn(`${LOG_PREFIX} No se pudieron cargar los datos del empleado.`);
+    return null;
+  }
+
+  return {
+    nombre: String(empleado.nombre ?? '').trim() || DEFAULT_REMITENTE_NOMBRE,
+    cargo: String(empleado.cargo ?? '').trim(),
+    email: String(empleado.email ?? '').trim().toLowerCase(),
+    telefono: String(empleado.telefono ?? '').trim(),
+  };
+}
+
+function construirFirmaHtml(firma: FirmaEmpleado | null): string {
+  return `
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;max-width:none;border-collapse:collapse;font-family:Arial,sans-serif;font-size:0;line-height:0;">
+      <tr>
+        <td style="padding:20px 0 0;font-size:0;line-height:0;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;border-collapse:collapse;font-size:0;line-height:0;">
+            <tr>
+              <td width="22%" valign="top" style="padding:0;font-size:0;line-height:0;">
+                <a href="${APP_URL}" style="text-decoration:none;"><img src="${APP_URL}/assets/images/banner-firma-qr.png" alt="Escanea el codigo QR para conocer Trotapie" width="430" style="display:block;width:100%;height:auto;border:0;"></a>
+              </td>
+              <td width="24%" align="center" valign="middle" style="padding:0;background:#ffffff;font-size:0;line-height:0;">
+                <a href="${APP_URL}" style="text-decoration:none;"><img src="${APP_URL}/assets/images/logos/trotapie%20logo.gif" alt="Trotapie" width="300" style="display:block;width:100%;max-width:300px;height:auto;margin:0 auto;border:0;"></a>
+              </td>
+              <td width="54%" valign="top" style="padding:0;font-size:0;line-height:0;">
+                <img src="${APP_URL}/assets/images/banner-firma-datos.png" alt="Firma de Trotapie" width="1083" usemap="#firma-contacto" style="display:block;width:100%;height:auto;border:0;">
+              </td>
+            </tr>
+            <tr>
+              <td colspan="3" style="padding:0;font-size:0;line-height:0;">
+                <img src="${APP_URL}/assets/images/banner-firma-footer.png" alt="Redes sociales de Trotapie" width="2000" usemap="#firma-redes" style="display:block;width:100%;height:auto;border:0;">
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+    <map name="firma-contacto" id="firma-contacto">
+      <area shape="rect" coords="35,285,460,365" href="mailto:jtriego@trotapie.com" alt="Enviar correo a Javier Triego">
+      <area shape="rect" coords="35,350,390,440" href="https://wa.me/526691957651" alt="Enviar WhatsApp a Javier Triego">
+    </map>
+    <map name="firma-redes" id="firma-redes">
+      <area shape="rect" coords="145,0,265,165" href="https://instagram.com/trotapie" alt="Instagram de Trotapie">
+      <area shape="rect" coords="275,0,410,165" href="https://facebook.com/trotapie" alt="Facebook de Trotapie">
+      <area shape="rect" coords="420,0,555,165" href="https://www.tiktok.com/@trotapie" alt="TikTok de Trotapie">
+      <area shape="rect" coords="555,0,700,165" href="https://wa.me/526691957651" alt="WhatsApp de Javier Triego">
+      <area shape="rect" coords="685,0,850,165" href="${APP_URL}" alt="Sitio web de Trotapie">
+    </map>`;
+}
+
 type GoogleScriptSendInput = {
   url: string;
   correos: string[];
@@ -356,6 +444,7 @@ type GoogleScriptSendInput = {
   replyTo: string;
   pdfBase64?: string;
   pdfNombre?: string;
+  firmaHtml: string;
   requestId: string;
 };
 
@@ -393,7 +482,8 @@ async function enviarPrimeroConGoogleScript(input: GoogleScriptSendInput): Promi
           remitenteNombre: input.remitenteNombre,
           replyTo: input.replyTo,
           pdfBase64: input.pdfBase64 || '',
-          pdfNombre: input.pdfNombre || 'cotizacion.pdf'
+          pdfNombre: input.pdfNombre || 'cotizacion.pdf',
+          firmaHtml: input.firmaHtml,
         }),
       });
 
@@ -472,4 +562,3 @@ async function safeJson(response: Response): Promise<any> {
     return {};
   }
 }
-
