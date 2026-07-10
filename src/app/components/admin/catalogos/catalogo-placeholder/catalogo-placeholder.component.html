@@ -33,6 +33,15 @@
                     </button>
                     }
 
+                    @if (tieneOrden) {
+                    <button mat-raised-button color="primary" class="text-white" type="button"
+                        [disabled]="loading || !hayCambiosOrden || guardandoOrden || editingId !== null"
+                        (click)="actualizarOrden()">
+                        <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:arrows-up-down'"></mat-icon>
+                        {{ guardandoOrden ? 'Actualizando...' : 'Actualizar orden' }}
+                    </button>
+                    }
+
                     @if (esCatalogoAmenidades) {
                     <button mat-raised-button color="accent" class="text-white" type="button"
                         (click)="toggleFiltrosAmenidades()">
@@ -272,6 +281,13 @@
                                 <mat-icon [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
                             </button>
                             } @else {
+                            @if (tieneOrden) {
+                            <button mat-icon-button type="button" cdkDragHandle
+                                [disabled]="guardandoOrden || editingId !== null" matTooltip="Reordenar"
+                                aria-label="Reordenar registro">
+                                <mat-icon class="cursor-move">drag_indicator</mat-icon>
+                            </button>
+                            }
                             <button mat-icon-button [matTooltip]="esCatalogoAtracciones ? 'Editar atraccion' : 'Editar'"
                                 (click)="iniciarEdicion(item)">
                                 <mat-icon [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
@@ -331,7 +347,7 @@
 <div class="fixed inset-0 z-[3000] flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-black/50" @backdropFade></div>
     <div
-        class="relative z-10 flex w-full max-h-[92vh] flex-col overflow-hidden rounded-2xl bg-white p-4 shadow-2xl dark:bg-gray-900 sm:p-6"
+        class="catalogo-form-modal relative z-10 flex w-full max-h-[92vh] flex-col overflow-hidden rounded-2xl bg-white p-4 shadow-2xl dark:bg-gray-900 sm:p-6"
         [class.max-w-lg]="!esCatalogoTarifas"
         [class.max-w-4xl]="esCatalogoTarifas">
         <h2 class="shrink-0 text-xl font-semibold text-gray-900 dark:text-white">
@@ -383,12 +399,9 @@
                 </mat-form-field>
             </div>
 
-            <div class="flex items-center gap-3">
-                <span class="text-sm font-medium text-gray-700">{{ !!editingDraft['estatus'] ? 'Activo' : 'Inactivo' }}</span>
-                <mat-slide-toggle [checked]="!!editingDraft['estatus']"
-                    (change)="actualizarBooleanDraft('estatus', $any($event.target).checked)">
-                </mat-slide-toggle>
-            </div>
+            <app-custom-switch [checked]="!!editingDraft['estatus']"
+                [label]="editingDraft['estatus'] ? 'Activo' : 'Inactivo'"
+                (change)="actualizarBooleanDraft('estatus', $event)"></app-custom-switch>
             }
 
             @if (esCatalogoOrigenReservacion) {
@@ -406,12 +419,10 @@
                 </mat-form-field>
             </div>
 
-            <div class="flex items-center gap-3">
-                <span class="text-sm font-medium text-gray-700">{{ !!editingDraft['estatus'] ? 'Activo' : 'Inactivo' }}</span>
-                <mat-slide-toggle [checked]="!!editingDraft['estatus']"
-                    (change)="actualizarBooleanDraft('estatus', $any($event.target).checked)">
-                </mat-slide-toggle>
-            </div>
+            <mat-slide-toggle [checked]="!!editingDraft['estatus']"
+                (change)="actualizarBooleanDraft('estatus', $event.checked)">
+                {{ editingDraft['estatus'] ? 'Activo' : 'Inactivo' }}
+            </mat-slide-toggle>
             }
 
             @if (esCatalogoRolesEmpresa) {
@@ -429,12 +440,9 @@
                 </mat-form-field>
             </div>
 
-            <div class="flex items-center gap-3">
-                <span class="text-sm font-medium text-gray-700">{{ !!editingDraft['estatus'] ? 'Activo' : 'Inactivo' }}</span>
-                <mat-slide-toggle [checked]="!!editingDraft['estatus']"
-                    (change)="actualizarBooleanDraft('estatus', $any($event.target).checked)">
-                </mat-slide-toggle>
-            </div>
+            <app-custom-switch [checked]="!!editingDraft['estatus']"
+                [label]="editingDraft['estatus'] ? 'Activo' : 'Inactivo'"
+                (change)="actualizarBooleanDraft('estatus', $event)"></app-custom-switch>
             }
 
             @if (esCatalogoTarifas) {
@@ -726,12 +734,9 @@
                             (input)="actualizarTextoDraft('orden', $any($event.target).value)" />
                     </mat-form-field>
 
-                    <div class="flex items-center gap-3">
-                        <span class="text-sm font-medium text-gray-700">{{ !!editingDraft['activo'] ? 'Activo' : 'Inactivo' }}</span>
-                        <mat-slide-toggle [checked]="!!editingDraft['activo']"
-                            (change)="actualizarBooleanDraft('activo', $any($event.target).checked)">
-                        </mat-slide-toggle>
-                    </div>
+                    <app-custom-switch [checked]="!!editingDraft['activo']"
+                        [label]="editingDraft['activo'] ? 'Activo' : 'Inactivo'"
+                        (change)="actualizarBooleanDraft('activo', $event)"></app-custom-switch>
                 </div>
 
                 <mat-form-field appearance="outline" class="w-full">
@@ -831,12 +836,9 @@
                             (input)="actualizarTextoCreacion('orden', $any($event.target).value)" />
                     </mat-form-field>
 
-                    <div class="flex items-center gap-3">
-                        <span class="text-sm font-medium text-gray-700">{{ !!nuevoRegistroDraft['activo'] ? 'Activo' : 'Inactivo' }}</span>
-                        <mat-slide-toggle [checked]="!!nuevoRegistroDraft['activo']"
-                            (change)="actualizarBooleanCreacion('activo', $any($event.target).checked)">
-                        </mat-slide-toggle>
-                    </div>
+                    <app-custom-switch [checked]="!!nuevoRegistroDraft['activo']"
+                        [label]="nuevoRegistroDraft['activo'] ? 'Activo' : 'Inactivo'"
+                        (change)="actualizarBooleanCreacion('activo', $event)"></app-custom-switch>
                 </div>
 
                 <mat-form-field appearance="outline" class="w-full">
@@ -933,7 +935,21 @@
             </div>
             }
 
-            @if (!esCatalogoPoliticas && !esCatalogoTarifas && !esCatalogoTiposHabitacion && !esCatalogoAmenidades && !esCatalogoDescuentos && !esCatalogoTipoImagen && !esCatalogoAtracciones && !esCatalogoConceptos && !esCatalogoTratamientos && !esCatalogoOrigenReservacion && !esCatalogoRolesEmpresa) {
+            @if (esCatalogoEstatus) {
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Clave</mat-label>
+                    <input matInput [value]="editingDraft['clave'] ?? ''"
+                        (input)="actualizarTextoDraft('clave', $any($event.target).value)" maxlength="50" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Nombre</mat-label>
+                    <input matInput [value]="editingDraft['nombre'] ?? ''"
+                        (input)="actualizarTextoDraft('nombre', $any($event.target).value)" maxlength="120" />
+                </mat-form-field>
+            </div>
+            } @else if (!esCatalogoPoliticas && !esCatalogoTarifas && !esCatalogoTiposHabitacion && !esCatalogoAmenidades && !esCatalogoDescuentos && !esCatalogoTipoImagen && !esCatalogoAtracciones && !esCatalogoConceptos && !esCatalogoTratamientos && !esCatalogoOrigenReservacion && !esCatalogoRolesEmpresa) {
             <mat-form-field appearance="outline" class="w-full">
                 <mat-label>Nombre</mat-label>
                 <input matInput [value]="editingDraft['nombre'] ?? ''"
@@ -968,7 +984,7 @@
             </div>
             }
 
-            @if (esCatalogoIdiomas || esCatalogoPoliticas || esCatalogoTarifas || esCatalogoAmenidades) {
+            @if (esCatalogoEstatus || esCatalogoIdiomas || esCatalogoPoliticas || esCatalogoTarifas || esCatalogoAmenidades) {
             <div class="switch-row">
                 <span class="switch-label">{{ !!editingDraft['activo'] ? 'Activo' : 'Inactivo' }}</span>
                 <label class="switch">
@@ -1050,7 +1066,7 @@
 @if (modalEdicionAbierto && esCatalogoPoliticas && editingId !== null) {
 <div class="fixed inset-0 z-[3000] flex items-center justify-center px-4">
     <div class="absolute inset-0 bg-black/50" @backdropFade></div>
-    <div class="relative z-10 flex h-[85vh] w-full max-w-4xl flex-col rounded-2xl bg-white p-6 shadow-2xl" @modalScaleFade>
+    <div class="catalogo-form-modal relative z-10 flex h-[85vh] w-full max-w-4xl flex-col rounded-2xl bg-white p-6 shadow-2xl" @modalScaleFade>
         <h2 class="shrink-0 text-xl font-semibold text-gray-900">
             {{ tituloModalEdicion }}
         </h2>
@@ -1224,7 +1240,7 @@
 @if (modalCrearAbierto && esCatalogoPoliticas) {
 <div class="fixed inset-0 z-[3000] flex items-center justify-center px-4">
     <div class="absolute inset-0 bg-black/50" @backdropFade></div>
-    <div class="relative z-10 flex h-[85vh] w-full max-w-4xl flex-col rounded-2xl bg-white p-6 shadow-2xl" @modalScaleFade>
+    <div class="catalogo-form-modal relative z-10 flex h-[85vh] w-full max-w-4xl flex-col rounded-2xl bg-white p-6 shadow-2xl" @modalScaleFade>
         <h2 class="shrink-0 text-xl font-semibold text-gray-900">
             {{ tituloModalCrear }}
         </h2>
@@ -1363,7 +1379,7 @@
 <div class="fixed inset-0 z-[3000] flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-black/50" @backdropFade></div>
     <div
-        class="relative z-10 flex w-full max-h-[92vh] flex-col overflow-hidden rounded-2xl bg-white p-4 shadow-2xl dark:bg-gray-900 sm:p-6"
+        class="catalogo-form-modal relative z-10 flex w-full max-h-[92vh] flex-col overflow-hidden rounded-2xl bg-white p-4 shadow-2xl dark:bg-gray-900 sm:p-6"
         [class.max-w-lg]="!esCatalogoTarifas"
         [class.max-w-4xl]="esCatalogoTarifas">
         <h2 class="shrink-0 text-xl font-semibold text-gray-900 dark:text-white">
@@ -1381,6 +1397,22 @@
                 <input matInput [value]="nuevoRegistroDraft['codigo'] ?? ''"
                     (input)="actualizarTextoCreacion('codigo', $any($event.target).value)" maxlength="10" />
             </mat-form-field>
+            }
+
+            @if (esCatalogoEstatus) {
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Clave</mat-label>
+                    <input matInput [value]="nuevoRegistroDraft['clave'] ?? ''"
+                        (input)="actualizarTextoCreacion('clave', $any($event.target).value)" maxlength="50" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Nombre</mat-label>
+                    <input matInput [value]="nuevoRegistroDraft['nombre'] ?? ''"
+                        (input)="actualizarTextoCreacion('nombre', $any($event.target).value)" maxlength="120" />
+                </mat-form-field>
+            </div>
             }
 
             @if (esCatalogoConceptos) {
@@ -1458,12 +1490,9 @@
                 </mat-form-field>
             </div>
 
-            <div class="flex items-center gap-3">
-                <span class="text-sm font-medium text-gray-700">{{ !!nuevoRegistroDraft['estatus'] ? 'Activo' : 'Inactivo' }}</span>
-                <mat-slide-toggle [checked]="!!nuevoRegistroDraft['estatus']"
-                    (change)="actualizarBooleanCreacion('estatus', $any($event.target).checked)">
-                </mat-slide-toggle>
-            </div>
+            <app-custom-switch [checked]="!!nuevoRegistroDraft['estatus']"
+                [label]="nuevoRegistroDraft['estatus'] ? 'Activo' : 'Inactivo'"
+                (change)="actualizarBooleanCreacion('estatus', $event)"></app-custom-switch>
             }
 
             @if (esCatalogoOrigenReservacion) {
@@ -1481,12 +1510,10 @@
                 </mat-form-field>
             </div>
 
-            <div class="flex items-center gap-3">
-                <span class="text-sm font-medium text-gray-700">{{ !!nuevoRegistroDraft['estatus'] ? 'Activo' : 'Inactivo' }}</span>
-                <mat-slide-toggle [checked]="!!nuevoRegistroDraft['estatus']"
-                    (change)="actualizarBooleanCreacion('estatus', $any($event.target).checked)">
-                </mat-slide-toggle>
-            </div>
+            <mat-slide-toggle [checked]="!!nuevoRegistroDraft['estatus']"
+                (change)="actualizarBooleanCreacion('estatus', $event.checked)">
+                {{ nuevoRegistroDraft['estatus'] ? 'Activo' : 'Inactivo' }}
+            </mat-slide-toggle>
             }
 
             @if (esCatalogoRolesEmpresa) {
@@ -1504,12 +1531,9 @@
                 </mat-form-field>
             </div>
 
-            <div class="flex items-center gap-3">
-                <span class="text-sm font-medium text-gray-700">{{ !!nuevoRegistroDraft['estatus'] ? 'Activo' : 'Inactivo' }}</span>
-                <mat-slide-toggle [checked]="!!nuevoRegistroDraft['estatus']"
-                    (change)="actualizarBooleanCreacion('estatus', $any($event.target).checked)">
-                </mat-slide-toggle>
-            </div>
+            <app-custom-switch [checked]="!!nuevoRegistroDraft['estatus']"
+                [label]="nuevoRegistroDraft['estatus'] ? 'Activo' : 'Inactivo'"
+                (change)="actualizarBooleanCreacion('estatus', $event)"></app-custom-switch>
             }
 
             @if (esCatalogoAmenidades) {
@@ -1777,12 +1801,9 @@
                             (input)="actualizarTextoCreacion('orden', $any($event.target).value)" />
                     </mat-form-field>
 
-                    <div class="flex items-center gap-3">
-                        <span class="text-sm font-medium text-gray-700">{{ !!nuevoRegistroDraft['activo'] ? 'Activo' : 'Inactivo' }}</span>
-                        <mat-slide-toggle [checked]="!!nuevoRegistroDraft['activo']"
-                            (change)="actualizarBooleanCreacion('activo', $any($event.target).checked)">
-                        </mat-slide-toggle>
-                    </div>
+                    <app-custom-switch [checked]="!!nuevoRegistroDraft['activo']"
+                        [label]="nuevoRegistroDraft['activo'] ? 'Activo' : 'Inactivo'"
+                        (change)="actualizarBooleanCreacion('activo', $event)"></app-custom-switch>
                 </div>
 
                 <mat-form-field appearance="outline" class="w-full">
@@ -1846,12 +1867,9 @@
                     }
                 </div>
 
-                <div class="flex items-center gap-3">
-                    <span class="text-sm font-medium text-gray-700">{{ !!nuevoRegistroDraft['activo'] ? 'Activo' : 'Inactivo' }}</span>
-                    <mat-slide-toggle [checked]="!!nuevoRegistroDraft['activo']"
-                        (change)="actualizarBooleanCreacion('activo', $any($event.target).checked)">
-                    </mat-slide-toggle>
-                </div>
+                <app-custom-switch [checked]="!!nuevoRegistroDraft['activo']"
+                    [label]="nuevoRegistroDraft['activo'] ? 'Activo' : 'Inactivo'"
+                    (change)="actualizarBooleanCreacion('activo', $event)"></app-custom-switch>
 
             </div>
             }

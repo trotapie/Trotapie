@@ -53,6 +53,15 @@
   max-width: 420px;
 }
 
+.catalogo-form-modal ::ng-deep .mat-mdc-form-field:hover .mat-mdc-text-field-wrapper,
+.catalogo-form-modal ::ng-deep .mat-mdc-form-field.mat-focused .mat-mdc-text-field-wrapper {
+  transform: none;
+}
+
+.catalogo-form-modal ::ng-deep .mat-mdc-text-field-wrapper {
+  overflow: visible;
+}
+
 
 
 .table-footer {
@@ -109,7 +118,10 @@
 }
 
 .switch input {
-  display: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
 }
 
 .switch {
@@ -191,6 +203,11 @@
 .switch input:checked + .slider .circle {
   left: calc(100% - var(--circle-diameter) - var(--switch-offset));
   box-shadow: var(--circle-checked-shadow);
+}
+
+.switch input:focus-visible + .slider {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
 }
 
 .selector-list {

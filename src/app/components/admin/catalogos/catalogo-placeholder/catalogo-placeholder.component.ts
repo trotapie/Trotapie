@@ -9,6 +9,7 @@ import { CatalogoAdminKey, CatalogosAdminService, IPoliticaTarifaAdmin } from 'a
 import { TraduccionesService } from 'app/core/traducciones.service';
 import { EstatusComponent } from 'app/shared/estatus/estatus.component';
 import { MaterialModule } from 'app/shared/material.module';
+import { CustomSwitchComponent } from 'app/shared/custom-switch/custom-switch.component';
 import { backdropFade, modalScaleFade } from 'app/shared/animations';
 
 interface IPoliticaTraduccionPreview {
@@ -40,7 +41,7 @@ interface CatalogoVistaConfig {
 @Component({
   selector: 'app-catalogo-placeholder',
   standalone: true,
-  imports: [CommonModule, MaterialModule, RouterLink, DragDropModule, EstatusComponent],
+  imports: [CommonModule, MaterialModule, RouterLink, DragDropModule, EstatusComponent, CustomSwitchComponent],
   templateUrl: './catalogo-placeholder.component.html',
   styleUrl: './catalogo-placeholder.component.scss',
   animations: [modalScaleFade, backdropFade],
@@ -154,9 +155,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
         { key: 'id', label: 'ID' },
         { key: 'clave', label: 'Clave' },
         { key: 'nombre_cotizador', label: 'Nombre cotizador' },
-        { key: 'estatus', label: 'Estatus' }
+        { key: 'estatus', label: 'Estatus' },
+        { key: 'orden', label: 'Orden' }
       ],
-      tieneOrden: false,
+      tieneOrden: true,
       editableKeys: ['clave', 'nombre_cotizador', 'estatus'],
       booleanKeys: ['estatus']
     },
@@ -336,6 +338,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
     return this.catalogoKey === 'roles_empresa';
   }
 
+  get esCatalogoEstatus(): boolean {
+    return this.catalogoKey === 'estatus_empleado' || this.catalogoKey === 'estatus_cotizacion';
+  }
+
   get esCatalogoDescuentos(): boolean {
     return this.catalogoKey === 'descuentos';
   }
@@ -360,11 +366,13 @@ export class CatalogoPlaceholderComponent implements OnInit {
     return (
       this.catalogoKey === 'actividades' ||
       this.catalogoKey === 'conceptos' ||
-      this.catalogoKey === 'tratamientos' ||
-      this.catalogoKey === 'continentes' ||
-      this.catalogoKey === 'descuentos' ||
-      this.catalogoKey === 'atracciones' ||
-      this.catalogoKey === 'idiomas' ||
+       this.catalogoKey === 'tratamientos' ||
+        this.catalogoKey === 'continentes' ||
+        this.catalogoKey === 'descuentos' ||
+        this.catalogoKey === 'atracciones' ||
+        this.catalogoKey === 'estatus_empleado' ||
+        this.catalogoKey === 'estatus_cotizacion' ||
+        this.catalogoKey === 'idiomas' ||
       this.catalogoKey === 'origen_reservacion' ||
       this.catalogoKey === 'roles_empresa' ||
       this.catalogoKey === 'politicas' ||
@@ -380,8 +388,9 @@ export class CatalogoPlaceholderComponent implements OnInit {
       this.catalogoKey === 'conceptos' ||
       this.catalogoKey === 'tratamientos' ||
       this.catalogoKey === 'continentes' ||
-      this.catalogoKey === 'descuentos' ||
-      this.catalogoKey === 'atracciones' ||
+       this.catalogoKey === 'descuentos' ||
+       this.esCatalogoEstatus ||
+       this.catalogoKey === 'atracciones' ||
       this.catalogoKey === 'idiomas' ||
       this.catalogoKey === 'origen_reservacion' ||
       this.catalogoKey === 'roles_empresa' ||
@@ -398,8 +407,9 @@ export class CatalogoPlaceholderComponent implements OnInit {
       this.catalogoKey === 'conceptos' ||
       this.catalogoKey === 'tratamientos' ||
       this.catalogoKey === 'continentes' ||
-      this.catalogoKey === 'descuentos' ||
-      this.catalogoKey === 'atracciones' ||
+       this.catalogoKey === 'descuentos' ||
+       this.esCatalogoEstatus ||
+       this.catalogoKey === 'atracciones' ||
       this.catalogoKey === 'idiomas' ||
       this.catalogoKey === 'origen_reservacion' ||
       this.catalogoKey === 'roles_empresa' ||
@@ -562,7 +572,9 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   get tituloModalCrear(): string {
-    if (this.esCatalogoIdiomas) {
+    if (this.esCatalogoEstatus) {
+      return 'Nuevo estatus';
+    } else if (this.esCatalogoIdiomas) {
       return 'Nuevo idioma';
     }
 
@@ -614,6 +626,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   get descripcionModalCrear(): string {
+    if (this.esCatalogoEstatus) {
+      return 'Captura la clave, el nombre y el estatus del nuevo registro.';
+    }
+
     if (this.esCatalogoIdiomas) {
       return 'Captura codigo y nombre para crear el nuevo idioma.';
     }
@@ -666,6 +682,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   get tituloModalEdicion(): string {
+    if (this.esCatalogoEstatus) {
+      return 'Editar estatus';
+    }
+
     if (this.esCatalogoIdiomas) {
       return 'Editar idioma';
     }
@@ -718,6 +738,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   get descripcionModalEdicion(): string {
+    if (this.esCatalogoEstatus) {
+      return 'Actualiza la clave, el nombre y el estatus del registro.';
+    }
+
     if (this.esCatalogoIdiomas) {
       return 'Actualiza codigo, nombre y estatus del idioma.';
     }
@@ -770,6 +794,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   get textoBotonCrear(): string {
+    if (this.esCatalogoEstatus) {
+      return 'Nuevo estatus';
+    }
+
     if (this.esCatalogoIdiomas) {
       return 'Nuevo idioma';
     }
@@ -822,6 +850,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   get textoBotonConfirmarCrear(): string {
+    if (this.esCatalogoEstatus) {
+      return 'Crear estatus';
+    }
+
     if (this.esCatalogoIdiomas) {
       return 'Crear idioma';
     }
@@ -874,6 +906,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   get mensajeExitoEdicion(): string {
+    if (this.esCatalogoEstatus) {
+      return 'Estatus guardado correctamente.';
+    }
+
     if (this.esCatalogoIdiomas) {
       return 'Idioma guardado correctamente.';
     }
@@ -922,6 +958,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   get mensajeExitoCreacion(): string {
+    if (this.esCatalogoEstatus) {
+      return 'Estatus creado correctamente.';
+    }
+
     if (this.esCatalogoIdiomas) {
       return 'Idioma creado correctamente.';
     }
@@ -974,6 +1014,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   get mensajeExitoEliminacion(): string {
+    if (this.esCatalogoEstatus) {
+      return 'Estatus eliminado correctamente.';
+    }
+
     if (this.esCatalogoIdiomas) {
       return 'Idioma eliminado correctamente.';
     }
@@ -1485,7 +1529,32 @@ export class CatalogoPlaceholderComponent implements OnInit {
     this.errorModalEdicion = '';
 
     try {
-      if (this.esCatalogoIdiomas) {
+      if (this.esCatalogoEstatus) {
+        const clave = String(this.editingDraft['clave'] ?? '').trim().toLowerCase();
+        const nombre = String(this.editingDraft['nombre'] ?? '').trim();
+        const estatusOriginal = this.items.find((item) => Number(item.id) === this.editingId);
+        const claveOriginal = String(estatusOriginal?.clave ?? '').trim().toLowerCase();
+
+        if (!clave || !nombre) {
+          this.errorModalEdicion = 'Clave y nombre son obligatorios para editar un estatus.';
+          this.guardandoEdicion = false;
+          return;
+        }
+
+        if (this.catalogoKey === 'estatus_empleado' &&
+          (claveOriginal === 'activo' || claveOriginal === 'inactivo') &&
+          (clave !== claveOriginal || !this.editingDraft['activo'])) {
+          this.errorModalEdicion = 'Los estatus Activo e Inactivo deben conservar su clave y permanecer habilitados.';
+          this.guardandoEdicion = false;
+          return;
+        }
+
+        const payload = { clave, nombre, activo: Boolean(this.editingDraft['activo']) };
+        await this.catalogosAdmin.actualizarCatalogoAdmin(this.catalogoKey, this.editingId, payload);
+        this.items = this.items.map((current) =>
+          Number(current.id) === this.editingId ? { ...current, ...payload } : current
+        );
+      } else if (this.esCatalogoIdiomas) {
         const codigo = String(this.editingDraft['codigo'] ?? '').trim().toLowerCase();
         const nombre = String(this.editingDraft['nombre'] ?? '').trim();
 
@@ -1857,7 +1926,14 @@ export class CatalogoPlaceholderComponent implements OnInit {
       return acc;
     }, {} as Record<string, any>);
 
-    if (this.esCatalogoIdiomas) {
+    if (this.esCatalogoEstatus) {
+      this.nuevoRegistroDraft = {
+        ...this.nuevoRegistroDraft,
+        clave: '',
+        nombre: '',
+        activo: true
+      };
+    } else if (this.esCatalogoIdiomas) {
       this.nuevoRegistroDraft = {
         ...this.nuevoRegistroDraft,
         codigo: '',
@@ -1976,6 +2052,11 @@ export class CatalogoPlaceholderComponent implements OnInit {
       return;
     }
 
+    if (this.esEstatusEmpleadoProtegido(item)) {
+      this.error = 'Los estatus Activo e Inactivo no se pueden eliminar.';
+      return;
+    }
+
     this.error = '';
     this.errorModalEliminar = '';
     const codigo = String(
@@ -2053,7 +2134,22 @@ export class CatalogoPlaceholderComponent implements OnInit {
     this.errorModalCreacion = '';
 
     try {
-      if (this.esCatalogoIdiomas) {
+      if (this.esCatalogoEstatus) {
+        const clave = String(this.nuevoRegistroDraft['clave'] ?? '').trim().toLowerCase();
+        const nombre = String(this.nuevoRegistroDraft['nombre'] ?? '').trim();
+
+        if (!clave || !nombre) {
+          this.errorModalCreacion = 'Clave y nombre son obligatorios para crear un estatus.';
+          this.guardandoCreacion = false;
+          return;
+        }
+
+        await this.catalogosAdmin.crearCatalogoAdmin(this.catalogoKey, {
+          clave,
+          nombre,
+          activo: Boolean(this.nuevoRegistroDraft['activo'])
+        });
+      } else if (this.esCatalogoIdiomas) {
         const codigo = String(this.nuevoRegistroDraft['codigo'] ?? '').trim().toLowerCase();
         const nombre = String(this.nuevoRegistroDraft['nombre'] ?? '').trim();
 
@@ -2742,6 +2838,15 @@ export class CatalogoPlaceholderComponent implements OnInit {
   private mostrarModalExitoConMensaje(message: string) {
     this.mensajeModalExito = message;
     this.mostrarModalExito = true;
+  }
+
+  private esEstatusEmpleadoProtegido(item: any): boolean {
+    if (this.catalogoKey !== 'estatus_empleado') {
+      return false;
+    }
+
+    const clave = String(item?.clave ?? '').trim().toLowerCase();
+    return clave === 'activo' || clave === 'inactivo';
   }
 
   private limpiarTexto(value: string | null | undefined): string {
