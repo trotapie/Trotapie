@@ -101,13 +101,19 @@ export class AuthService {
 
       role = roles.includes('admin') ? 'admin' : roles[0] ?? role;
 
-      if (!roles.includes('admin')) {
-        const { data: empleado } = await client
+      const { data: usuarioSesion, error: usuarioSesionError } = await client.auth.getUser();
+      if (usuarioSesionError) throw usuarioSesionError;
+
+      // Temporary exception for the account used to validate employee status flows.
+      const esUsuarioDePrueba = String(usuarioSesion.user?.email ?? '').trim().toLowerCase() === 'pruebausuarios@gmail.com';
+      if (!esUsuarioDePrueba) {
+        const { data: empleado, error: empleadoError } = await client
           .from('empleados')
           .select('id, estatus_id')
           .eq('auth_user_id', userId)
           .maybeSingle();
 
+        if (empleadoError) throw empleadoError;
         if (!empleado?.id) {
           throw new Error('Tu usuario no tiene un empleado activo asociado.');
         }
@@ -116,7 +122,14 @@ export class AuthService {
           ? Number(empleado.estatus_id)
           : null;
 
-        if (employeeStatusId !== 1) {
+        const { data: estatusEmpleado, error: estatusError } = await client
+          .from('estatus_empleado')
+          .select('clave, activo')
+          .eq('id', employeeStatusId ?? -1)
+          .maybeSingle();
+
+        if (estatusError) throw estatusError;
+        if (String(estatusEmpleado?.clave ?? '').trim().toLowerCase() !== 'activo' || !estatusEmpleado?.activo) {
           throw new Error('Tu usuario esta inactivo. Solicita al administrador que te habilite.');
         }
       }

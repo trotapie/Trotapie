@@ -775,7 +775,7 @@ export class CotizacionMultipleComponent implements OnInit {
       parts.push(`${room.adults} ${room.adults === 1 ? 'adulto' : 'adultos'}`);
 
       if (room.children > 0) {
-        const childrenText = `${room.children} ${room.children === 1 ? 'niño' : 'niños'}`;
+        const childrenText = `${room.children} menor${room.children === 1 ? '' : 'es'}`;
         if (room.childAges?.length) {
           parts.push(`${childrenText} · edades: ${room.childAges.join(', ')}`);
         } else {

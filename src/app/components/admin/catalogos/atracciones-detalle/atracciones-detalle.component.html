@@ -128,9 +128,8 @@
             <td mat-cell *matCellDef="let item" class="text-center">
               @if (editingId === item.id) {
                 <div class="flex justify-center">
-                  <mat-slide-toggle [(ngModel)]="editingDraft['activo']" [ngModelOptions]="{ standalone: true }">
-                    {{ editingDraft['activo'] ? 'Si' : 'No' }}
-                  </mat-slide-toggle>
+                  <app-custom-switch [(ngModel)]="editingDraft['activo']" [ngModelOptions]="{ standalone: true }"
+                    [label]="editingDraft['activo'] ? 'Activo' : 'Inactivo'"></app-custom-switch>
                 </div>
               } @else {
                 <div class="flex justify-center">

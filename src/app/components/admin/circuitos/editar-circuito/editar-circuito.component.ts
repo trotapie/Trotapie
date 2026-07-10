@@ -3,11 +3,12 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormBuilder, Validators } from '@angular/forms';
 import { MaterialModule } from 'app/shared/material.module';
 import { CircuitosService } from 'app/core/circuitos.service';
+import { CustomSwitchComponent } from 'app/shared/custom-switch/custom-switch.component';
 
 @Component({
   selector: 'app-editar-circuito',
   standalone: true,
-  imports: [MaterialModule, RouterLink],
+  imports: [MaterialModule, RouterLink, CustomSwitchComponent],
   templateUrl: './editar-circuito.component.html',
   styleUrl: './editar-circuito.component.scss',
 })

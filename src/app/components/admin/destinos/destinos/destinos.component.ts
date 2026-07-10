@@ -41,8 +41,14 @@ export class DestinosComponent implements OnInit {
       this.supabase.obtenerDestinosAdmin(),
       this.supabase.continentes()
     ]);
-    const destinos = informacionDestino ?? [];
     const catalogoDestinos = destinosAdmin ?? [];
+    const estadosPorDestinoId = new Map(
+      catalogoDestinos.map((item: any) => [Number(item.id), Boolean(item.activo)])
+    );
+    const destinos = (informacionDestino ?? []).map((item: any) => ({
+      ...item,
+      activo: estadosPorDestinoId.get(Number(item.id)) ?? Boolean(item.activo)
+    }));
     this.continentes = continentesResponse?.data ?? [];
 
     this.destinosNacionales = destinos.filter((item) => this.esNacional(item));

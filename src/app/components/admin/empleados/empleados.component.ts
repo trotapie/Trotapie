@@ -13,6 +13,8 @@ import { backdropFade, modalScaleFade, fadeSlideIn } from 'app/shared/animations
 interface IEmpleadoAdmin {
   id: number;
   nombre: string;
+  cargo: string | null;
+  telefono: string | null;
   estatus_id: number | null;
   email: string | null;
   auth_user_id: string | null;
@@ -25,6 +27,13 @@ interface IRolAdmin {
   name: string;
 }
 
+interface IEstatusEmpleado {
+  id: number;
+  clave: string;
+  nombre: string;
+  activo: boolean;
+}
+
 @Component({
   selector: 'app-empleados',
   standalone: true,
@@ -34,9 +43,6 @@ interface IRolAdmin {
   animations: [modalScaleFade, backdropFade, fadeSlideIn],
 })
 export class EmpleadosComponent implements OnInit, AfterViewInit {
-  private readonly ESTATUS_ACTIVO = 1;
-  private readonly ESTATUS_INHABILITADO = 2;
-
   private supabase = inject(EmpleadosService);
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
@@ -63,10 +69,13 @@ export class EmpleadosComponent implements OnInit, AfterViewInit {
   contrasenaTemporal = '';
   contrasenaTemporalCopiada = false;
   rolesDisponibles: IRolAdmin[] = [];
+  estatusDisponibles: IEstatusEmpleado[] = [];
   rolesSeleccionados: number | null = null;
 
   form = this.fb.group({
     nombre: ['', [Validators.required, Validators.maxLength(120)]],
+    cargo: ['', [Validators.maxLength(120)]],
+    telefono: ['', [Validators.maxLength(20), Validators.pattern(/^[0-9+()\-\s]*$/)]],
     email: ['', [Validators.email, Validators.maxLength(180)]],
   });
 
@@ -114,6 +123,8 @@ export class EmpleadosComponent implements OnInit, AfterViewInit {
     }
 
     const nombre = String(this.form.get('nombre')?.value ?? '').trim();
+    const cargo = String(this.form.get('cargo')?.value ?? '').trim();
+    const telefono = String(this.form.get('telefono')?.value ?? '').trim();
     const email = String(this.form.get('email')?.value ?? '').trim().toLowerCase();
     if (!nombre) {
       this.error = 'El nombre es obligatorio.';
@@ -136,10 +147,10 @@ export class EmpleadosComponent implements OnInit, AfterViewInit {
       let debeMostrarContrasenaTemporal = false;
 
       if (this.estaEditando && this.empleadoEditandoId !== null) {
-        empleado = await this.supabase.actualizarEmpleadoAdmin(this.empleadoEditandoId, { nombre }) as IEmpleadoAdmin;
+        empleado = await this.supabase.actualizarEmpleadoAdmin(this.empleadoEditandoId, { nombre, cargo, telefono }) as IEmpleadoAdmin;
         this.mensaje = 'Empleado actualizado correctamente.';
       } else {
-        empleado = await this.supabase.crearEmpleadoAdmin({ nombre }) as IEmpleadoAdmin;
+        empleado = await this.supabase.crearEmpleadoAdmin({ nombre, cargo, telefono }) as IEmpleadoAdmin;
         this.mensaje = 'Empleado creado correctamente.';
       }
 
@@ -188,6 +199,8 @@ export class EmpleadosComponent implements OnInit, AfterViewInit {
     await this.cargarRolesDisponibles();
     this.form.patchValue({
       nombre: item.nombre,
+      cargo: item.cargo ?? '',
+      telefono: item.telefono ?? '',
       email: item.email ?? '',
     });
 
@@ -395,11 +408,11 @@ export class EmpleadosComponent implements OnInit, AfterViewInit {
   }
 
   estaInhabilitado(item: IEmpleadoAdmin): boolean {
-    return Number(item?.estatus_id) === this.ESTATUS_INHABILITADO;
+    return this.obtenerClaveEstatus(item) !== 'activo';
   }
 
   obtenerEtiquetaEstatus(item: IEmpleadoAdmin): string {
-    return this.estaInhabilitado(item) ? 'INACTIVO' : 'ACTIVO';
+    return this.estatusDisponibles.find((estatus) => estatus.id === Number(item?.estatus_id))?.nombre ?? 'Sin estatus';
   }
 
   compareById(a: number | null, b: number | null): boolean {
@@ -409,9 +422,17 @@ export class EmpleadosComponent implements OnInit, AfterViewInit {
   private async aplicarCambioEstatus(item: IEmpleadoAdmin, inhabilitar: boolean) {
     this.actualizandoEstatusId = item.id;
     try {
+      const claveDestino = inhabilitar ? 'inactivo' : 'activo';
+      const estatusDestino = this.estatusDisponibles.find(
+        (estatus) => estatus.clave === claveDestino && estatus.activo
+      );
+      if (!estatusDestino) {
+        throw new Error(`No existe un estatus ${claveDestino} habilitado.`);
+      }
+
       await this.supabase.actualizarEstatusEmpleadoAdmin(
         item.id,
-        inhabilitar ? this.ESTATUS_INHABILITADO : this.ESTATUS_ACTIVO
+        estatusDestino.id
       );
 
       this.mostrarToast({
@@ -439,12 +460,24 @@ export class EmpleadosComponent implements OnInit, AfterViewInit {
     this.error = '';
 
     try {
-      const { data, error } = await this.supabase.empleados({ incluirInhabilitados: true });
+      const [{ data, error }, estatus] = await Promise.all([
+        this.supabase.empleados({ incluirInhabilitados: true }),
+        this.supabase.obtenerEstatusEmpleadoAdmin()
+      ]);
       if (error) throw error;
+
+      this.estatusDisponibles = estatus.map((item: any) => ({
+        id: Number(item.id),
+        clave: String(item.clave ?? '').trim().toLowerCase(),
+        nombre: String(item.nombre ?? '').trim() || 'Sin nombre',
+        activo: Boolean(item.activo)
+      }));
 
       this.dataSource.data = (data ?? []).map((item: any) => ({
         id: Number(item.id),
         nombre: String(item.nombre ?? ''),
+        cargo: item.cargo ? String(item.cargo) : null,
+        telefono: item.telefono ? String(item.telefono) : null,
         estatus_id: Number.isFinite(Number(item.estatus_id)) ? Number(item.estatus_id) : null,
         email: item.email ? String(item.email) : null,
         auth_user_id: item.auth_user_id ? String(item.auth_user_id) : null,
@@ -487,6 +520,10 @@ export class EmpleadosComponent implements OnInit, AfterViewInit {
 
   private normalizar(value: unknown): string {
     return String(value ?? '').trim().toLowerCase();
+  }
+
+  private obtenerClaveEstatus(item: IEmpleadoAdmin): string {
+    return this.estatusDisponibles.find((estatus) => estatus.id === Number(item?.estatus_id))?.clave ?? '';
   }
 
   private mostrarToast(data: {

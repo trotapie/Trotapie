@@ -147,7 +147,7 @@
             {{ estaEditando ? 'Editar empleado' : 'Nuevo empleado' }}
         </h2>
         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Completa el nombre. Si agregas un correo, se creara o vinculara un usuario para iniciar sesion.
+            Agrega los datos que se mostraran en la firma de las cotizaciones. Si agregas un correo, se creara o vinculara un usuario para iniciar sesion.
         </p>
 
         <form class="mt-4 space-y-4" [formGroup]="form" (ngSubmit)="guardarEmpleado()">
@@ -160,7 +160,21 @@
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Email de acceso</mat-label>
+                <mat-label>Cargo</mat-label>
+                <input matInput formControlName="cargo" maxlength="120" placeholder="Ej. Asesor de viajes" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Telefono / WhatsApp</mat-label>
+                <input matInput formControlName="telefono" inputmode="tel" maxlength="20" placeholder="669 195 7651" />
+                <mat-hint>Se mostrara en la firma y abrira WhatsApp.</mat-hint>
+                @if (form.get('telefono')?.hasError('pattern') && form.get('telefono')?.touched) {
+                <mat-error>Usa solo numeros, espacios, parentesis, guiones o +.</mat-error>
+                }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Email de acceso y contacto</mat-label>
                 <input matInput formControlName="email" type="email" maxlength="180" />
                 @if (form.get('email')?.hasError('email') && form.get('email')?.touched) {
                 <mat-error>Ingresa un correo valido.</mat-error>

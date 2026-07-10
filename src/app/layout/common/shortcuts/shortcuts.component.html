@@ -232,12 +232,10 @@
                         <mat-label>Link</mat-label>
                         <input matInput [formControlName]="'link'" required />
                     </mat-form-field>
-                    <mat-slide-toggle
-                        [color]="'primary'"
+                    <app-custom-switch
                         [formControlName]="'useRouter'"
-                    >
-                        Use router for the link
-                    </mat-slide-toggle>
+                        label="Use router for the link"
+                    ></app-custom-switch>
                     <!-- Actions -->
                     <div class="mt-4 flex items-center justify-end">
                         @if (mode === 'edit') {

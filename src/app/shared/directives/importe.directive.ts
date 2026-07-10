@@ -1,15 +1,21 @@
-import { Directive, ElementRef, HostListener, inject } from '@angular/core';
+import { AfterViewInit, Directive, ElementRef, HostListener, inject } from '@angular/core';
 import { NgControl } from '@angular/forms';
 
 @Directive({
   selector: '[importeMxnBlur]',
   standalone: true,
 })
-export class ImporteMxnBlurDirective {
+export class ImporteMxnBlurDirective implements AfterViewInit {
   private el = inject(ElementRef<HTMLInputElement>);
   private ngControl = inject(NgControl, { optional: true });
 
   private readonly prefix = '$';
+
+  ngAfterViewInit(): void {
+    // Las cotizaciones existentes llegan al control antes de crear el input.
+    // Formatea ese valor inicial sin interferir con la escritura al enfocarlo.
+    queueMicrotask(() => this.formatCurrentValue());
+  }
 
   @HostListener('input')
   onInput(): void {
@@ -34,6 +40,10 @@ export class ImporteMxnBlurDirective {
 
   @HostListener('blur')
   onBlur(): void {
+    this.formatCurrentValue();
+  }
+
+  private formatCurrentValue(): void {
     const input = this.el.nativeElement;
     const raw = this.sanitizeDecimal(this.stripFormat(input.value));
 
@@ -43,20 +53,13 @@ export class ImporteMxnBlurDirective {
       return;
     }
 
-    // Soporta "12." o ".5"
     const normalized = raw.startsWith('.') ? `0${raw}` : raw;
     const n = Number(normalized);
     if (Number.isNaN(n)) return;
 
-    const fixed = n.toFixed(2);           // "11.00"
-    input.value = this.formatMxn(fixed);  // "$ 11.00"
-
-    // 👇 aquí decide qué quieres guardar en el formControl:
-    // Opción A (recomendada): guardar número "limpio" -> "11.00"
+    const fixed = n.toFixed(2);
+    input.value = this.formatMxn(fixed);
     this.setControlValue(input.value);
-
-    // Opción B: guardar formateado -> "$ 11.00"
-    // this.setControlValue(input.value);
   }
 
   private sanitizeDecimal(value: string): string {

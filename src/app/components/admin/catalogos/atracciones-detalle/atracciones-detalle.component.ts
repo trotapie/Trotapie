@@ -5,11 +5,12 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CatalogosAdminService } from 'app/core/catalogos-admin.service';
 import { EstatusComponent } from 'app/shared/estatus/estatus.component';
 import { MaterialModule } from 'app/shared/material.module';
+import { CustomSwitchComponent } from 'app/shared/custom-switch/custom-switch.component';
 
 @Component({
   selector: 'app-atracciones-detalle',
   standalone: true,
-  imports: [CommonModule, MaterialModule, RouterLink, FormsModule, EstatusComponent],
+  imports: [CommonModule, MaterialModule, RouterLink, FormsModule, EstatusComponent, CustomSwitchComponent],
   templateUrl: './atracciones-detalle.component.html',
   styleUrl: './atracciones-detalle.component.scss'
 })

@@ -14,7 +14,7 @@ export class EmpleadosService {
   empleados(options?: { incluirInhabilitados?: boolean }) {
     let query = this.client
       .from('empleados')
-      .select('id, nombre, estatus_id, email, auth_user_id, primera_vez_login')
+      .select('id, nombre, cargo, telefono, estatus_id, email, auth_user_id, primera_vez_login')
       .order('id', { ascending: true });
 
     if (!options?.incluirInhabilitados) {
@@ -22,6 +22,32 @@ export class EmpleadosService {
     }
 
     return query;
+  }
+
+  async obtenerEstatusEmpleadoAdmin() {
+    const { data, error } = await this.client
+      .from('estatus_empleado')
+      .select('id, clave, nombre, activo, orden')
+      .order('orden', { ascending: true })
+      .order('id', { ascending: true });
+
+    if (error) throw error;
+    return data ?? [];
+  }
+
+  private async obtenerEstatusEmpleadoPorClave(clave: string): Promise<number> {
+    const { data, error } = await this.client
+      .from('estatus_empleado')
+      .select('id')
+      .eq('clave', clave)
+      .eq('activo', true)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data?.id) {
+      throw new Error(`No existe un estatus de empleado habilitado con la clave ${clave}.`);
+    }
+    return Number(data.id);
   }
 
   async guardarAccesoEmpleadoAdmin(payload: {
@@ -86,25 +112,30 @@ export class EmpleadosService {
     return data;
   }
 
-  async crearEmpleadoAdmin(payload: { nombre: string }) {
+  async crearEmpleadoAdmin(payload: { nombre: string; cargo?: string; telefono?: string }) {
     const nombre = String(payload.nombre ?? '').trim();
+    const cargo = String(payload.cargo ?? '').trim() || null;
+    const telefono = String(payload.telefono ?? '').trim() || null;
+    const estatusActivoId = await this.obtenerEstatusEmpleadoPorClave('activo');
     const { data, error } = await this.client
       .from('empleados')
-      .insert({ nombre, estatus_id: 1 })
-      .select('id, nombre, estatus_id, email, auth_user_id, primera_vez_login')
+      .insert({ nombre, cargo, telefono, estatus_id: estatusActivoId })
+      .select('id, nombre, cargo, telefono, estatus_id, email, auth_user_id, primera_vez_login')
       .single();
 
     if (error) throw error;
     return data;
   }
 
-  async actualizarEmpleadoAdmin(id: number, payload: { nombre: string }) {
+  async actualizarEmpleadoAdmin(id: number, payload: { nombre: string; cargo?: string; telefono?: string }) {
     const nombre = String(payload.nombre ?? '').trim();
+    const cargo = String(payload.cargo ?? '').trim() || null;
+    const telefono = String(payload.telefono ?? '').trim() || null;
     const { data, error } = await this.client
       .from('empleados')
-      .update({ nombre })
+      .update({ nombre, cargo, telefono })
       .eq('id', id)
-      .select('id, nombre, estatus_id, email, auth_user_id, primera_vez_login')
+      .select('id, nombre, cargo, telefono, estatus_id, email, auth_user_id, primera_vez_login')
       .single();
 
     if (error) throw error;
@@ -116,7 +147,7 @@ export class EmpleadosService {
       .from('empleados')
       .update({ estatus_id: estatusId })
       .eq('id', id)
-      .select('id, nombre, estatus_id, email, auth_user_id, primera_vez_login')
+      .select('id, nombre, cargo, telefono, estatus_id, email, auth_user_id, primera_vez_login')
       .single();
 
     if (error) throw error;

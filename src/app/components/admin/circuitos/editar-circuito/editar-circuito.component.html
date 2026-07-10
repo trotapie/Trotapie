@@ -73,9 +73,7 @@
                     <input matInput type="number" min="0" formControlName="duracion_noches" />
                 </mat-form-field>
 
-                <div class="flex items-center gap-3">
-                    <mat-slide-toggle formControlName="activo">Circuito activo</mat-slide-toggle>
-                </div>
+                <app-custom-switch formControlName="activo" label="Circuito activo"></app-custom-switch>
 
                 <mat-form-field class="w-full md:col-span-2 lg:col-span-3">
                     <mat-label>Imagen principal (URL)</mat-label>

@@ -342,8 +342,8 @@ export class CatalogosAdminService {
       case 'origen_reservacion': {
         const { data, error } = await this.client
           .from('origen_reservacion')
-          .select('id, clave, nombre_cotizador, estatus')
-          .order('nombre_cotizador', { ascending: true })
+          .select('id, clave, nombre_cotizador, estatus, orden')
+          .order('orden', { ascending: true })
           .order('id', { ascending: true });
         if (error) throw error;
         return data ?? [];
@@ -546,7 +546,7 @@ export class CatalogosAdminService {
       case 'tratamientos': {
         const { data, error } = await this.client
           .from('tratamientos')
-          .select('id, nombre, abreviacion')
+          .select('id, nombre, abreviacion, estatus')
           .order('nombre', { ascending: true })
           .order('id', { ascending: true });
         if (error) throw error;
@@ -574,7 +574,7 @@ export class CatalogosAdminService {
       estatus_cotizacion: 'estatus_cotizacion',
       idiomas: 'idiomas',
       politicas: null,
-      origen_reservacion: null,
+      origen_reservacion: 'origen_reservacion',
       roles_empresa: null,
       regimen_hotel: null,
       tarifas: null,
@@ -673,15 +673,55 @@ export class CatalogosAdminService {
         if (error) throw error;
         return data;
       }
+      case 'estatus_empleado':
+      case 'estatus_cotizacion': {
+        const tabla = catalogo;
+        const { data: ultimoRegistro, error: ultimoError } = await this.client
+          .from(tabla)
+          .select('orden')
+          .order('orden', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (ultimoError) throw ultimoError;
+
+        const ordenMaximo = Number((ultimoRegistro as any)?.orden);
+        const siguienteOrden = Number.isFinite(ordenMaximo) ? ordenMaximo + 1 : 1;
+        const { data, error } = await this.client
+          .from(tabla)
+          .insert({
+            clave: payload.clave ?? null,
+            nombre: payload.nombre ?? null,
+            activo: payload.activo ?? true,
+            orden: siguienteOrden
+          })
+          .select('id, clave, nombre, activo, orden')
+          .single();
+
+        if (error) throw error;
+        return data;
+      }
       case 'origen_reservacion': {
+        const { data: ultimoRegistro, error: ultimoError } = await this.client
+          .from('origen_reservacion')
+          .select('orden')
+          .order('orden', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (ultimoError) throw ultimoError;
+
+        const ordenMaximo = Number((ultimoRegistro as any)?.orden);
+        const siguienteOrden = Number.isFinite(ordenMaximo) ? ordenMaximo + 1 : 1;
         const { data, error } = await this.client
           .from('origen_reservacion')
           .insert({
             clave: payload.clave ?? null,
             nombre_cotizador: payload.nombre_cotizador ?? null,
-            estatus: payload.estatus ?? true
+            estatus: payload.estatus ?? true,
+            orden: siguienteOrden
           })
-          .select('id, clave, nombre_cotizador, estatus')
+          .select('id, clave, nombre_cotizador, estatus, orden')
           .single();
         if (error) throw error;
         return data;
@@ -911,6 +951,15 @@ export class CatalogosAdminService {
 
         const { error } = await this.client
           .from('descuentos')
+          .delete()
+          .eq('id', id);
+        if (error) throw error;
+        return { deleted: 1 };
+      }
+      case 'estatus_empleado':
+      case 'estatus_cotizacion': {
+        const { error } = await this.client
+          .from(catalogo)
           .delete()
           .eq('id', id);
         if (error) throw error;

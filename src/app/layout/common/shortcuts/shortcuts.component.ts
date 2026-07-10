@@ -23,10 +23,10 @@ import { MatButton, MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
 import { ShortcutsService } from 'app/layout/common/shortcuts/shortcuts.service';
+import { CustomSwitchComponent } from 'app/shared/custom-switch/custom-switch.component';
 import { Shortcut } from 'app/layout/common/shortcuts/shortcuts.types';
 import { Subject, takeUntil } from 'rxjs';
 
@@ -47,7 +47,7 @@ import { Subject, takeUntil } from 'rxjs';
         ReactiveFormsModule,
         MatFormFieldModule,
         MatInputModule,
-        MatSlideToggleModule,
+        CustomSwitchComponent,
     ],
 })
 export class ShortcutsComponent implements OnInit, OnDestroy {

@@ -4,11 +4,12 @@ import { MaterialModule } from 'app/shared/material.module';
 import { fadeSlideIn } from 'app/shared/animations';
 import { CircuitosService } from 'app/core/circuitos.service';
 import { Circuito } from 'app/shared/flyer-editor/models/circuito.interface';
+import { CustomSwitchComponent } from 'app/shared/custom-switch/custom-switch.component';
 
 @Component({
   selector: 'app-admin-circuitos',
   standalone: true,
-  imports: [MaterialModule],
+  imports: [MaterialModule, CustomSwitchComponent],
   templateUrl: './admin-circuitos.component.html',
   styleUrl: './admin-circuitos.component.scss',
   animations: [fadeSlideIn],

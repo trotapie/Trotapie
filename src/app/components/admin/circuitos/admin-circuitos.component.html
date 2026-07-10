@@ -49,7 +49,8 @@
             <ng-container matColumnDef="activo">
                 <th mat-header-cell *matHeaderCellDef>Activo</th>
                 <td mat-cell *matCellDef="let item">
-                    <mat-slide-toggle [checked]="item.activo" (change)="toggleActivo(item)"></mat-slide-toggle>
+                    <app-custom-switch [checked]="item.activo" [label]="item.activo ? 'Activo' : 'Inactivo'"
+                        (change)="toggleActivo(item)"></app-custom-switch>
                 </td>
             </ng-container>
 

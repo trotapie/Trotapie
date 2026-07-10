@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { DestinosService } from 'app/core/destinos.service';
 import { BlockingLoaderComponent } from 'app/shared/blocking-loader/blocking-loader.component';
 import { MaterialModule } from 'app/shared/material.module';
+import { CustomSwitchComponent } from 'app/shared/custom-switch/custom-switch.component';
 
 interface ITipoDestino {
   id: number;
@@ -23,7 +24,7 @@ interface IDestinoPadre {
 @Component({
   selector: 'app-editar-destino',
   standalone: true,
-  imports: [MaterialModule, BlockingLoaderComponent],
+  imports: [MaterialModule, BlockingLoaderComponent, CustomSwitchComponent],
   templateUrl: './editar-destino.component.html',
   styleUrl: './editar-destino.component.scss'
 })

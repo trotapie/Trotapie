@@ -1,12 +1,13 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MaterialModule } from 'app/shared/material.module';
+import { CustomSwitchComponent } from 'app/shared/custom-switch/custom-switch.component';
 import { FlyerElement } from '../../models/flyer-element.interface';
 
 @Component({
   selector: 'app-flyer-properties',
   standalone: true,
-  imports: [MaterialModule, FormsModule],
+  imports: [MaterialModule, FormsModule, CustomSwitchComponent],
   template: `
     <div>
       <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Propiedades</p>
@@ -124,10 +125,8 @@ import { FlyerElement } from '../../models/flyer-element.interface';
             </mat-form-field>
           </div>
 
-          <mat-slide-toggle [checked]="element.fabricConfig.lockMovementX"
-            (change)="toggleLock()" color="primary">
-            Bloquear posición
-          </mat-slide-toggle>
+          <app-custom-switch [checked]="element.fabricConfig.lockMovementX" (change)="toggleLock()"
+            label="Bloquear posición"></app-custom-switch>
 
         </div>
       }
