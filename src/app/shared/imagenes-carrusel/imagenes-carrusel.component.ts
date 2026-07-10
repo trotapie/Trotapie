@@ -1,4 +1,4 @@
-import { Component, ElementRef, inject, Input, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
+import { Component, ElementRef, HostListener, inject, Input, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { MaterialModule } from '../material.module';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { ImagenesService } from 'app/core/imagenes.service';
@@ -20,6 +20,7 @@ export class ImagenesCarruselComponent implements OnInit, OnDestroy {
   private router = inject(Router)
   @Input() imagenesCargadas: any[] = [];
   @Input() hotel: IDetalleHotel;
+  @Input() soloModal = false;
 
   imagenes: string[] = [];
   imagenesFilter: string[] = [];
@@ -82,6 +83,7 @@ export class ImagenesCarruselComponent implements OnInit, OnDestroy {
   }
 
   open(i: number, event: MouseEvent) {
+    if (!this.imagenesFilter.length) return;
     this.currentIndex = i;
     this.updateCurrent();
 
@@ -101,6 +103,11 @@ export class ImagenesCarruselComponent implements OnInit, OnDestroy {
 
     this.show = false;
     setTimeout(() => (this.isOpen = false), 300);
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.isOpen) this.close();
   }
 
   next(event?: Event) {
@@ -142,12 +149,12 @@ export class ImagenesCarruselComponent implements OnInit, OnDestroy {
     this.selectedTipoId = tipoId;
     if (this.selectedTipoId === 0) {
       this.imagenesFilter = (this.imagenesCargadas ?? [])
-        .map((x: any) => this.esCotizacion ? x?.url : x?.url_imagen)
+        .map((x: any) => this.obtenerUrlImagen(x))
         .filter((x: string | undefined): x is string => !!x);
     } else {
       this.imagenesFilter = (this.imagenesCargadas ?? [])
         .filter((x: any) => x?.tipo_imagen_id === this.selectedTipoId)
-        .map((x: any) => this.esCotizacion ? x?.url : x?.url_imagen)
+        .map((x: any) => this.obtenerUrlImagen(x))
         .filter((x: string | undefined): x is string => !!x);
     }
     this.currentIndex = 0;
@@ -155,10 +162,17 @@ export class ImagenesCarruselComponent implements OnInit, OnDestroy {
 
   }
 
+  private obtenerUrlImagen(imagen: any): string | undefined {
+    return typeof imagen === 'string'
+      ? imagen
+      : this.esCotizacion ? imagen?.url : imagen?.url_imagen;
+  }
+
   async obtenerTipoImagen() {
     const data = await this.supabase.obtenerTiposImagenHotel();
     let tipoImagenId: number[] = [];
     this.imagenesCargadas.forEach(imagen => {
+      if (!imagen?.tipo_imagen_id) return;
       if (tipoImagenId.length === 0) {
         tipoImagenId.push(imagen.tipo_imagen_id);
       } else if (!tipoImagenId.includes(imagen.tipo_imagen_id)) {
