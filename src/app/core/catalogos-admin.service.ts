@@ -173,9 +173,8 @@ export class CatalogosAdminService {
   async obtenerCatalogoAdmin(catalogo: CatalogoAdminKey): Promise<any[]> {
     switch (catalogo) {
       case 'actividades': {
-        const { data, error } = await this.client
-          .from('actividades')
-          .select(`
+        const pageSize = 1000;
+        const select = `
             id,
             descripcion,
             clave,
@@ -186,11 +185,32 @@ export class CatalogosAdminService {
               idioma:idiomas(codigo),
               descripcion
             )
-          `)
-          .order('orden', { ascending: true })
-          .order('id', { ascending: true });
-        if (error) throw error;
-        return (data ?? []).map((item: any) => ({
+          `;
+
+        const resultados: any[] = [];
+        let from = 0;
+
+        while (true) {
+          const { data, error } = await this.client
+            .from('actividades')
+            .select(select)
+            .order('orden', { ascending: true })
+            .order('id', { ascending: true })
+            .range(from, from + pageSize - 1);
+
+          if (error) throw error;
+
+          const bloque = data ?? [];
+          resultados.push(...bloque);
+
+          if (bloque.length < pageSize) {
+            break;
+          }
+
+          from += pageSize;
+        }
+
+        return resultados.map((item: any) => ({
           ...item,
           traducciones_preview: (item.traducciones ?? []).reduce((acc: any, t: any) => {
             const code = t.idioma?.codigo;
@@ -1532,4 +1552,5 @@ export class CatalogosAdminService {
 
     if (error) throw error;
   }
+
 }

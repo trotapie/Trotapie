@@ -14,6 +14,7 @@ import { EstatusComponent } from 'app/shared/estatus/estatus.component';
 import { CommonModule } from '@angular/common';
 import { ImagenesCarruselComponent } from 'app/shared/imagenes-carrusel/imagenes-carrusel.component';
 import { find } from 'lodash';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 type Tile = { key: string; url: string; alt: string; class: string };
 
@@ -125,6 +126,7 @@ export class CotizacionComponent implements OnInit {
   private catalogosAdmin = inject(CatalogosAdminService);
   private fb = inject(FormBuilder);
   private _translocoService = inject(TranslocoService);
+  private sanitizer = inject(DomSanitizer);
   cargando = true;
 
   informacionCotizacion: ICotizacion
@@ -395,6 +397,61 @@ export class CotizacionComponent implements OnInit {
     return partes.length ? partes.join(' · ') : null;
   }
 
+  get resumenHabitacionesYPersonas(): string {
+    const detalleHabitaciones = this.obtenerDetalleHabitacionesPdf(this.obtenerTextoHabitacionesCotizacion());
+    const totalHabitaciones = detalleHabitaciones.length;
+
+    if (!totalHabitaciones) {
+      return '';
+    }
+
+    const totalAdultos = detalleHabitaciones.reduce((total, item) => total + item.adultos, 0);
+    const totalMenores = detalleHabitaciones.reduce((total, item) => total + item.ninos, 0);
+    const resumen = [
+      `${totalHabitaciones} habitaci${totalHabitaciones === 1 ? 'ón' : 'ones'}`,
+      `${totalAdultos} adulto${totalAdultos === 1 ? '' : 's'}`
+    ];
+
+    if (totalMenores > 0) {
+      resumen.push(`${totalMenores} menor${totalMenores === 1 ? '' : 'es'}`);
+    }
+
+    return resumen.join(' · ');
+  }
+
+  get amenidadesDestacadas(): Array<{ id: number; descripcion: string; icono?: string | null }> {
+    return (this.informacionCotizacion?.actividades ?? [])
+      .filter((item) => String(item?.icono ?? '').trim().length > 0)
+      .slice(0, 20);
+  }
+
+  get amenidadesLineales(): Array<{ id: number; descripcion: string; icono?: string | null }> {
+    return this.amenidadesDestacadas.slice(0, 4);
+  }
+
+  get amenidadesCompactas(): Array<{ id: number; descripcion: string; icono?: string | null }> {
+    return this.amenidadesDestacadas.slice(4, 6);
+  }
+
+  esIconoSvgCrudo(icono?: string | null): boolean {
+    return String(icono ?? '').trim().startsWith('<svg');
+  }
+
+  tieneIconoCargado(icono?: string | null): boolean {
+    return String(icono ?? '').trim().length > 0;
+  }
+
+  iconoSvgSeguro(icono?: string | null): SafeHtml {
+    const valor = String(icono ?? '').trim();
+    const normalizado = valor
+      .replace(/fill=("|')#ffffff\1/gi, 'fill="currentColor"')
+      .replace(/fill=("|')#fff\1/gi, 'fill="currentColor"')
+      .replace(/stroke=("|')#ffffff\1/gi, 'stroke="currentColor"')
+      .replace(/stroke=("|')#fff\1/gi, 'stroke="currentColor"');
+
+    return this.sanitizer.bypassSecurityTrustHtml(normalizado);
+  }
+
   async ngOnInit() {
     try {
       this.cargando = true;
@@ -409,6 +466,8 @@ export class CotizacionComponent implements OnInit {
         this.informacionCotizacion = await this.supabase.obtenerCotizacionPorPublicId(id);
         await this.obtenerInformacionCatalogosEdicion();
         this.validacionesPreciosGuardados();
+
+        
         datosHotel = {
           ubicacion: this.informacionCotizacion.ubicacion,
           nombre_hotel: this.informacionCotizacion.nombre_hotel
@@ -417,6 +476,9 @@ export class CotizacionComponent implements OnInit {
 
       } else {
         this.informacionCotizacion = await this.supabase.obtenerCotizacionPorPublicIdCliente(id);
+        console.log('testtte');
+
+        console.log(this.informacionCotizacion);
         await this.cargarCatalogoTiposHabitacion();
         datosHotel = {
           ubicacion: this.informacionCotizacion.ubicacion,
@@ -620,6 +682,22 @@ export class CotizacionComponent implements OnInit {
     );
     this.validacionesPreciosGuardados();
     this.edicionForm.markAsPristine();
+  }
+
+  get enlaceWhatsappContacto(): string {
+    const mensaje = this.mensajeContactoCotizacion;
+    return `https://wa.me/526188032093?text=${encodeURIComponent(mensaje)}`;
+  }
+
+  get enlaceCorreoContacto(): string {
+    const asunto = `Consulta sobre cotización CTRO-${this.informacionCotizacion?.id ?? ''}`;
+    return `mailto:reservas@trotapie.com?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(this.mensajeContactoCotizacion)}`;
+  }
+
+  private get mensajeContactoCotizacion(): string {
+    const publicId = this.informacionCotizacion?.public_id || '';
+    const url = `https://app.trotapie.com/share/cotizacion/${publicId}`;
+    return `Hola Estoy interesado(a) en esta cotización: ${url} Me gustaría avanzar con la reserva. ¿Me ayudas con los siguientes pasos?`;
   }
 
   get telefonoCtrl() {
@@ -2258,6 +2336,61 @@ export class CotizacionComponent implements OnInit {
 
     const [year, month, day] = dateStr.split('-').map(Number);
     return new Date(year, month - 1, day);
+  }
+
+  formatearRangoFechaCompacto(
+    fechaEntrada: string | Date | null | undefined,
+    fechaSalida: string | Date | null | undefined,
+    idioma = 'es'
+  ): string {
+    const entrada = this.parseLocalDate(fechaEntrada);
+    const salida = this.parseLocalDate(fechaSalida);
+
+    if (!entrada || !salida) return '';
+
+    const localeMap: Record<string, string> = {
+      es: 'es-MX',
+      en: 'en-US',
+      pt: 'pt-BR',
+      fr: 'fr-FR',
+      de: 'de-DE'
+    };
+
+    const locale = localeMap[String(idioma).toLowerCase().trim().split('-')[0]] ?? 'es-MX';
+    const mismoMes = entrada.getMonth() === salida.getMonth();
+    const mismoAnio = entrada.getFullYear() === salida.getFullYear();
+    const capitalizar = (valor: string): string => valor.charAt(0).toUpperCase() + valor.slice(1);
+
+    const diaSemanaEntrada = capitalizar(new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(entrada));
+    const diaSemanaSalida = capitalizar(new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(salida));
+    const diaEntrada = new Intl.DateTimeFormat(locale, { day: '2-digit' }).format(entrada);
+    const diaSalida = new Intl.DateTimeFormat(locale, { day: '2-digit' }).format(salida);
+
+    if (mismoMes && mismoAnio) {
+      const mes = new Intl.DateTimeFormat(locale, { month: 'long' }).format(salida);
+      const anio = new Intl.DateTimeFormat(locale, { year: 'numeric' }).format(salida);
+      return `${diaSemanaEntrada} ${diaEntrada} - ${diaSemanaSalida} ${diaSalida} de ${mes} ${anio}`;
+    }
+
+    const fechaEntradaCompleta = capitalizar(
+      new Intl.DateTimeFormat(locale, {
+        weekday: 'short',
+        day: '2-digit',
+        month: 'long',
+        year: mismoAnio ? undefined : 'numeric'
+      }).format(entrada)
+    );
+
+    const fechaSalidaCompleta = capitalizar(
+      new Intl.DateTimeFormat(locale, {
+        weekday: 'short',
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      }).format(salida)
+    );
+
+    return `${fechaEntradaCompleta} - ${fechaSalidaCompleta}`;
   }
 
   private formatearFechaParaDb(value: unknown): string | null {

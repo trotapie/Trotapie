@@ -2016,11 +2016,15 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
     try {
       await this.catalogosAdmin.eliminarCatalogoAdmin(this.catalogoKey, this.itemAEliminar.id);
-      this.items = this.items.filter((item) => Number(item.id) !== this.itemAEliminar?.id);
+      if (this.esCatalogoAmenidades) {
+        await this.cargar();
+      } else {
+        this.items = this.items.filter((item) => Number(item.id) !== this.itemAEliminar?.id);
 
-      const totalPaginas = Math.ceil(this.items.length / this.pageSize);
-      if (this.pageIndex >= totalPaginas && this.pageIndex > 0) {
-        this.pageIndex = Math.max(totalPaginas - 1, 0);
+        const totalPaginas = Math.ceil(this.items.length / this.pageSize);
+        if (this.pageIndex >= totalPaginas && this.pageIndex > 0) {
+          this.pageIndex = Math.max(totalPaginas - 1, 0);
+        }
       }
 
       this.cerrarModalEliminar();

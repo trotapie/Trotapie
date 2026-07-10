@@ -25,7 +25,7 @@
         </div>
         }
 
-        @if(!esEdicion){
+        <!-- @if(!esEdicion){
         <header class="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 sticky top-0 z-50">
             <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
                 <div class="flex items-center gap-2">
@@ -34,51 +34,129 @@
                 </div>
                 <div class="flex capitalize items-center gap-4 text-xs font-medium text-slate-500 dark:text-slate-400">
                     <app-status-badge [status]="informacionCotizacion.estatus"></app-status-badge>
-                    <span>{{t('cotizacion-s')}} {{informacionCotizacion.fecha_creacion | dateI18n:'EEEE dd MMMM
-                        yyyy':informacionCotizacion.idioma}}</span>
+                    <span>{{t('cotizacion-s')}} {{informacionCotizacion.fecha_creacion | dateI18n:'EEEE dd MMMMyyyy':informacionCotizacion.idioma}}</span>
                 </div>
             </div>
         </header>
-        }
+        } -->
         <section class="print-area bg-card m-5 rounded-3xl shadow-xl">
             <form [formGroup]="edicionForm">
                 <div class="text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-200 px-5">
                     <main class="max-w-7xl mx-auto px-4 py-2 pb-32">
                         @if (!esEdicion) {
                         <section class="public-quote-hero mb-14">
-                            <div class="space-y-8">
-                                <section class="space-y-5 pt-4 max-w-2xl">
-                                    <p class="text-[11px] uppercase tracking-[0.28em] font-black text-emerald-700 dark:text-emerald-300">
-                                        {{ t('cotizacion-s') }} personalizada
-                                    </p>
-                                    <h1 class="text-5xl lg:text-6xl font-black text-slate-900 dark:text-white leading-tight tracking-tight">
-                                        Reserva con protección y flexibilidad
-                                    </h1>
-                                    <p class="text-sm text-slate-600 dark:text-slate-300 max-w-xl leading-relaxed">
-                                        {{ t('descripcion_cotizacion')}}
-                                    </p>
+                            <div class="quote-top-layout">
+                                <section class="quote-contact">
+                                    <img src="assets/images/logos/trotapie.png" alt="Trotapie" class="quote-contact__logo" />
+                                    <div class="quote-contact__client-row">
+                                        <mat-icon class="icon-size-6 icon-thick text-emerald-700" [svgIcon]="'heroicons_outline:user-circle'"></mat-icon>
+                                        <p>{{ informacionCotizacion.cliente_nombre || 'Cliente' }}</p>
+                                    </div>
+
+                                    <div class="quote-contact__agent-card">
+                                        <p class="quote-contact__agent-label">Le atendio: {{ informacionCotizacion.empleado_nombre || 'Trotapie' }}</p>
+                                        <p class="quote-contact__agent-date">{{ informacionCotizacion.fecha_creacion | dateI18n:'dd/MM/yyyy | HH:mm':informacionCotizacion.idioma }}</p>
+                                    </div>
                                 </section>
 
-                                <div class="quote-glass-card p-7 sm:p-8">
-                                    <div class="flex items-center gap-4">
-                                        <div class="quote-icon-card">
-                                            <mat-icon class="icon-size-5 icon-thick" [svgIcon]="'heroicons_outline:calendar-days'"></mat-icon>
+                                <article class="quote-hero-card">
+                                    <p class="quote-hero-card__eyebrow">Cotizacion</p>
+                                    <p class="quote-hero-card__message">Ya casi tienes tu alojamiento en {{ informacionCotizacion.destino_nombre }}</p>
+                                    <p class="quote-hero-card__folio">CTRO-{{ informacionCotizacion.id }}</p>
+                                </article>
+                            </div>
+
+                            <div class="space-y-6 pt-4 w-full min-w-0">
+                                <div class="quote-hotel-card quote-hotel-card--split">
+                                    <div class="quote-hotel-card__media-column">
+                                        <div class="quote-hotel-card__header">
+                                            <p class="quote-hotel-card__eyebrow">Hotel seleccionado</p>
+                                            <h2 class="quote-hotel-card__title">
+                                                {{ informacionCotizacion.nombre_hotel }}
+                                            </h2>
                                         </div>
-                                        <div>
-                                            <p class="quote-eyebrow">{{ t('fechas_viaje') }}</p>
-                                            <p class="font-black text-slate-950 dark:text-white text-base sm:text-lg capitalize">
-                                                {{ informacionCotizacion.fecha_entrada | dateI18n:'dd MMM yyyy':informacionCotizacion.idioma }} -
-                                                {{informacionCotizacion.fecha_salida | dateI18n:'dd MMM yyyy':informacionCotizacion.idioma}}
-                                            </p>
-                                            <p class="text-xs font-semibold text-slate-500 dark:text-slate-300 mt-1">
-                                                {{ t('noches-s', { noches: informacionCotizacion.noches }) }}
-                                            </p>
+                                        <div class="quote-hotel-card__media">
+                                            <img
+                                                alt="Hotel {{ informacionCotizacion.nombre_hotel }}"
+                                                class="h-full w-full object-cover"
+                                                [src]="informacionCotizacion.fondo || ''" />
                                         </div>
+                                    </div>
+
+                                    <div class="quote-hotel-card__details ">
+                                        <div class="flex items-center gap-3">
+                                            <div class="quote-icon-card">
+                                                <mat-icon class="icon-size-6 icon-thick" style="color:#0f766e" [svgIcon]="'heroicons_outline:calendar-days'"></mat-icon>
+                                            </div>
+                                            <div>
+                                                <p class="font-black text-slate-950 dark:text-white text-base sm:text-lg">
+                                                    {{ formatearRangoFechaCompacto(informacionCotizacion.fecha_entrada,
+                                                    informacionCotizacion.fecha_salida, informacionCotizacion.idioma) }}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex items-center gap-3">
+                                            <div class="quote-icon-card">
+                                                <mat-icon class="icon-size-6 icon-thick" style="color:#0f766e" [svgIcon]="'heroicons_outline:moon'"></mat-icon>
+                                            </div>
+                                            <div>
+                                                <p class="font-black text-slate-950 dark:text-white text-base sm:text-lg capitalize">
+                                                   {{ t('noches-s', { noches: informacionCotizacion.noches }) }}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex items-center gap-3">
+                                            <div class="quote-icon-card">
+                                                <mat-icon class="icon-size-6 icon-thick" style="color:#0f766e" [svgIcon]="'heroicons_outline:check-badge'"></mat-icon>
+                                            </div>
+                                            <div>
+                                                <p class="font-black text-slate-950 dark:text-white text-base sm:text-lg capitalize">
+                                                    {{informacionCotizacion.regimen}}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex items-center gap-3">
+                                            <div class="quote-icon-card">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor"
+                                                    class="icon-size-6 icon-thick" style="color:#0f766e" aria-hidden="true">
+                                                    <path
+                                                        d="M40-200v-600h80v400h320v-320h320q66 0 113 47t47 113v360h-80v-120H120v120H40Zm155-275q-35-35-35-85t35-85q35-35 85-35t85 35q35 35 35 85t-35 85q-35 35-85 35t-85-35Zm325 75h320v-160q0-33-23.5-56.5T760-640H520v240ZM308.5-531.5Q320-543 320-560t-11.5-28.5Q297-600 280-600t-28.5 11.5Q240-577 240-560t11.5 28.5Q263-520 280-520t28.5-11.5ZM280-560Zm240-80v240-240Z" />
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <p class="font-black text-slate-950 dark:text-white text-base sm:text-lg capitalize">
+                                                    {{ resumenHabitacionesYPersonas }}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div class="quote-hotel-divider" aria-hidden="true"></div>
+
+                                        @if (amenidadesDestacadas.length) {
+                                        <div class="quote-hotel-amenities" aria-label="Amenidades destacadas">
+                                            @for (amenidad of amenidadesDestacadas; track amenidad.id) {
+                                            <button type="button" class="quote-hotel-amenity-chip quote-hotel-amenity-chip--flat"
+                                                [attr.title]="amenidad.descripcion" [attr.aria-label]="amenidad.descripcion">
+                                                    @if (esIconoSvgCrudo(amenidad.icono)) {
+                                                <span class="quote-hotel-amenity-chip__svg text-emerald-700"
+                                                        [innerHTML]="iconoSvgSeguro(amenidad.icono)"></span>
+                                                } @else if (tieneIconoCargado(amenidad.icono)) {
+                                                <mat-icon class="icon-size-6 icon-thick text-emerald-700"
+                                                    style="color:#0f766e"
+                                                    [svgIcon]="amenidad.icono"></mat-icon>
+                                                }
+                                            </button>
+                                            }
+                                        </div>
+                                        }
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="relative h-[420px] lg:h-[550px] rounded-[2.5rem] overflow-hidden shadow-2xl shadow-slate-900/15">
+                            <!-- <div class="relative h-[420px] lg:h-[550px] rounded-[2.5rem] overflow-hidden shadow-2xl shadow-slate-900/15">
                                 <img alt="Imagen destino" class="w-full h-full object-cover"
                                     [src]="informacionCotizacion.imagen_cotizacion || fallback" />
                                 <div class="absolute inset-0 bg-gradient-to-t from-slate-950/35 via-transparent to-white/10"></div>
@@ -90,7 +168,7 @@
                                         {{informacionCotizacion.destino_nombre}}
                                     </p>
                                 </div>
-                            </div>
+                            </div> -->
                         </section>
 
                         <section class="space-y-8 mb-16">
@@ -102,32 +180,35 @@
                                             <p class="quote-eyebrow">Tarifa</p>
                                             <h2>{{ t('precio_sin_seguro') }}</h2>
                                         </div>
-                                        <p class="quote-rate-total">MXN {{ totalPorCampoPublico('precio') | currency }}</p>
                                     </div>
                                     <div class="quote-rate-table-wrap">
                                         <table class="quote-rate-table">
                                             <thead>
                                                 <tr>
-                                                    <th>Habitación</th>
+                                                    <th></th>
                                                     <th>Acomodo</th>
                                                     <th>Categoría</th>
-                                                    <th>Tarifa</th>
+                                                    <th class="quote-price-cell">Tarifa</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 @for (habitacionCotizacion of habitacionesCotizacionPublicaVista; track $index) {
                                                 @if (habitacionCotizacion.precioSinSeguro !== null) {
                                                 <tr>
-                                                    <td data-label="Habitación">{{ getEtiquetaCotizacionMultiple(habitacionCotizacion) }}</td>
+                                                    <td data-label="Habitación"></td>
                                                     <td data-label="Acomodo">{{ habitacionCotizacion.detalleHabitacion || '-' }}</td>
                                                     <td data-label="Categoría">{{ habitacionCotizacion.tipoHabitacion || habitacionCotizacion.hotelNombre || '-' }}</td>
-                                                    <td data-label="Tarifa" class="quote-money">MXN {{ habitacionCotizacion.precioSinSeguro | currency }}</td>
+                                                    <td data-label="Tarifa" class="quote-money quote-price-cell">MXN {{ habitacionCotizacion.precioSinSeguro | currency }}</td>
                                                 </tr>
                                                 }
                                                 }
                                             </tbody>
                                         </table>
                                     </div>
+                                    <section class="quote-rate-summary">
+                                        <p class="quote-rate-total">MXN {{ totalPorCampoPublico('precio') | currency }}</p>
+                                        <p class="quote-rate-deadline">| Se requiere pago inmediato</p>
+                                    </section>
                                     <div class="quote-policy-panel">
                                         <p>Políticas de reserva</p>
                                         <div class="quote-policy-list">
@@ -146,38 +227,39 @@
                                             <p class="quote-eyebrow">Tarifa</p>
                                             <h2>{{ t('precio_con_seguro') }}</h2>
                                         </div>
-                                        <p class="quote-rate-total">MXN {{ totalPorCampoPublico('precioConSeguro') | currency }}</p>
                                     </div>
                                     <div class="quote-rate-table-wrap">
                                         <table class="quote-rate-table">
                                             <thead>
                                                 <tr>
-                                                    <th>Habitación</th>
+                                                    <th></th>
                                                     <th>Acomodo</th>
                                                     <th>Categoría</th>
-                                                    <th>Tarifa</th>
-                                                    <th>Apartado</th>
-                                                    <th>Pague después</th>
-                                                    <th>Fecha límite</th>
+                                                    <th class="quote-price-cell">Tarifa</th>
+                                                    <th class="quote-price-cell">Apartado</th>
+                                                    <th class="quote-price-cell">Pague después</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 @for (habitacionCotizacion of habitacionesCotizacionPublicaVista; track $index) {
                                                 @if (habitacionCotizacion.precioConSeguro !== null) {
                                                 <tr>
-                                                    <td data-label="Habitación">{{ getEtiquetaCotizacionMultiple(habitacionCotizacion) }}</td>
+                                                    <td data-label="Habitación"></td>
                                                     <td data-label="Acomodo">{{ habitacionCotizacion.detalleHabitacion || '-' }}</td>
                                                     <td data-label="Categoría">{{ habitacionCotizacion.tipoHabitacion || habitacionCotizacion.hotelNombre || '-' }}</td>
-                                                    <td data-label="Tarifa" class="quote-money">MXN {{ habitacionCotizacion.precioConSeguro | currency }}</td>
-                                                    <td data-label="Apartado">{{ habitacionCotizacion.apartadoSeguro | currency }} MXN</td>
-                                                    <td data-label="Pague después">{{ habitacionCotizacion.pagueDespuesSeguro | currency }} MXN</td>
-                                                    <td data-label="Fecha límite">{{ habitacionCotizacion.fechaLimiteSeguro | dateI18n:'dd MMM yyyy':informacionCotizacion.idioma }}</td>
+                                                    <td data-label="Tarifa" class="quote-money quote-price-cell">MXN {{ habitacionCotizacion.precioConSeguro | currency }}</td>
+                                                    <td data-label="Apartado" class="quote-price-cell">{{ habitacionCotizacion.apartadoSeguro | currency }} MXN</td>
+                                                    <td data-label="Pague después" class="quote-price-cell">{{ habitacionCotizacion.pagueDespuesSeguro | currency }} MXN</td>
                                                 </tr>
                                                 }
                                                 }
                                             </tbody>
                                         </table>
                                     </div>
+                                    <section class="quote-rate-summary">
+                                        <p class="quote-rate-total">MXN {{ totalPorCampoPublico('precioConSeguro') | currency }}</p>
+                                        <p class="quote-rate-deadline">| Pague antes de {{ informacionCotizacion.fecha_limite_seguro | dateI18n:'dd/MM/yyyy':informacionCotizacion.idioma }}</p>
+                                    </section>
                                     <div class="quote-policy-panel">
                                         <p>Políticas de reserva</p>
                                         <div class="quote-policy-list">
@@ -196,38 +278,40 @@
                                             <p class="quote-eyebrow">Tarifa</p>
                                             <h2>{{ t('precio_a_meses') }}</h2>
                                         </div>
-                                        <p class="quote-rate-total">MXN {{ totalPorCampoPublico('precioMeses') | currency }}</p>
+                                        
                                     </div>
                                     <div class="quote-rate-table-wrap">
                                         <table class="quote-rate-table">
                                             <thead>
                                                 <tr>
-                                                    <th>Habitación</th>
+                                                    <th></th>
                                                     <th>Acomodo</th>
                                                     <th>Categoría</th>
-                                                    <th>Tarifa</th>
-                                                    <th>Apartado</th>
-                                                    <th>Pague después</th>
-                                                    <th>Fecha límite</th>
+                                                    <th class="quote-price-cell">Tarifa</th>
+                                                    <th class="quote-price-cell">Apartado</th>
+                                                    <th class="quote-price-cell">Pague después</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 @for (habitacionCotizacion of habitacionesCotizacionPublicaVista; track $index) {
                                                 @if (habitacionCotizacion.precioMeses !== null) {
                                                 <tr>
-                                                    <td data-label="Habitación">{{ getEtiquetaCotizacionMultiple(habitacionCotizacion) }}</td>
+                                                    <td data-label="Habitación"></td>
                                                     <td data-label="Acomodo">{{ habitacionCotizacion.detalleHabitacion || '-' }}</td>
                                                     <td data-label="Categoría">{{ habitacionCotizacion.tipoHabitacion || habitacionCotizacion.hotelNombre || '-' }}</td>
-                                                    <td data-label="Tarifa" class="quote-money">MXN {{ habitacionCotizacion.precioMeses | currency }}</td>
-                                                    <td data-label="Apartado">{{ habitacionCotizacion.apartadoMeses | currency }} MXN</td>
-                                                    <td data-label="Pague después">{{ habitacionCotizacion.pagueDespuesMeses | currency }} MXN</td>
-                                                    <td data-label="Fecha límite">{{ habitacionCotizacion.fechaLimiteMeses | dateI18n:'dd MMM yyyy':informacionCotizacion.idioma }}</td>
+                                                    <td data-label="Tarifa" class="quote-money quote-price-cell">MXN {{ habitacionCotizacion.precioMeses | currency }}</td>
+                                                    <td data-label="Apartado" class="quote-price-cell">{{ habitacionCotizacion.apartadoMeses | currency }} MXN</td>
+                                                    <td data-label="Pague después" class="quote-price-cell">{{ habitacionCotizacion.pagueDespuesMeses | currency }} MXN</td>
                                                 </tr>
                                                 }
                                                 }
                                             </tbody>
                                         </table>
                                     </div>
+                                    <section class="quote-rate-summary">
+                                        <p class="quote-rate-total">MXN {{ totalPorCampoPublico('precioMeses') | currency }}</p>
+                                        <p class="quote-rate-deadline">| Pague antes de {{ informacionCotizacion.fecha_limite_meses | dateI18n:'dd/MM/yyyy':informacionCotizacion.idioma }}</p>
+                                    </section>
                                     <div class="quote-policy-panel">
                                         <p>Políticas de reserva</p>
                                         <div class="quote-policy-list">
@@ -246,28 +330,31 @@
                                             <p class="quote-eyebrow">Tarifa</p>
                                             <h2>{{ t('precio_sin_seguro') }}</h2>
                                         </div>
-                                        <p class="quote-rate-total">MXN {{ precioSinSeguro.precio | currency }}</p>
                                     </div>
                                     <div class="quote-rate-table-wrap">
                                         <table class="quote-rate-table">
                                             <thead>
                                                 <tr>
-                                                    <th>Habitación</th>
+                                                    <th></th>
                                                     <th>Acomodo</th>
                                                     <th>Categoría</th>
-                                                    <th>Tarifa</th>
+                                                    <th class="quote-price-cell">Tarifa</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 <tr>
-                                                    <td data-label="Habitación">Habitación 1</td>
+                                                    <td data-label="Habitación"></td>
                                                     <td data-label="Acomodo">{{informacionCotizacion.idioma ==='es' ? informacionCotizacion.habitaciones.es : informacionCotizacion.habitaciones.traduccion}}</td>
                                                     <td data-label="Categoría">{{ displayHabitacion(edicionForm.get('tipoHabitacion')?.value) || '-' }}</td>
-                                                    <td data-label="Tarifa" class="quote-money">MXN {{ precioSinSeguro.precio | currency }}</td>
+                                                    <td data-label="Tarifa" class="quote-money quote-price-cell">MXN {{ precioSinSeguro.precio | currency }}</td>
                                                 </tr>
                                             </tbody>
                                         </table>
                                     </div>
+                                    <section class="quote-rate-summary">
+                                        <p class="quote-rate-total">MXN {{ precioSinSeguro.precio | currency }}</p>
+                                        <p class="quote-rate-deadline">| Se requiere pago inmediato</p>
+                                    </section>
                                     <div class="quote-policy-panel">
                                         <p>Políticas de reserva</p>
                                         <div class="quote-policy-list">
@@ -286,34 +373,35 @@
                                             <p class="quote-eyebrow">Tarifa</p>
                                             <h2>{{ t('precio_con_seguro') }}</h2>
                                         </div>
-                                        <p class="quote-rate-total">MXN {{ precioConSeguro.precio | currency }}</p>
                                     </div>
                                     <div class="quote-rate-table-wrap">
                                         <table class="quote-rate-table">
                                             <thead>
                                                 <tr>
-                                                    <th>Habitación</th>
+                                                    <th></th>
                                                     <th>Acomodo</th>
                                                     <th>Categoría</th>
-                                                    <th>Tarifa</th>
-                                                    <th>Apartado</th>
-                                                    <th>Pague después</th>
-                                                    <th>Fecha límite</th>
+                                                    <th class="quote-price-cell">Tarifa</th>
+                                                    <th class="quote-price-cell">Apartado</th>
+                                                    <th class="quote-price-cell">Pague después</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 <tr>
-                                                    <td data-label="Habitación">Habitación 1</td>
+                                                    <td data-label="Habitación"></td>
                                                     <td data-label="Acomodo">{{informacionCotizacion.idioma ==='es' ? informacionCotizacion.habitaciones.es : informacionCotizacion.habitaciones.traduccion}}</td>
                                                     <td data-label="Categoría">{{ displayHabitacion(edicionForm.get('tipoHabitacion')?.value) || '-' }}</td>
-                                                    <td data-label="Tarifa" class="quote-money">MXN {{ precioConSeguro.precio | currency }}</td>
-                                                    <td data-label="Apartado">{{ edicionForm.get('cantidadApartado')?.value | currency }} MXN</td>
-                                                    <td data-label="Pague después">{{ edicionForm.get('pagueDespuesApartado')?.value | currency }} MXN</td>
-                                                    <td data-label="Fecha límite">{{ informacionCotizacion.fecha_limite_seguro | dateI18n:'dd MMM yyyy':informacionCotizacion.idioma }}</td>
+                                                    <td data-label="Tarifa" class="quote-money quote-price-cell">MXN {{ precioConSeguro.precio | currency }}</td>
+                                                    <td data-label="Apartado" class="quote-price-cell">{{ edicionForm.get('cantidadApartado')?.value | currency }} MXN</td>
+                                                    <td data-label="Pague después" class="quote-price-cell">{{ edicionForm.get('pagueDespuesApartado')?.value | currency }} MXN</td>
                                                 </tr>
                                             </tbody>
                                         </table>
                                     </div>
+                                    <section class="quote-rate-summary">
+                                        <p class="quote-rate-total">MXN {{ precioConSeguro.precio | currency }}</p>
+                                        <p class="quote-rate-deadline">| Pague antes de {{ informacionCotizacion.fecha_limite_seguro | dateI18n:'dd/MM/yyyy':informacionCotizacion.idioma }}</p>
+                                    </section>
                                     <div class="quote-policy-panel">
                                         <p>Políticas de reserva</p>
                                         <div class="quote-policy-list">
@@ -332,34 +420,35 @@
                                             <p class="quote-eyebrow">Tarifa</p>
                                             <h2>{{ t('precio_a_meses') }}</h2>
                                         </div>
-                                        <p class="quote-rate-total">MXN {{ precioAMeses.precio | currency }}</p>
                                     </div>
                                     <div class="quote-rate-table-wrap">
                                         <table class="quote-rate-table">
                                             <thead>
                                                 <tr>
-                                                    <th>Habitación</th>
+                                                    <th></th>
                                                     <th>Acomodo</th>
                                                     <th>Categoría</th>
-                                                    <th>Tarifa</th>
-                                                    <th>Apartado</th>
-                                                    <th>Pague después</th>
-                                                    <th>Fecha límite</th>
+                                                    <th class="quote-price-cell">Tarifa</th>
+                                                    <th class="quote-price-cell">Apartado</th>
+                                                    <th class="quote-price-cell">Pague después</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 <tr>
-                                                    <td data-label="Habitación">Habitación 1</td>
+                                                    <td data-label="Habitación"></td>
                                                     <td data-label="Acomodo">{{informacionCotizacion.idioma ==='es' ? informacionCotizacion.habitaciones.es : informacionCotizacion.habitaciones.traduccion}}</td>
                                                     <td data-label="Categoría">{{ displayHabitacion(edicionForm.get('tipoHabitacion')?.value) || '-' }}</td>
-                                                    <td data-label="Tarifa" class="quote-money">MXN {{ precioAMeses.precio | currency }}</td>
-                                                    <td data-label="Apartado">{{ edicionForm.get('cantidadMeses')?.value | currency }} MXN</td>
-                                                    <td data-label="Pague después">{{ edicionForm.get('pagueDespuesMeses')?.value | currency }} MXN</td>
-                                                    <td data-label="Fecha límite">{{ informacionCotizacion.fecha_limite_meses | dateI18n:'dd MMM yyyy':informacionCotizacion.idioma }}</td>
+                                                    <td data-label="Tarifa" class="quote-money quote-price-cell">MXN {{ precioAMeses.precio | currency }}</td>
+                                                    <td data-label="Apartado" class="quote-price-cell">{{ edicionForm.get('cantidadMeses')?.value | currency }} MXN</td>
+                                                    <td data-label="Pague después" class="quote-price-cell">{{ edicionForm.get('pagueDespuesMeses')?.value | currency }} MXN</td>
                                                 </tr>
                                             </tbody>
                                         </table>
                                     </div>
+                                    <section class="quote-rate-summary">
+                                        <p class="quote-rate-total">MXN {{ precioAMeses.precio | currency }}</p>
+                                        <p class="quote-rate-deadline">| Pague antes de {{ informacionCotizacion.fecha_limite_meses | dateI18n:'dd/MM/yyyy':informacionCotizacion.idioma }}</p>
+                                    </section>
                                     <div class="quote-policy-panel">
                                         <p>Políticas de reserva</p>
                                         <div class="quote-policy-list">
@@ -1931,12 +2020,12 @@
                         </section>
                         }
 
-                        <div class="flex items-center gap-4 mb-8">
+                        <!-- <div class="flex items-center gap-4 mb-8">
                             <h2 class="text-2xl font-black text-slate-800 dark:text-slate-100">{{
                                 t('alojamiento_seleccionado') }}</h2>
                             <div class="h-px flex-1 bg-slate-200 dark:bg-slate-800 opacity-50"></div>
-                        </div>
-                        <div
+                        </div> -->
+                        <!-- <div
                             class="bg-white dark:bg-slate-800 rounded-[2.5rem] overflow-hidden shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-50 dark:border-slate-700">
                             <div class="flex flex-col">
                                 <div class="grid grid-cols-1 lg:grid-cols-12">
@@ -2012,7 +2101,6 @@
                                         </div>
                                     </div>
                                 </div>
-                                <!-- TODO: AMENIDADES DEL HOTEL -->
                                 <div
                                     class="bg-slate-50/50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700">
                                     <div class="grid grid-cols-1 gap-0 divide-x divide-slate-100 dark:divide-slate-700">
@@ -2023,9 +2111,16 @@
                                             <section
                                                 class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 space-y-4 text-xs font-semibold  text-slate-600 dark:text-slate-400">
                                                 @for (e of informacionCotizacion.actividades; track e.id) {
-                                                <span class="flex items-center gap-3"><mat-icon
-                                                        class="icon-size-5 text-emerald-600 icon-thick"
-                                                        [svgIcon]="'heroicons_outline:check-badge'"></mat-icon>
+                                                <span class="flex items-center gap-3">
+                                                    @if (e.icono && tieneIconoCargado(e.icono)) {
+                                                    @if (esIconoSvgCrudo(e.icono)) {
+                                                    <span class="inline-flex h-5 w-5 items-center justify-center text-emerald-600"
+                                                        [innerHTML]="iconoSvgSeguro(e.icono)"></span>
+                                                    } @else {
+                                                    <mat-icon class="icon-size-5 text-emerald-600 icon-thick"
+                                                        [svgIcon]="e.icono"></mat-icon>
+                                                    }
+                                                    }
                                                     {{e.descripcion}}</span>
                                                 }
                                             </section>
@@ -2034,19 +2129,34 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="mt-20">
+                        </div> -->
+                        <!-- <div class="mt-20">
                             <app-imagenes-carrusel [imagenesCargadas]="informacionCotizacion.imagenes" />
-                        </div>
-                        <div
-                            class="mt-20 p-8 bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/30 rounded-[2rem] flex gap-5">
-                            <mat-icon class="icon-size-5 icon-thick text-blue-800 dark:text-blue-300"
-                                [svgIcon]="'heroicons_outline:information-circle'"></mat-icon>
-                            <div
-                                class="text-[11px] font-medium text-blue-800 dark:text-blue-300 leading-relaxed uppercase tracking-wider">
-                                {{ t('aviso_legal') }}
+                        </div> -->
+                        <section class="quote-legal-card mt-2">
+                            <div class="quote-legal-notice p-8 flex gap-5">
+                                <mat-icon class="icon-size-5 icon-thick text-blue-800 dark:text-blue-300"
+                                    [svgIcon]="'heroicons_outline:information-circle'"></mat-icon>
+                                <div
+                                    class="text-[11px] font-medium text-blue-800 dark:text-blue-300 leading-relaxed uppercase tracking-wider">
+                                    {{ t('aviso_legal') }}
+                                </div>
                             </div>
-                        </div>
+
+                            @if (!esEdicion) {
+                            <section class="quote-contact-bar" aria-label="Datos de contacto Trotapie">
+                                <a class="quote-contact-bar__item" [href]="enlaceCorreoContacto" aria-label="Enviar correo a reservas Trotapie">
+                                    <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:envelope'"></mat-icon>
+                                    <span>reservas&#64;trotapie.com</span>
+                                </a>
+                                <span class="quote-contact-bar__divider" aria-hidden="true"></span>
+                                <a class="quote-contact-bar__item" [href]="enlaceWhatsappContacto" target="_blank" rel="noopener noreferrer" aria-label="Contactar por WhatsApp a Trotapie">
+                                    <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:phone'"></mat-icon>
+                                    <span>+52 618 803 2093</span>
+                                </a>
+                            </section>
+                            }
+                        </section>
 
                     </main>
                     <div class="no-print sticky bottom-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl

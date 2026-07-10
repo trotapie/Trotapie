@@ -14,6 +14,7 @@ export interface ICotizacion {
     cliente_telefono: number;
     nombre_hotel: string;
     fondo: string;
+    icono?: string | null;
     estrellas: number;
     ubicacion: string;
     imagenes: Imagene[];
@@ -22,6 +23,7 @@ export interface ICotizacion {
     empleado_nombre: string;
     regimen?: string | null;
     estatus: string;
+    actividades?: CotizacionActividad[];
     precios: PreciosYCondiciones[];
     politicas_tarifas: PoliticasTarifas;
     porcentaje_meses: number;
@@ -52,6 +54,12 @@ export interface CotizacionMultipleItem {
     origen_reservacion_precio_id?: number | null;
     origen_reservacion_con_seguro_id?: number | null;
     origen_reservacion_meses_id?: number | null;
+}
+
+export interface CotizacionActividad {
+    id: number;
+    descripcion: string;
+    icono?: string | null;
 }
 
 export interface Habitaciones {

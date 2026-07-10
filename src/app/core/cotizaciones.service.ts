@@ -201,7 +201,7 @@ export class CotizacionesService {
     );
     if (error) throw error;
 
-    return data?.[0] ?? null;
+    return this.enriquecerCotizacionConIcono(data?.[0] ?? null);
     // TODO: AGREGAR LA IMAGEN DE FONDO DEL DESTINO Y TRAERLA  Y AL TRAER LA INFO MOSTRAR LA DESCRIPCION,
     // TAMBIEN TRAER EL REGIMEN QUE SE SELECCIONO
   }
@@ -213,9 +213,139 @@ export class CotizacionesService {
     );
     if (error) throw error;
 
-    return data?.[0] ?? null;
+    return this.enriquecerCotizacionConIcono(data?.[0] ?? null);
     // TODO: AGREGAR LA IMAGEN DE FONDO DEL DESTINO Y TRAERLA  Y AL TRAER LA INFO MOSTRAR LA DESCRIPCION,
     // TAMBIEN TRAER EL REGIMEN QUE SE SELECCIONO
+  }
+
+  private async enriquecerCotizacionConIcono(cotizacion: any) {
+    if (!cotizacion) {
+      return null;
+    }
+
+    const iconoExistente =
+      cotizacion?.icono ??
+      cotizacion?.concepto?.icono ??
+      cotizacion?.descuento?.icono ??
+      cotizacion?.hotel?.concepto?.icono ??
+      cotizacion?.hotel?.descuento?.icono ??
+      cotizacion?.cotizacion_multiple?.[0]?.icono ??
+      cotizacion?.cotizacion_multiple?.[0]?.hotel?.concepto?.icono ??
+      cotizacion?.cotizacion_multiple?.[0]?.hotel?.descuento?.icono ??
+      null;
+
+    if (String(iconoExistente ?? '').trim()) {
+      return {
+        ...cotizacion,
+        icono: iconoExistente
+      };
+    }
+
+    const hotelIdCrudo =
+      cotizacion?.hotel_id ??
+      cotizacion?.hotelId ??
+      cotizacion?.cotizacion_multiple?.[0]?.hotel_id ??
+      cotizacion?.cotizacion_multiple?.[0]?.hotelId ??
+      null;
+    const hotelId = Number(hotelIdCrudo);
+
+    const actividadesBase = Array.isArray(cotizacion?.actividades) ? cotizacion.actividades : [];
+    const actividadIds = actividadesBase
+      .map((item: any) => Number(item?.id))
+      .filter((id: number) => Number.isFinite(id) && id > 0);
+
+    let iconosActividades = new Map<number, string | null>();
+    if (actividadIds.length) {
+      try {
+        const { data: actividadesData, error: actividadesError } = await this.client
+          .from('actividades')
+          .select('id, icono')
+          .in('id', actividadIds);
+
+        if (!actividadesError) {
+          iconosActividades = new Map<number, string | null>(
+            (actividadesData ?? []).map((item: any) => [Number(item.id), item.icono ?? null])
+          );
+        }
+      } catch {
+        // Si falla el enriquecimiento, dejamos el payload original.
+      }
+    }
+
+    if (!Number.isFinite(hotelId) || hotelId <= 0) {
+      return {
+        ...cotizacion,
+        actividades: actividadesBase.map((item: any) => ({
+          ...item,
+          icono: item?.icono ?? iconosActividades.get(Number(item?.id)) ?? null
+        }))
+      };
+    }
+
+    try {
+      const idiomaCodigo = String(cotizacion?.idioma ?? 'es').trim().toLowerCase() || 'es';
+      const idiomaId = await this.supabase.getIdiomaId(idiomaCodigo);
+
+      const { data, error } = await this.client
+        .from('hoteles')
+        .select(`
+          concepto:concepto_id ( icono ),
+          descuento:descuento_id ( icono ),
+          actividades:actividades_hotel!actividades_hotel_hotel_id_fkey (
+            actividad:actividades!actividades_hotel_actividad_id_fkey (
+              id,
+              icono,
+              descripcion,
+              traducciones:actividades_traducciones (
+                idioma_id,
+                descripcion
+              )
+            )
+          )
+        `)
+        .eq('id', hotelId)
+        .maybeSingle();
+
+      if (error) {
+        return cotizacion;
+      }
+
+      const hotelRelacion = data as any;
+      const actividades = (hotelRelacion?.actividades ?? [])
+        .map((item: any) => {
+          const actividad = item?.actividad ?? null;
+          const traduccion = actividad?.traducciones?.find((t: any) => t.idioma_id === idiomaId);
+          const descripcion = String(traduccion?.descripcion ?? actividad?.descripcion ?? '').trim();
+
+          if (!descripcion) {
+            return null;
+          }
+
+          return {
+            id: Number(actividad?.id),
+            descripcion,
+            icono: actividad?.icono ?? null
+          };
+        })
+        .filter(Boolean);
+
+      return {
+        ...cotizacion,
+        icono: hotelRelacion?.concepto?.icono ?? hotelRelacion?.descuento?.icono ?? cotizacion?.icono ?? null,
+        actividades: (actividades.length ? actividades : actividadesBase).map((item: any) => ({
+          ...item,
+          icono: item?.icono ?? iconosActividades.get(Number(item?.id)) ?? null
+        }))
+      };
+    } catch {
+      return {
+        ...cotizacion,
+        actividades: actividadesBase.map((item: any) => ({
+          ...item,
+          icono: item?.icono ?? iconosActividades.get(Number(item?.id)) ?? null
+        }))
+      };
+    }
   }
 
   tipoHabitaciones() {
