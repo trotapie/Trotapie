@@ -796,6 +796,10 @@
   text-align: center !important;
 }
 
+.quote-payment-details {
+  display: none;
+}
+
 .quote-rate-summary {
   display: flex;
   flex-wrap: wrap;
@@ -1073,58 +1077,175 @@
   }
 
   .quote-rate-table-wrap {
-    border: 0;
-    background: transparent;
+    overflow: visible;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.82);
+    -webkit-overflow-scrolling: touch;
   }
 
-  .quote-rate-table,
-  .quote-rate-table tbody,
-  .quote-rate-table tr,
-  .quote-rate-table td {
+  .quote-rate-table {
+    min-width: 100%;
+    table-layout: fixed;
+  }
+
+  .quote-rate-table thead,
+  .quote-rate-table tbody {
     display: block;
-    width: 100%;
-  }
-
-  .quote-rate-table thead {
-    display: none;
   }
 
   .quote-rate-table tr {
-    margin-bottom: 0.85rem;
-    overflow: hidden;
-    border: 1px solid rgba(226, 232, 240, 0.9);
-    border-radius: 1.15rem;
-    background: rgba(255, 255, 255, 0.86);
+    display: flex;
+    width: 100%;
   }
 
-  .quote-rate-table tr:last-child {
-    margin-bottom: 0;
-  }
-
+  .quote-rate-table th,
   .quote-rate-table td {
-    display: grid;
-    grid-template-columns: 7.5rem 1fr;
-    gap: 0.85rem;
-    padding: 0.85rem 1rem;
-    border-bottom: 1px solid rgba(226, 232, 240, 0.82);
+    flex: 0 0 auto;
+    padding: 0.5rem 0.15rem;
+    font-size: 0.6rem;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
   }
 
-  .quote-price-cell {
-    padding-right: 1rem !important;
+  .quote-rate-table th {
+    font-size: 0.56rem;
+    line-height: 1.15;
+    letter-spacing: 0.06em;
   }
 
-  .quote-rate-table td::before {
-    content: attr(data-label);
-    font-size: 0.66rem;
+  .quote-rate-table th:first-child,
+  .quote-rate-table td:first-child {
+    width: 13%;
+  }
+
+  .quote-rate-table th:nth-child(2),
+  .quote-rate-table td:nth-child(2) {
+    width: 20%;
+  }
+
+  .quote-rate-table th:nth-child(3),
+  .quote-rate-table td:nth-child(3) {
+    width: 21%;
+  }
+
+  .quote-rate-table .quote-price-cell {
+    width: 15.33%;
+  }
+
+  .quote-rate-table .quote-payment-details {
+    display: block;
+    width: 28%;
+  }
+
+  .quote-rate-table tr:has(> .quote-payment-details) > :first-child {
+    width: 10%;
+  }
+
+  .quote-rate-table tr:has(> .quote-payment-details) > :nth-child(2) {
+    width: 20%;
+  }
+
+  .quote-rate-table tr:has(> .quote-payment-details) > :nth-child(3) {
+    width: 22%;
+  }
+
+  .quote-rate-table tr:has(> .quote-payment-details) > .quote-price-cell {
+    width: 20%;
+  }
+
+  .quote-rate-table tr:has(> .quote-payment-details) > :nth-child(5),
+  .quote-rate-table tr:has(> .quote-payment-details) > :nth-child(6) {
+    display: none;
+  }
+
+  .quote-payment-popover {
+    position: relative;
+  }
+
+  .quote-payment-popover summary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 1.8rem;
+    padding: 0.25rem;
+    border-radius: 0.45rem;
+    color: #087f6f;
+    background: rgba(8, 127, 111, 0.1);
+    font-size: 0.58rem;
     font-weight: 900;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .quote-payment-popover summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .quote-payment-popover > div {
+    position: absolute;
+    z-index: 10;
+    right: 0;
+    bottom: calc(100% + 0.35rem);
+    width: min(11rem, 70vw);
+    padding: 0.6rem;
+    border: 1px solid rgba(8, 127, 111, 0.2);
+    border-radius: 0.65rem;
+    background: #ffffff;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+  }
+
+  .quote-payment-popover p {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0.3rem 0;
+    font-size: 0.62rem;
+    font-weight: 800;
+    color: #0f172a;
+  }
+
+  .quote-payment-popover p + p {
+    border-top: 1px solid rgba(226, 232, 240, 0.9);
+  }
+
+  .quote-payment-popover span {
     color: #64748b;
   }
 
-  :host-context(.dark) .quote-rate-table tr {
+  .quote-rate-table tr:not(:has(> :nth-child(6))) > :nth-child(2) {
+    width: 30%;
+  }
+
+  .quote-rate-table tr:not(:has(> :nth-child(6))) > :nth-child(3) {
+    width: 31%;
+  }
+
+  .quote-rate-table tr:not(:has(> :nth-child(6))) > .quote-price-cell {
+    width: 26%;
+  }
+
+  .quote-rate-table .quote-money {
+    white-space: normal;
+  }
+
+  :host-context(.dark) .quote-rate-table-wrap {
     border-color: rgba(51, 65, 85, 0.9);
-    background: rgba(15, 23, 42, 0.76);
+    background: rgba(15, 23, 42, 0.74);
+  }
+
+  :host-context(.dark) .quote-payment-popover > div {
+    border-color: rgba(71, 85, 105, 0.9);
+    background: #1e293b;
+  }
+
+  :host-context(.dark) .quote-payment-popover p {
+    color: #f8fafc;
+  }
+
+  :host-context(.dark) .quote-payment-popover p + p {
+    border-top-color: rgba(71, 85, 105, 0.9);
   }
 }
 

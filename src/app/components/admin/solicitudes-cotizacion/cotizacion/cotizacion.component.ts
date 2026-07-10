@@ -1,4 +1,4 @@
-﻿import { Component, inject, OnInit, ViewChild } from '@angular/core';
+﻿import { Component, HostListener, inject, OnInit, ViewChild } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CatalogosAdminService } from 'app/core/catalogos-admin.service';
@@ -192,6 +192,24 @@ export class CotizacionComponent implements OnInit {
     { country: 'Uruguay', iso2: 'UY', dialCode: '598' },
     { country: 'Venezuela', iso2: 'VE', dialCode: '58' }
   ];
+
+  @HostListener('document:click', ['$event'])
+  cerrarDetallesAlTocarFuera(event: MouseEvent): void {
+    if ((event.target as HTMLElement).closest('.quote-payment-popover')) return;
+
+    document.querySelectorAll<HTMLDetailsElement>('.quote-payment-popover[open]').forEach((detalle) => {
+      detalle.open = false;
+    });
+  }
+
+  cerrarOtrosDetalles(event: Event): void {
+    const detalleActual = event.target as HTMLDetailsElement;
+    if (!detalleActual.open) return;
+
+    document.querySelectorAll<HTMLDetailsElement>('.quote-payment-popover[open]').forEach((detalle) => {
+      if (detalle !== detalleActual) detalle.open = false;
+    });
+  }
 
   telefonoForm = this.fb.group({
     lada: [this.defaultDialCode, [Validators.required]],

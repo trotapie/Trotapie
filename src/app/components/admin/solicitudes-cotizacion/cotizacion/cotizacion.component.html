@@ -42,7 +42,7 @@
         <section class="print-area bg-card m-5 rounded-3xl shadow-xl">
             <form [formGroup]="edicionForm">
                 <div class="text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-200 px-5">
-                    <main class="max-w-7xl mx-auto px-4 py-2 pb-32">
+                    <main class="max-w-7xl mx-auto px-4 py-2 pb-8">
                         @if (!esEdicion) {
                         <section class="public-quote-hero mb-14">
                             <div class="quote-top-layout">
@@ -263,9 +263,10 @@
                                                     <th></th>
                                                     <th>Acomodo</th>
                                                     <th>Categoría</th>
-                                                    <th class="quote-price-cell">Tarifa</th>
-                                                    <th class="quote-price-cell">Apartado</th>
-                                                    <th class="quote-price-cell">Pague después</th>
+                                                     <th class="quote-price-cell">Tarifa</th>
+                                                     <th class="quote-price-cell">Apartado</th>
+                                                     <th class="quote-price-cell">Pague después</th>
+                                                     <th class="quote-payment-details">Detalles</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -275,9 +276,18 @@
                                                     <td data-label="Habitación">{{ claveOrigenReservacion(habitacionCotizacion.origenReservacionConSeguro) }}</td>
                                                     <td data-label="Acomodo">{{ habitacionCotizacion.detalleHabitacion || '-' }}</td>
                                                     <td data-label="Categoría">{{ habitacionCotizacion.tipoHabitacion || habitacionCotizacion.hotelNombre || '-' }}</td>
-                                                    <td data-label="Tarifa" class="quote-money quote-price-cell">MXN {{ habitacionCotizacion.precioConSeguro | currency }}</td>
-                                                    <td data-label="Apartado" class="quote-price-cell">{{ habitacionCotizacion.apartadoSeguro | currency }} MXN</td>
-                                                    <td data-label="Pague después" class="quote-price-cell">{{ habitacionCotizacion.pagueDespuesSeguro | currency }} MXN</td>
+                                                     <td data-label="Tarifa" class="quote-money quote-price-cell">MXN {{ habitacionCotizacion.precioConSeguro | currency }}</td>
+                                                     <td data-label="Apartado" class="quote-price-cell">{{ habitacionCotizacion.apartadoSeguro | currency }} MXN</td>
+                                                     <td data-label="Pague después" class="quote-price-cell">{{ habitacionCotizacion.pagueDespuesSeguro | currency }} MXN</td>
+                                                     <td class="quote-payment-details">
+                                                         <details class="quote-payment-popover" (toggle)="cerrarOtrosDetalles($event)">
+                                                             <summary>Detalles</summary>
+                                                             <div>
+                                                                 <p><span>Apartado</span>{{ habitacionCotizacion.apartadoSeguro | currency }} MXN</p>
+                                                                 <p><span>Pague después</span>{{ habitacionCotizacion.pagueDespuesSeguro | currency }} MXN</p>
+                                                             </div>
+                                                         </details>
+                                                     </td>
                                                 </tr>
                                                 }
                                                 }
@@ -315,9 +325,10 @@
                                                     <th></th>
                                                     <th>Acomodo</th>
                                                     <th>Categoría</th>
-                                                    <th class="quote-price-cell">Tarifa</th>
-                                                    <th class="quote-price-cell">Apartado</th>
-                                                    <th class="quote-price-cell">Pague después</th>
+                                                     <th class="quote-price-cell">Tarifa</th>
+                                                     <th class="quote-price-cell">Apartado</th>
+                                                     <th class="quote-price-cell">Pague después</th>
+                                                     <th class="quote-payment-details">Detalles</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -327,9 +338,18 @@
                                                     <td data-label="Habitación">{{ claveOrigenReservacion(habitacionCotizacion.origenReservacionMeses) }}</td>
                                                     <td data-label="Acomodo">{{ habitacionCotizacion.detalleHabitacion || '-' }}</td>
                                                     <td data-label="Categoría">{{ habitacionCotizacion.tipoHabitacion || habitacionCotizacion.hotelNombre || '-' }}</td>
-                                                    <td data-label="Tarifa" class="quote-money quote-price-cell">MXN {{ habitacionCotizacion.precioMeses | currency }}</td>
-                                                    <td data-label="Apartado" class="quote-price-cell">{{ habitacionCotizacion.apartadoMeses | currency }} MXN</td>
-                                                    <td data-label="Pague después" class="quote-price-cell">{{ habitacionCotizacion.pagueDespuesMeses | currency }} MXN</td>
+                                                     <td data-label="Tarifa" class="quote-money quote-price-cell">MXN {{ habitacionCotizacion.precioMeses | currency }}</td>
+                                                     <td data-label="Apartado" class="quote-price-cell">{{ habitacionCotizacion.apartadoMeses | currency }} MXN</td>
+                                                     <td data-label="Pague después" class="quote-price-cell">{{ habitacionCotizacion.pagueDespuesMeses | currency }} MXN</td>
+                                                     <td class="quote-payment-details">
+                                                         <details class="quote-payment-popover" (toggle)="cerrarOtrosDetalles($event)">
+                                                             <summary>Detalles</summary>
+                                                             <div>
+                                                                 <p><span>Apartado</span>{{ habitacionCotizacion.apartadoMeses | currency }} MXN</p>
+                                                                 <p><span>Pague después</span>{{ habitacionCotizacion.pagueDespuesMeses | currency }} MXN</p>
+                                                             </div>
+                                                         </details>
+                                                     </td>
                                                 </tr>
                                                 }
                                                 }
@@ -409,9 +429,10 @@
                                                     <th></th>
                                                     <th>Acomodo</th>
                                                     <th>Categoría</th>
-                                                    <th class="quote-price-cell">Tarifa</th>
-                                                    <th class="quote-price-cell">Apartado</th>
-                                                    <th class="quote-price-cell">Pague después</th>
+                                                     <th class="quote-price-cell">Tarifa</th>
+                                                     <th class="quote-price-cell">Apartado</th>
+                                                     <th class="quote-price-cell">Pague después</th>
+                                                     <th class="quote-payment-details">Detalles</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -419,9 +440,18 @@
                                                     <td data-label="Habitación">{{ claveOrigenCotizacion('precioConSeguro') }}</td>
                                                     <td data-label="Acomodo">{{informacionCotizacion.idioma ==='es' ? informacionCotizacion.habitaciones.es : informacionCotizacion.habitaciones.traduccion}}</td>
                                                     <td data-label="Categoría">{{ displayHabitacion(edicionForm.get('tipoHabitacion')?.value) || '-' }}</td>
-                                                    <td data-label="Tarifa" class="quote-money quote-price-cell">MXN {{ precioConSeguro.precio | currency }}</td>
-                                                    <td data-label="Apartado" class="quote-price-cell">{{ edicionForm.get('cantidadApartado')?.value | currency }} MXN</td>
-                                                    <td data-label="Pague después" class="quote-price-cell">{{ edicionForm.get('pagueDespuesApartado')?.value | currency }} MXN</td>
+                                                     <td data-label="Tarifa" class="quote-money quote-price-cell">MXN {{ precioConSeguro.precio | currency }}</td>
+                                                     <td data-label="Apartado" class="quote-price-cell">{{ edicionForm.get('cantidadApartado')?.value | currency }} MXN</td>
+                                                     <td data-label="Pague después" class="quote-price-cell">{{ edicionForm.get('pagueDespuesApartado')?.value | currency }} MXN</td>
+                                                     <td class="quote-payment-details">
+                                                         <details class="quote-payment-popover" (toggle)="cerrarOtrosDetalles($event)">
+                                                             <summary>Detalles</summary>
+                                                             <div>
+                                                                 <p><span>Apartado</span>{{ edicionForm.get('cantidadApartado')?.value | currency }} MXN</p>
+                                                                 <p><span>Pague después</span>{{ edicionForm.get('pagueDespuesApartado')?.value | currency }} MXN</p>
+                                                             </div>
+                                                         </details>
+                                                     </td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -456,9 +486,10 @@
                                                     <th></th>
                                                     <th>Acomodo</th>
                                                     <th>Categoría</th>
-                                                    <th class="quote-price-cell">Tarifa</th>
-                                                    <th class="quote-price-cell">Apartado</th>
-                                                    <th class="quote-price-cell">Pague después</th>
+                                                     <th class="quote-price-cell">Tarifa</th>
+                                                     <th class="quote-price-cell">Apartado</th>
+                                                     <th class="quote-price-cell">Pague después</th>
+                                                     <th class="quote-payment-details">Detalles</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -466,9 +497,18 @@
                                                     <td data-label="Habitación">{{ claveOrigenCotizacion('precioMeses') }}</td>
                                                     <td data-label="Acomodo">{{informacionCotizacion.idioma ==='es' ? informacionCotizacion.habitaciones.es : informacionCotizacion.habitaciones.traduccion}}</td>
                                                     <td data-label="Categoría">{{ displayHabitacion(edicionForm.get('tipoHabitacion')?.value) || '-' }}</td>
-                                                    <td data-label="Tarifa" class="quote-money quote-price-cell">MXN {{ precioAMeses.precio | currency }}</td>
-                                                    <td data-label="Apartado" class="quote-price-cell">{{ edicionForm.get('cantidadMeses')?.value | currency }} MXN</td>
-                                                    <td data-label="Pague después" class="quote-price-cell">{{ edicionForm.get('pagueDespuesMeses')?.value | currency }} MXN</td>
+                                                     <td data-label="Tarifa" class="quote-money quote-price-cell">MXN {{ precioAMeses.precio | currency }}</td>
+                                                     <td data-label="Apartado" class="quote-price-cell">{{ edicionForm.get('cantidadMeses')?.value | currency }} MXN</td>
+                                                     <td data-label="Pague después" class="quote-price-cell">{{ edicionForm.get('pagueDespuesMeses')?.value | currency }} MXN</td>
+                                                     <td class="quote-payment-details">
+                                                         <details class="quote-payment-popover" (toggle)="cerrarOtrosDetalles($event)">
+                                                             <summary>Detalles</summary>
+                                                             <div>
+                                                                 <p><span>Apartado</span>{{ edicionForm.get('cantidadMeses')?.value | currency }} MXN</p>
+                                                                 <p><span>Pague después</span>{{ edicionForm.get('pagueDespuesMeses')?.value | currency }} MXN</p>
+                                                             </div>
+                                                         </details>
+                                                     </td>
                                                 </tr>
                                             </tbody>
                                         </table>
