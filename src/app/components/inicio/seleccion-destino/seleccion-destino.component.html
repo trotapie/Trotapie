@@ -118,9 +118,8 @@
                                                     </div>
                                                 </button>
                                                 <button type="button" class="w-full group/item flex items-center gap-4 px-5 py-2
-                 rounded-[1.5rem] transition-all duration-200
-                 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                                    (click)="cargarDestinos(2); showOverlay(); closeDropdown();">
+                  rounded-[1.5rem] transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50
+                  hover:bg-gray-100 dark:hover:bg-gray-700" [disabled]="true">
                                                     <div class="w-12 h-12 flex items-center justify-center
                    rounded-full overflow-hidden">
                                                         <img class="w-full h-full object-cover"
@@ -133,7 +132,7 @@
                                                             {{ t('destinos-internacionales') }}
                                                         </span>
                                                         <span class="text-sm text-gray-500 dark:text-gray-400">
-                                                            {{ t('explora-fronteras-lejanas') }}
+                                                            {{ t('proximamente') }}
                                                         </span>
                                                     </div>
                                                 </button>
