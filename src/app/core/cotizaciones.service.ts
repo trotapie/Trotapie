@@ -59,10 +59,8 @@ export class CotizacionesService {
     fecha_entrada?: string | Date | null;
     fecha_salida?: string | Date | null;
     noches?: number | null;
-    telefono?: string | null;
-    public_id?: string | null;
-    pdf_base64?: string | null;
-    pdf_filename?: string | null;
+      telefono?: string | null;
+      public_id?: string | null;
   }) {
     const toEmail = String(payload?.to_email ?? '').trim();
     if (!toEmail) {
@@ -80,9 +78,7 @@ export class CotizacionesService {
         fecha_salida: payload?.fecha_salida ?? null,
         noches: payload?.noches ?? null,
         telefono: payload?.telefono ?? null,
-        public_id: payload?.public_id ?? null,
-        pdf_base64: payload?.pdf_base64 ?? null,
-        pdf_filename: payload?.pdf_filename ?? null
+        public_id: payload?.public_id ?? null
       }
     });
 

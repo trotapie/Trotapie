@@ -15,11 +15,11 @@
                             <mat-icon class="icon-size-5 icon-thick text-white" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
                             <span>Regresar</span>
                         </button>
-                    <button mat-raised-button color="primary" class="gap-2 text-white" type="button"
+                    <!-- <button mat-raised-button color="primary" class="gap-2 text-white" type="button"
                         [disabled]="!puedeDescargarPdf" (click)="exportarCotizacionPdf()">
                         <mat-icon class="icon-size-5 icon-thick text-white" [svgIcon]="'heroicons_outline:document-arrow-down'"></mat-icon>
                         <span>{{ exportandoPdf ? 'Generando...' : 'Descargar PDF' }}</span>
-                    </button>
+                    </button> -->
                 </div>
             </div>
         </div>
@@ -76,11 +76,39 @@
                                             </h2>
                                         </div>
                                         <div class="quote-hotel-card__media">
-                                            <img
-                                                alt="Hotel {{ informacionCotizacion.nombre_hotel }}"
-                                                class="h-full w-full object-cover"
-                                                [src]="informacionCotizacion.fondo || ''" />
+                                            <button
+                                                type="button"
+                                                class="quote-hotel-card__media-desktop"
+                                                [attr.aria-label]="'Ver fotos de ' + informacionCotizacion.nombre_hotel"
+                                                (click)="abrirGaleriaHotel(0, $event)">
+                                                <img
+                                                    alt="Hotel {{ informacionCotizacion.nombre_hotel }}"
+                                                    class="h-full w-full object-cover"
+                                                    [src]="imagenesHotel[0] || informacionCotizacion.fondo || ''" />
+                                                @if (imagenesHotel.length > 1) {
+                                                <span class="quote-hotel-card__gallery-hint">Ver {{ imagenesHotel.length }} fotos</span>
+                                                }
+                                            </button>
+
+                                            <div class="quote-hotel-card__media-mobile" aria-label="Fotos del hotel. Desliza para ver más imágenes.">
+                                                @if (imagenesHotel.length) {
+                                                    @for (imagen of imagenesHotel; track imagen) {
+                                                    <img
+                                                        alt="Hotel {{ informacionCotizacion.nombre_hotel }}"
+                                                        class="quote-hotel-card__mobile-image"
+                                                        [src]="imagen" />
+                                                    }
+                                                } @else {
+                                                <img
+                                                    alt="Hotel {{ informacionCotizacion.nombre_hotel }}"
+                                                    class="quote-hotel-card__mobile-image"
+                                                    [src]="informacionCotizacion.fondo || ''" />
+                                                }
+                                            </div>
                                         </div>
+                                        <app-imagenes-carrusel
+                                            [imagenesCargadas]="imagenesHotel.length ? informacionCotizacion.imagenes : (informacionCotizacion.fondo ? [informacionCotizacion.fondo] : [])"
+                                            [soloModal]="true" />
                                     </div>
 
                                     <div class="quote-hotel-card__details ">
@@ -195,7 +223,7 @@
                                                 @for (habitacionCotizacion of habitacionesCotizacionPublicaVista; track $index) {
                                                 @if (habitacionCotizacion.precioSinSeguro !== null) {
                                                 <tr>
-                                                    <td data-label="Habitación"></td>
+                                                    <td data-label="Habitación">{{ claveOrigenReservacion(habitacionCotizacion.origenReservacionPrecio) }}</td>
                                                     <td data-label="Acomodo">{{ habitacionCotizacion.detalleHabitacion || '-' }}</td>
                                                     <td data-label="Categoría">{{ habitacionCotizacion.tipoHabitacion || habitacionCotizacion.hotelNombre || '-' }}</td>
                                                     <td data-label="Tarifa" class="quote-money quote-price-cell">MXN {{ habitacionCotizacion.precioSinSeguro | currency }}</td>
@@ -244,7 +272,7 @@
                                                 @for (habitacionCotizacion of habitacionesCotizacionPublicaVista; track $index) {
                                                 @if (habitacionCotizacion.precioConSeguro !== null) {
                                                 <tr>
-                                                    <td data-label="Habitación"></td>
+                                                    <td data-label="Habitación">{{ claveOrigenReservacion(habitacionCotizacion.origenReservacionConSeguro) }}</td>
                                                     <td data-label="Acomodo">{{ habitacionCotizacion.detalleHabitacion || '-' }}</td>
                                                     <td data-label="Categoría">{{ habitacionCotizacion.tipoHabitacion || habitacionCotizacion.hotelNombre || '-' }}</td>
                                                     <td data-label="Tarifa" class="quote-money quote-price-cell">MXN {{ habitacionCotizacion.precioConSeguro | currency }}</td>
@@ -296,7 +324,7 @@
                                                 @for (habitacionCotizacion of habitacionesCotizacionPublicaVista; track $index) {
                                                 @if (habitacionCotizacion.precioMeses !== null) {
                                                 <tr>
-                                                    <td data-label="Habitación"></td>
+                                                    <td data-label="Habitación">{{ claveOrigenReservacion(habitacionCotizacion.origenReservacionMeses) }}</td>
                                                     <td data-label="Acomodo">{{ habitacionCotizacion.detalleHabitacion || '-' }}</td>
                                                     <td data-label="Categoría">{{ habitacionCotizacion.tipoHabitacion || habitacionCotizacion.hotelNombre || '-' }}</td>
                                                     <td data-label="Tarifa" class="quote-money quote-price-cell">MXN {{ habitacionCotizacion.precioMeses | currency }}</td>
@@ -343,7 +371,7 @@
                                             </thead>
                                             <tbody>
                                                 <tr>
-                                                    <td data-label="Habitación"></td>
+                                                    <td data-label="Habitación">{{ claveOrigenCotizacion('precio') }}</td>
                                                     <td data-label="Acomodo">{{informacionCotizacion.idioma ==='es' ? informacionCotizacion.habitaciones.es : informacionCotizacion.habitaciones.traduccion}}</td>
                                                     <td data-label="Categoría">{{ displayHabitacion(edicionForm.get('tipoHabitacion')?.value) || '-' }}</td>
                                                     <td data-label="Tarifa" class="quote-money quote-price-cell">MXN {{ precioSinSeguro.precio | currency }}</td>
@@ -388,7 +416,7 @@
                                             </thead>
                                             <tbody>
                                                 <tr>
-                                                    <td data-label="Habitación"></td>
+                                                    <td data-label="Habitación">{{ claveOrigenCotizacion('precioConSeguro') }}</td>
                                                     <td data-label="Acomodo">{{informacionCotizacion.idioma ==='es' ? informacionCotizacion.habitaciones.es : informacionCotizacion.habitaciones.traduccion}}</td>
                                                     <td data-label="Categoría">{{ displayHabitacion(edicionForm.get('tipoHabitacion')?.value) || '-' }}</td>
                                                     <td data-label="Tarifa" class="quote-money quote-price-cell">MXN {{ precioConSeguro.precio | currency }}</td>
@@ -435,7 +463,7 @@
                                             </thead>
                                             <tbody>
                                                 <tr>
-                                                    <td data-label="Habitación"></td>
+                                                    <td data-label="Habitación">{{ claveOrigenCotizacion('precioMeses') }}</td>
                                                     <td data-label="Acomodo">{{informacionCotizacion.idioma ==='es' ? informacionCotizacion.habitaciones.es : informacionCotizacion.habitaciones.traduccion}}</td>
                                                     <td data-label="Categoría">{{ displayHabitacion(edicionForm.get('tipoHabitacion')?.value) || '-' }}</td>
                                                     <td data-label="Tarifa" class="quote-money quote-price-cell">MXN {{ precioAMeses.precio | currency }}</td>
@@ -464,8 +492,156 @@
                         }
 
                         @if (esEdicion) {
+                        <section class="quick-quote-editor">
+                            <header class="quick-quote-editor__header">
+                                <div>
+                                    <p class="quick-quote-editor__eyebrow">Captura rápida</p>
+                                    <h2>Tarifas por habitación</h2>
+                                    <p>Configura las políticas una vez por tarifa; se aplicarán a todas las habitaciones.</p>
+                                </div>
+                                <mat-form-field appearance="fill" class="tp-select quick-quote-editor__status">
+                                    <mat-label>Estatus de la cotización</mat-label>
+                                    <mat-select formControlName="estatus">
+                                        <mat-option value="" disabled>Selecciona estatus</mat-option>
+                                        @for (estatus of estatusOpciones; track estatus.id) {
+                                        <mat-option [value]="estatus.clave">{{ estatus.nombre }}</mat-option>
+                                        }
+                                    </mat-select>
+                                </mat-form-field>
+                            </header>
+
+                            <mat-tab-group animationDuration="0ms" class="quick-quote-tabs">
+                                <mat-tab label="Sin seguro">
+                                    <div class="quick-quote-tab-content">
+                                        <div class="quick-quote-table-wrap">
+                                            <table class="quick-quote-table">
+                                                <thead><tr><th>Origen</th><th>Habitación</th><th>Precio</th></tr></thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td data-label="Origen"><mat-select formControlName="origenReservacionPrecio" placeholder="Seleccionar">
+                                                            <mat-option [value]="null">Sin seleccionar</mat-option>
+                                                            @for (origen of origenReservacionOpciones; track origen.id) { <mat-option [value]="origen.id">{{ origen.clave }}</mat-option> }
+                                                        </mat-select></td>
+                                                        <td data-label="Habitación"><mat-select formControlName="tipoHabitacion" [compareWith]="compareTipoHabitacion" placeholder="Seleccionar habitación">
+                                                            @for (tipo of obtenerTiposHabitacionDisponibles(0); track tipo.id) { <mat-option [value]="tipo">{{ tipo.nombre_habitacion }}</mat-option> }
+                                                        </mat-select></td>
+                                                        <td data-label="Precio"><input type="tel" inputmode="numeric" formControlName="precio" importeMxnBlur placeholder="$0"></td>
+                                                    </tr>
+                                                </tbody>
+                                                <tbody formArrayName="habitacionesAdicionales">
+                                                    @for (habitacion of habitacionesAdicionales.controls; track $index) {
+                                                    <tr [formGroupName]="$index">
+                                                        <td data-label="Origen"><mat-select formControlName="origenReservacionPrecio" placeholder="Seleccionar">
+                                                            <mat-option [value]="null">Sin seleccionar</mat-option>
+                                                            @for (origen of origenReservacionOpciones; track origen.id) { <mat-option [value]="origen.id">{{ origen.clave }}</mat-option> }
+                                                        </mat-select></td>
+                                                        <td data-label="Habitación"><mat-select formControlName="tipoHabitacion" [compareWith]="compareTipoHabitacion" placeholder="Seleccionar habitación">
+                                                            @for (tipo of obtenerTiposHabitacionDisponibles($index + 1); track tipo.id) { <mat-option [value]="tipo">{{ tipo.nombre_habitacion }}</mat-option> }
+                                                        </mat-select></td>
+                                                        <td data-label="Precio"><input type="tel" inputmode="numeric" formControlName="precio" importeMxnBlur placeholder="$0"></td>
+                                                    </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <mat-form-field appearance="fill" class="tp-select quick-quote-policy mt-4">
+                                            <mat-label>Políticas de reservación</mat-label>
+                                            <mat-select formControlName="condicionesPrecioSinSeguro" multiple
+                                                panelClass="tp-select-panel" [compareWith]="comparePolitica">
+                                                @for (politica of politicasNoReembolsable; track politica.id) {
+                                                <mat-option [value]="politica">{{ politica.descripcion }}</mat-option>
+                                                }
+                                            </mat-select>
+                                        </mat-form-field>
+                                        @if (edicionForm.get('condicionesPrecioSinSeguro')?.value?.length) {
+                                        <div class="quick-quote-selected-policies">
+                                            @for (politica of edicionForm.get('condicionesPrecioSinSeguro')?.value; track politica.id) {
+                                            <span>{{ politica.descripcion }}</span>
+                                            }
+                                        </div>
+                                        }
+                                    </div>
+                                </mat-tab>
+
+                                <mat-tab label="Con seguro">
+                                    <div class="quick-quote-tab-content">
+                                        <div class="quick-quote-table-wrap">
+                                            <table class="quick-quote-table">
+                                                <thead><tr><th>Origen</th><th>Habitación</th><th>Precio</th></tr></thead>
+                                                <tbody><tr>
+                                                    <td data-label="Origen"><mat-select formControlName="origenReservacionConSeguro" placeholder="Seleccionar"><mat-option [value]="null">Sin seleccionar</mat-option>@for (origen of origenReservacionOpciones; track origen.id) { <mat-option [value]="origen.id">{{ origen.clave }}</mat-option> }</mat-select></td>
+                                                    <td data-label="Habitación">{{ displayHabitacion(edicionForm.get('tipoHabitacion')?.value) || 'Selecciona en Sin seguro' }}</td>
+                                                    <td data-label="Precio"><input type="tel" inputmode="numeric" formControlName="precioConSeguro" importeMxnBlur placeholder="$0"></td>
+                                                </tr></tbody>
+                                                <tbody formArrayName="habitacionesAdicionales">@for (habitacion of habitacionesAdicionales.controls; track $index) { <tr [formGroupName]="$index">
+                                                    <td data-label="Origen"><mat-select formControlName="origenReservacionConSeguro" placeholder="Seleccionar"><mat-option [value]="null">Sin seleccionar</mat-option>@for (origen of origenReservacionOpciones; track origen.id) { <mat-option [value]="origen.id">{{ origen.clave }}</mat-option> }</mat-select></td>
+                                                    <td data-label="Habitación">{{ displayHabitacion(habitacion.get('tipoHabitacion')?.value) || 'Selecciona en Sin seguro' }}</td>
+                                                    <td data-label="Precio"><input type="tel" inputmode="numeric" formControlName="precioConSeguro" importeMxnBlur placeholder="$0"></td>
+                                                </tr> }</tbody>
+                                            </table>
+                                        </div>
+                                        <div class="quick-quote-settings quick-quote-settings--below-table mt-4">
+                                            <mat-form-field><mat-label>Fecha límite</mat-label><input matInput [matDatepicker]="fechaSeguro" formControlName="fechaLimiteSeguro"><mat-datepicker-toggle matIconSuffix [for]="fechaSeguro"></mat-datepicker-toggle><mat-datepicker #fechaSeguro></mat-datepicker></mat-form-field>
+                                            <mat-form-field><mat-label>% de apartado</mat-label><input matInput inputmode="decimal" formControlName="porcentajeSeguro" porcentajeBlur placeholder="0%"></mat-form-field>
+                                            <mat-form-field appearance="fill" class="tp-select quick-quote-policy">
+                                            <mat-label>Políticas de reservación</mat-label>
+                                            <mat-select formControlName="condicionesPrecioConSeguro" multiple panelClass="tp-select-panel" [compareWith]="comparePolitica">
+                                                @for (politica of politicasApartado; track politica.id) { <mat-option [value]="politica">{{ politica.descripcion }}</mat-option> }
+                                            </mat-select>
+                                        </mat-form-field>
+                                        </div>
+                                        @if (edicionForm.get('condicionesPrecioConSeguro')?.value?.length) {
+                                        <div class="quick-quote-selected-policies">
+                                            @for (politica of edicionForm.get('condicionesPrecioConSeguro')?.value; track politica.id) {
+                                            <span>{{ politica.descripcion }}</span>
+                                            }
+                                        </div>
+                                        }
+                                    </div>
+                                </mat-tab>
+
+                                <mat-tab label="A meses">
+                                    <div class="quick-quote-tab-content">
+                                        <fieldset class="quick-quote-rate-type">
+                                            <legend>Tipo de tarifa</legend>
+                                            <label><input type="radio" formControlName="tipoTarifa" value="no_reembolsable"> No reembolsable</label>
+                                            <label><input type="radio" formControlName="tipoTarifa" value="apartado"> Apartado</label>
+                                        </fieldset>
+                                        <div class="quick-quote-table-wrap"><table class="quick-quote-table">
+                                            <thead><tr><th>Origen</th><th>Habitación</th><th>Precio</th></tr></thead>
+                                            <tbody><tr>
+                                                <td data-label="Origen"><mat-select formControlName="origenReservacionMeses" placeholder="Seleccionar"><mat-option [value]="null">Sin seleccionar</mat-option>@for (origen of origenReservacionOpciones; track origen.id) { <mat-option [value]="origen.id">{{ origen.clave }}</mat-option> }</mat-select></td>
+                                                <td data-label="Habitación">{{ displayHabitacion(edicionForm.get('tipoHabitacion')?.value) || 'Selecciona en Sin seguro' }}</td>
+                                                <td data-label="Precio"><input type="tel" inputmode="numeric" formControlName="precioMeses" importeMxnBlur placeholder="$0"></td>
+                                            </tr></tbody>
+                                            <tbody formArrayName="habitacionesAdicionales">@for (habitacion of habitacionesAdicionales.controls; track $index) { <tr [formGroupName]="$index">
+                                                <td data-label="Origen"><mat-select formControlName="origenReservacionMeses" placeholder="Seleccionar"><mat-option [value]="null">Sin seleccionar</mat-option>@for (origen of origenReservacionOpciones; track origen.id) { <mat-option [value]="origen.id">{{ origen.clave }}</mat-option> }</mat-select></td>
+                                                <td data-label="Habitación">{{ displayHabitacion(habitacion.get('tipoHabitacion')?.value) || 'Selecciona en Sin seguro' }}</td>
+                                                <td data-label="Precio"><input type="tel" inputmode="numeric" formControlName="precioMeses" importeMxnBlur placeholder="$0"></td>
+                                            </tr> }</tbody>
+                                        </table></div>
+                                        <div class="quick-quote-settings quick-quote-settings--below-table mt-4">
+                                            @if (edicionForm.get('tipoTarifa')?.value === 'apartado') { <mat-form-field><mat-label>Fecha límite</mat-label><input matInput [matDatepicker]="fechaMeses" formControlName="fechaLimiteMeses"><mat-datepicker-toggle matIconSuffix [for]="fechaMeses"></mat-datepicker-toggle><mat-datepicker #fechaMeses></mat-datepicker></mat-form-field> }
+                                            <mat-form-field><mat-label>% de apartado</mat-label><input matInput inputmode="decimal" formControlName="porcentajeMeses" porcentajeBlur placeholder="0%"></mat-form-field>
+                                            <mat-form-field appearance="fill" class="tp-select quick-quote-policy"><mat-label>Políticas de reservación</mat-label>
+                                            <mat-select formControlName="condicionesPrecioMeses" multiple panelClass="tp-select-panel" [compareWith]="comparePolitica">
+                                                @for (politica of politicas; track politica.id) { <mat-option [value]="politica">{{ politica.descripcion }}</mat-option> }
+                                            </mat-select>
+                                        </mat-form-field>
+                                        </div>
+                                        @if (edicionForm.get('condicionesPrecioMeses')?.value?.length) {
+                                        <div class="quick-quote-selected-policies">
+                                            @for (politica of edicionForm.get('condicionesPrecioMeses')?.value; track politica.id) {
+                                            <span>{{ politica.descripcion }}</span>
+                                            }
+                                        </div>
+                                        }
+                                    </div>
+                                </mat-tab>
+                            </mat-tab-group>
+                        </section>
                         <section class="grid grid-cols-1 gap-12 mb-16 items-start"
-                            [ngClass]="esEdicion ? 'lg:grid-cols-1' : 'lg:grid-cols-2'">
+                            [ngClass]="esEdicion ? 'hidden' : 'lg:grid-cols-2'">
                             <div [ngClass]="esEdicion ? 'w-full' : ''">
 
                                 <section class="space-y-6 pt-4" [ngClass]="esEdicion ? 'max-w-4xl' : 'max-w-md'">
@@ -1119,7 +1295,7 @@
                                                     <mat-select formControlName="origenReservacionPrecio">
                                                         <mat-option [value]="null">Sin seleccionar</mat-option>
                                                         @for (origen of origenReservacionOpciones; track origen.id) {
-                                                        <mat-option [value]="origen.id">{{ origen.nombre_cotizador }}</mat-option>
+                                                        <mat-option [value]="origen.id">{{ origen.clave }}</mat-option>
                                                         }
                                                     </mat-select>
                                                 </mat-form-field>
@@ -1262,7 +1438,7 @@
                                                     <mat-select formControlName="origenReservacionConSeguro">
                                                         <mat-option [value]="null">Sin seleccionar</mat-option>
                                                         @for (origen of origenReservacionOpciones; track origen.id) {
-                                                        <mat-option [value]="origen.id">{{ origen.nombre_cotizador }}</mat-option>
+                                                        <mat-option [value]="origen.id">{{ origen.clave }}</mat-option>
                                                         }
                                                     </mat-select>
                                                 </mat-form-field>
@@ -1512,7 +1688,7 @@
                                                     <mat-select formControlName="origenReservacionMeses">
                                                         <mat-option [value]="null">Sin seleccionar</mat-option>
                                                         @for (origen of origenReservacionOpciones; track origen.id) {
-                                                        <mat-option [value]="origen.id">{{ origen.nombre_cotizador }}</mat-option>
+                                                        <mat-option [value]="origen.id">{{ origen.clave }}</mat-option>
                                                         }
                                                     </mat-select>
                                                 </mat-form-field>
@@ -1753,7 +1929,7 @@
                                                             <mat-select formControlName="origenReservacionPrecio">
                                                                 <mat-option [value]="null">Sin seleccionar</mat-option>
                                                                 @for (origen of origenReservacionOpciones; track origen.id) {
-                                                                <mat-option [value]="origen.id">{{ origen.nombre_cotizador }}</mat-option>
+                                                                <mat-option [value]="origen.id">{{ origen.clave }}</mat-option>
                                                                 }
                                                             </mat-select>
                                                         </mat-form-field>
@@ -1826,7 +2002,7 @@
                                                             <mat-select formControlName="origenReservacionConSeguro">
                                                                 <mat-option [value]="null">Sin seleccionar</mat-option>
                                                                 @for (origen of origenReservacionOpciones; track origen.id) {
-                                                                <mat-option [value]="origen.id">{{ origen.nombre_cotizador }}</mat-option>
+                                                                <mat-option [value]="origen.id">{{ origen.clave }}</mat-option>
                                                                 }
                                                             </mat-select>
                                                         </mat-form-field>
@@ -1890,13 +2066,13 @@
                                                 <section class="mb-6">
                                                     <fieldset id="switch" class="radio">
                                                         <input type="radio" [id]="'no_reembolsable_'+$index"
-                                                            [name]="'tipoTarifa_'+$index" value="no_reembolsable"
+                                                            value="no_reembolsable"
                                                             formControlName="tipoTarifa">
                                                         <label [for]="'no_reembolsable_'+$index">
                                                             TARIFA NO REEMBOLSABLE
                                                         </label>
                                                         <input type="radio" [id]="'apartado_'+$index"
-                                                            [name]="'tipoTarifa_'+$index" value="apartado"
+                                                            value="apartado"
                                                             formControlName="tipoTarifa">
                                                         <label [for]="'apartado_'+$index">
                                                             TARIFA DE APARTADO
@@ -1927,7 +2103,7 @@
                                                             <mat-select formControlName="origenReservacionMeses">
                                                                 <mat-option [value]="null">Sin seleccionar</mat-option>
                                                                 @for (origen of origenReservacionOpciones; track origen.id) {
-                                                                <mat-option [value]="origen.id">{{ origen.nombre_cotizador }}</mat-option>
+                                                                <mat-option [value]="origen.id">{{ origen.clave }}</mat-option>
                                                                 }
                                                             </mat-select>
                                                         </mat-form-field>
@@ -2133,13 +2309,16 @@
                         <!-- <div class="mt-20">
                             <app-imagenes-carrusel [imagenesCargadas]="informacionCotizacion.imagenes" />
                         </div> -->
+                        @if (!esEdicion) {
                         <section class="quote-legal-card mt-2">
                             <div class="quote-legal-notice p-8 flex gap-5">
                                 <mat-icon class="icon-size-5 icon-thick text-blue-800 dark:text-blue-300"
                                     [svgIcon]="'heroicons_outline:information-circle'"></mat-icon>
-                                <div
-                                    class="text-[11px] font-medium text-blue-800 dark:text-blue-300 leading-relaxed uppercase tracking-wider">
-                                    {{ t('aviso_legal') }}
+                                <div class="min-w-0">
+                                    <h2 class="quote-legal-title">Observaciones</h2>
+                                    <div class="text-[11px] font-medium text-blue-800 dark:text-blue-300 leading-relaxed uppercase tracking-wider">
+                                        {{ t('aviso_legal') }}
+                                    </div>
                                 </div>
                             </div>
 
@@ -2157,6 +2336,7 @@
                             </section>
                             }
                         </section>
+                        }
 
                     </main>
                     <div class="no-print sticky bottom-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl
@@ -2346,15 +2526,9 @@
                         <label class="block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">
                             Descripcion (Opcional)
                         </label>
-                        <textarea formControlName="descripcionCorreo" rows="3" placeholder="Adjunto encontrarás el PDF con el detalle completo de tu solicitud de cotización."
+                        <textarea formControlName="descripcionCorreo" rows="3" placeholder="Te compartimos los detalles de tu solicitud de cotización."
                             class="w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-colors dark:bg-slate-800 dark:text-white border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-primary"></textarea>
                     </div>
-
-                    <!-- <label *ngIf="tieneCorreoCapturado" class="inline-flex items-center gap-2 cursor-pointer text-sm font-semibold text-slate-700 dark:text-slate-300">
-                        <input type="checkbox" formControlName="incluirPreciosPdf"
-                            class="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary">
-                        Incluir precios en archivo PDF
-                    </label> -->
 
                 </form>
             </div>

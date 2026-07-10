@@ -1,4 +1,4 @@
-﻿import { Component, inject, OnInit } from '@angular/core';
+﻿import { Component, inject, OnInit, ViewChild } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CatalogosAdminService } from 'app/core/catalogos-admin.service';
@@ -85,6 +85,9 @@ interface HabitacionCotizacionPublicaVista {
   pagueDespuesSeguro: number | null;
   apartadoMeses: number | null;
   pagueDespuesMeses: number | null;
+  origenReservacionPrecio: number | null;
+  origenReservacionConSeguro: number | null;
+  origenReservacionMeses: number | null;
 }
 
 interface DetalleHabitacionCotizacion {
@@ -130,6 +133,7 @@ export class CotizacionComponent implements OnInit {
   cargando = true;
 
   informacionCotizacion: ICotizacion
+  @ViewChild(ImagenesCarruselComponent) galeriaHotel?: ImagenesCarruselComponent;
   esEdicion: boolean;
   exportandoPdf = false;
   enviarCotizacion: boolean;
@@ -201,8 +205,7 @@ export class CotizacionComponent implements OnInit {
     ],
     correo: ['', [validarListaCorreos]],
     asunto: [''],
-    descripcionCorreo: ['Adjunto encontrarás el PDF con el detalle completo de tu solicitud de cotización.'],
-    incluirPreciosPdf: [true]
+    descripcionCorreo: ['Te compartimos los detalles de tu solicitud de cotización.']
   });
   enviandoCorreoCotizacion = false;
   mensajeCorreoCotizacion = '';
@@ -365,7 +368,16 @@ export class CotizacionComponent implements OnInit {
         apartadoSeguro,
         pagueDespuesSeguro: this.calcularMontoPendiente(precioConSeguro, apartadoSeguro),
         apartadoMeses,
-        pagueDespuesMeses: this.calcularMontoPendiente(precioMeses, apartadoMeses)
+        pagueDespuesMeses: this.calcularMontoPendiente(precioMeses, apartadoMeses),
+        origenReservacionPrecio: this.obtenerNumeroLimpio(
+          item?.origen_reservacion_precio_id ?? (item as any)?.origenReservacionPrecio
+        ),
+        origenReservacionConSeguro: this.obtenerNumeroLimpio(
+          item?.origen_reservacion_con_seguro_id ?? (item as any)?.origenReservacionConSeguro
+        ),
+        origenReservacionMeses: this.obtenerNumeroLimpio(
+          item?.origen_reservacion_meses_id ?? (item as any)?.origenReservacionMeses
+        )
       };
     });
   }
@@ -375,8 +387,10 @@ export class CotizacionComponent implements OnInit {
     if (!habitaciones) return '';
     const texto = (habitaciones.es ?? '').trim() || (habitaciones.traduccion ?? '').trim();
     return texto
-      .replace(/\bninos\b/gi, 'niños')
-      .replace(/\bnino\b/gi, 'niño')
+      .replace(/\bninos\b/gi, 'menores')
+      .replace(/\bnino\b/gi, 'menor')
+      .replace(/\bniños\b/gi, 'menores')
+      .replace(/\bniño\b/gi, 'menor')
       .replace(/\bhabitacion\b/gi, 'habitación');
   }
 
@@ -388,7 +402,7 @@ export class CotizacionComponent implements OnInit {
       partes.push(`${detalle.adultos} adulto${detalle.adultos === 1 ? '' : 's'}`);
     }
     if (detalle.ninos > 0) {
-      partes.push(`${detalle.ninos} niño${detalle.ninos === 1 ? '' : 's'}`);
+      partes.push(`${detalle.ninos} menor${detalle.ninos === 1 ? '' : 'es'}`);
     }
     if (detalle.extra) {
       partes.push(detalle.extra);
@@ -480,6 +494,7 @@ export class CotizacionComponent implements OnInit {
 
         console.log(this.informacionCotizacion);
         await this.cargarCatalogoTiposHabitacion();
+        await this.cargarOrigenesReservacionPublicos();
         datosHotel = {
           ubicacion: this.informacionCotizacion.ubicacion,
           nombre_hotel: this.informacionCotizacion.nombre_hotel
@@ -545,7 +560,6 @@ export class CotizacionComponent implements OnInit {
           if (roomValue?.precioMeses) precios.push(roomValue.precioMeses);
         });
         this.preciosList = precios;
-        this.sincronizarAperturaSecuencialHabitaciones();
 
       })
     }
@@ -566,8 +580,7 @@ export class CotizacionComponent implements OnInit {
         nombre_cotizador: String(item.nombre_cotizador ?? ''),
         estatus: Boolean(item.estatus)
       }))
-      .filter((item: OrigenReservacionOption) => Number.isFinite(item.id))
-      .sort((a, b) => a.nombre_cotizador.localeCompare(b.nombre_cotizador, 'es', { sensitivity: 'base' }));
+      .filter((item: OrigenReservacionOption) => Number.isFinite(item.id));
     this.filteredOptions$ = this.obtenerTiposHabitacionDisponibles(0);
 
   }
@@ -577,6 +590,33 @@ export class CotizacionComponent implements OnInit {
     const { data } = await this.supabase.tipoHabitaciones();
     this.tiposHabitacion = data ?? [];
     this.filteredOptions$ = this.obtenerTiposHabitacionDisponibles(0);
+  }
+
+  get imagenesHotel(): string[] {
+    return (this.informacionCotizacion?.imagenes ?? [])
+      .map((imagen) => imagen?.url)
+      .filter((url): url is string => Boolean(url));
+  }
+
+  abrirGaleriaHotel(indice: number, evento: MouseEvent): void {
+    this.galeriaHotel?.open(indice, evento);
+  }
+
+  private async cargarOrigenesReservacionPublicos(): Promise<void> {
+    try {
+      const origenes = await this.catalogosAdmin.obtenerCatalogoAdmin('origen_reservacion');
+      this.origenReservacionOpciones = (origenes ?? [])
+        .map((item: any) => ({
+          id: Number(item?.id),
+          clave: String(item?.clave ?? ''),
+          nombre_cotizador: String(item?.nombre_cotizador ?? ''),
+          estatus: Boolean(item?.estatus)
+        }))
+        .filter((item: OrigenReservacionOption) => Number.isFinite(item.id));
+    } catch {
+      // El origen es informativo en la cotización pública; no debe impedir verla.
+      this.origenReservacionOpciones = [];
+    }
   }
 
   private _filter(value: string): TipoHabitacion[] {
@@ -728,10 +768,6 @@ export class CotizacionComponent implements OnInit {
 
   get descripcionCorreoCtrl() {
     return this.telefonoForm.get('descripcionCorreo');
-  }
-
-  get incluirPreciosPdfCtrl() {
-    return this.telefonoForm.get('incluirPreciosPdf');
   }
 
   get tieneTelefonoCapturado(): boolean {
@@ -920,7 +956,6 @@ export class CotizacionComponent implements OnInit {
     const correoValido = this.tieneCorreoCapturado && !this.correoCtrl?.invalid;
     const asuntoCapturado = String(this.asuntoCtrl?.value ?? '').trim();
     const descripcion = String(this.descripcionCorreoCtrl?.value ?? '').trim();
-    const incluirPreciosPdf = Boolean(this.incluirPreciosPdfCtrl?.value);
 
     if (!this.tieneTelefonoCapturado && !tieneCorreos) {
       this.mensajeCorreoCotizacion = 'Captura un telefono y/o correo para enviar la cotizacion.';
@@ -948,8 +983,7 @@ export class CotizacionComponent implements OnInit {
         await this.enviarCotizacionCorreoInterno(
           correos,
           asuntoCapturado,
-          descripcion,
-          incluirPreciosPdf
+          descripcion
         );
       }
 
@@ -989,23 +1023,9 @@ export class CotizacionComponent implements OnInit {
   private async enviarCotizacionCorreoInterno(
     correos: string[],
     asunto: string,
-    descripcion: string,
-    incluirPreciosPdf: boolean
+    descripcion: string
   ): Promise<void> {
     await this.guardarCambiosAntesDeSalida();
-
-    let pdfBase64: string | null = null;
-    if (incluirPreciosPdf) {
-      const pdf = await this.descargarPdfProformaCotizacion(this.informacionCotizacion.public_id, {
-        descargar: false
-      });
-      const pdfDataUri = pdf.output('datauristring');
-      pdfBase64 = pdfDataUri.includes(',') ? pdfDataUri.split(',')[1] : '';
-
-      if (!pdfBase64) {
-        throw new Error('No se pudo generar el PDF para adjuntar al correo.');
-      }
-    }
 
     const asuntoPredeterminado = this.asuntoPredeterminado;
     const asuntoFinal = asunto || asuntoPredeterminado;
@@ -1020,9 +1040,7 @@ export class CotizacionComponent implements OnInit {
       telefono: this.telefonoCompleto(),
       public_id: this.informacionCotizacion?.public_id ?? null,
       asunto: asuntoFinal,
-      mensaje: descripcion || null,
-      pdf_base64: pdfBase64,
-      pdf_filename: pdfBase64 ? `cotizacion-${this.informacionCotizacion.public_id}.pdf` : null
+      mensaje: descripcion || null
     });
   }
 
@@ -1314,7 +1332,10 @@ export class CotizacionComponent implements OnInit {
         pagueDespuesMeses: this.calcularMontoPendiente(
           this.obtenerNumeroLimpio(precioMeses?.precio),
           this.calcularMontoApartado(this.obtenerNumeroLimpio(precioMeses?.precio), this.obtenerNumeroLimpio(precioMeses?.porcentaje) ?? this.obtenerNumeroLimpio(cotizacion?.porcentaje_meses))
-        )
+        ),
+        origenReservacionPrecio: null,
+        origenReservacionConSeguro: null,
+        origenReservacionMeses: null
       }];
     const regimenCotizacion = limpiar(cotizacion?.regimen) || '-';
 
@@ -1508,7 +1529,7 @@ export class CotizacionComponent implements OnInit {
     if (segmentos.length) {
       return segmentos.map(({ indice, detalle }) => {
         const adultosMatch = detalle.match(/(\d+)\s*adult(?:o|os)/i);
-        const ninosMatch = detalle.match(/(\d+)\s*ni(?:n|ñ)(?:o|os)/i);
+        const ninosMatch = detalle.match(/(\d+)\s*(?:ni(?:n|ñ)(?:o|os)|menor(?:es)?)/i);
         const extra = this.limpiarDetalleExtraHabitacion(detalle);
 
         return {
@@ -1529,7 +1550,7 @@ export class CotizacionComponent implements OnInit {
     return lineas.map((linea, index) => {
       const habitacionMatch = linea.match(/habitaci[oó]n\s*(\d+)/i);
       const adultosMatch = linea.match(/(\d+)\s*adult(?:o|os)/i);
-      const ninosMatch = linea.match(/(\d+)\s*ni(?:n|ñ)(?:o|os)/i);
+      const ninosMatch = linea.match(/(\d+)\s*(?:ni(?:n|ñ)(?:o|os)|menor(?:es)?)/i);
       const extra = this.limpiarDetalleExtraHabitacion(
         linea.includes(':') ? linea.split(':').slice(1).join(':').trim() : linea
       );
@@ -1548,7 +1569,7 @@ export class CotizacionComponent implements OnInit {
   private limpiarDetalleExtraHabitacion(texto: string): string {
     return texto
       .replace(/\b\d+\s*adult(?:o|os)\b/gi, '')
-      .replace(/\b\d+\s*ni(?:n|ñ)(?:o|os)\b/gi, '')
+      .replace(/\b\d+\s*(?:ni(?:n|ñ)(?:o|os)|menor(?:es)?)\b/gi, '')
       .replace(/\s*[-\u00B7]+\s*/g, ' · ')
       .replace(/(?:\s*·\s*){2,}/g, ' · ')
       .replace(/\s*,\s*/g, ', ')
@@ -1802,8 +1823,8 @@ export class CotizacionComponent implements OnInit {
 
   private estadoSeccionNoReembolsable(control: AbstractControl) {
     const precio = this.obtenerNumeroLimpio(control.get('precio')?.value);
-    const politicas = control.get('condicionesPrecioSinSeguro')?.value ?? [];
-    const tieneDatos = precio !== null || politicas.length > 0;
+    const politicas = this.edicionForm.get('condicionesPrecioSinSeguro')?.value ?? [];
+    const tieneDatos = precio !== null;
     return {
       tieneDatos,
       completa: precio !== null && politicas.length > 0
@@ -1812,9 +1833,9 @@ export class CotizacionComponent implements OnInit {
 
   private estadoSeccionConSeguro(control: AbstractControl) {
     const precio = this.obtenerNumeroLimpio(control.get('precioConSeguro')?.value);
-    const politicas = control.get('condicionesPrecioConSeguro')?.value ?? [];
-    const fecha = control.get('fechaLimiteSeguro')?.value ?? null;
-    const tieneDatos = precio !== null || politicas.length > 0 || !!fecha;
+    const politicas = this.edicionForm.get('condicionesPrecioConSeguro')?.value ?? [];
+    const fecha = this.edicionForm.get('fechaLimiteSeguro')?.value ?? null;
+    const tieneDatos = precio !== null;
     return {
       tieneDatos,
       completa: precio !== null && politicas.length > 0 && !!fecha
@@ -1823,9 +1844,9 @@ export class CotizacionComponent implements OnInit {
 
   private estadoSeccionMeses(control: AbstractControl) {
     const precio = this.obtenerNumeroLimpio(control.get('precioMeses')?.value);
-    const politicas = control.get('condicionesPrecioMeses')?.value ?? [];
-    const fecha = control.get('fechaLimiteMeses')?.value ?? null;
-    const tipoTarifa = String(control.get('tipoTarifa')?.value ?? '').trim();
+    const politicas = this.edicionForm.get('condicionesPrecioMeses')?.value ?? [];
+    const fecha = this.edicionForm.get('fechaLimiteMeses')?.value ?? null;
+    const tipoTarifa = String(this.edicionForm.get('tipoTarifa')?.value ?? '').trim();
     const requiereFecha = tipoTarifa === 'apartado';
     const tieneDatos = precio !== null || politicas.length > 0 || !!fecha;
     return {
@@ -1933,6 +1954,30 @@ export class CotizacionComponent implements OnInit {
     if (tipoHabitacionId === null || tipoHabitacionId === undefined) return null;
     const tipo = this.tiposHabitacion.find((item) => Number(item.id) === Number(tipoHabitacionId));
     return tipo?.nombre_habitacion ?? null;
+  }
+
+  claveOrigenReservacion(origenId: number | null | undefined): string {
+    const id = this.obtenerNumeroLimpio(origenId);
+    if (id === null) return '';
+    return this.origenReservacionOpciones.find((origen) => origen.id === id)?.clave ?? '';
+  }
+
+  claveOrigenCotizacion(campo: 'precio' | 'precioConSeguro' | 'precioMeses'): string {
+    const primeraHabitacion = this.cotizacionMultipleRespuesta[0] as any;
+    if (!primeraHabitacion) return '';
+
+    const campoOrigen = campo === 'precio'
+      ? 'origen_reservacion_precio_id'
+      : campo === 'precioConSeguro'
+        ? 'origen_reservacion_con_seguro_id'
+        : 'origen_reservacion_meses_id';
+    const campoAlterno = campo === 'precio'
+      ? 'origenReservacionPrecio'
+      : campo === 'precioConSeguro'
+        ? 'origenReservacionConSeguro'
+        : 'origenReservacionMeses';
+
+    return this.claveOrigenReservacion(primeraHabitacion?.[campoOrigen] ?? primeraHabitacion?.[campoAlterno]);
   }
 
   private normalizarTipoHabitacion(value: unknown): TipoHabitacion | null {
@@ -2215,11 +2260,28 @@ export class CotizacionComponent implements OnInit {
       tipoTarifa: this.edicionForm.get('tipoTarifa')?.value
     };
 
+    const politicasSinSeguro = this.edicionForm.get('condicionesPrecioSinSeguro')?.value ?? [];
+    const politicasConSeguro = this.edicionForm.get('condicionesPrecioConSeguro')?.value ?? [];
+    const politicasMeses = this.edicionForm.get('condicionesPrecioMeses')?.value ?? [];
+    const porcentajeSeguro = this.edicionForm.get('porcentajeSeguro')?.value;
+    const porcentajeMeses = this.edicionForm.get('porcentajeMeses')?.value;
+    const fechaLimiteSeguro = this.edicionForm.get('fechaLimiteSeguro')?.value;
+    const fechaLimiteMeses = this.edicionForm.get('fechaLimiteMeses')?.value;
+    const tipoTarifa = this.edicionForm.get('tipoTarifa')?.value;
+
     const habitaciones = [
       primeraHabitacion,
       ...this.habitacionesAdicionales.controls.map((control) => ({
         ...(control.value as CotizacionHabitacionForm),
-        tipoHabitacion: this.normalizarTipoHabitacion(control.get('tipoHabitacion')?.value)
+        tipoHabitacion: this.normalizarTipoHabitacion(control.get('tipoHabitacion')?.value),
+        condicionesPrecioSinSeguro: politicasSinSeguro,
+        condicionesPrecioConSeguro: politicasConSeguro,
+        condicionesPrecioMeses: politicasMeses,
+        porcentajeSeguro,
+        porcentajeMeses,
+        fechaLimiteSeguro,
+        fechaLimiteMeses,
+        tipoTarifa
       }))
     ];
 
