@@ -3,7 +3,6 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { FuseSplashScreenService } from '@fuse/services/splash-screen';
 import { AuthService } from 'app/core/auth/auth.service';
 import { SupabaseService } from 'app/core/supabase.service';
 import { CotizacionesService } from 'app/core/cotizaciones.service';
@@ -29,7 +28,6 @@ type ColumnFilterKey =
   styleUrl: './solicitudes-cotizacion.component.scss'
 })
 export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
-  private splashScreen = inject(FuseSplashScreenService);
   private authService = inject(AuthService);
   private supabaseClient = inject(SupabaseService);
   private cotizacionesService = inject(CotizacionesService);
@@ -84,8 +82,6 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
   @ViewChild(MatSort) sort!: MatSort;
 
   async ngOnInit() {
-    this.splashScreen.show();
-
     try {
       const data = await this.cotizacionesService.obtenerSolicitudesCotizacion();
       this.dataSource.data = await this.filtrarSolicitudesPorUsuario(data ?? []);
@@ -93,8 +89,8 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
 
       if (this.paginator) this.dataSource.paginator = this.paginator;
       if (this.sort) this.dataSource.sort = this.sort;
-    } finally {
-      this.splashScreen.hide();
+    } catch {
+      // handled by material table
     }
   }
 

@@ -15,7 +15,6 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router } from '@angular/router';
 import { fuseAnimations } from '@fuse/animations';
 import { FuseAlertComponent, FuseAlertType } from '@fuse/components/alert';
-import { FuseSplashScreenService } from '@fuse/services/splash-screen';
 import { FuseValidators } from '@fuse/validators';
 import { AuthService } from 'app/core/auth/auth.service';
 import { finalize } from 'rxjs';
@@ -50,7 +49,6 @@ export class AuthFirstLoginPasswordComponent implements OnInit {
         private _authService: AuthService,
         private _formBuilder: UntypedFormBuilder,
         private _router: Router,
-        private _splashScreen: FuseSplashScreenService
     ) {}
 
     ngOnInit(): void {
@@ -73,13 +71,10 @@ export class AuthFirstLoginPasswordComponent implements OnInit {
 
         this.form.disable();
         this.showAlert = false;
-        this._splashScreen.show();
-
         this._authService
             .completeFirstLoginPassword(this.form.get('password')?.value)
             .pipe(
                 finalize(() => {
-                    this._splashScreen.hide();
                     this.form.enable();
                 })
             )

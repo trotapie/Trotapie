@@ -12,7 +12,6 @@ import { QRCodeComponent } from 'angularx-qrcode';
 import { TextTypewriterComponent } from 'app/text-typewriter.component';
 import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
 import { HotelesService } from 'app/core/hoteles.service';
-import { FuseSplashScreenService } from '@fuse/services/splash-screen';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { FooterComponent } from 'app/footer/footer.component';
 import { getDefaultLang } from 'app/lang.utils';
@@ -35,7 +34,6 @@ export class DetalleHotelComponent {
     private _fuseMediaWatcherService = inject(FuseMediaWatcherService)
     private supabase = inject(HotelesService);
     private route = inject(ActivatedRoute)
-    private splashScreen = inject(FuseSplashScreenService)
     private _translocoService = inject(TranslocoService);
 
 
@@ -115,7 +113,6 @@ export class DetalleHotelComponent {
     }
 
     async ngOnInit() {
-        this.splashScreen.show();
         this._fuseMediaWatcherService.onMediaChange$
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe(({ matchingAliases }) => {
@@ -140,7 +137,6 @@ export class DetalleHotelComponent {
         this.ubicacion = this.hotel.ubicacion;
 
         this.mostrarInfo = true;
-        this.splashScreen.hide();
 
         this._translocoService.langChanges$.subscribe(async (activeLang) => {
             const data = await this.supabase.infoHotel(id, activeLang);

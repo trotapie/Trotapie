@@ -23,7 +23,6 @@ import {
 } from '@fuse/services/loading';
 import { FuseMediaWatcherService } from '@fuse/services/media-watcher';
 import { FusePlatformService } from '@fuse/services/platform';
-import { FuseSplashScreenService } from '@fuse/services/splash-screen';
 import { FuseUtilsService } from '@fuse/services/utils';
 
 export type FuseProviderConfig = {
@@ -75,7 +74,6 @@ export const provideFuse = (
 
         provideEnvironmentInitializer(() => inject(FuseMediaWatcherService)),
         provideEnvironmentInitializer(() => inject(FusePlatformService)),
-        provideEnvironmentInitializer(() => inject(FuseSplashScreenService)),
         provideEnvironmentInitializer(() => inject(FuseUtilsService)),
     ];
 

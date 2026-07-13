@@ -6,7 +6,6 @@ import { MaterialModule } from 'app/shared/material.module';
 import { Router } from '@angular/router';
 import { Observable, startWith, Subject, takeUntil } from 'rxjs';
 import { DatosService } from './hoteles.service';
-import { FuseSplashScreenService } from '@fuse/services/splash-screen';
 import { FloatingSearchComponent } from './search-component/floating-search.component';
 import { SupabaseService } from 'app/core/supabase.service';
 import { DomSanitizer } from '@angular/platform-browser';
@@ -29,7 +28,6 @@ export class HotelesComponent {
     private formBuilder = inject(FormBuilder);
     private router = inject(Router);
     private datosService = inject(DatosService);
-    private splashScreen = inject(FuseSplashScreenService)
     private supabase = inject(SupabaseService);
     private sanitizer = inject(DomSanitizer)
     private _translocoService = inject(TranslocoService);
@@ -114,7 +112,6 @@ export class HotelesComponent {
             });
             if (sessionStorage.getItem('tipoDestino') !== null) {
                 this.obtenerDestinos()
-                this.splashScreen.show();
             }
             // TODO: no hacer de nuevo la petición al cambiar idioma sino solo remplar los textos
             this._translocoService.langChanges$.subscribe(async (activeLang) => {
@@ -266,7 +263,6 @@ export class HotelesComponent {
         if (this.tipoDestino === 2) {
             this.gruposDestinos = this.agruparHotelesPorDestino(info)
         }
-        this.splashScreen.hide();
         this.mostrarInfo = true;
         this.destinoSeleccionado(info);
         this.listaHoteles = info;
@@ -398,7 +394,6 @@ export class HotelesComponent {
     }
 
     async actualizacionDestinos() {
-        this.splashScreen.show();
         const { data, error } = await this.supabase.obtenerDestinos(this.tipoDestino);
         if (error) { this.error = error.message; return; }
         this.destinos = data;

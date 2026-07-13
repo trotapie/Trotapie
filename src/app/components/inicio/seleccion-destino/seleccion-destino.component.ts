@@ -7,7 +7,6 @@ import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { SupabaseService } from 'app/core/supabase.service';
 import { MaterialModule } from 'app/shared/material.module';
 import { startWith } from 'rxjs';
-import { FuseSplashScreenService } from '@fuse/services/splash-screen';
 import { MatSelect, MatSelectChange } from '@angular/material/select';
 import { getDefaultLang } from 'app/lang.utils';
 import { FooterComponent } from 'app/footer/footer.component';
@@ -26,7 +25,6 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
   private formBuilder = inject(FormBuilder);
   private router = inject(Router);
   private datosService = inject(DatosService);
-  private splashScreen = inject(FuseSplashScreenService)
   private supabase = inject(SupabaseService);
   private sanitizer = inject(DomSanitizer)
   private _translocoService = inject(TranslocoService);

@@ -1,7 +1,6 @@
 ﻿import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { FuseSplashScreenService } from '@fuse/services/splash-screen';
 import {
   DestinosService,
   DestinoCatalogo,
@@ -70,7 +69,6 @@ export class CotizacionMultipleComponent implements OnInit {
   private cotizacionesService = inject(CotizacionesService);
   private supabase = inject(SupabaseService);
   private router = inject(Router);
-  private splashScreen = inject(FuseSplashScreenService);
 
   tipoBusqueda: 'NACIONAL' | 'INTERNACIONAL' = 'NACIONAL';
   regiones: RegionCatalogo[] = [];
@@ -132,8 +130,6 @@ export class CotizacionMultipleComponent implements OnInit {
   });
 
   async ngOnInit() {
-    this.splashScreen.show();
-
     try {
       this.cargando = true;
       const [divisionesNacionales, regiones, paisesInternacionales, empleadosResponse, tratamientos] = await Promise.all([
@@ -167,7 +163,6 @@ export class CotizacionMultipleComponent implements OnInit {
       this.error = error?.message ?? 'No se pudo cargar la pantalla para crear cotizacion.';
     } finally {
       this.cargando = false;
-      this.splashScreen.hide();
     }
   }
 

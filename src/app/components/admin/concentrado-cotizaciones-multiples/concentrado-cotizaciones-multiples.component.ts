@@ -3,7 +3,6 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableDataSource } from '@angular/material/table';
 import { Router } from '@angular/router';
-import { FuseSplashScreenService } from '@fuse/services/splash-screen';
 import { SupabaseService } from 'app/core/supabase.service';
 import { ISolicitudCotizacionListado } from 'app/interface/solicitudes-cotizacion.interface';
 import { EstatusComponent } from 'app/shared/estatus/estatus.component';
@@ -32,7 +31,6 @@ type CotizacionMultipleTreeRow = ISolicitudCotizacionListado & {
   styleUrl: './concentrado-cotizaciones-multiples.component.scss'
 })
 export class ConcentradoCotizacionesMultiplesComponent implements OnInit, AfterViewInit {
-  private splashScreen = inject(FuseSplashScreenService);
   private supabase = inject(SupabaseService);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
@@ -86,7 +84,6 @@ export class ConcentradoCotizacionesMultiplesComponent implements OnInit, AfterV
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   async ngOnInit() {
-    this.splashScreen.show();
     try {
       this.cargando = true;
       const data = await this.supabase.obtenerCotizacionesMultiples();
@@ -100,7 +97,6 @@ export class ConcentradoCotizacionesMultiplesComponent implements OnInit, AfterV
       this.error = error?.message ?? 'No se pudo cargar el concentrado de cotizaciones multiples.';
     } finally {
       this.cargando = false;
-      this.splashScreen.hide();
     }
   }
 

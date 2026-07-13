@@ -1,6 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { FuseSplashScreenService } from '@fuse/services/splash-screen';
 import { SupabaseService } from 'app/core/supabase.service';
 import { EstatusComponent } from 'app/shared/estatus/estatus.component';
 import { MaterialModule } from 'app/shared/material.module';
@@ -16,7 +15,6 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 export class DetalleCotizacionMultipleComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly supabase = inject(SupabaseService);
-  private readonly splashScreen = inject(FuseSplashScreenService);
   private readonly snackBar = inject(MatSnackBar);
 
   cotizacion: any | null = null;
@@ -42,7 +40,6 @@ export class DetalleCotizacionMultipleComponent implements OnInit {
 
   async cargarDetalle() {
     const publicId = this.route.snapshot.paramMap.get('id') ?? '';
-    this.splashScreen.show();
 
     try {
       this.cargando = true;
@@ -60,7 +57,6 @@ export class DetalleCotizacionMultipleComponent implements OnInit {
       this.error = error?.message ?? 'No se pudo cargar el detalle de la cotizacion multiple.';
     } finally {
       this.cargando = false;
-      this.splashScreen.hide();
     }
   }
 
