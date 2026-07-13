@@ -61,7 +61,7 @@ function portraitGranTour(id: number, nombre: string, descripcion: string, categ
         textEl('since_badge', 60, 1780, 'DESDE', { width: 100, fontSize: 13, fill: accent, charSpacing: 120, fontWeight: 'bold' }),
         textEl('price_value', 60, 1802, '$12,900 MXN', { width: 400, fontSize: 38, fontFamily: 'Georgia', fill: text, fontWeight: 'bold' }),
         textEl('duration', 320, 1812, '5 dias / 4 noches', { width: 260, fontSize: 16, fill: text, opacity: 0.8 }),
-        textEl('footer_text', 700, 1812, 'trotapie.com', { width: 320, fontSize: 16, fill: text, opacity: 0.7, textAlign: 'right' }),
+        textEl('footer_text', 700, 1812, 'www.trotapie.com', { width: 320, fontSize: 16, fill: text, opacity: 0.7, textAlign: 'right' }),
 
         rectEl('destinations_bar', 60, 1260, 960, 100, { fill: '#ffffff', rx: 50, ry: 50, opacity: 0.12, selectable: false }),
         textEl('destinations', 140, 1288, 'CDMX    Queretaro    San Miguel    Guanajuato', { width: 800, fontSize: 18, fill: text, fontWeight: 'bold', charSpacing: 40 }),
@@ -101,7 +101,7 @@ function landscapeGranTour(id: number, nombre: string, descripcion: string, cate
         textEl('destinations', 1040, 452, 'CDMX  •  Queretaro  •  San Miguel  •  Guanajuato', { width: 720, fontSize: 15, fill: text, fontWeight: 'bold' }),
 
         rectEl('footer_bar', 0, 960, 1920, 120, { fill: bg2, selectable: false }),
-        textEl('footer_text', 60, 1000, 'trotapie.com  |  contacto@trotapie.com', { width: 600, fontSize: 16, fill: text, opacity: 0.68 }),
+        textEl('footer_text', 60, 1000, 'www.trotapie.com  |  contacto@www.trotapie.com', { width: 600, fontSize: 16, fill: text, opacity: 0.68 }),
         textEl('cta', 1400, 1000, 'Cotiza este circuito', { width: 460, fontSize: 16, fill: accent, textAlign: 'right', fontWeight: 'bold' }),
       ],
     },

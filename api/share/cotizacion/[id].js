@@ -1,4 +1,4 @@
-const APP_BASE_URL = 'https://app.trotapie.com';
+const APP_BASE_URL = 'https://www.trotapie.com';
 const OG_IMAGE_URL = `${APP_BASE_URL}/assets/images/logos/trotapie-iso.png`;
 
 const SUPABASE_URL =

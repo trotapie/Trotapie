@@ -7,6 +7,7 @@ import { FuseSplashScreenService } from '@fuse/services/splash-screen';
 import { AuthService } from 'app/core/auth/auth.service';
 import { SupabaseService } from 'app/core/supabase.service';
 import { CotizacionesService } from 'app/core/cotizaciones.service';
+import { formatearFolioCotizacion } from 'app/core/cotizacion-folio.util';
 import { ISolicitudCotizacionListado } from 'app/interface/solicitudes-cotizacion.interface';
 import { EstatusComponent } from 'app/shared/estatus/estatus.component';
 import { MaterialModule } from 'app/shared/material.module';
@@ -138,7 +139,7 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
     ) => {
       switch (sortHeaderId) {
         case 'id':
-          return data.id;
+          return Number(data.id) || 0;
         case 'fecha':
           return this._obtenerFechaSolicitud(data)?.getTime() ?? 0;
         case 'cliente':
@@ -176,9 +177,10 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
       const estatusFilter = this.normalize(normalized.estatus ?? '');
       const fechaSolicitud = this._obtenerFechaSolicitud(data);
       const fechaSolicitudNormalizada = fechaSolicitud ? this._formatearFechaClaveLocal(fechaSolicitud) : '';
+      const folioCotizacion = this.folioCotizacionVisual(data);
 
       const byColumn =
-        this.normalize(data.id).includes(idFilter) &&
+        this.normalize(folioCotizacion).includes(idFilter) &&
         (!fechaFilter || fechaSolicitudNormalizada === fechaFilter) &&
         this.normalize(data.cliente_nombre).includes(clienteFilter) &&
         this.normalize(data.hotel_nombre).includes(hotelFilter) &&
@@ -373,6 +375,13 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
       .map((linea) => linea.trim())
       .filter(Boolean)
       .join(' | ');
+  }
+
+  folioCotizacionVisual(item: ISolicitudCotizacionListado): string {
+    return (
+      formatearFolioCotizacion(item?.id) ||
+      `CTRO-${String(item?.id ?? '').trim()}`
+    );
   }
 
   private obtenerTotalHabitaciones(item: ISolicitudCotizacionListado): number {

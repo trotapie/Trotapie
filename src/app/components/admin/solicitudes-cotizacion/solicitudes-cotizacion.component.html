@@ -41,8 +41,8 @@
 
                         <!-- ID -->
                         <ng-container matColumnDef="id">
-                            <th mat-header-cell *matHeaderCellDef mat-sort-header> No. </th>
-                            <td mat-cell *matCellDef="let row" class="mono"> {{ row.id }} </td>
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header> Folio </th>
+                            <td mat-cell *matCellDef="let row" class="mono"> {{ folioCotizacionVisual(row) }} </td>
                         </ng-container>
 
                         <!-- Fecha cotizacion -->
@@ -156,7 +156,7 @@
                         <ng-container matColumnDef="idFilter">
                             <th mat-header-cell *matHeaderCellDef>
                                 <mat-form-field appearance="outline" class="column-filter">
-                                    <input matInput [value]="columnFilters.id" (input)="applyColumnFilter('id', $event)" placeholder="Filtrar"
+                                    <input matInput [value]="columnFilters.id" (input)="applyColumnFilter('id', $event)" placeholder="Filtrar folio"
                                         [disabled]="!showColumnFilters" [tabIndex]="showColumnFilters ? 0 : -1" />
                                 </mat-form-field>
                             </th>

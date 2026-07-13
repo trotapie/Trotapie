@@ -82,7 +82,7 @@
       {
         "id": "footer_text",
         "type": "text",
-        "fabricConfig": { "left": 80, "top": 1850, "width": 920, "fontSize": 14, "fontFamily": "Arial", "fill": "#6ee7b7", "text": "Trotapie — Tu agencia de viajes · trotapie.com", "textAlign": "center" }
+        "fabricConfig": { "left": 80, "top": 1850, "width": 920, "fontSize": 14, "fontFamily": "Arial", "fill": "#6ee7b7", "text": "Trotapie — Tu agencia de viajes · www.trotapie.com", "textAlign": "center" }
       }
     ]
   }

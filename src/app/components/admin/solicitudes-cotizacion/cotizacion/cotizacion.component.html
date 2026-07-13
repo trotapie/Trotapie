@@ -62,7 +62,7 @@
                                 <article class="quote-hero-card">
                                     <p class="quote-hero-card__eyebrow">¡Cotizacion!</p>
                                     <p class="quote-hero-card__message">Ya casi tienes tu alojamiento en {{ informacionCotizacion.destino_nombre }}</p>
-                                    <p class="quote-hero-card__folio">CTRO-{{ informacionCotizacion.id }}</p>
+                                    <p class="quote-hero-card__folio">{{ folioCotizacionVisual() }}</p>
                                 </article>
                             </div>
 
@@ -2546,7 +2546,7 @@
                             <section class="quote-contact-bar" aria-label="Datos de contacto Trotapie">
                                 <a class="quote-contact-bar__item" [href]="enlaceCorreoContacto" aria-label="Enviar correo a reservas Trotapie">
                                     <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:envelope'"></mat-icon>
-                                    <span>reservas&#64;trotapie.com</span>
+                                    <span>reservas&#64;www.trotapie.com</span>
                                 </a>
                                 <span class="quote-contact-bar__divider" aria-hidden="true"></span>
                                 <a class="quote-contact-bar__item" [href]="enlaceWhatsappContacto" target="_blank" rel="noopener noreferrer" aria-label="Contactar por WhatsApp a Trotapie">

@@ -92,7 +92,7 @@
       {
         "id": "footer_text",
         "type": "text",
-        "fabricConfig": { "left": 60, "top": 1020, "width": 700, "fontSize": 14, "fontFamily": "Georgia", "fill": "#6b7280", "text": "trotapie.com  |  contacto@trotapie.com", "textAlign": "left" }
+        "fabricConfig": { "left": 60, "top": 1020, "width": 700, "fontSize": 14, "fontFamily": "Georgia", "fill": "#6b7280", "text": "www.trotapie.com  |  contacto@www.trotapie.com", "textAlign": "left" }
       },
       {
         "id": "qr_box",

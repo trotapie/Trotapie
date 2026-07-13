@@ -60,8 +60,8 @@ export class CotizacionesService {
     fecha_entrada?: string | Date | null;
     fecha_salida?: string | Date | null;
     noches?: number | null;
-      telefono?: string | null;
-      public_id?: string | null;
+    telefono?: string | null;
+    public_id?: string | null;
   }) {
     const toEmail = String(payload?.to_email ?? '').trim();
     if (!toEmail) {

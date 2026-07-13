@@ -72,7 +72,7 @@
       {
         "id": "footer_text",
         "type": "text",
-        "fabricConfig": { "left": 80, "top": 1010, "width": 500, "fontSize": 16, "fontFamily": "Arial", "fill": "#ffffff", "text": "trotapie.com", "textAlign": "left" }
+        "fabricConfig": { "left": 80, "top": 1010, "width": 500, "fontSize": 16, "fontFamily": "Arial", "fill": "#ffffff", "text": "www.trotapie.com", "textAlign": "left" }
       }
     ]
   }

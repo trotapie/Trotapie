@@ -113,7 +113,7 @@ Las siguientes variables de entorno deben estar configuradas en la consola de Ve
 | `MAILEROO_API_KEY` | Llave API privada para la entrega de correos | *Configurado en Maileroo* |
 | `MAILEROO_FROM_EMAIL` | Dirección de envío verificada | `info@tu-dominio.com` |
 | `MAILEROO_FROM_NAME` | Nombre de visualización del remitente | `Trotapie` |
-| `MAILEROO_REPLY_TO` | Dirección alternativa de respuesta | `contacto@trotapie.com` |
+| `MAILEROO_REPLY_TO` | Dirección alternativa de respuesta | `contacto@www.trotapie.com` |
 
 ---
 

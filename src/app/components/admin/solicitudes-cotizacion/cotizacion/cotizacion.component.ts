@@ -15,6 +15,7 @@ import { CommonModule } from '@angular/common';
 import { ImagenesCarruselComponent } from 'app/shared/imagenes-carrusel/imagenes-carrusel.component';
 import { find } from 'lodash';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { formatearFolioCotizacion } from 'app/core/cotizacion-folio.util';
 
 type Tile = { key: string; url: string; alt: string; class: string };
 
@@ -762,13 +763,13 @@ export class CotizacionComponent implements OnInit {
   }
 
   get enlaceCorreoContacto(): string {
-    const asunto = `Consulta sobre cotización CTRO-${this.informacionCotizacion?.id ?? ''}`;
-    return `mailto:reservas@trotapie.com?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(this.mensajeContactoCotizacion)}`;
+    const asunto = `Consulta sobre cotización ${this.folioCotizacionVisual()}`;
+    return `mailto:reservas@www.trotapie.com?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(this.mensajeContactoCotizacion)}`;
   }
 
   private get mensajeContactoCotizacion(): string {
     const publicId = this.informacionCotizacion?.public_id || '';
-    const url = `https://app.trotapie.com/share/cotizacion/${publicId}`;
+    const url = `https://www.trotapie.com/cotizacion/${publicId}`;
     return `Hola Estoy interesado(a) en esta cotización: ${url} Me gustaría avanzar con la reserva. ¿Me ayudas con los siguientes pasos?`;
   }
 
@@ -1038,7 +1039,7 @@ export class CotizacionComponent implements OnInit {
     const telefono = this.telefonoForm.get('telefono')?.value ?? '';
     const telefonoLimpio = String(telefono).replace(/\D/g, '');
     const lada = String(this.ladaCtrl?.value ?? this.defaultDialCode).replace(/\D/g, '');
-    const url = `https://app.trotapie.com/cotizacion/${this.informacionCotizacion.public_id}`;
+    const url = `https://www.trotapie.com/cotizacion/${this.informacionCotizacion.public_id}`;
 
     const mensaje = await this.buildMensajeCotizacionViaje(url);
     const mensajeCodificado = encodeURIComponent(mensaje);
@@ -1082,12 +1083,18 @@ export class CotizacionComponent implements OnInit {
       return `Cotizacion de viaje para ${hotelNombre}`;
     }
 
-    const publicId = String(this.informacionCotizacion?.public_id ?? '').trim();
-    if (publicId) {
-      return `Cotizacion de viaje ${publicId}`;
+    const folio = this.folioCotizacionVisual();
+    if (folio) {
+      return `Cotizacion de viaje ${folio}`;
     }
 
     return 'Cotizacion de viaje';
+  }
+
+  folioCotizacionVisual(
+    valor: number | string | null | undefined = this.informacionCotizacion?.id
+  ): string {
+    return formatearFolioCotizacion(valor) || `CTRO-${String(valor ?? '').trim()}`;
   }
 
   private obtenerCorreosCapturados(): string[] {
@@ -1268,7 +1275,7 @@ export class CotizacionComponent implements OnInit {
       pdf.setFillColor(...green);
       pdf.rect(0, pageHeight - footerHeight, pageWidth, footerHeight, 'F');
       drawIcon('mail', pageWidth / 2 - 56, pageHeight - 6.8, [255, 255, 255], 0.85);
-      drawText('reservas@trotapie.com', pageWidth / 2 - 28, pageHeight - 3.8, { size: 7, color: [255, 255, 255], align: 'center' });
+      drawText('reservas@www.trotapie.com', pageWidth / 2 - 28, pageHeight - 3.8, { size: 7, color: [255, 255, 255], align: 'center' });
       drawIcon('phone', pageWidth / 2 + 13, pageHeight - 7.3, [255, 255, 255], 0.82);
       drawText('+52 618 803 2093', pageWidth / 2 + 34, pageHeight - 3.8, { size: 7, color: [255, 255, 255], align: 'center' });
       pdf.setDrawColor(255, 255, 255);
@@ -1289,7 +1296,7 @@ export class CotizacionComponent implements OnInit {
       y = margin;
       if (header) {
         drawText('Cotizacion de hospedaje', margin, y + 6, { size: 14, bold: true, color: navy });
-        drawText(`Folio: ${publicId}`, pageWidth - margin, y + 6, { size: 8, color: mutedColor, align: 'right' });
+        drawText(`Folio: ${folioCotizacion}`, pageWidth - margin, y + 6, { size: 8, color: mutedColor, align: 'right' });
         y += 13;
       }
     };
@@ -1322,6 +1329,7 @@ export class CotizacionComponent implements OnInit {
       limpiar(cotizacion?.fondo) ||
       limpiar(cotizacion?.imagenes?.[0]?.url);
     const hotelImageDataUrl = hotelImageSource ? await this.obtenerImagenComoDataURL(hotelImageSource) : null;
+    const folioCotizacion = this.folioCotizacionVisual(cotizacion?.id);
 
     const precios = cotizacion.precios ?? [];
     const precioSinSeguro = precios.find((p) => p.tipo === 'sin_seguro');
@@ -1375,7 +1383,7 @@ export class CotizacionComponent implements OnInit {
     y += 24;
     drawText(limpiar(cotizacion.destino_nombre) || '-', margin + 2, y, { size: 10, bold: true, color: greenDark });
     drawText(limpiar(cotizacion.cliente_nombre) || 'Cliente', margin + 2, y + 8, { size: 11, color: textColor });
-    drawText(`Folio: ${publicId}`, margin + 62, y + 8, { size: 7, color: mutedColor });
+    drawText(`Folio: ${folioCotizacion}`, margin + 62, y + 8, { size: 7, color: mutedColor });
     drawPill('Ya casi tienes listo tu viaje', margin + 2, y + 13, 58);
 
     roundedBox(pageWidth - margin - 67, y - 6, 67, 24);
@@ -1530,7 +1538,7 @@ export class CotizacionComponent implements OnInit {
     drawText('No podemos garantizar estos precios y/o producto sigan disponibles al momento de la contratacion.', margin + 4, y + 15, { size: 5.9, color: textColor });
 
     if (options?.descargar !== false) {
-      pdf.save(`cotizacion-${publicId}.pdf`);
+      pdf.save(`cotizacion-${folioCotizacion}.pdf`);
     }
 
     return pdf;
@@ -1654,6 +1662,7 @@ export class CotizacionComponent implements OnInit {
       const raiz = (iframeDoc.querySelector('.print-area') as HTMLElement | null)
         ?? (iframeDoc.body as HTMLElement | null);
       if (!raiz) return;
+      const folioCotizacion = this.folioCotizacionVisual();
 
       const elementosNoPrint = Array.from(raiz.querySelectorAll('.no-print')) as HTMLElement[];
       const estilosOriginales = elementosNoPrint.map((e) => e.style.display);
@@ -1689,7 +1698,7 @@ export class CotizacionComponent implements OnInit {
         restante -= altoPdf;
       }
 
-      pdf.save(`cotizacion-${publicId}.pdf`);
+      pdf.save(`cotizacion-${folioCotizacion}.pdf`);
 
       cleanup();
     } catch {
@@ -2382,7 +2391,7 @@ export class CotizacionComponent implements OnInit {
       con_seguro: 'opcion-con-seguro',
       a_meses: 'opcion-a-meses',
     };
-    const url = `https://app.trotapie.com/share/cotizacion/${this.informacionCotizacion.public_id}`
+    const url = `https://www.trotapie.com/cotizacion/${this.informacionCotizacion.public_id}`
 
     const mensaje = await this.buildMensajeInteres(
       url,

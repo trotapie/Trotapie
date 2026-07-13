@@ -23,12 +23,12 @@ type EmailPayload = {
 };
 
 const GOOGLE_SCRIPT_EXEC_URL = 'https://script.google.com/macros/s/AKfycbxojdZ6fXbfu7ji0mIGGaMB1JO9SMIs0kqJW6NsWbyToFcXHuSKGPDKkU5598zTRU7q/exec';
-const DEFAULT_REPLY_TO = 'cotizaciones@trotapie.com';
+const DEFAULT_REPLY_TO = 'cotizaciones@www.trotapie.com';
 const DEFAULT_REMITENTE_NOMBRE = 'Trotapie';
 const DEFAULT_TITULO_CORREO = 'Tu cotizacion esta lista';
 const DEFAULT_MENSAJE_CORREO = 'Te compartimos tu cotizacion en PDF.';
 const LOG_PREFIX = '[enviar-correo]';
-const APP_URL = 'https://app.trotapie.com';
+const APP_URL = 'https://www.trotapie.com';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -421,7 +421,7 @@ function construirFirmaHtml(firma: FirmaEmpleado | null): string {
       </tr>
     </table>
     <map name="firma-contacto" id="firma-contacto">
-      <area shape="rect" coords="35,285,460,365" href="mailto:jtriego@trotapie.com" alt="Enviar correo a Javier Triego">
+      <area shape="rect" coords="35,285,460,365" href="mailto:jtriego@www.trotapie.com" alt="Enviar correo a Javier Triego">
       <area shape="rect" coords="35,350,390,440" href="https://wa.me/526691957651" alt="Enviar WhatsApp a Javier Triego">
     </map>
     <map name="firma-redes" id="firma-redes">

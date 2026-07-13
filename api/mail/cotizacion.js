@@ -146,7 +146,7 @@ function formatDate(value) {
 
 function getRequestOrigin(req) {
   const protocolHeader = req.headers['x-forwarded-proto'];
-  const host = req.headers.host || 'app.trotapie.com';
+  const host = req.headers.host || 'www.trotapie.com';
   const protocol = Array.isArray(protocolHeader) ? protocolHeader[0] : protocolHeader || 'https';
   return `${protocol}://${host}`;
 }
