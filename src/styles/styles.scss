@@ -119,6 +119,52 @@
     line-height: 1.4;
 }
 
+.quick-quote-policy-panel.mat-mdc-select-panel {
+    max-height: min(32rem, calc(100vh - 4rem)) !important;
+    overflow-y: auto;
+}
+
+.quick-quote-selected-policies-menu.mat-mdc-menu-panel {
+    max-width: min(32rem, calc(100vw - 1.5rem));
+    padding: 0.5rem;
+}
+
+.quick-quote-selected-policy {
+    display: block;
+    padding: 0.55rem 0.7rem;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-size: 0.82rem;
+    line-height: 1.4;
+}
+
+.quote-policy-menu.mat-mdc-menu-panel,
+.quote-bank-menu.mat-mdc-menu-panel {
+    box-sizing: border-box;
+    width: min(20rem, calc(100vw - 1.5rem));
+    max-width: calc(100vw - 1.5rem);
+}
+
+.quote-policy-menu .quote-popover,
+.quote-bank-menu .quote-popover {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.quote-policy-menu .quote-popover__item {
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.cdk-overlay-pane:has(.quote-policy-menu),
+.cdk-overlay-pane:has(.quote-bank-menu) {
+    max-width: calc(100vw - 1.5rem) !important;
+}
+
 .cdk-overlay-pane:has(.tp-select-panel) {
     max-width: calc(100vw - 1.5rem) !important;
 }

@@ -150,6 +150,78 @@
   color: var(--fuse-text-default);
 }
 
+.quick-quote-hotel-card {
+  display: grid;
+  grid-template-columns: minmax(15rem, 0.85fr) minmax(0, 2fr);
+  gap: 1.5rem;
+  align-items: center;
+  margin: 2rem 0 -1.25rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--fuse-border);
+  border-radius: 1.25rem;
+  background: color-mix(in srgb, var(--fuse-bg-card) 92%, #0f766e 8%);
+  color: var(--fuse-text-default);
+}
+
+.quick-quote-hotel-card__heading p,
+.quick-quote-hotel-card__heading h2,
+.quick-quote-hotel-card__details dd {
+  margin: 0;
+}
+
+.quick-quote-hotel-card__heading p {
+  color: #0f766e;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.quick-quote-hotel-card__heading h2 {
+  margin-top: 0.35rem;
+  font-size: 1.25rem;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.quick-quote-hotel-card__details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.quick-quote-hotel-card__details div {
+  min-width: 0;
+}
+
+.quick-quote-hotel-card__details dt {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--fuse-text-secondary);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.quick-quote-hotel-card__details mat-icon {
+  width: 1rem;
+  height: 1rem;
+  color: #0f766e;
+}
+
+.quote-hotel-amenity-chip__svg,
+.quote-hotel-amenity-chip mat-icon {
+  color: #000000;
+}
+
+.quick-quote-hotel-card__details dd {
+  margin-top: 0.3rem;
+  overflow-wrap: anywhere;
+  font-size: 0.88rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
 .quick-quote-editor__header {
   display: flex;
   align-items: center;
@@ -204,6 +276,10 @@
 .quick-quote-settings--below-table {
   grid-template-columns: minmax(0, 14rem) minmax(0, 14rem) minmax(0, 1fr);
   align-items: center;
+}
+
+.quick-quote-settings--deadline {
+  grid-template-columns: minmax(0, 14rem);
 }
 
 .quick-quote-policy {
@@ -313,17 +389,43 @@
   color: var(--fuse-text-default);
 }
 
-.quick-quote-table td:nth-child(1) { min-width: 13rem; }
-.quick-quote-table td:nth-child(2) { min-width: 17rem; font-weight: 700; }
-.quick-quote-table td:nth-child(3) { min-width: 10rem; }
+.quick-quote-policy-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.quick-quote-policy-cell mat-select {
+  min-width: 0;
+}
+
+.quick-quote-policy-info {
+  flex: 0 0 auto;
+  width: 2.3rem;
+  height: 2.3rem;
+  color: #0f766e;
+}
+
+.quick-quote-policy-info:disabled {
+  color: var(--fuse-text-secondary);
+}
+
+.quick-quote-table td:nth-child(1) { min-width: 12rem; }
+.quick-quote-table td:nth-child(2) { min-width: 10rem; font-size: 0.78rem; font-weight: 700; }
+.quick-quote-table td:nth-child(3) { min-width: 14rem; font-weight: 700; }
+.quick-quote-table td:nth-child(4) { min-width: 9rem; }
+.quick-quote-table td:nth-child(5) { min-width: 8rem; }
+.quick-quote-table td:nth-child(6) { min-width: 15rem; }
 
 @media (max-width: 768px) {
   .quick-quote-editor__header { align-items: stretch; flex-direction: column; padding: 1.25rem; }
+  .quick-quote-hotel-card { grid-template-columns: 1fr; margin-top: 1.5rem; padding: 1.15rem; }
+  .quick-quote-hotel-card__details { grid-template-columns: 1fr; gap: 0.75rem; }
   .quick-quote-editor__status { width: 100%; }
   .quick-quote-tab-content { padding: 1rem; }
   .quick-quote-settings { grid-template-columns: 1fr; }
   .quick-quote-settings--below-table { justify-content: stretch; }
-  .quick-quote-table { min-width: 38rem; }
+  .quick-quote-table { min-width: 58rem; }
 }
 
 .public-quote-hero {
@@ -435,7 +537,7 @@
   font-weight: 900;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: #0f766e;
+  color: #000000;
 }
 
 .quote-hero-card__headline {
@@ -454,7 +556,7 @@
   z-index: 1;
   max-width: 18rem;
   margin-top: 0.55rem;
-  font-size: clamp(1.1rem, 1.8vw, 1.45rem);
+  font-size: clamp(0.82rem, 1.15vw, 0.98rem);
   font-weight: 700;
   line-height: 1.45;
   color: #334155;
@@ -785,7 +887,7 @@
 }
 
 .quote-rate-table th {
-  font-size: 0.68rem;
+  font-size: 0.78rem;
   line-height: 1rem;
   font-weight: 900;
   letter-spacing: 0.11em;
@@ -800,13 +902,135 @@
   display: none;
 }
 
+.quote-payment-details__policies {
+  display: none;
+}
+
+.quote-policy-cell {
+  width: 5.5rem;
+  text-align: center !important;
+}
+
+.quote-policy-trigger {
+  color: #000000;
+}
+
+.quote-rate-room-summary {
+  margin: 0.3rem 0 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
 .quote-rate-summary {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 0.5rem;
   margin-top: 1rem;
+}
+
+.quote-rate-amount-group {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  margin-left: auto;
+}
+
+.quote-rate-payment-breakdown {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.quote-rate-payment-breakdown p {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.quote-rate-payment-breakdown span {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #64748b;
+}
+
+.quote-rate-payment-breakdown strong {
+  min-width: 10.5rem;
+  color: #087f6f;
+  font-size: clamp(0.92rem, 1.5vw, 1.15rem);
+  font-weight: 900;
+  text-align: right;
+}
+
+@media (max-width: 640px) {
+  .quote-rate-summary {
+    align-items: flex-start;
+  }
+
+  .quote-rate-amount-group {
+    align-items: flex-end;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .quote-rate-payment-breakdown {
+    width: 100%;
+  }
+
+  .quote-rate-deadline {
+    margin: 0;
+  }
+}
+
+.quote-deposit-account {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #334155;
+}
+
+.quote-deposit-account button {
+  color: #000000;
+}
+
+:host ::ng-deep .quote-policy-menu .mat-mdc-menu-content,
+:host ::ng-deep .quote-bank-menu .mat-mdc-menu-content {
+  padding: 0;
+}
+
+.quote-popover {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  padding: 1rem;
+  color: #334155;
+}
+
+.quote-popover__title {
+  margin: 0 0 0.65rem;
+  color: #0f172a;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.quote-popover__item {
+  min-width: 0;
+  margin: 0;
+  padding: 0.45rem 0;
+  border-top: 1px solid #e2e8f0;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .quote-rate-deadline {
@@ -1076,6 +1300,11 @@
     white-space: normal;
   }
 
+  .quote-rate-summary {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .quote-rate-table-wrap {
     overflow: visible;
     border: 1px solid rgba(226, 232, 240, 0.9);
@@ -1163,6 +1392,16 @@
     position: relative;
   }
 
+  .quote-policy-cell {
+    width: 100%;
+    text-align: left !important;
+  }
+
+  .quote-policy-cell {
+    width: 100%;
+    text-align: left !important;
+  }
+
   .quote-payment-popover summary {
     display: flex;
     align-items: center;
@@ -1226,6 +1465,56 @@
     width: 26%;
   }
 
+  /* Keep the reservation-policy action visible in the compact public table. */
+  .quote-rate-table tr:has(> .quote-policy-cell) > :first-child {
+    width: 9%;
+  }
+
+  .quote-rate-table tr:has(> .quote-policy-cell) > :nth-child(2) {
+    width: 27%;
+  }
+
+  .quote-rate-table tr:has(> .quote-policy-cell) > :nth-child(3) {
+    width: 26%;
+  }
+
+  .quote-rate-table tr:has(> .quote-policy-cell) > .quote-price-cell {
+    width: 22%;
+  }
+
+  .quote-rate-table tr:has(> .quote-policy-cell) > .quote-policy-cell {
+    display: table-cell;
+    width: 16%;
+    text-align: center !important;
+  }
+
+  .quote-rate-table tr:has(> .quote-payment-details):has(> .quote-policy-cell) > :first-child {
+    width: 8%;
+  }
+
+  .quote-rate-table tr:has(> .quote-payment-details):has(> .quote-policy-cell) > :nth-child(2) {
+    width: 23%;
+  }
+
+  .quote-rate-table tr:has(> .quote-payment-details):has(> .quote-policy-cell) > :nth-child(3) {
+    width: 24%;
+  }
+
+  .quote-rate-table tr:has(> .quote-payment-details):has(> .quote-policy-cell) > .quote-price-cell {
+    width: 18%;
+  }
+
+  .quote-rate-table tr:has(> .quote-payment-details):has(> .quote-policy-cell) > .quote-payment-details {
+    display: table-cell;
+    width: 17%;
+  }
+
+  .quote-rate-table tr:has(> .quote-payment-details):has(> .quote-policy-cell) > .quote-policy-cell {
+    display: table-cell;
+    width: 10%;
+    text-align: center !important;
+  }
+
   .quote-rate-table .quote-money {
     white-space: normal;
   }
@@ -1253,6 +1542,53 @@
   .quote-top-layout {
     grid-template-columns: 1fr;
     max-width: 32rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  .quote-rate-table tr:has(> .quote-payment-details):has(> .quote-policy-cell) > :nth-child(5),
+  .quote-rate-table tr:has(> .quote-payment-details):has(> .quote-policy-cell) > :nth-child(6),
+  .quote-rate-table tr:has(> .quote-payment-details):has(> .quote-policy-cell) > .quote-policy-cell {
+    display: none;
+  }
+
+  .quote-rate-table tr:has(> .quote-payment-details) > :first-child {
+    width: 8%;
+  }
+
+  .quote-rate-table tr:has(> .quote-payment-details) > :nth-child(2) {
+    width: 25%;
+  }
+
+  .quote-rate-table tr:has(> .quote-payment-details) > :nth-child(3) {
+    width: 25%;
+  }
+
+  .quote-rate-table tr:has(> .quote-payment-details) > .quote-price-cell {
+    width: 22%;
+  }
+
+  .quote-rate-table tr:has(> .quote-payment-details) > .quote-payment-details {
+    display: table-cell;
+    width: 20%;
+  }
+
+  .quote-payment-details__policies {
+    display: block;
+    margin-top: 0.45rem;
+    padding-top: 0.45rem;
+    border-top: 1px solid rgba(226, 232, 240, 0.9);
+  }
+
+  .quote-payment-popover .quote-payment-details__policies p {
+    display: block;
+    padding: 0.25rem 0;
+    overflow-wrap: anywhere;
+  }
+
+  .quote-payment-popover .quote-payment-details__policies p:first-child {
+    color: #087f6f;
+    font-weight: 900;
   }
 }
 

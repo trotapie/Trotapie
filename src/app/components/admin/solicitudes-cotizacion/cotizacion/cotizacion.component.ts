@@ -451,6 +451,17 @@ export class CotizacionComponent implements OnInit {
     return resumen.join(' · ');
   }
 
+  detallePersonasHabitacion(indice: number): string {
+    const detalle = this.obtenerDetalleHabitacionesEdicion()[indice];
+    if (!detalle) return 'Sin datos';
+
+    const total = detalle.adultos + detalle.ninos;
+    const desglose = this.formatearDetalleHabitacionTexto(detalle);
+    return total > 0
+      ? `${total} persona${total === 1 ? '' : 's'}${desglose ? ` · ${desglose}` : ''}`
+      : desglose || 'Sin datos';
+  }
+
   get amenidadesDestacadas(): Array<{ id: number; descripcion: string; icono?: string | null }> {
     return (this.informacionCotizacion?.actividades ?? [])
       .filter((item) => String(item?.icono ?? '').trim().length > 0)
@@ -559,7 +570,10 @@ export class CotizacionComponent implements OnInit {
       this.edicionForm.get('tipoTarifa')?.valueChanges.subscribe(valor => {
         this.edicionForm.patchValue({
           condicionesPrecioMeses: []
-        })
+        }, { emitEvent: false })
+        this.habitacionesAdicionales.controls.forEach((control) => {
+          control.patchValue({ condicionesPrecioMeses: [] }, { emitEvent: false });
+        });
         this.politicas = valor === 'apartado' ? this.politicasApartadoMeses : this.politicasNoReembolsableMeses;
         this.politicas.forEach(item => {
           item.tipoPoliticas = valor;
@@ -744,7 +758,7 @@ export class CotizacionComponent implements OnInit {
 
   get enlaceWhatsappContacto(): string {
     const mensaje = this.mensajeContactoCotizacion;
-    return `https://wa.me/526188032093?text=${encodeURIComponent(mensaje)}`;
+    return `https://wa.me/526188032003?text=${encodeURIComponent(mensaje)}`;
   }
 
   get enlaceCorreoContacto(): string {
@@ -878,17 +892,12 @@ export class CotizacionComponent implements OnInit {
     return this.totalPublicoPorTarifa(tipo);
   }
 
-  politicasPorCampoPublico(campo: 'precio' | 'precioConSeguro' | 'precioMeses'): Condicione[] {
-    const habitacion = this.habitacionesCotizacionPublicaVista.find((item) => {
-      if (campo === 'precio') return item.precioSinSeguro !== null;
-      if (campo === 'precioConSeguro') return item.precioConSeguro !== null;
-      return item.precioMeses !== null;
-    });
+  totalPagoPublicoPorCampo(campo: 'apartadoSeguro' | 'pagueDespuesSeguro' | 'apartadoMeses' | 'pagueDespuesMeses'): number | null {
+    const valores = this.habitacionesCotizacionPublicaVista
+      .map(habitacion => habitacion[campo])
+      .filter((valor): valor is number => valor !== null);
 
-    if (!habitacion) return [];
-    if (campo === 'precio') return habitacion.condicionesSinSeguro;
-    if (campo === 'precioConSeguro') return habitacion.condicionesConSeguro;
-    return habitacion.condicionesMeses;
+    return valores.length ? valores.reduce((total, valor) => total + valor, 0) : null;
   }
 
   private obtenerPayloadEdicion(): any {
@@ -1851,7 +1860,7 @@ export class CotizacionComponent implements OnInit {
 
   private estadoSeccionConSeguro(control: AbstractControl) {
     const precio = this.obtenerNumeroLimpio(control.get('precioConSeguro')?.value);
-    const politicas = this.edicionForm.get('condicionesPrecioConSeguro')?.value ?? [];
+    const politicas = control.get('condicionesPrecioConSeguro')?.value ?? [];
     const fecha = this.edicionForm.get('fechaLimiteSeguro')?.value ?? null;
     const tieneDatos = precio !== null;
     return {
@@ -1862,7 +1871,7 @@ export class CotizacionComponent implements OnInit {
 
   private estadoSeccionMeses(control: AbstractControl) {
     const precio = this.obtenerNumeroLimpio(control.get('precioMeses')?.value);
-    const politicas = this.edicionForm.get('condicionesPrecioMeses')?.value ?? [];
+    const politicas = control.get('condicionesPrecioMeses')?.value ?? [];
     const fecha = this.edicionForm.get('fechaLimiteMeses')?.value ?? null;
     const tipoTarifa = String(this.edicionForm.get('tipoTarifa')?.value ?? '').trim();
     const requiereFecha = tipoTarifa === 'apartado';
@@ -2279,10 +2288,6 @@ export class CotizacionComponent implements OnInit {
     };
 
     const politicasSinSeguro = this.edicionForm.get('condicionesPrecioSinSeguro')?.value ?? [];
-    const politicasConSeguro = this.edicionForm.get('condicionesPrecioConSeguro')?.value ?? [];
-    const politicasMeses = this.edicionForm.get('condicionesPrecioMeses')?.value ?? [];
-    const porcentajeSeguro = this.edicionForm.get('porcentajeSeguro')?.value;
-    const porcentajeMeses = this.edicionForm.get('porcentajeMeses')?.value;
     const fechaLimiteSeguro = this.edicionForm.get('fechaLimiteSeguro')?.value;
     const fechaLimiteMeses = this.edicionForm.get('fechaLimiteMeses')?.value;
     const tipoTarifa = this.edicionForm.get('tipoTarifa')?.value;
@@ -2293,10 +2298,6 @@ export class CotizacionComponent implements OnInit {
         ...(control.value as CotizacionHabitacionForm),
         tipoHabitacion: this.normalizarTipoHabitacion(control.get('tipoHabitacion')?.value),
         condicionesPrecioSinSeguro: politicasSinSeguro,
-        condicionesPrecioConSeguro: politicasConSeguro,
-        condicionesPrecioMeses: politicasMeses,
-        porcentajeSeguro,
-        porcentajeMeses,
         fechaLimiteSeguro,
         fechaLimiteMeses,
         tipoTarifa

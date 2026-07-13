@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { ISolicitudCotizacionListado } from 'app/interface/solicitudes-cotizacion.interface';
+import { construirNombreClienteVisible } from './cliente-nombre.util';
 
 @Injectable({ providedIn: 'root' })
 export class CotizacionesService {
@@ -209,7 +210,11 @@ export class CotizacionesService {
     );
     if (error) throw error;
 
-    return this.enriquecerCotizacionConIcono(data?.[0] ?? null);
+    const cotizacion = await this.enriquecerCotizacionConIcono(data?.[0] ?? null);
+    if (!cotizacion) return cotizacion;
+
+    const datosCliente = await this.obtenerDatosClientePublicos(publicId);
+    return this.formatearNombreClientePublico({ ...cotizacion, ...datosCliente });
     // TODO: AGREGAR LA IMAGEN DE FONDO DEL DESTINO Y TRAERLA  Y AL TRAER LA INFO MOSTRAR LA DESCRIPCION,
     // TAMBIEN TRAER EL REGIMEN QUE SE SELECCIONO
   }
@@ -341,6 +346,43 @@ export class CotizacionesService {
           icono: item?.icono ?? iconosActividades.get(Number(item?.id)) ?? null
         }))
       };
+    }
+  }
+
+  private formatearNombreClientePublico(cotizacion: any) {
+    if (!cotizacion) return cotizacion;
+
+    const cliente = cotizacion.cliente ?? {};
+    const tratamiento = cotizacion.tratamiento ?? cliente.tratamiento ?? {};
+    const nombreVisible = construirNombreClienteVisible({
+      tratamientoAbreviacion:
+        cotizacion.tratamiento_abreviacion ??
+        cotizacion.cliente_tratamiento_abreviacion ??
+        tratamiento.abreviacion,
+      nombreCompleto:
+        cotizacion.cliente_nombre_completo ??
+        cliente.nombre_completo ??
+        cotizacion.nombre_completo,
+      nombreFallback: cotizacion.cliente_nombre ?? cliente.nombre ?? cotizacion.nombre_persona
+    });
+
+    return nombreVisible
+      ? { ...cotizacion, cliente_nombre: nombreVisible }
+      : cotizacion;
+  }
+
+  private async obtenerDatosClientePublicos(publicId: string): Promise<Record<string, unknown>> {
+    try {
+      const { data, error } = await this.client.rpc(
+        'obtener_tratamiento_cliente_por_cotizacion_publica',
+        { p_public_id: publicId }
+      );
+
+      if (error) return {};
+      return data?.[0] ?? {};
+    } catch {
+      // The quote remains available while the database migration is pending.
+      return {};
     }
   }
 
