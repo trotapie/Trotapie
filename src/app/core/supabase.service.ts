@@ -115,6 +115,14 @@ export class SupabaseService {
   constructor() {
     this.client = createClient(environment.supabaseUrl, environment.supabaseAnonKey, {
       auth: { persistSession: true, autoRefreshToken: true },
+      global: {
+        fetch: (url, init) => {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 30_000);
+          return fetch(url, { ...init, signal: controller.signal })
+            .finally(() => clearTimeout(timeoutId));
+        },
+      },
     });
   }
 

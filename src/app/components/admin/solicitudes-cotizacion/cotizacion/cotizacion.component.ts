@@ -520,9 +520,7 @@ export class CotizacionComponent implements OnInit {
 
       } else {
         this.informacionCotizacion = await this.supabase.obtenerCotizacionPorPublicIdCliente(id);
-        console.log('testtte');
 
-        console.log(this.informacionCotizacion);
         await this.cargarCatalogoTiposHabitacion();
         await this.cargarOrigenesReservacionPublicos();
         datosHotel = {
