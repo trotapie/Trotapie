@@ -63,6 +63,10 @@ export default [
         path: 'empleados',
         loadChildren: () => import('./empleados/empleados.routes'),
     },
+    {
+        path: 'condiciones',
+        loadChildren: () => import('./condiciones/condiciones.routes'),
+    },
     // {
     //     path: 'configuracion',
     //     loadChildren: () => import('./configuracion/configuracion.routes'),

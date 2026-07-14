@@ -1,0 +1,68 @@
+<div class="flex min-w-0 flex-auto flex-col bg-gray-50 dark:bg-gray-950">
+    <div class="mx-auto flex w-full max-w-screen-xl flex-col px-6 py-8 sm:px-8">
+        <div class="max-w-3xl">
+            <h1 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+                Condiciones
+            </h1>
+            <p class="mt-2 text-base text-gray-500 dark:text-gray-400">
+                Centraliza la edicion de plantillas y la impresion de politicas en PDF.
+            </p>
+        </div>
+    </div>
+
+    <div class="mx-auto w-full max-w-screen-xl px-6 py-8 sm:px-8">
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <a [routerLink]="['/admin/condiciones/plantillas']"
+                class="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-gray-700 dark:bg-gray-900">
+                <div class="relative aspect-[16/9] w-full overflow-hidden bg-gradient-to-br from-indigo-950 via-slate-900 to-cyan-950">
+                    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.22),transparent_35%),radial-gradient(circle_at_bottom_left,rgba(99,102,241,0.22),transparent_34%)]"></div>
+                    <div class="relative flex h-full items-center justify-center">
+                        <div class="flex h-20 w-20 items-center justify-center rounded-3xl border border-white/10 bg-white/10 text-white shadow-2xl backdrop-blur-md">
+                            <mat-icon class="icon-size-10" svgIcon="heroicons_outline:document-text"></mat-icon>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative z-10 -mt-12 flex flex-1 flex-col p-6">
+                    <div class="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-indigo-700 shadow-lg transition-colors duration-300 group-hover:text-indigo-900">
+                        <mat-icon class="icon-size-8" svgIcon="heroicons_outline:pencil-square"></mat-icon>
+                    </div>
+
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+                        Administrador de plantillas
+                    </h2>
+
+                    <p class="mt-2 flex-1 text-base leading-6 text-gray-500 dark:text-gray-400">
+                        Edita el contenido base, los bloques de politica y los valores que cambian por documento.
+                    </p>
+                </div>
+            </a>
+
+            <a [routerLink]="['/admin/condiciones/imprimir']"
+                class="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-gray-700 dark:bg-gray-900">
+                <div class="relative aspect-[16/9] w-full overflow-hidden bg-gradient-to-br from-emerald-950 via-slate-900 to-teal-950">
+                    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.2),transparent_35%),radial-gradient(circle_at_bottom_left,rgba(20,184,166,0.24),transparent_34%)]"></div>
+                    <div class="relative flex h-full items-center justify-center">
+                        <div class="flex h-20 w-20 items-center justify-center rounded-3xl border border-white/10 bg-white/10 text-white shadow-2xl backdrop-blur-md">
+                            <mat-icon class="icon-size-10" svgIcon="heroicons_outline:printer"></mat-icon>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative z-10 -mt-12 flex flex-1 flex-col p-6">
+                    <div class="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-emerald-700 shadow-lg transition-colors duration-300 group-hover:text-emerald-900">
+                        <mat-icon class="icon-size-8" svgIcon="heroicons_outline:queue-list"></mat-icon>
+                    </div>
+
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+                        Imprimir
+                    </h2>
+
+                    <p class="mt-2 flex-1 text-base leading-6 text-gray-500 dark:text-gray-400">
+                        Selecciona una plantilla, llena los datos y genera el PDF listo para imprimir.
+                    </p>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>

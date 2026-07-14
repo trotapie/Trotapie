@@ -76,6 +76,14 @@ export const compactNavigation: FuseNavigationItem[] = [
         meta : { permissions: ['empleados.manage'] }
     },
     // {
+    //     id   : 'condiciones',
+    //     title: 'Condiciones',
+    //     type : 'basic',
+    //     icon : 'heroicons_outline:document-text',
+    //     link : '/admin/condiciones',
+    //     meta : { permissions: ['condiciones.manage'] }
+    // },
+    // {
     //     id   : 'configuracion',
     //     title: 'Configuracion',
     //     type : 'basic',
