@@ -179,26 +179,35 @@
                       {{ actividad.get(['traducciones', 'es', 'nombre'])?.value || 'Sin nombre' }}
                     </td>
                     <td class="px-4 py-3">
-                      @if (getImagenActivaActividad(i); as imagen) {
-                        <div class="flex flex-wrap items-center gap-2">
-                          <a [href]="imagen.imagen_url" target="_blank" rel="noopener noreferrer" class="block">
+                      @if (getImagenesActivasActividad(i); as imagenesActivas) {
+                        @if (imagenesActivas.length > 0) {
+                          <div class="flex flex-wrap items-center gap-1.5">
+                            @for (img of imagenesActivas.slice(0, 4); track img.id) {
+                              <a [href]="img.imagen_url" target="_blank" rel="noopener noreferrer" class="block">
+                                <img
+                                  [src]="img.imagen_url"
+                                  alt="Imagen de actividad"
+                                  class="h-10 w-14 rounded-md border border-gray-200 object-cover"
+                                />
+                              </a>
+                            }
+                            @if (imagenesActivas.length > 4) {
+                              <div class="flex h-10 w-14 items-center justify-center rounded-md border border-gray-200 bg-gray-100 text-sm font-semibold text-gray-500">
+                                +{{ imagenesActivas.length - 4 }}
+                              </div>
+                            }
+                          </div>
+                        } @else if (actividad.get('imagen_fondo')?.value) {
+                          <a [href]="actividad.get('imagen_fondo')?.value" target="_blank" rel="noopener noreferrer" class="block">
                             <img
-                              [src]="imagen.imagen_url"
+                              [src]="actividad.get('imagen_fondo')?.value"
                               alt="Imagen de actividad"
                               class="h-10 w-14 rounded-md border border-gray-200 object-cover"
                             />
                           </a>
-                        </div>
-                      } @else if (actividad.get('imagen_fondo')?.value) {
-                        <a [href]="actividad.get('imagen_fondo')?.value" target="_blank" rel="noopener noreferrer" class="block">
-                          <img
-                            [src]="actividad.get('imagen_fondo')?.value"
-                            alt="Imagen de actividad"
-                            class="h-10 w-14 rounded-md border border-gray-200 object-cover"
-                          />
-                        </a>
-                      } @else {
-                        <span class="text-sm text-amber-700">Sin imagen cargada</span>
+                        } @else {
+                          <span class="text-sm text-amber-700">Sin imagen cargada</span>
+                        }
                       }
                     </td>
                     <td class="px-4 py-3">

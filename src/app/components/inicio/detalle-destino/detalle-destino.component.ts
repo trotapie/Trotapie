@@ -14,6 +14,12 @@ import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { getDefaultLang } from 'app/lang.utils';
 import { log } from 'fabric/fabric-impl';
 
+interface CarouselSlide {
+  imagen_url: string;
+  nombre: string;
+  descripcion: string;
+}
+
 @Component({
   selector: 'app-detalle-destino',
   imports: [FooterComponent, MapaComponent, MaterialModule, TranslocoModule],
@@ -40,6 +46,7 @@ export class DetalleDestinoComponent implements OnInit {
   mostrarMapa = false;
   currentIndex = 0;
   intervalId: any;
+  slides: CarouselSlide[] = [];
 
   async ngOnInit() {
     const id = Number(this.route.snapshot.paramMap.get('id'));
@@ -50,6 +57,7 @@ export class DetalleDestinoComponent implements OnInit {
       return;
     }
     this.detallesDestino = informacionDestino[0];
+    this.construirSlidesCarrusel();
 
     this.ipQueryService.getCurrentIpInfo().subscribe((response) => {
       this.ipPublica = response.ip;
@@ -71,10 +79,10 @@ export class DetalleDestinoComponent implements OnInit {
     this._translocoService.langChanges$.subscribe(async (activeLang) => {
       const informacionDestino = await this.supabase.obtenerDetalleDestino(id, activeLang);
       this.detallesDestino = informacionDestino[0];
+      this.construirSlidesCarrusel();
     });
     
     sessionStorage.setItem('hotel', JSON.stringify(datosHotel))
-    this.startCarousel();
   }
 
   abrirUbicacion() {
@@ -82,10 +90,49 @@ export class DetalleDestinoComponent implements OnInit {
   }
 
   startCarousel() {
+    clearInterval(this.intervalId);
+    if (this.slides.length <= 1) {
+      return;
+    }
+
     this.intervalId = setInterval(() => {
-      this.currentIndex =
-        (this.currentIndex + 1) % this.detallesDestino?.atracciones_principales.length;
+      this.currentIndex = (this.currentIndex + 1) % this.slides.length;
     }, 3000);
+  }
+
+  private construirSlidesCarrusel() {
+    this.currentIndex = 0;
+    const actividadesMostradas = new Set<number>();
+
+    this.slides = (this.detallesDestino?.atracciones_principales ?? []).flatMap((actividad) => {
+      if (actividadesMostradas.has(actividad.id)) {
+        return [];
+      }
+      actividadesMostradas.add(actividad.id);
+
+      const urlsMostradas = new Set<string>();
+      const imagenes = actividad.imagenes?.length
+        ? actividad.imagenes
+        : actividad.imagen_fondo
+          ? [{ imagen_url: actividad.imagen_fondo }]
+          : [];
+
+      return imagenes
+        .filter((imagen) => {
+          if (urlsMostradas.has(imagen.imagen_url)) {
+            return false;
+          }
+          urlsMostradas.add(imagen.imagen_url);
+          return true;
+        })
+        .map((imagen) => ({
+          imagen_url: imagen.imagen_url,
+          nombre: actividad.nombre,
+          descripcion: actividad.descripcion
+        }));
+    });
+
+    this.startCarousel();
   }
 
   ngOnDestroy() {

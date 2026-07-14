@@ -13,6 +13,7 @@ export interface AtraccionesPrincipale {
     nombre:       string;
     descripcion:  string;
     imagen_fondo: string;
+    imagenes?:    Array<{ imagen_url: string }>;
 }
 
 export interface DatosRapido {

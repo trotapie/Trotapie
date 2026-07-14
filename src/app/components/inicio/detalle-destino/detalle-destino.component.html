@@ -188,18 +188,18 @@
                         <div class="max-w-[1200px] mx-auto">
                             <div class="relative h-[500px] w-full overflow-hidden rounded-xl shadow-2xl">
                                 <div class="relative w-full h-[500px] overflow-hidden">
-                                    <div *ngFor="let image of detallesDestino?.atracciones_principales; let i = index"
+                                    <div *ngFor="let slide of slides; let i = index"
                                         class="absolute inset-0 transition-opacity duration-1000 ease-in-out"
                                         [class.opacity-100]="i === currentIndex" [class.opacity-0]="i !== currentIndex">
-                                        <img [src]="image.imagen_fondo" class="w-full h-full object-cover"
+                                        <img [src]="slide.imagen_url" class="w-full h-full object-cover"
                                             alt="carousel image" />
                                         <div class="absolute inset-0 flex flex-col justify-end p-8 md:p-16 z-10">
                                             <span
                                                 class="mb-4 inline-block w-fit rounded-full bg-[#F9B44B] px-4 py-1 text-xs font-bold uppercase tracking-widest text-white">{{detallesDestino?.nombre}}</span>
                                             <h1 class="text-4xl md:text-6xl font-black text-white leading-tight mb-4">
-                                                {{image.nombre}}
+                                                {{slide.nombre}}
                                             </h1>
-                                            <p class="max-w-2xl text-lg text-white/90 font-medium">{{image.descripcion}}
+                                            <p class="max-w-2xl text-lg text-white/90 font-medium">{{slide.descripcion}}
                                             </p>
                                         </div>
                                     </div>

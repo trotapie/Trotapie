@@ -873,6 +873,7 @@ export class DestinosService {
     try {
       const previewDestino = await this.obtenerPreviewDestinoAdmin(destinoId);
       const imagenesPorId = new Map<number, string>();
+      const imagenesActivasPorId = new Map<number, Array<{ imagen_url: string }>>();
 
       (previewDestino.actividades ?? []).forEach((actividad) => {
         const actividadId = Number(actividad.id);
@@ -880,13 +881,28 @@ export class DestinosService {
         if (actividadId && imagenSeleccionada) {
           imagenesPorId.set(actividadId, imagenSeleccionada);
         }
+
+        if (actividadId) {
+          imagenesActivasPorId.set(
+            actividadId,
+            (actividad.imagenes ?? [])
+              .filter((imagen) => imagen.activa && !!imagen.imagen_url)
+              .map((imagen) => ({ imagen_url: imagen.imagen_url }))
+          );
+        }
       });
 
       respuesta[0] = {
         ...respuesta[0],
         atracciones_principales: (respuesta[0]?.atracciones_principales ?? []).map((actividad: any, index: number) => {
           const actividadId = Number(actividad?.id);
+          const imagenesActivas =
+            (actividadId ? imagenesActivasPorId.get(actividadId) : undefined) ??
+            (previewDestino.actividades?.[index]?.imagenes ?? [])
+              .filter((imagen) => imagen.activa && !!imagen.imagen_url)
+              .map((imagen) => ({ imagen_url: imagen.imagen_url }));
           const imagenPreview =
+            imagenesActivas[0]?.imagen_url ??
             (actividadId ? imagenesPorId.get(actividadId) : null) ??
             previewDestino.actividades?.[index]?.imagen_seleccionada ??
             previewDestino.actividades?.[index]?.imagen_fondo ??
@@ -895,7 +911,8 @@ export class DestinosService {
 
           return {
             ...actividad,
-            imagen_fondo: imagenPreview
+            imagen_fondo: imagenPreview,
+            imagenes: imagenesActivas
           };
         })
       };
