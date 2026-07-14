@@ -3,6 +3,8 @@ import { Router, RouterLink } from '@angular/router';
 import { MaterialModule } from 'app/shared/material.module';
 import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { DestinosService } from 'app/core/destinos.service';
+import { EstatusComponent } from 'app/shared/estatus/estatus.component';
+import { PageEvent } from '@angular/material/paginator';
 
 @Component({
   selector: 'app-destinos',
@@ -10,7 +12,8 @@ import { DestinosService } from 'app/core/destinos.service';
   imports: [
     MaterialModule,
     DragDropModule,
-    RouterLink
+    RouterLink,
+    EstatusComponent
   ],
   templateUrl: './destinos.component.html',
   styleUrl: './destinos.component.scss'
@@ -28,6 +31,9 @@ export class DestinosComponent implements OnInit {
   filtroContinenteId: number | null = null;
   filtroPais: string | null = null;
   filtroBusqueda = '';
+  pageIndex = 0;
+  pageSize = 10;
+  pageSizeOptions = [10, 25, 50];
   ordenOriginalNacionalesIds: number[] = [];
   ordenOriginalInternacionalesIds: number[] = [];
   hayCambiosOrden = false;
@@ -88,6 +94,11 @@ export class DestinosComponent implements OnInit {
     });
   }
 
+  get dataSourcePaginada(): any[] {
+    const inicio = this.pageIndex * this.pageSize;
+    return this.dataSourceFiltrada.slice(inicio, inicio + this.pageSize);
+  }
+
   get paisesDisponibles(): string[] {
     const filtrados = this.destinosInternacionales.filter((item) =>
       this.filtroContinenteId ? item.continente_id === this.filtroContinenteId : true
@@ -102,6 +113,7 @@ export class DestinosComponent implements OnInit {
     this.tipoVisible = tipo;
     this.filtroContinenteId = null;
     this.filtroPais = null;
+    this.pageIndex = 0;
     this.actualizarEstadoCambiosOrden();
     this.errorOrden = '';
   }
@@ -109,10 +121,17 @@ export class DestinosComponent implements OnInit {
   seleccionarContinente(continenteId: number | null) {
     this.filtroContinenteId = continenteId;
     this.filtroPais = null;
+    this.pageIndex = 0;
   }
 
   seleccionarPais(pais: string | null) {
     this.filtroPais = pais;
+    this.pageIndex = 0;
+  }
+
+  onBusquedaChange(valor: string) {
+    this.filtroBusqueda = valor;
+    this.pageIndex = 0;
   }
 
   get draggableEnabled(): boolean {
@@ -120,17 +139,28 @@ export class DestinosComponent implements OnInit {
   }
 
   drop(event: CdkDragDrop<any[]>) {
-    const lista = this.dataSourceVisible;
-    moveItemInArray(lista, event.previousIndex, event.currentIndex);
+    const inicioPagina = this.pageIndex * this.pageSize;
+    const indiceOrigen = inicioPagina + event.previousIndex;
+    const indiceDestino = inicioPagina + event.currentIndex;
+    const listaVisible = this.dataSourceVisible;
+
+    if (indiceOrigen === indiceDestino || indiceOrigen < 0 || indiceDestino < 0) {
+      return;
+    }
 
     if (this.tipoVisible === 'NACIONAL') {
-      this.destinosNacionales = [...lista];
+      this.destinosNacionales = this.reordenarListaVisible(this.destinosNacionales, listaVisible, indiceOrigen, indiceDestino);
     } else {
-      this.destinosInternacionales = [...lista];
+      this.destinosInternacionales = this.reordenarListaVisible(this.destinosInternacionales, listaVisible, indiceOrigen, indiceDestino);
     }
 
     this.actualizarEstadoCambiosOrden();
     this.errorOrden = '';
+  }
+
+  cambiarPagina(evento: PageEvent) {
+    this.pageIndex = evento.pageIndex;
+    this.pageSize = evento.pageSize;
   }
 
   async actualizarOrden() {
@@ -238,6 +268,36 @@ export class DestinosComponent implements OnInit {
         continente_id: pais?.continente_id ?? null,
         pais_nombre: pais?.nombre ?? item.destino_padre ?? item.destino
       };
+    });
+  }
+
+  private reordenarListaVisible(baseList: any[], listaVisible: any[], indiceOrigen: number, indiceDestino: number): any[] {
+    const idsVisibles = listaVisible.map((item) => String(item.id));
+    if (!idsVisibles.length) {
+      return baseList;
+    }
+
+    const indiceVisibleOrigen = indiceOrigen;
+    const indiceVisibleDestino = indiceDestino;
+    if (indiceVisibleOrigen < 0 || indiceVisibleOrigen >= idsVisibles.length || indiceVisibleDestino < 0 || indiceVisibleDestino >= idsVisibles.length) {
+      return baseList;
+    }
+
+    const idsReordenados = [...idsVisibles];
+    moveItemInArray(idsReordenados, indiceVisibleOrigen, indiceVisibleDestino);
+    const itemsReordenados = idsReordenados
+      .map((id) => baseList.find((item) => String(item.id) === id))
+      .filter(Boolean);
+
+    const conjuntoVisibles = new Set(idsVisibles);
+    let cursor = 0;
+
+    return baseList.map((item) => {
+      if (!conjuntoVisibles.has(String(item.id))) {
+        return item;
+      }
+
+      return itemsReordenados[cursor++] ?? item;
     });
   }
 }

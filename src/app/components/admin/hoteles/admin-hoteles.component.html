@@ -1,4 +1,4 @@
-<div class="flex min-w-0 flex-auto flex-col">
+<div class="flex h-[calc(100vh-4rem)] min-w-0 flex-auto flex-col overflow-hidden">
     <div class="sticky top-0 z-[100] mx-6 mt-2 rounded-xl border border-transparent bg-transparent px-2 py-2 backdrop-blur-md transition-all duration-300 md:px-4">
         <div class="w-full md:flex md:items-center md:justify-between">
             <div class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">
@@ -91,7 +91,7 @@
     </div>
     }
 
-    <div class="m-3 flex-auto overflow-auto rounded-3xl bg-card">
+    <div class="m-3 flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl bg-card">
         @if (cargando || cargandoHoteles) {
         <div class="flex h-40 items-center justify-center">
             <mat-progress-spinner diameter="36" mode="indeterminate"></mat-progress-spinner>
@@ -109,7 +109,8 @@
             Este destino no tiene hoteles registrados.
         </div>
         } @else {
-        <table mat-table [dataSource]="hoteles" cdkDropList [cdkDropListData]="hoteles" (cdkDropListDropped)="drop($event)">
+        <div class="min-h-0 flex-1 overflow-auto">
+        <table mat-table [dataSource]="hotelesPaginados" cdkDropList [cdkDropListData]="hotelesPaginados" (cdkDropListDropped)="drop($event)">
             <ng-container matColumnDef="nombre_hotel">
                 <th mat-header-cell *matHeaderCellDef>Nombre hotel</th>
                 <td mat-cell *matCellDef="let item">{{ item.nombre_hotel }}</td>
@@ -122,7 +123,7 @@
 
             <ng-container matColumnDef="orden">
                 <th mat-header-cell *matHeaderCellDef>Orden</th>
-                <td mat-cell *matCellDef="let item; let i = index">{{ i + 1 }}</td>
+                <td mat-cell *matCellDef="let item; let i = index">{{ pageIndex * pageSize + i + 1 }}</td>
             </ng-container>
 
             <ng-container matColumnDef="acciones">
@@ -134,7 +135,7 @@
                         </button>
 
                         <button mat-icon-button [matTooltip]="'Eliminar hotel'" (click)="abrirModalConfirmarEliminarHotel(item)">
-                            <mat-icon class="icon-size-5 text-red-600">delete</mat-icon>
+                            <mat-icon class="icon-size-5 text-red-600">delete_outline</mat-icon>
                         </button>
 
                         <button mat-icon-button [matTooltip]="'Reordenar'" cdkDragHandle>
@@ -147,6 +148,16 @@
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
             <tr mat-row cdkDrag *matRowDef="let row; columns: displayedColumns"></tr>
         </table>
+        </div>
+        <mat-paginator
+            class="border-t border-gray-200 bg-white"
+            [length]="hoteles.length"
+            [pageIndex]="pageIndex"
+            [pageSize]="pageSize"
+            [pageSizeOptions]="pageSizeOptions"
+            [showFirstLastButtons]="true"
+            (page)="cambiarPagina($event)">
+        </mat-paginator>
         }
     </div>
 </div>

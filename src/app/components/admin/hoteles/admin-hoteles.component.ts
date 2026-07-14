@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
+import { PageEvent } from '@angular/material/paginator';
 import { SupabaseService } from 'app/core/supabase.service';
 import { MaterialModule } from 'app/shared/material.module';
 
@@ -50,6 +51,9 @@ export class AdminHotelesComponent implements OnInit {
   regimenes: IRegimen[] = [];
   hoteles: IHotelAdmin[] = [];
   hotelesOriginalIds: number[] = [];
+  pageIndex = 0;
+  pageSize = 10;
+  pageSizeOptions = [10, 25, 50];
 
   tipoBusqueda: 'NACIONAL' | 'INTERNACIONAL' = 'NACIONAL';
   continenteSeleccionadoId: number | null = null;
@@ -106,6 +110,11 @@ export class AdminHotelesComponent implements OnInit {
     );
   }
 
+  get hotelesPaginados(): IHotelAdmin[] {
+    const inicio = this.pageIndex * this.pageSize;
+    return this.hoteles.slice(inicio, inicio + this.pageSize);
+  }
+
   cambiarTipoBusqueda(tipo: 'NACIONAL' | 'INTERNACIONAL') {
     this.tipoBusqueda = tipo;
     this.continenteSeleccionadoId = null;
@@ -119,6 +128,7 @@ export class AdminHotelesComponent implements OnInit {
     this.hoteles = [];
     this.hotelesOriginalIds = [];
     this.hayCambiosOrden = false;
+    this.pageIndex = 0;
     this.error = '';
 
     if (!destinoId) return;
@@ -132,6 +142,7 @@ export class AdminHotelesComponent implements OnInit {
           : await this.supabase.obtenerHotelesAdminPorDestinoPadre(destinoId);
       this.hoteles = (hoteles ?? []) as IHotelAdmin[];
       this.hotelesOriginalIds = this.hoteles.map((item) => item.id);
+      this.pageIndex = 0;
     } catch (error: any) {
       this.error = error?.message ?? 'No se pudieron cargar los hoteles del destino.';
     } finally {
@@ -200,10 +211,23 @@ export class AdminHotelesComponent implements OnInit {
   }
 
   drop(event: CdkDragDrop<IHotelAdmin[]>) {
-    moveItemInArray(this.hoteles, event.previousIndex, event.currentIndex);
+    const inicioPagina = this.pageIndex * this.pageSize;
+    const indiceOrigen = inicioPagina + event.previousIndex;
+    const indiceDestino = inicioPagina + event.currentIndex;
+
+    if (indiceOrigen === indiceDestino || indiceOrigen < 0 || indiceDestino < 0) {
+      return;
+    }
+
+    moveItemInArray(this.hoteles, indiceOrigen, indiceDestino);
     this.hoteles = [...this.hoteles];
     this.hayCambiosOrden = !this.tieneMismoOrden();
     this.error = '';
+  }
+
+  cambiarPagina(event: PageEvent) {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
   }
 
   async actualizarOrden() {

@@ -1377,9 +1377,10 @@ export class SupabaseService {
   obtenerDestinos(id: number) {
     return this.client
       .from('destinos')
-      .select('id, nombre, orden, imagen_destino,  continente:continente_id ( id, nombre )')
+      .select('id, nombre, orden, imagen_destino, activo, continente:continente_id ( id, nombre )')
       .eq('tipo_desino_id', id)
       .is('destino_padre_id', null)
+      .eq('activo', true)
       .order('orden', { ascending: true });
   }
 

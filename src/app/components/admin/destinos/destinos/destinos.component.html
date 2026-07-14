@@ -1,4 +1,4 @@
-<div class="flex min-w-0 flex-auto flex-col ">
+<div class="flex h-[calc(100vh-4rem)] min-w-0 flex-auto flex-col overflow-hidden">
 
     <!-- Header -->
     <div class="sticky top-0 z-[100] mx-6 mt-2 rounded-xl border border-transparent bg-transparent px-2 py-2 backdrop-blur-md transition-all duration-300 md:px-4">
@@ -66,7 +66,7 @@
     <div class="mx-6 mb-2">
         <mat-form-field class="w-full sm:w-72" subscriptSizing="dynamic">
             <mat-icon matPrefix class="icon-size-5" [svgIcon]="'heroicons_solid:magnifying-glass'"></mat-icon>
-            <input matInput placeholder="Buscar destino..." [(ngModel)]="filtroBusqueda" />
+            <input matInput placeholder="Buscar destino..." [ngModel]="filtroBusqueda" (ngModelChange)="onBusquedaChange($event)" />
             @if (filtroBusqueda) {
             <button matSibling mat-icon-button (click)="filtroBusqueda = ''">
                 <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
@@ -119,7 +119,7 @@
     </div> -->
 
     <!-- Tabla -->
-    <div class="flex-auto overflow-auto bg-card m-3 rounded-3xl">
+    <div class="m-3 flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl bg-card">
 
         <!-- <table class="w-full min-w-[900px] border-separate border-spacing-0 text-left">
 
@@ -293,8 +293,8 @@
 
             </tbody>
         </table> -->
-        <div class="w-full overflow-auto">
-            <table mat-table [dataSource]="dataSourceFiltrada" cdkDropList [cdkDropListData]="dataSourceVisible"
+        <div class="min-h-0 flex-1 overflow-auto">
+            <table mat-table [dataSource]="dataSourcePaginada" cdkDropList [cdkDropListData]="dataSourcePaginada"
                 [cdkDropListDisabled]="!draggableEnabled" (cdkDropListDropped)="drop($event)">
 
                 <ng-container matColumnDef="orden">
@@ -321,15 +321,7 @@
                 <ng-container matColumnDef="activo">
                     <th mat-header-cell *matHeaderCellDef>Estado</th>
                     <td mat-cell *matCellDef="let item">
-                        @if (item.activo) {
-                        <span class="inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-700 ring-1 ring-inset ring-green-600/20">
-                            Activo
-                        </span>
-                        } @else {
-                        <span class="inline-flex items-center rounded-full bg-gray-50 px-2.5 py-0.5 text-xs font-semibold text-gray-600 ring-1 ring-inset ring-gray-500/20">
-                            Inactivo
-                        </span>
-                        }
+                        <app-status-badge [status]="item.activo ? 'ACTIVO' : 'INACTIVO'"></app-status-badge>
                     </td>
                 </ng-container>
 
@@ -370,6 +362,16 @@
 
             </table>
         </div>
+
+        <mat-paginator
+            class="border-t border-gray-200 bg-white"
+            [length]="dataSourceFiltrada.length"
+            [pageIndex]="pageIndex"
+            [pageSize]="pageSize"
+            [pageSizeOptions]="pageSizeOptions"
+            [showFirstLastButtons]="true"
+            (page)="cambiarPagina($event)">
+        </mat-paginator>
     </div>
 
     <!-- Paginación -->

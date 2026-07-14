@@ -19,12 +19,20 @@
                         <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
                         Regresar
                     </button>
+                    <button mat-raised-button color="primary" class="text-white" type="submit" form="form-editar-destino" [disabled]="guardando">
+                        <mat-icon class="mr-3 icon-size-5 text-white">save_outline</mat-icon>
+                        @if (guardando) {
+                        Guardando...
+                        } @else {
+                        Guardar cambios
+                        }
+                    </button>
                 </div>
             </div>
         </div>
 
         @if (!cargando) {
-        <form [formGroup]="form" (ngSubmit)="guardar()"
+        <form id="form-editar-destino" [formGroup]="form" (ngSubmit)="guardar()"
             class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
             <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
                 <mat-form-field class="w-full">
@@ -123,16 +131,6 @@
             </div>
             }
 
-            <div class="mt-6 flex items-center justify-end gap-3">
-                <button mat-stroked-button type="button" (click)="regresar()">Cancelar</button>
-                <button mat-flat-button color="primary" type="submit" [disabled]="guardando">
-                    @if (guardando) {
-                    Guardando...
-                    } @else {
-                    Guardar cambios
-                    }
-                </button>
-            </div>
         </form>
         }
     </div>
