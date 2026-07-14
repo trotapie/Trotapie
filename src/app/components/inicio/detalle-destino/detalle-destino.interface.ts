@@ -9,11 +9,11 @@ export interface IDetallesDestino {
 }
 
 export interface AtraccionesPrincipale {
-    id:           number;
-    nombre:       string;
-    descripcion:  string;
-    imagen_fondo: string;
-    imagenes?:    Array<{ imagen_url: string }>;
+  id:           number;
+  nombre:       string;
+  descripcion:  string;
+  imagen_fondo?: string;
+  imagenes?:    Array<{ imagen_url: string; activa?: boolean; oscurecer_fondo?: boolean }>;
 }
 
 export interface DatosRapido {

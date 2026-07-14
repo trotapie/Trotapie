@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, HostListener, Input, OnChanges, OnDestroy, Output, SimpleChanges } from '@angular/core';
+import { CustomSwitchComponent } from 'app/shared/custom-switch/custom-switch.component';
 import { MaterialModule } from 'app/shared/material.module';
 import { backdropFade, modalScaleFade } from 'app/shared/animations';
 
@@ -15,6 +16,7 @@ export interface FolderImageManagerImage {
   extension?: string | null;
   mimeType?: string | null;
   sizeLabel?: string | null;
+  oscurecerFondo?: boolean;
 }
 
 export interface FolderImageManagerFolder {
@@ -28,7 +30,7 @@ export interface FolderImageManagerFolder {
 @Component({
   selector: 'app-folder-image-manager',
   standalone: true,
-  imports: [CommonModule, MaterialModule],
+    imports: [CommonModule, MaterialModule, CustomSwitchComponent],
   templateUrl: './folder-image-manager.component.html',
   styleUrl: './folder-image-manager.component.scss',
   animations: [modalScaleFade, backdropFade],
@@ -38,8 +40,9 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
   @Input() subtitle = 'Selecciona una carpeta y elige una imagen.';
   @Input() folders: FolderImageManagerFolder[] = [];
   @Input() selectedImageId: string | number | null = null;
-  @Input() activeImageId: string | number | null = null;
+  @Input() activeImageIds: Array<string | number> | Set<string | number> = [];
   @Input() showDetailPanel = true;
+  @Input() isSaving = false;
   @Input() isSavingFolder = false;
   @Input() showDeleteAllImages = false;
   @Input() isDeletingAllImages = false;
@@ -53,11 +56,17 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
   @Output() deleteAllImages = new EventEmitter<void>();
   @Output() imageDroppedOnFolder = new EventEmitter<{ image: FolderImageManagerImage; folder: FolderImageManagerFolder }>();
   @Output() editImage = new EventEmitter<FolderImageManagerImage>();
-  @Output() makePrimaryImage = new EventEmitter<FolderImageManagerImage>();
+  @Output() toggleImageActive = new EventEmitter<{ image: FolderImageManagerImage; checked: boolean }>();
+  @Output() deleteImage = new EventEmitter<FolderImageManagerImage>();
+  @Output() toggleImageDarken = new EventEmitter<{ image: FolderImageManagerImage; checked: boolean }>();
+  @Output() toggleFolderActive = new EventEmitter<FolderImageManagerFolder>();
+  @Output() toggleSelectedImagesActive = new EventEmitter<FolderImageManagerImage[]>();
 
   activeFolderId: string | number | null = null;
   searchTerm = '';
   activeView: 'all' | 'folders' | 'images' | 'favorites' = 'all';
+  selectedImageIds = new Set<string>();
+  selectionModeActive = false;
   creatingFolder = false;
   newFolderName = '';
   editingFolderId: string | number | null = null;
@@ -66,6 +75,12 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
   folderActionsTargetFolder: FolderImageManagerFolder | null = null;
   draggedImage: FolderImageManagerImage | null = null;
   dropTargetFolderId: string | number | null = null;
+  private previousActiveImageIdSet = new Set<string>();
+
+  get activeImageIdSet(): Set<string> {
+    const values = this.activeImageIds instanceof Set ? Array.from(this.activeImageIds) : this.activeImageIds ?? [];
+    return new Set(values.map((value) => String(value)));
+  }
 
   @HostListener('document:click')
   onDocumentClick(): void {
@@ -76,6 +91,7 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
     const selectedImageChanged =
       !!changes['selectedImageId'] && changes['selectedImageId'].previousValue !== changes['selectedImageId'].currentValue;
     const foldersChanged = !!changes['folders'];
+    const activeImageIdsChanged = !!changes['activeImageIds'];
 
     if (this.creatingFolder && changes['folders']) {
       const prevLength = changes['folders'].previousValue?.length ?? 0;
@@ -88,7 +104,12 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
     if (!this.folders.length) {
       this.activeFolderId = null;
       this.folderSelected.emit(null);
+      this.syncSelectionWithActiveImages();
       return;
+    }
+
+    if (activeImageIdsChanged) {
+      this.syncSelectionWithActiveImages();
     }
 
     if (selectedImageChanged) {
@@ -105,6 +126,7 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
     if (foldersChanged && activeFolderStillExists) {
       return;
     }
+
   }
 
   ngOnDestroy(): void {
@@ -157,6 +179,15 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
     });
   }
 
+  get selectedImages(): FolderImageManagerImage[] {
+    const ids = this.selectedImageIds;
+    if (!ids.size) {
+      return [];
+    }
+
+    return this.folders.flatMap((folder) => folder.images).filter((image) => ids.has(String(image.id)));
+  }
+
   get selectedImage(): FolderImageManagerImage | null {
     if (this.selectedImageId === null || this.selectedImageId === undefined) {
       return null;
@@ -166,15 +197,21 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
   }
 
   get activeImage(): FolderImageManagerImage | null {
-    if (this.activeImageId === null || this.activeImageId === undefined) {
-      return null;
-    }
-
-    return this.findImageById(this.activeImageId);
+    return this.folders.flatMap((folder) => folder.images).find((image) => this.isActiveImage(image)) ?? null;
   }
 
   get detailImage(): FolderImageManagerImage | null {
     return this.selectedImage ?? this.activeImage ?? this.activeImages[0] ?? null;
+  }
+
+  get detailImageActiveChecked(): boolean {
+    const image = this.detailImage;
+    return image ? this.isActiveImage(image) : false;
+  }
+
+  get detailImageDarkenChecked(): boolean {
+    const image = this.detailImage;
+    return !!image?.oscurecerFondo;
   }
 
   get detailFolderName(): string {
@@ -187,14 +224,14 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
     }
 
     if (this.isActiveImage(this.detailImage)) {
-      return 'Imagen principal';
+      return 'Activa';
     }
 
     if (this.isSelected(this.detailImage)) {
       return 'Seleccionada';
     }
 
-    return 'Disponible';
+    return 'Oculta';
   }
 
   get shouldShowFoldersSection(): boolean {
@@ -207,7 +244,7 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
 
   get emptyStateMessage(): string {
     if (this.activeView === 'favorites') {
-      return 'No hay imagenes principales que coincidan con esta busqueda.';
+      return 'No hay imagenes activas que coincidan con esta busqueda.';
     }
 
     if (this.normalizedSearchTerm) {
@@ -222,7 +259,38 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
   }
 
   isActiveImage(image: FolderImageManagerImage): boolean {
-    return this.idsMatch(image.id, this.activeImageId);
+    return this.activeImageIdSet.has(String(image.id));
+  }
+
+  isBulkSelected(image: FolderImageManagerImage): boolean {
+    return this.selectedImageIds.has(String(image.id));
+  }
+
+  get selectedImageCount(): number {
+    return this.selectedImageIds.size;
+  }
+
+  get areAllSelectedImagesActive(): boolean {
+    return this.selectedImages.length > 0 && this.selectedImages.every((image) => this.isActiveImage(image));
+  }
+
+  get selectedImagesActionLabel(): string {
+    return this.areAllSelectedImagesActive ? 'Inactivar seleccionados' : 'Activar seleccionadas';
+  }
+
+  isFolderFullyActive(folder: FolderImageManagerFolder): boolean {
+    return folder.images.length > 0 && folder.images.every((image) => this.isActiveImage(image));
+  }
+
+  private syncSelectionWithActiveImages(): void {
+    const currentActiveIds = this.activeImageIdSet;
+    const removedActiveIds = Array.from(this.previousActiveImageIdSet).filter((id) => !currentActiveIds.has(id));
+
+    if (removedActiveIds.length) {
+      removedActiveIds.forEach((id) => this.selectedImageIds.delete(id));
+    }
+
+    this.previousActiveImageIdSet = new Set(currentActiveIds);
   }
 
   private findImageById(imageId: string | number): FolderImageManagerImage | null {
@@ -303,7 +371,36 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
   }
 
   selectImage(image: FolderImageManagerImage): void {
+    if (this.selectionModeActive) {
+      this.toggleBulkSelection(image);
+      return;
+    }
+
     this.imageSelected.emit(image);
+  }
+
+  toggleSelectionMode(): void {
+    this.selectionModeActive = !this.selectionModeActive;
+
+    if (!this.selectionModeActive) {
+      this.clearBulkSelection();
+    }
+  }
+
+  toggleBulkSelection(image: FolderImageManagerImage, event?: Event): void {
+    event?.stopPropagation();
+    const key = String(image.id);
+    if (this.selectedImageIds.has(key)) {
+      this.selectedImageIds.delete(key);
+      return;
+    }
+
+    this.selectedImageIds.add(key);
+  }
+
+  clearBulkSelection(event?: Event): void {
+    event?.stopPropagation();
+    this.selectedImageIds.clear();
   }
 
   requestEditImage(image: FolderImageManagerImage | null): void {
@@ -314,12 +411,51 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
     this.editImage.emit(image);
   }
 
-  requestMakePrimaryImage(image: FolderImageManagerImage | null): void {
-    if (!image || this.isActiveImage(image)) {
+  requestToggleImageActive(image: FolderImageManagerImage | null): void {
+    if (!image) {
       return;
     }
 
-    this.makePrimaryImage.emit(image);
+    this.toggleImageActive.emit({ image, checked: !this.isActiveImage(image) });
+  }
+
+  requestSetImageActive(image: FolderImageManagerImage | null, checked: boolean): void {
+    if (!image) {
+      return;
+    }
+
+    this.toggleImageActive.emit({ image, checked });
+  }
+
+  requestToggleImageDarken(image: FolderImageManagerImage | null, checked: boolean): void {
+    if (!image) {
+      return;
+    }
+
+    this.toggleImageDarken.emit({ image, checked });
+  }
+
+  requestDeleteImage(image: FolderImageManagerImage | null): void {
+    if (!image) {
+      return;
+    }
+
+    this.deleteImage.emit(image);
+  }
+
+  requestToggleFolderActive(folder: FolderImageManagerFolder): void {
+    this.toggleFolderActive.emit(folder);
+  }
+
+  requestToggleSelectedImagesActive(): void {
+    const selected = this.selectedImages;
+    if (!selected.length) {
+      return;
+    }
+
+    this.toggleSelectedImagesActive.emit(selected);
+    this.selectedImageIds.clear();
+    this.selectionModeActive = false;
   }
 
   toggleFolderActions(folder: FolderImageManagerFolder, event: Event): void {

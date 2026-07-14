@@ -61,11 +61,22 @@
           [class.fm-tab--active]="activeView === 'favorites'"
           (click)="setActiveView('favorites')"
         >
-          Imagen actual
+          Activas
         </button>
       </div>
 
       <div class="fm-summary">
+        <button
+          mat-stroked-button
+          type="button"
+          class="fm-selection-toggle"
+          [class.fm-selection-toggle--active]="selectionModeActive"
+          (click)="toggleSelectionMode()"
+          [attr.aria-pressed]="selectionModeActive"
+        >
+          <mat-icon class="mr-2 icon-size-4" [svgIcon]="selectionModeActive ? 'heroicons_outline:x-mark' : 'heroicons_outline:check'"></mat-icon>
+          {{ selectionModeActive ? 'Salir selección' : 'Seleccionar' }}
+        </button>
         <button mat-stroked-button type="button" (click)="openCreateFolder()">
           <mat-icon class="mr-2 icon-size-4" [svgIcon]="'heroicons_outline:plus'"></mat-icon>
           Nueva carpeta
@@ -82,6 +93,22 @@
         }
       </div>
     </div>
+
+    @if (selectedImageCount) {
+      <div class="fm-bulk-bar">
+        <div>
+          <p class="fm-bulk-bar__label">Selección múltiple</p>
+          <p class="fm-bulk-bar__count">{{ selectedImageCount }} imagen{{ selectedImageCount === 1 ? '' : 'es' }} seleccionada{{ selectedImageCount === 1 ? '' : 's' }}</p>
+        </div>
+
+        <div class="fm-bulk-bar__actions">
+          <button mat-flat-button [color]="areAllSelectedImagesActive ? 'warn' : 'primary'" type="button" (click)="requestToggleSelectedImagesActive()">
+            {{ selectedImagesActionLabel }}
+          </button>
+          <button mat-stroked-button type="button" (click)="clearBulkSelection()">Limpiar selección</button>
+        </div>
+      </div>
+    }
   </div>
 
   
@@ -142,6 +169,10 @@
                             <mat-icon [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
                             <span>Cambiar nombre</span>
                           </button>
+                          <button type="button" class="fm-folder-actions-popover__item" (click)="requestToggleFolderActive(folder); $event.stopPropagation()">
+                            <mat-icon [svgIcon]="isFolderFullyActive(folder) ? 'heroicons_outline:eye-slash' : 'heroicons_outline:eye'"></mat-icon>
+                            <span>{{ isFolderFullyActive(folder) ? 'Desactivar carpeta' : 'Activar carpeta' }}</span>
+                          </button>
                           <button type="button" class="fm-folder-actions-popover__item fm-folder-actions-popover__item--danger" (click)="requestDeleteFolder(folder, $event)">
                             <mat-icon [svgIcon]="'heroicons_outline:trash'"></mat-icon>
                             <span>Eliminar</span>
@@ -186,21 +217,42 @@
                     type="button"
                     class="fm-image-card"
                     [class.fm-image-card--selected]="isSelected(image)"
-                    draggable="true"
+                    [class.fm-image-card--bulk-selected]="isBulkSelected(image)"
+                    [class.fm-image-card--selection-mode]="selectionModeActive"
+                    [draggable]="!selectionModeActive"
                     (dragstart)="onImageDragStart(image, $event)"
                     (dragend)="onImageDragEnd()"
                     (click)="selectImage(image)"
                   >
+                    @if (selectionModeActive) {
+                      <div class="checkbox-wrapper-46" (click)="$event.stopPropagation()">
+                        <input
+                          type="checkbox"
+                          class="inp-cbx"
+                          [id]="'cbx-' + image.id"
+                          [checked]="isBulkSelected(image)"
+                          (change)="toggleBulkSelection(image, $event)"
+                        />
+                        <label class="cbx" [for]="'cbx-' + image.id">
+                          <span>
+                            <svg viewBox="0 0 12 10" height="10px" width="12px" aria-hidden="true">
+                              <polyline points="1.5 6 4.5 9 10.5 1"></polyline>
+                            </svg>
+                          </span>
+                        </label>
+                      </div>
+                    }
+
                     <div class="fm-image-preview">
                       <img class="fm-image-thumb" [src]="image.imageUrl" [alt]="image.name" />
                       @if (isActiveImage(image)) {
                         <div
                           class="fm-active-star"
-                          aria-label="Imagen principal"
-                          matTooltip="Imagen principal"
+                          aria-label="Imagen activa"
+                          matTooltip="Imagen activa"
                           matTooltipPosition="above"
                         >
-                          <mat-icon class="icon-size-4" [svgIcon]="'heroicons_solid:star'"></mat-icon>
+                          <mat-icon class="icon-size-4" [svgIcon]="'heroicons_solid:eye'"></mat-icon>
                         </div>
                       }
                     </div>
@@ -251,18 +303,28 @@
               }
             </dl>
 
+            <div class="fm-detail-switches">
+              <app-custom-switch
+                [checked]="detailImageDarkenChecked"
+                label="Oscurecer fondo"
+                [disabled]="isSaving"
+                (change)="requestToggleImageDarken(detailImage, $event)"
+              ></app-custom-switch>
+
+              <app-custom-switch
+                [checked]="detailImageActiveChecked"
+                [label]="detailImageActiveChecked ? 'Activo' : 'Inactivo'"
+                [disabled]="isSaving"
+                (change)="requestSetImageActive(detailImage, $event)"
+              ></app-custom-switch>
+            </div>
+
             <div class="fm-detail-actions">
-              <button
-                mat-stroked-button
-                color="primary"
-                type="button"
-                (click)="requestMakePrimaryImage(detailImage)"
-                [disabled]="isActiveImage(detailImage)"
-              >
-                {{ isActiveImage(detailImage) ? 'Imagen principal actual' : 'Dejar como principal' }}
-              </button>
               <button mat-flat-button color="primary" type="button" (click)="requestEditImage(detailImage)">
                 Editar
+              </button>
+              <button mat-stroked-button color="warn" type="button" (click)="requestDeleteImage(detailImage)">
+                Eliminar
               </button>
             </div>
           } @else {

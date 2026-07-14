@@ -18,6 +18,7 @@ interface CarouselSlide {
   imagen_url: string;
   nombre: string;
   descripcion: string;
+  oscurecer_fondo: boolean;
 }
 
 @Component({
@@ -57,6 +58,7 @@ export class DetalleDestinoComponent implements OnInit {
       return;
     }
     this.detallesDestino = informacionDestino[0];
+    console.log('[detalle-destino] detalle inicial recibido:', this.detallesDestino);
     this.construirSlidesCarrusel();
 
     this.ipQueryService.getCurrentIpInfo().subscribe((response) => {
@@ -79,6 +81,7 @@ export class DetalleDestinoComponent implements OnInit {
     this._translocoService.langChanges$.subscribe(async (activeLang) => {
       const informacionDestino = await this.supabase.obtenerDetalleDestino(id, activeLang);
       this.detallesDestino = informacionDestino[0];
+      console.log('[detalle-destino] detalle actualizado por idioma:', activeLang, this.detallesDestino);
       this.construirSlidesCarrusel();
     });
     
@@ -111,8 +114,10 @@ export class DetalleDestinoComponent implements OnInit {
       actividadesMostradas.add(actividad.id);
 
       const urlsMostradas = new Set<string>();
+      // The service already returns only active gallery images. Keep legacy RPC
+      // responses working too, where `activa` is not included on the image.
       const imagenes = actividad.imagenes?.length
-        ? actividad.imagenes
+        ? actividad.imagenes.filter((imagen) => imagen.activa !== false)
         : actividad.imagen_fondo
           ? [{ imagen_url: actividad.imagen_fondo }]
           : [];
@@ -128,7 +133,8 @@ export class DetalleDestinoComponent implements OnInit {
         .map((imagen) => ({
           imagen_url: imagen.imagen_url,
           nombre: actividad.nombre,
-          descripcion: actividad.descripcion
+          descripcion: actividad.descripcion,
+          oscurecer_fondo: Boolean(imagen.oscurecer_fondo ?? false)
         }));
     });
 

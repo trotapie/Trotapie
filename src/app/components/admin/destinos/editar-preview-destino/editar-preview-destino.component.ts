@@ -499,7 +499,6 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
       const actividadExistente = actividadIndex !== null ? this.actividadesArray.at(actividadIndex) : null;
       const actividadId = this.parseNumber(actividadExistente?.get('id')?.value);
       const imagenes = this.normalizarImagenesActividadPayload(raw.imagenes ?? []);
-      const imagenActivaId = imagenes.find((imagen) => imagen.activa)?.id ?? null;
       const imagenPrincipal = this.obtenerImagenPrincipalGaleria(
         imagenes.length ? imagenes : undefined,
         this.limpiarTexto(raw.imagen_fondo)
@@ -509,7 +508,6 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
         destino_id: this.destinoId,
         actividad_id: actividadId,
         imagen_fondo: imagenPrincipal,
-        imagen_activa_id: imagenActivaId,
         imagenes: imagenes.length
           ? imagenes
           : imagenPrincipal
@@ -1074,7 +1072,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
       this.fb.group({
         id: [null],
         imagen_url: [''],
-        activa: [this.imagenesActividadArray.length === 0],
+        activa: [false],
         orden: [this.imagenesActividadArray.length + 1],
         vigencia_desde: [null],
         vigencia_hasta: [null],

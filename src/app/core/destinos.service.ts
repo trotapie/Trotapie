@@ -345,6 +345,7 @@ export class DestinosService {
               carpeta_id,
               carpeta,
               activa,
+              oscurecer_fondo,
               orden,
               vigencia_desde,
               vigencia_hasta,
@@ -499,6 +500,7 @@ export class DestinosService {
               size: this.parseBigint(imagen.size),
               size_formatted: imagen.size_formatted ?? null,
               activa: Boolean(imagen.activa),
+              oscurecer_fondo: Boolean(imagen.oscurecer_fondo),
               orden: imagen.orden ?? null,
               vigencia_desde: imagen.vigencia_desde ?? null,
               vigencia_hasta: imagen.vigencia_hasta ?? null,
@@ -506,13 +508,9 @@ export class DestinosService {
             };
           })
         );
-        const imagenSeleccionada = this.seleccionarImagenGaleria(imagenesOrdenadas);
-        const imagenFondoUrl = imagenSeleccionada?.imagen_url ?? actividad.imagen_fondo ?? '';
-        const imagenFondoRegistro =
-          imagenSeleccionada ??
-          imagenesOrdenadas.find((imagen: any) => imagen.imagen_url === actividad.imagen_fondo) ??
-          null;
-        const imagenFondoId = this.parseNumber(imagenFondoRegistro?.id);
+        const imagenSeleccionada = imagenesOrdenadas.find((imagen: any) => Boolean(imagen.activa)) ?? imagenesOrdenadas[0] ?? null;
+        const imagenFondoUrl = imagenSeleccionada?.imagen_url ?? '';
+        const imagenFondoId = this.parseNumber(imagenSeleccionada?.id);
         const recordTraducciones: Record<number, { nombre: string; descripcion: string }> = {};
 
         idiomas.forEach((idioma) => {
@@ -541,6 +539,7 @@ export class DestinosService {
             size: this.parseBigint(imagen.size),
             size_formatted: imagen.size_formatted ?? null,
             activa: Boolean(imagen.activa),
+            oscurecer_fondo: Boolean(imagen.oscurecer_fondo),
             orden: imagen.orden ?? null,
             vigencia_desde: imagen.vigencia_desde ?? null,
             vigencia_hasta: imagen.vigencia_hasta ?? null,
@@ -873,7 +872,7 @@ export class DestinosService {
     try {
       const previewDestino = await this.obtenerPreviewDestinoAdmin(destinoId);
       const imagenesPorId = new Map<number, string>();
-      const imagenesActivasPorId = new Map<number, Array<{ imagen_url: string }>>();
+      const imagenesActivasPorId = new Map<number, Array<{ imagen_url: string; oscurecer_fondo: boolean }>>();
 
       (previewDestino.actividades ?? []).forEach((actividad) => {
         const actividadId = Number(actividad.id);
@@ -887,7 +886,10 @@ export class DestinosService {
             actividadId,
             (actividad.imagenes ?? [])
               .filter((imagen) => imagen.activa && !!imagen.imagen_url)
-              .map((imagen) => ({ imagen_url: imagen.imagen_url }))
+              .map((imagen) => ({
+                imagen_url: imagen.imagen_url,
+                oscurecer_fondo: Boolean(imagen.oscurecer_fondo),
+              }))
           );
         }
       });
@@ -900,7 +902,10 @@ export class DestinosService {
             (actividadId ? imagenesActivasPorId.get(actividadId) : undefined) ??
             (previewDestino.actividades?.[index]?.imagenes ?? [])
               .filter((imagen) => imagen.activa && !!imagen.imagen_url)
-              .map((imagen) => ({ imagen_url: imagen.imagen_url }));
+              .map((imagen) => ({
+                imagen_url: imagen.imagen_url,
+                oscurecer_fondo: Boolean(imagen.oscurecer_fondo),
+              }));
           const imagenPreview =
             imagenesActivas[0]?.imagen_url ??
             (actividadId ? imagenesPorId.get(actividadId) : null) ??
@@ -1535,6 +1540,7 @@ export class DestinosService {
       size_formatted?: string | null;
       sizeFormatted?: string | null;
       activa?: boolean;
+      oscurecer_fondo?: boolean;
       orden?: number | null;
       vigencia_desde?: string | null;
       vigencia_hasta?: string | null;
@@ -1560,6 +1566,7 @@ export class DestinosService {
           String(imagen?.size_formatted ?? imagen?.sizeFormatted ?? '').trim()
           || this.formatearTamanoArchivo(this.parseBigint(imagen?.size)),
         activa: Boolean(imagen?.activa),
+        oscurecer_fondo: Boolean(imagen?.oscurecer_fondo ?? false),
         orden: Number.isFinite(Number(imagen?.orden)) ? Number(imagen?.orden) : index + 1,
         vigencia_desde: this.normalizarFecha(imagen?.vigencia_desde),
         vigencia_hasta: this.normalizarFecha(imagen?.vigencia_hasta)
@@ -1643,6 +1650,7 @@ export class DestinosService {
             mime_type: imagen.mime_type,
             size: imagen.size,
             size_formatted: imagen.size_formatted,
+            oscurecer_fondo: Boolean(imagen.oscurecer_fondo),
             orden: imagen.orden,
             vigencia_desde: imagen.vigencia_desde,
             vigencia_hasta: imagen.vigencia_hasta
@@ -1670,6 +1678,7 @@ export class DestinosService {
           size: imagen.size,
           size_formatted: imagen.size_formatted,
           activa: false,
+          oscurecer_fondo: Boolean(imagen.oscurecer_fondo),
           orden: imagen.orden,
           vigencia_desde: imagen.vigencia_desde,
           vigencia_hasta: imagen.vigencia_hasta

@@ -194,13 +194,16 @@
                                         <img [src]="slide.imagen_url" class="w-full h-full object-cover"
                                             alt="carousel image" />
                                         <div class="absolute inset-0 flex flex-col justify-end p-8 md:p-16 z-10">
-                                            <span
-                                                class="mb-4 inline-block w-fit rounded-full bg-[#F9B44B] px-4 py-1 text-xs font-bold uppercase tracking-widest text-white">{{detallesDestino?.nombre}}</span>
-                                            <h1 class="text-4xl md:text-6xl font-black text-white leading-tight mb-4">
-                                                {{slide.nombre}}
-                                            </h1>
-                                            <p class="max-w-2xl text-lg text-white/90 font-medium">{{slide.descripcion}}
-                                            </p>
+                                            <div
+                                                [class]="slide.oscurecer_fondo ? 'max-w-3xl rounded-2xl border border-white/20 bg-white/12 p-6 md:p-8 backdrop-blur-xl backdrop-saturate-150 shadow-[0_24px_80px_rgba(15,23,42,0.18)]' : 'max-w-3xl'">
+                                                <span
+                                                    class="mb-4 inline-block w-fit rounded-full bg-[#F9B44B] px-4 py-1 text-xs font-bold uppercase tracking-widest text-white">{{detallesDestino?.nombre}}</span>
+                                                <h1 class="text-4xl md:text-6xl font-black text-white leading-tight mb-4">
+                                                    {{slide.nombre}}
+                                                </h1>
+                                                <p class="text-lg text-white/90 font-medium">{{slide.descripcion}}
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
 

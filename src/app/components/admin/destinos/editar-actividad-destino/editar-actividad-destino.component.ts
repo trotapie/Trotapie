@@ -48,6 +48,7 @@ type ImagenActividadForm = {
   size: number | null;
   size_formatted: string | null;
   activa: boolean;
+  oscurecer_fondo: boolean;
   orden: number | null;
   vigencia_desde: string | null;
   vigencia_hasta: string | null;
@@ -153,7 +154,23 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     }));
   }
 
-  get imagenesVisibles(): Array<{ control: any; index: number }> {
+  get imagenesActivasIds(): Set<string | number> {
+    const ids = new Set<string | number>();
+    (this.imagenesArray.controls as any[]).forEach((control, index) => {
+      if (!Boolean(control.get('activa')?.value)) {
+        return;
+      }
+
+      const id = this.parseNumber(control.get('id')?.value)
+        ?? this.limpiarTexto(control.get('draft_key')?.value)
+        ?? `actividad-imagen-${index}`;
+      ids.add(String(id));
+    });
+
+    return ids;
+  }
+
+  get imagenesActivas(): Array<{ control: any; index: number }> {
     return (this.imagenesArray.controls as any[])
       .map((control, index) => ({ control, index }))
       .filter(({ control }) =>
@@ -220,7 +237,8 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
         typeLabel: mimeTypeImagen ?? extensionImagen,
         extension: extensionImagen,
         mimeType: mimeTypeImagen,
-        sizeLabel: sizeLabelImagen
+        sizeLabel: sizeLabelImagen,
+        oscurecerFondo: Boolean(control.get('oscurecer_fondo')?.value)
       };
 
       if (!folderExistente) {
@@ -248,20 +266,6 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       .sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  get imagenPrincipalSeleccionadaId(): string | null {
-    const activeIndex = (this.imagenesArray.controls as any[]).findIndex((control) => Boolean(control.get('activa')?.value));
-    if (activeIndex < 0) {
-      return null;
-    }
-
-    const control = this.imagenesArray.at(activeIndex);
-    return String(
-      this.parseNumber(control?.get('id')?.value)
-      ?? this.limpiarTexto(control?.get('draft_key')?.value)
-      ?? `actividad-imagen-${activeIndex}`
-    );
-  }
-
   get imagenSeleccionadaGestorId(): string | null {
     if (this.imagenSeleccionadaIndex !== null) {
       const control = this.imagenesArray.at(this.imagenSeleccionadaIndex);
@@ -281,7 +285,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       );
     }
 
-    return this.imagenPrincipalSeleccionadaId;
+    return null;
   }
 
   get imagenEditandoControl(): any | null {
@@ -360,7 +364,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   }
 
   get puedeEliminarImagenEditando(): boolean {
-    return !!this.imagenEditandoControl && !this.imagenEditandoEsActiva && this.imagenesArray.length > 1;
+    return !!this.imagenEditandoControl && this.imagenesArray.length > 1;
   }
 
   get carpetasParaSelector(): Array<{ id: number; nombre: string }> {
@@ -719,11 +723,6 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (accion === 'delete_images' && this.carpetaContieneImagenActiva(carpetaId)) {
-      this.error = 'Esta carpeta contiene la imagen principal. Primero marca otra imagen como principal.';
-      return;
-    }
-
     if (accion === 'move_existing' && this.carpetaDestinoEliminarId === null) {
       this.error = 'Selecciona una carpeta de destino.';
       return;
@@ -818,14 +817,6 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     indices.forEach((index) => this.imagenesArray.removeAt(index));
   }
 
-  private carpetaContieneImagenActiva(carpetaId: number): boolean {
-    return (this.imagenesArray.controls as any[]).some(
-      (control) =>
-        this.parseNumber(control.get('carpeta_id')?.value) === carpetaId
-        && Boolean(control.get('activa')?.value)
-    );
-  }
-
   private moverImagenesLocales(carpetaOrigenId: number, carpetaDestinoId: number, carpetaDestinoNombre: string): void {
     const controles = this.imagenesArray.controls as any[];
     controles.forEach((control) => {
@@ -885,11 +876,6 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     }
 
     if (this.procesandoEliminarCarpeta) {
-      return;
-    }
-
-    if (this.carpetaContieneImagenActiva(carpetaId)) {
-      this.error = 'Esta carpeta contiene la imagen principal. Primero marca otra imagen como principal.';
       return;
     }
 
@@ -1222,7 +1208,8 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
               mime_type: [this.limpiarTexto(imagen.mimeType)],
               size: [this.parseNumber(imagen.size)],
               size_formatted: [this.limpiarTexto(imagen.sizeFormatted) ?? this.formatearTamanoArchivo(this.parseNumber(imagen.size))],
-              activa: [this.imagenesArray.length === 0 && insertadas === 0],
+              activa: [false],
+              oscurecer_fondo: [false],
               orden: [this.imagenesArray.length + 1],
               vigencia_desde: [null],
               vigencia_hasta: [null],
@@ -1300,7 +1287,8 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
         mime_type: [null],
         size: [null],
         size_formatted: [null],
-        activa: [this.imagenesArray.length === 0],
+        activa: [false],
+        oscurecer_fondo: [false],
         orden: [this.imagenesArray.length + 1],
         vigencia_desde: [null],
         vigencia_hasta: [null],
@@ -1317,11 +1305,6 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     }
 
     const control = this.imagenesArray.at(index);
-    if (Boolean(control.get('activa')?.value)) {
-      this.error = 'No puedes eliminar la imagen principal. Primero marca otra imagen como principal.';
-      return;
-    }
-
     if (this.imagenesArray.length <= 1) {
       this.error = 'Debe quedar al menos una imagen en la actividad.';
       return;
@@ -1368,6 +1351,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       size: [this.parseNumber(snapshot.size)],
       size_formatted: [snapshot.size_formatted ?? null],
       activa: [Boolean(snapshot.activa)],
+      oscurecer_fondo: [Boolean(snapshot.oscurecer_fondo)],
       orden: [this.parseNumber(snapshot.orden) ?? index + 1],
       vigencia_desde: [this.parseDateValue(snapshot.vigencia_desde)],
       vigencia_hasta: [this.parseDateValue(snapshot.vigencia_hasta)],
@@ -1446,19 +1430,23 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     this.normalizarOrdenImagenes();
   }
 
-  setImagenActiva(index: number) {
-    this.imagenesArray.controls.forEach((control, currentIndex) => {
-      control.get('activa')?.setValue(currentIndex === index, { emitEvent: false });
-    });
+  toggleImagenActiva(index: number) {
+    const control = this.imagenesArray.at(index);
+    if (!control) {
+      return;
+    }
+
+    const siguienteEstado = !Boolean(control.get('activa')?.value);
+    control.get('activa')?.setValue(siguienteEstado, { emitEvent: false });
     this.imagenSeleccionadaIndex = index;
   }
 
-  async marcarImagenEditandoComoPrincipal(): Promise<void> {
+  async alternarImagenEditandoActiva(): Promise<void> {
     if (this.imagenEditandoIndex === null) {
       return;
     }
 
-    this.setImagenActiva(this.imagenEditandoIndex);
+    this.toggleImagenActiva(this.imagenEditandoIndex);
     await this.guardarImagenes();
   }
 
@@ -1488,7 +1476,8 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     this.abrirEditorImagen(index);
   }
 
-  async marcarImagenComoPrincipalDesdeGestor(image: FolderImageManagerImage): Promise<void> {
+  async alternarImagenActivaDesdeGestor(evento: { image: FolderImageManagerImage; checked: boolean }): Promise<void> {
+    const { image, checked } = evento;
     const index = (this.imagenesArray.controls as any[]).findIndex(
       (control) =>
         this.parseNumber(control.get('id')?.value) === this.parseNumber(image.id)
@@ -1498,8 +1487,108 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const control = this.imagenesArray.at(index);
+    const valorAnterior = Boolean(control.get('activa')?.value);
     this.imagenSeleccionadaIndex = index;
-    this.setImagenActiva(index);
+    control.get('activa')?.setValue(Boolean(checked), { emitEvent: false });
+    if (!await this.guardarImagenes()) {
+      control.get('activa')?.setValue(valorAnterior, { emitEvent: false });
+    }
+  }
+
+  async alternarOscurecerFondoDesdeGestor(evento: { image: FolderImageManagerImage; checked: boolean }): Promise<void> {
+    const { image, checked } = evento;
+    const index = (this.imagenesArray.controls as any[]).findIndex(
+      (control) =>
+        this.parseNumber(control.get('id')?.value) === this.parseNumber(image.id)
+        || this.limpiarTexto(control.get('draft_key')?.value) === (image.draftKey ?? String(image.id))
+    );
+    if (!Number.isFinite(index)) {
+      return;
+    }
+
+    const control = this.imagenesArray.at(index);
+    const valorAnterior = Boolean(control.get('oscurecer_fondo')?.value);
+    control.get('oscurecer_fondo')?.setValue(Boolean(checked), { emitEvent: false });
+    this.imagenSeleccionadaIndex = index;
+    if (!await this.guardarImagenes()) {
+      control.get('oscurecer_fondo')?.setValue(valorAnterior, { emitEvent: false });
+    }
+  }
+
+  async eliminarImagenDesdeGestor(image: FolderImageManagerImage): Promise<void> {
+    const nombre = image?.name ?? 'esta imagen';
+    const confirmado = typeof window === 'undefined'
+      ? true
+      : window.confirm(`Quieres eliminar ${nombre}? Esta accion no se puede deshacer.`);
+
+    if (!confirmado) {
+      return;
+    }
+
+    const index = (this.imagenesArray.controls as any[]).findIndex(
+      (control) =>
+        this.parseNumber(control.get('id')?.value) === this.parseNumber(image.id)
+        || this.limpiarTexto(control.get('draft_key')?.value) === (image.draftKey ?? String(image.id))
+    );
+
+    if (!Number.isFinite(index)) {
+      return;
+    }
+
+    await this.eliminarImagen(index);
+  }
+
+  async alternarCarpetaActivaDesdeGestor(folder: FolderImageManagerFolder): Promise<void> {
+    const nombreCarpeta = this.normalizarCarpeta(folder.name);
+    if (!nombreCarpeta) {
+      return;
+    }
+
+    const controles = (this.imagenesArray.controls as any[])
+      .map((control, index) => ({ control, index }))
+      .filter(({ control }) => this.normalizarCarpeta(control.get('carpeta')?.value) === nombreCarpeta);
+
+    if (!controles.length) {
+      return;
+    }
+
+    const todasActivas = controles.every(({ control }) => Boolean(control.get('activa')?.value));
+    const nuevoEstado = !todasActivas;
+
+    controles.forEach(({ control }) => {
+      control.get('activa')?.setValue(nuevoEstado, { emitEvent: false });
+    });
+
+    this.imagenSeleccionadaIndex = controles[0]?.index ?? this.imagenSeleccionadaIndex;
+    await this.guardarImagenes();
+  }
+
+  async activarImagenesSeleccionadasDesdeGestor(images: FolderImageManagerImage[]): Promise<void> {
+    if (!images.length) {
+      return;
+    }
+
+    const indices = images
+      .map((image) => (this.imagenesArray.controls as any[]).findIndex(
+        (control) =>
+          this.parseNumber(control.get('id')?.value) === this.parseNumber(image.id)
+          || this.limpiarTexto(control.get('draft_key')?.value) === (image.draftKey ?? String(image.id))
+      ))
+      .filter((index) => Number.isFinite(index) && index >= 0);
+
+    if (!indices.length) {
+      return;
+    }
+
+    const todasActivas = indices.every((index) => Boolean(this.imagenesArray.at(index).get('activa')?.value));
+    const nuevoEstado = !todasActivas;
+
+    indices.forEach((index) => {
+      this.imagenesArray.at(index).get('activa')?.setValue(nuevoEstado, { emitEvent: false });
+      this.imagenSeleccionadaIndex = index;
+    });
+
     await this.guardarImagenes();
   }
 
@@ -1637,9 +1726,6 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     const raw = this.form.getRawValue();
     const imagenesConPendientes = this.aplicarPendientesImagenes(raw.imagenes ?? []);
     const imagenes = this.normalizarImagenesActividadPayload(imagenesConPendientes).map(({ draft_key, ...imagen }) => imagen);
-    const imagenPrincipal = this.obtenerImagenPrincipalGaleria(imagenes);
-    const imagenActiva = imagenes.find((imagen) => imagen.activa) ?? null;
-    const imagenActivaId = imagenActiva?.id ?? null;
 
     if (!imagenes.length) {
       this.error = 'Agrega al menos una imagen.';
@@ -1653,8 +1739,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       await this.actividadesService.guardarImagenesActividadAdmin({
         destino_id: this.destinoId,
         actividad_id: this.actividadId,
-        imagen_fondo: imagenPrincipal,
-        imagen_activa_id: imagenActivaId,
+        imagen_fondo: null,
         imagenes: imagenesConPendientes
       });
 
@@ -1729,6 +1814,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
             ?? this.formatearTamanoArchivo(this.parseNumber(imagen?.size))
           ],
           activa: [Boolean(imagen?.activa)],
+          oscurecer_fondo: [Boolean(imagen?.oscurecer_fondo ?? false)],
           orden: [Number.isFinite(Number(imagen?.orden)) ? Number(imagen.orden) : index + 1],
           vigencia_desde: [this.parseDateValue(imagen?.vigencia_desde)],
           vigencia_hasta: [this.parseDateValue(imagen?.vigencia_hasta)],
@@ -1752,14 +1838,15 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
         extension: this.limpiarTexto(imagen?.extension) ?? this.obtenerExtensionArchivo(imagen?.imagen_url ?? ''),
         mime_type: this.limpiarTexto(imagen?.mime_type ?? imagen?.mimeType),
         size: this.parseNumber(imagen?.size),
-        size_formatted:
-          this.limpiarTexto(imagen?.size_formatted ?? imagen?.sizeFormatted)
-          ?? this.formatearTamanoArchivo(this.parseNumber(imagen?.size)),
-        activa: Boolean(imagen?.activa),
-        orden: this.parseNumber(imagen?.orden) ?? index + 1,
-        vigencia_desde: this.normalizarFechaYYYYMMDD(imagen?.vigencia_desde),
-        vigencia_hasta: this.normalizarFechaYYYYMMDD(imagen?.vigencia_hasta),
-        created_at: imagen?.created_at ?? null
+          size_formatted:
+            this.limpiarTexto(imagen?.size_formatted ?? imagen?.sizeFormatted)
+            ?? this.formatearTamanoArchivo(this.parseNumber(imagen?.size)),
+          activa: Boolean(imagen?.activa),
+          oscurecer_fondo: Boolean(imagen?.oscurecer_fondo ?? false),
+          orden: this.parseNumber(imagen?.orden) ?? index + 1,
+          vigencia_desde: this.normalizarFechaYYYYMMDD(imagen?.vigencia_desde),
+          vigencia_hasta: this.normalizarFechaYYYYMMDD(imagen?.vigencia_hasta),
+          created_at: imagen?.created_at ?? null
       }))
       .filter((imagen) => !!imagen.imagen_url);
   }
@@ -2118,10 +2205,6 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     this.imagenesArray.controls.forEach((control, index) => {
       control.get('orden')?.setValue(index + 1, { emitEvent: false });
     });
-
-    if (!this.imagenesArray.controls.some((control) => Boolean(control.get('activa')?.value)) && this.imagenesArray.length > 0) {
-      this.imagenesArray.at(0)?.get('activa')?.setValue(true, { emitEvent: false });
-    }
   }
 
   private abrirEditorImagen(index: number) {

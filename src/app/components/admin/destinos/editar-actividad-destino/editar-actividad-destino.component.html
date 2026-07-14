@@ -115,8 +115,9 @@
             [subtitle]="'Administre y organice sus archivos visuales.'"
             [folders]="galeriaCarpetas"
             [selectedImageId]="imagenSeleccionadaGestorId"
-            [activeImageId]="imagenPrincipalSeleccionadaId"
+            [activeImageIds]="imagenesActivasIds"
             [showDetailPanel]="true"
+            [isSaving]="guardandoImagenes"
             [isSavingFolder]="procesandoCrearCarpeta"
             [showDeleteAllImages]="imagenesArray.length > 0 || carpetasActividad.length > 0"
             [isDeletingAllImages]="guardandoImagenes || eliminandoGaleria"
@@ -128,7 +129,11 @@
             (deleteFolder)="eliminarCarpetaActividad($event)"
             (imageSelected)="seleccionarImagenPrincipalDesdeGestor($event)"
             (editImage)="editarImagenDesdeGestor($event)"
-            (makePrimaryImage)="marcarImagenComoPrincipalDesdeGestor($event)"
+            (toggleImageActive)="alternarImagenActivaDesdeGestor($event)"
+            (toggleImageDarken)="alternarOscurecerFondoDesdeGestor($event)"
+            (deleteImage)="eliminarImagenDesdeGestor($event)"
+            (toggleFolderActive)="alternarCarpetaActivaDesdeGestor($event)"
+            (toggleSelectedImagesActive)="activarImagenesSeleccionadasDesdeGestor($event)"
             (imageDroppedOnFolder)="solicitarMoverImagenDesdeGestor($event)"
           />
         </section>
@@ -215,6 +220,17 @@
                         <mat-label>Hasta</mat-label>
                         <input matInput type="date" [formControl]="imagenEditandoControl.get('vigencia_hasta')" />
                       </mat-form-field>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3">
+                      <div>
+                        <p class="text-sm font-semibold text-gray-900">Oscurecer fondo</p>
+                        <p class="text-xs text-gray-500">Aplica blur + velo oscuro en el carrusel publico.</p>
+                      </div>
+                      <mat-slide-toggle
+                        [checked]="imagenEditandoControl.get('oscurecer_fondo')?.value"
+                        (change)="imagenEditandoControl.get('oscurecer_fondo')?.setValue($event.checked)"
+                      ></mat-slide-toggle>
                     </div>
                   </div>
                 </div>

@@ -77,6 +77,7 @@ export interface IActividadPreviewAdmin {
     size?: number | null;
     size_formatted?: string | null;
     activa: boolean;
+    oscurecer_fondo?: boolean;
     orden: number | null;
     vigencia_desde: string | null;
     vigencia_hasta: string | null;
@@ -592,6 +593,7 @@ export class SupabaseService {
       size_formatted?: string | null;
       sizeFormatted?: string | null;
       activa?: boolean;
+      oscurecer_fondo?: boolean;
       orden?: number | null;
       vigencia_desde?: string | null;
       vigencia_hasta?: string | null;
@@ -617,6 +619,7 @@ export class SupabaseService {
           String(imagen?.size_formatted ?? imagen?.sizeFormatted ?? '').trim()
           || this.formatearTamanoArchivo(this.parseBigint(imagen?.size)),
         activa: Boolean(imagen?.activa),
+        oscurecer_fondo: Boolean(imagen?.oscurecer_fondo ?? false),
         orden: Number.isFinite(Number(imagen?.orden)) ? Number(imagen?.orden) : index + 1,
         vigencia_desde: this.normalizarFecha(imagen?.vigencia_desde),
         vigencia_hasta: this.normalizarFecha(imagen?.vigencia_hasta)
@@ -633,16 +636,6 @@ export class SupabaseService {
       return;
     }
 
-    const idActivaRecibida = this.parseNumber(imagenActivaId);
-    const indicePorId = idActivaRecibida !== null
-      ? limpias.findIndex((imagen) => imagen.id === idActivaRecibida)
-      : -1;
-    const primeraActiva = limpias.findIndex((imagen) => imagen.activa);
-    const indiceActivaFinal = indicePorId >= 0 ? indicePorId : primeraActiva >= 0 ? primeraActiva : 0;
-    limpias.forEach((imagen, index) => {
-      imagen.activa = index === indiceActivaFinal;
-    });
-
     const carpetasPorNombre = await this.asegurarCarpetasActividad(
       actividadId,
       limpias.map((imagen) => imagen.carpeta_nombre ?? imagen.carpeta)
@@ -656,10 +649,7 @@ export class SupabaseService {
     if (existentesError) throw existentesError;
 
     const idsExistentes = new Set((existentes ?? []).map((item: any) => Number(item.id)));
-    const idImagenActivaActual =
-      (existentes ?? []).find((item: any) => Boolean(item.activa))?.id ?? null;
     const idsRecibidos = new Set<number>();
-    let idImagenActivaFinal: number | null = null;
 
     for (let index = 0; index < limpias.length; index += 1) {
       const imagen = limpias[index];
@@ -700,6 +690,8 @@ export class SupabaseService {
             mime_type: imagen.mime_type,
             size: imagen.size,
             size_formatted: imagen.size_formatted,
+            activa: Boolean(imagen.activa),
+            oscurecer_fondo: Boolean(imagen.oscurecer_fondo),
             orden: imagen.orden,
             vigencia_desde: imagen.vigencia_desde,
             vigencia_hasta: imagen.vigencia_hasta
@@ -708,9 +700,6 @@ export class SupabaseService {
           .eq('atraccion_id', actividadId);
 
         if (updateError) throw updateError;
-        if (index === indiceActivaFinal) {
-          idImagenActivaFinal = imagen.id;
-        }
         continue;
       }
 
@@ -726,7 +715,8 @@ export class SupabaseService {
           mime_type: imagen.mime_type,
           size: imagen.size,
           size_formatted: imagen.size_formatted,
-          activa: false,
+          activa: Boolean(imagen.activa),
+          oscurecer_fondo: Boolean(imagen.oscurecer_fondo),
           orden: imagen.orden,
           vigencia_desde: imagen.vigencia_desde,
           vigencia_hasta: imagen.vigencia_hasta
@@ -737,9 +727,6 @@ export class SupabaseService {
       if (insertError) throw insertError;
       if (nuevaImagen?.id) {
         idsRecibidos.add(Number(nuevaImagen.id));
-        if (index === indiceActivaFinal) {
-          idImagenActivaFinal = Number(nuevaImagen.id);
-        }
       }
     }
 
@@ -752,50 +739,6 @@ export class SupabaseService {
         .in('id', idsParaEliminar);
 
       if (eliminarError) throw eliminarError;
-    }
-
-    const imagenActivaFinal = limpias[indiceActivaFinal] ?? null;
-    if (idImagenActivaFinal === null && imagenActivaFinal?.imagen_url) {
-      const { data: imagenesPorUrl, error: buscarPorUrlError } = await this.client
-        .from('atracciones_imagenes')
-        .select('id')
-        .eq('atraccion_id', actividadId)
-        .eq('imagen_url', imagenActivaFinal.imagen_url)
-        .limit(1);
-
-      if (buscarPorUrlError) throw buscarPorUrlError;
-
-      const idPorUrl = this.parseNumber(imagenesPorUrl?.[0]?.id);
-      if (idPorUrl === null) {
-        throw new Error('No se encontro la imagen seleccionada para marcarla como principal.');
-      }
-
-      idImagenActivaFinal = idPorUrl;
-    }
-
-    const idImagenActivaAnterior = this.parseNumber(idImagenActivaActual);
-    if (
-      idImagenActivaAnterior !== null &&
-      idImagenActivaAnterior !== idImagenActivaFinal &&
-      idsRecibidos.has(idImagenActivaAnterior)
-    ) {
-      const { error: desactivarAnteriorError } = await this.client
-        .from('atracciones_imagenes')
-        .update({ activa: false })
-        .eq('id', idImagenActivaAnterior)
-        .eq('atraccion_id', actividadId);
-
-      if (desactivarAnteriorError) throw desactivarAnteriorError;
-    }
-
-    if (idImagenActivaFinal !== null && idImagenActivaFinal !== idImagenActivaAnterior) {
-      const { error: activarFinalError } = await this.client
-        .from('atracciones_imagenes')
-        .update({ activa: true })
-        .eq('id', idImagenActivaFinal)
-        .eq('atraccion_id', actividadId);
-
-      if (activarFinalError) throw activarFinalError;
     }
 
   }
@@ -1711,6 +1654,7 @@ export class SupabaseService {
               carpeta_id,
               carpeta,
               activa,
+              oscurecer_fondo,
               orden,
               vigencia_desde,
               vigencia_hasta,
@@ -1867,6 +1811,7 @@ export class SupabaseService {
               size: this.parseBigint(imagen.size),
               size_formatted: imagen.size_formatted ?? null,
               activa: Boolean(imagen.activa),
+              oscurecer_fondo: Boolean(imagen.oscurecer_fondo),
               orden: imagen.orden ?? null,
               vigencia_desde: imagen.vigencia_desde ?? null,
               vigencia_hasta: imagen.vigencia_hasta ?? null,
@@ -1874,13 +1819,9 @@ export class SupabaseService {
             };
           })
         );
-        const imagenSeleccionada = this.seleccionarImagenGaleria(imagenesOrdenadas);
-        const imagenFondoUrl = imagenSeleccionada?.imagen_url ?? actividad.imagen_fondo ?? '';
-        const imagenFondoRegistro =
-          imagenSeleccionada ??
-          imagenesOrdenadas.find((imagen: any) => imagen.imagen_url === actividad.imagen_fondo) ??
-          null;
-        const imagenFondoId = this.parseNumber(imagenFondoRegistro?.id);
+        const imagenSeleccionada = imagenesOrdenadas.find((imagen: any) => Boolean(imagen.activa)) ?? imagenesOrdenadas[0] ?? null;
+        const imagenFondoUrl = imagenSeleccionada?.imagen_url ?? '';
+        const imagenFondoId = this.parseNumber(imagenSeleccionada?.id);
         const recordTraducciones: Record<number, { nombre: string; descripcion: string }> = {};
 
 
@@ -1911,6 +1852,7 @@ export class SupabaseService {
             size: this.parseBigint(imagen.size),
             size_formatted: imagen.size_formatted ?? null,
             activa: Boolean(imagen.activa),
+            oscurecer_fondo: Boolean(imagen.oscurecer_fondo),
             orden: imagen.orden ?? null,
             vigencia_desde: imagen.vigencia_desde ?? null,
             vigencia_hasta: imagen.vigencia_hasta ?? null,
@@ -2246,6 +2188,7 @@ export class SupabaseService {
       size_formatted?: string | null;
       sizeFormatted?: string | null;
       activa?: boolean;
+      oscurecer_fondo?: boolean;
       orden?: number | null;
       vigencia_desde?: string | null;
       vigencia_hasta?: string | null;
@@ -2282,22 +2225,12 @@ export class SupabaseService {
     let actividadId = payload.actividad_id ?? null;
 
     if (actividadId) {
-      const { error: actualizarActividadError } = await this.client
-        .from('atracciones_principales')
-        .update({
-          imagen_fondo: payload.imagen_fondo
-        })
-        .eq('id', actividadId)
-        .eq('detalles_destino_id', detallesDestinoId);
-
-      if (actualizarActividadError) throw actualizarActividadError;
       await this.sincronizarImagenesActividad(actividadId, payload.imagenes, payload.imagen_activa_id);
     } else {
       const { data: nuevaActividad, error: crearActividadError } = await this.client
         .from('atracciones_principales')
         .insert({
-          detalles_destino_id: detallesDestinoId,
-          imagen_fondo: payload.imagen_fondo
+          detalles_destino_id: detallesDestinoId
         })
         .select('id')
         .single();
@@ -2381,14 +2314,6 @@ export class SupabaseService {
       throw new Error('No se encontro el detalle del destino.');
     }
 
-    const { error: actualizarActividadError } = await this.client
-      .from('atracciones_principales')
-      .update({ imagen_fondo: payload.imagen_fondo })
-      .eq('id', payload.actividad_id)
-      .eq('detalles_destino_id', detalleExistente.id);
-
-    if (actualizarActividadError) throw actualizarActividadError;
-
     await this.sincronizarImagenesActividad(payload.actividad_id, payload.imagenes, payload.imagen_activa_id);
     return { id: payload.actividad_id };
   }
@@ -2460,6 +2385,7 @@ export class SupabaseService {
       size_formatted?: string | null;
       sizeFormatted?: string | null;
       activa?: boolean;
+      oscurecer_fondo?: boolean;
       orden?: number | null;
       vigencia_desde?: string | null;
       vigencia_hasta?: string | null;
@@ -2475,14 +2401,6 @@ export class SupabaseService {
     if (!detalleExistente?.id) {
       throw new Error('No se encontro el detalle del destino.');
     }
-
-    const { error: actualizarActividadError } = await this.client
-      .from('atracciones_principales')
-      .update({ imagen_fondo: payload.imagen_fondo })
-      .eq('id', payload.actividad_id)
-      .eq('detalles_destino_id', detalleExistente.id);
-
-    if (actualizarActividadError) throw actualizarActividadError;
 
     await this.sincronizarImagenesActividad(payload.actividad_id, payload.imagenes, payload.imagen_activa_id);
     return { id: payload.actividad_id };
