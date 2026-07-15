@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { UserService } from 'app/core/user/user.service';
-import { from, map, Observable, of, switchMap, catchError, throwError } from 'rxjs';
+import { from, map, Observable, of, switchMap, catchError, throwError, timeout } from 'rxjs';
 import { SupabaseService } from '../supabase.service';
 
 @Injectable({ providedIn: 'root' })
@@ -345,14 +345,13 @@ export class AuthService {
           })
         );
       }),
+      // A failed profile lookup must not leave a route guard waiting indefinitely.
+      timeout(15_000),
       catchError(() => {
-        return from(this._supabase.signOut()).pipe(
-          map(() => {
-            this._authenticated = false;
-            this._clearAccessState();
-            return false;
-          })
-        );
+        this._accessToken = '';
+        this._authenticated = false;
+        this._clearAccessState();
+        return of(false);
       })
     );
   }

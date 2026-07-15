@@ -5,9 +5,10 @@ import {
     HttpRequest,
 } from '@angular/common/http';
 import { inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { AuthService } from 'app/core/auth/auth.service';
 import { SupabaseService } from 'app/core/supabase.service';
-import { Observable, catchError, from, switchMap, throwError } from 'rxjs';
+import { Observable, catchError, from, of, switchMap, throwError, timeout } from 'rxjs';
 
 /**
  * Intercept
@@ -21,6 +22,7 @@ export const authInterceptor = (
 ): Observable<HttpEvent<unknown>> => {
     const authService = inject(AuthService);
     const supabase = inject(SupabaseService);
+    const router = inject(Router);
 
     return from(supabase.getSession()).pipe(
         switchMap(({ data }) => {
@@ -36,11 +38,17 @@ export const authInterceptor = (
             return next(newReq).pipe(
                 catchError((error) => {
                     if (error instanceof HttpErrorResponse && error.status === 401) {
-                        authService.signOut();
-                        location.reload();
+                        return authService.signOut().pipe(
+                            timeout(3_000),
+                            catchError(() => of(true)),
+                            switchMap(() => {
+                                void router.navigateByUrl('/sign-in');
+                                return throwError(() => error);
+                            })
+                        );
                     }
 
-                    return throwError(error);
+                    return throwError(() => error);
                 })
             );
         })

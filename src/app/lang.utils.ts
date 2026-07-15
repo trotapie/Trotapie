@@ -1,11 +1,18 @@
-export function getDefaultLang(): string {
-  const savedLang = localStorage.getItem('lang');
+const defaultLang = 'es';
+const availableLangs = new Set(['es', 'en', 'fr', 'pt', 'de']);
 
-  if (savedLang) {
-    return savedLang;
+export function getDefaultLang(): string {
+  try {
+    const savedLang = localStorage.getItem('lang');
+
+    if (savedLang && availableLangs.has(savedLang)) {
+      return savedLang;
+    }
+
+    localStorage.setItem('lang', defaultLang);
+  } catch {
+    // Storage can be unavailable in private or restricted browser contexts.
   }
 
-  const defaultLang = 'es';
-  localStorage.setItem('lang', defaultLang);
   return defaultLang;
 }

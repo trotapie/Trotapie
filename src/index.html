@@ -7,6 +7,12 @@
     <meta name="description" content="Trotapie, tu agencia de viajes." />
     <meta name="keywords" content="viajes, hoteles, vacaciones, Trotapie, paquetes, turismo" />
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0" />
+    <style>
+        #app-skeleton { align-items: center; background: #fdfdfd; display: flex; inset: 0; justify-content: center; position: fixed; z-index: 999999; }
+        #app-skeleton img { max-width: 120px; opacity: .8; width: 100px; }
+        @keyframes app-skeleton-fallback { to { opacity: 0; visibility: hidden; } }
+        #app-skeleton { animation: app-skeleton-fallback .5s ease-in 3s forwards; }
+    </style>
 
     <base href="/" />
 

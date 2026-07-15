@@ -17,7 +17,7 @@ import { appRoutes } from 'app/app.routes';
 import { provideAuth } from 'app/core/auth/auth.provider';
 import { provideIcons } from 'app/core/icons/icons.provider';
 import { MockApiService } from 'app/mock-api';
-import { firstValueFrom } from 'rxjs';
+import { catchError, firstValueFrom, of, timeout } from 'rxjs';
 import { provideServiceWorker } from '@angular/service-worker';
 import { TranslocoHttpLoader } from './core/transloco/transloco.http-loader';
 import { mockApiInterceptor } from '@fuse/lib/mock-api';
@@ -110,7 +110,20 @@ export const appConfig: ApplicationConfig = {
 
             translocoService.setActiveLang(lang);
 
-            return firstValueFrom(translocoService.load(lang));
+            return firstValueFrom(
+                translocoService.load(lang).pipe(
+                    timeout(10_000),
+                    catchError(() => {
+                        translocoService.setActiveLang('es');
+
+                        return translocoService.load('es').pipe(
+                            timeout(10_000),
+                            // Do not prevent Angular from bootstrapping if translations are unavailable.
+                            catchError(() => of({}))
+                        );
+                    })
+                )
+            );
         }),
 
         // Fuse
