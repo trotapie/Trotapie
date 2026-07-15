@@ -102,21 +102,6 @@ El servidor web local estará disponible en `http://localhost:4200/`.
 
 ---
 
-## ⚙️ Variables de Entorno (Vercel / Hosting)
-
-Las siguientes variables de entorno deben estar configuradas en la consola de Vercel para asegurar el correcto funcionamiento de las Serverless Functions:
-
-| Variable | Descripción | Valor Ejemplo / Proveedor |
-|---|---|---|
-| `SUPABASE_URL` | URL de conexión de la instancia de Supabase | `https://ygcvxwtvkmeqfbwexhzx.supabase.co` |
-| `SUPABASE_ANON_KEY` | Llave anónima pública de Supabase | `eyJhbGciOiJIUzI1NiIsInR5...` |
-| `MAILEROO_API_KEY` | Llave API privada para la entrega de correos | *Configurado en Maileroo* |
-| `MAILEROO_FROM_EMAIL` | Dirección de envío verificada | `info@tu-dominio.com` |
-| `MAILEROO_FROM_NAME` | Nombre de visualización del remitente | `Trotapie` |
-| `MAILEROO_REPLY_TO` | Dirección alternativa de respuesta | `contacto@www.trotapie.com` |
-
----
-
 ## 🚀 Compilación y Despliegue
 
 ### Generar Build de Producción
