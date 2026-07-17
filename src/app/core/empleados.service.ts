@@ -14,7 +14,22 @@ export class EmpleadosService {
   empleados(options?: { incluirInhabilitados?: boolean }) {
     let query = this.client
       .from('empleados')
-      .select('id, nombre, cargo, telefono, estatus_id, email, auth_user_id, primera_vez_login')
+      .select(`
+        id,
+        nombre,
+        cargo_id,
+        cargo:roles_empresa!empleados_cargo_id_fkey (
+          id,
+          rol,
+          descripcion_rol,
+          estatus
+        ),
+        telefono,
+        estatus_id,
+        email,
+        auth_user_id,
+        primera_vez_login
+      `)
       .order('id', { ascending: true });
 
     if (!options?.incluirInhabilitados) {
@@ -33,6 +48,14 @@ export class EmpleadosService {
 
     if (error) throw error;
     return data ?? [];
+  }
+
+  async rolesEmpresaAdmin() {
+    return this.client
+      .from('roles_empresa')
+      .select('id, rol, descripcion_rol, estatus')
+      .order('rol', { ascending: true })
+      .order('id', { ascending: true });
   }
 
   private async obtenerEstatusEmpleadoPorClave(clave: string): Promise<number> {
@@ -112,42 +135,89 @@ export class EmpleadosService {
     return data;
   }
 
-  async crearEmpleadoAdmin(payload: { nombre: string; cargo?: string; telefono?: string }) {
+  async crearEmpleadoAdmin(payload: { nombre: string; cargo_id?: number | null; telefono?: string }): Promise<any> {
     const nombre = String(payload.nombre ?? '').trim();
-    const cargo = String(payload.cargo ?? '').trim() || null;
+    const cargoId = Number(payload.cargo_id);
+    const cargo_id = Number.isFinite(cargoId) && cargoId > 0 ? cargoId : null;
     const telefono = String(payload.telefono ?? '').trim() || null;
     const estatusActivoId = await this.obtenerEstatusEmpleadoPorClave('activo');
     const { data, error } = await this.client
       .from('empleados')
-      .insert({ nombre, cargo, telefono, estatus_id: estatusActivoId })
-      .select('id, nombre, cargo, telefono, estatus_id, email, auth_user_id, primera_vez_login')
+      .insert({ nombre, cargo_id, telefono, estatus_id: estatusActivoId })
+      .select(`
+        id,
+        nombre,
+        cargo_id,
+        cargo:roles_empresa!empleados_cargo_id_fkey (
+          id,
+          rol,
+          descripcion_rol,
+          estatus
+        ),
+        telefono,
+        estatus_id,
+        email,
+        auth_user_id,
+        primera_vez_login
+      `)
       .single();
 
     if (error) throw error;
     return data;
   }
 
-  async actualizarEmpleadoAdmin(id: number, payload: { nombre: string; cargo?: string; telefono?: string }) {
+  async actualizarEmpleadoAdmin(id: number, payload: { nombre: string; cargo_id?: number | null; telefono?: string }): Promise<any> {
     const nombre = String(payload.nombre ?? '').trim();
-    const cargo = String(payload.cargo ?? '').trim() || null;
+    const cargoId = Number(payload.cargo_id);
+    const cargo_id = Number.isFinite(cargoId) && cargoId > 0 ? cargoId : null;
     const telefono = String(payload.telefono ?? '').trim() || null;
     const { data, error } = await this.client
       .from('empleados')
-      .update({ nombre, cargo, telefono })
+      .update({ nombre, cargo_id, telefono })
       .eq('id', id)
-      .select('id, nombre, cargo, telefono, estatus_id, email, auth_user_id, primera_vez_login')
+      .select(`
+        id,
+        nombre,
+        cargo_id,
+        cargo:roles_empresa!empleados_cargo_id_fkey (
+          id,
+          rol,
+          descripcion_rol,
+          estatus
+        ),
+        telefono,
+        estatus_id,
+        email,
+        auth_user_id,
+        primera_vez_login
+      `)
       .single();
 
     if (error) throw error;
     return data;
   }
 
-  async actualizarEstatusEmpleadoAdmin(id: number, estatusId: number) {
+  async actualizarEstatusEmpleadoAdmin(id: number, estatusId: number): Promise<any> {
     const { data, error } = await this.client
       .from('empleados')
       .update({ estatus_id: estatusId })
       .eq('id', id)
-      .select('id, nombre, cargo, telefono, estatus_id, email, auth_user_id, primera_vez_login')
+      .select(`
+        id,
+        nombre,
+        cargo_id,
+        cargo:roles_empresa!empleados_cargo_id_fkey (
+          id,
+          rol,
+          descripcion_rol,
+          estatus
+        ),
+        telefono,
+        estatus_id,
+        email,
+        auth_user_id,
+        primera_vez_login
+      `)
       .single();
 
     if (error) throw error;

@@ -9,6 +9,8 @@ describe('EmpleadosComponent', () => {
   let fixture: ComponentFixture<EmpleadosComponent>;
   const supabaseMock = {
     empleados: jasmine.createSpy('empleados').and.resolveTo({ data: [], error: null }),
+    obtenerEstatusEmpleadoAdmin: jasmine.createSpy('obtenerEstatusEmpleadoAdmin').and.resolveTo([]),
+    rolesEmpresaAdmin: jasmine.createSpy('rolesEmpresaAdmin').and.resolveTo({ data: [], error: null }),
     crearEmpleadoAdmin: jasmine.createSpy('crearEmpleadoAdmin').and.resolveTo({ id: 1, nombre: 'Empleado test' }),
     actualizarEmpleadoAdmin: jasmine.createSpy('actualizarEmpleadoAdmin').and.resolveTo({ id: 1, nombre: 'Empleado test' }),
     actualizarEstatusEmpleadoAdmin: jasmine.createSpy('actualizarEstatusEmpleadoAdmin').and.resolveTo({ id: 1, nombre: 'Empleado test', estatus_id: 2 })

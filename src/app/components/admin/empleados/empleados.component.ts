@@ -9,16 +9,25 @@ import { EstatusComponent } from 'app/shared/estatus/estatus.component';
 import { MaterialModule } from 'app/shared/material.module';
 import { EmpleadoToastComponent } from './empleado-toast.component';
 import { backdropFade, modalScaleFade, fadeSlideIn } from 'app/shared/animations';
+import { BannerComponent } from 'app/shared/banner/banner.component';
 
 interface IEmpleadoAdmin {
   id: number;
   nombre: string;
+  cargo_id: number | null;
   cargo: string | null;
   telefono: string | null;
   estatus_id: number | null;
   email: string | null;
   auth_user_id: string | null;
   primera_vez_login: boolean;
+}
+
+interface ICargoEmpresa {
+  id: number;
+  rol: string;
+  descripcion_rol: string;
+  estatus: boolean;
 }
 
 interface IRolAdmin {
@@ -37,7 +46,7 @@ interface IEstatusEmpleado {
 @Component({
   selector: 'app-empleados',
   standalone: true,
-  imports: [MaterialModule, EstatusComponent],
+  imports: [MaterialModule, EstatusComponent, BannerComponent],
   templateUrl: './empleados.component.html',
   styleUrl: './empleados.component.scss',
   animations: [modalScaleFade, backdropFade, fadeSlideIn],
@@ -47,11 +56,12 @@ export class EmpleadosComponent implements OnInit, AfterViewInit {
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
 
-  displayedColumns: string[] = ['id', 'nombre', 'email', 'estatus', 'acceso', 'acciones'];
+  displayedColumns: string[] = ['id', 'nombre', 'cargo', 'email', 'estatus', 'acceso', 'acciones'];
   dataSource = new MatTableDataSource<IEmpleadoAdmin>([]);
 
   cargando = false;
   cargandoRoles = false;
+  cargandoCargos = false;
   guardando = false;
   actualizandoEstatusId: number | null = null;
   eliminandoEmpleadoId: number | null = null;
@@ -61,20 +71,23 @@ export class EmpleadosComponent implements OnInit, AfterViewInit {
   modalQuitarAccesoAbierto = false;
   modalEliminarAbierto = false;
   modalContrasenaTemporalAbierto = false;
+  modalFirmaAbierto = false;
   empleadoPendienteInhabilitar: IEmpleadoAdmin | null = null;
   empleadoPendienteQuitarAcceso: IEmpleadoAdmin | null = null;
   empleadoPendienteEliminar: IEmpleadoAdmin | null = null;
+  empleadoFirmaSeleccionado: IEmpleadoAdmin | null = null;
   error = '';
   mensaje = '';
   contrasenaTemporal = '';
   contrasenaTemporalCopiada = false;
+  cargosDisponibles: ICargoEmpresa[] = [];
   rolesDisponibles: IRolAdmin[] = [];
   estatusDisponibles: IEstatusEmpleado[] = [];
   rolesSeleccionados: number | null = null;
 
   form = this.fb.group({
     nombre: ['', [Validators.required, Validators.maxLength(120)]],
-    cargo: ['', [Validators.maxLength(120)]],
+    cargo_id: [null as number | null],
     telefono: ['', [Validators.maxLength(20), Validators.pattern(/^[0-9+()\-\s]*$/)]],
     email: ['', [Validators.email, Validators.maxLength(180)]],
   });
@@ -86,12 +99,14 @@ export class EmpleadosComponent implements OnInit, AfterViewInit {
     this.dataSource.filterPredicate = (data, filter) =>
       this.normalizar(data.id).includes(filter) ||
       this.normalizar(data.nombre).includes(filter) ||
+      this.normalizar(data.cargo).includes(filter) ||
       this.normalizar(data.email).includes(filter) ||
       this.normalizar(this.obtenerEtiquetaEstatus(data)).includes(filter);
 
     this.dataSource.sortingDataAccessor = (data: IEmpleadoAdmin, sortHeaderId: string) => {
       if (sortHeaderId === 'id') return data.id;
       if (sortHeaderId === 'nombre') return this.normalizar(data.nombre);
+      if (sortHeaderId === 'cargo') return this.normalizar(data.cargo);
       if (sortHeaderId === 'email') return this.normalizar(data.email);
       if (sortHeaderId === 'estatus') return this.normalizar(this.obtenerEtiquetaEstatus(data));
       if (sortHeaderId === 'acceso') return data.primera_vez_login ? 2 : data.auth_user_id ? 1 : 0;
@@ -110,6 +125,16 @@ export class EmpleadosComponent implements OnInit, AfterViewInit {
     return this.empleadoEditandoId !== null;
   }
 
+  abrirFirma(empleado: IEmpleadoAdmin): void {
+    this.empleadoFirmaSeleccionado = empleado;
+    this.modalFirmaAbierto = true;
+  }
+
+  cerrarModalFirma(): void {
+    this.modalFirmaAbierto = false;
+    this.empleadoFirmaSeleccionado = null;
+  }
+
   async guardarEmpleado() {
     this.error = '';
     this.mensaje = '';
@@ -123,7 +148,7 @@ export class EmpleadosComponent implements OnInit, AfterViewInit {
     }
 
     const nombre = String(this.form.get('nombre')?.value ?? '').trim();
-    const cargo = String(this.form.get('cargo')?.value ?? '').trim();
+    const cargo_id = this.parseNumber(this.form.get('cargo_id')?.value);
     const telefono = String(this.form.get('telefono')?.value ?? '').trim();
     const email = String(this.form.get('email')?.value ?? '').trim().toLowerCase();
     if (!nombre) {
@@ -147,10 +172,10 @@ export class EmpleadosComponent implements OnInit, AfterViewInit {
       let debeMostrarContrasenaTemporal = false;
 
       if (this.estaEditando && this.empleadoEditandoId !== null) {
-        empleado = await this.supabase.actualizarEmpleadoAdmin(this.empleadoEditandoId, { nombre, cargo, telefono }) as IEmpleadoAdmin;
+        empleado = await this.supabase.actualizarEmpleadoAdmin(this.empleadoEditandoId, { nombre, cargo_id, telefono }) as IEmpleadoAdmin;
         this.mensaje = 'Empleado actualizado correctamente.';
       } else {
-        empleado = await this.supabase.crearEmpleadoAdmin({ nombre, cargo, telefono }) as IEmpleadoAdmin;
+        empleado = await this.supabase.crearEmpleadoAdmin({ nombre, cargo_id, telefono }) as IEmpleadoAdmin;
         this.mensaje = 'Empleado creado correctamente.';
       }
 
@@ -196,10 +221,11 @@ export class EmpleadosComponent implements OnInit, AfterViewInit {
     this.modalContrasenaTemporalAbierto = false;
     this.modalEmpleadoAbierto = true;
     this.empleadoEditandoId = item.id;
+    await this.cargarCargosDisponibles();
     await this.cargarRolesDisponibles();
     this.form.patchValue({
       nombre: item.nombre,
-      cargo: item.cargo ?? '',
+      cargo_id: item.cargo_id ?? null,
       telefono: item.telefono ?? '',
       email: item.email ?? '',
     });
@@ -346,9 +372,15 @@ export class EmpleadosComponent implements OnInit, AfterViewInit {
     this.contrasenaTemporal = '';
     this.contrasenaTemporalCopiada = false;
     this.modalContrasenaTemporalAbierto = false;
+    await this.cargarCargosDisponibles();
     await this.cargarRolesDisponibles();
     this.rolesSeleccionados = this.obtenerRolPorDefecto();
-    this.form.reset();
+    this.form.reset({
+      nombre: '',
+      cargo_id: null,
+      telefono: '',
+      email: '',
+    });
     this.empleadoEditandoId = null;
     this.modalEmpleadoAbierto = true;
   }
@@ -361,7 +393,12 @@ export class EmpleadosComponent implements OnInit, AfterViewInit {
       this.modalContrasenaTemporalAbierto = false;
     }
     this.rolesSeleccionados = null;
-    this.form.reset();
+    this.form.reset({
+      nombre: '',
+      cargo_id: null,
+      telefono: '',
+      email: '',
+    });
   }
 
   cerrarModalContrasenaTemporal() {
@@ -476,7 +513,8 @@ export class EmpleadosComponent implements OnInit, AfterViewInit {
       this.dataSource.data = (data ?? []).map((item: any) => ({
         id: Number(item.id),
         nombre: String(item.nombre ?? ''),
-        cargo: item.cargo ? String(item.cargo) : null,
+        cargo_id: Number.isFinite(Number(item.cargo_id)) ? Number(item.cargo_id) : null,
+        cargo: item.cargo?.rol ? String(item.cargo.rol) : null,
         telefono: item.telefono ? String(item.telefono) : null,
         estatus_id: Number.isFinite(Number(item.estatus_id)) ? Number(item.estatus_id) : null,
         email: item.email ? String(item.email) : null,
@@ -513,9 +551,52 @@ export class EmpleadosComponent implements OnInit, AfterViewInit {
     }
   }
 
+  private async cargarCargosDisponibles() {
+    if (this.cargosDisponibles.length || this.cargandoCargos) {
+      return;
+    }
+
+    this.cargandoCargos = true;
+
+    try {
+      const { data, error } = await this.supabase.rolesEmpresaAdmin();
+      if (error) throw error;
+
+      this.cargosDisponibles = (data ?? []).map((item: any) => ({
+        id: Number(item.id),
+        rol: String(item.rol ?? '').trim(),
+        descripcion_rol: String(item.descripcion_rol ?? '').trim(),
+        estatus: Boolean(item.estatus)
+      }));
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudieron cargar los cargos disponibles.';
+    } finally {
+      this.cargandoCargos = false;
+    }
+  }
+
   private obtenerRolPorDefecto(): number | null {
     const rolEmpleado = this.rolesDisponibles.find((item) => item.key === 'empleado');
     return rolEmpleado ? rolEmpleado.id : null;
+  }
+
+  private parseNumber(value: number | string | null | undefined): number | null {
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  getCargoLabel(item: IEmpleadoAdmin): string {
+    return item.cargo?.trim() || 'Sin cargo';
+  }
+
+  getCargoSeleccionadoLabel(): string {
+    const cargoId = Number(this.form.get('cargo_id')?.value);
+    const cargo = this.cargosDisponibles.find((item) => item.id === cargoId);
+    return cargo?.rol?.trim() || 'Sin cargo';
   }
 
   private normalizar(value: unknown): string {

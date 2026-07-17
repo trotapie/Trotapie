@@ -16,6 +16,8 @@ import { ImagenesCarruselComponent } from 'app/shared/imagenes-carrusel/imagenes
 import { find } from 'lodash';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { formatearFolioCotizacion } from 'app/core/cotizacion-folio.util';
+import { BannerComponent } from 'app/shared/banner/banner.component';
+import type { EmpleadoFirma } from 'app/core/cotizaciones.service';
 
 type Tile = { key: string; url: string; alt: string; class: string };
 
@@ -115,7 +117,7 @@ interface OrigenReservacionOption {
 }
 @Component({
   selector: 'app-modificar-cotizacion',
-  imports: [MaterialModule, RouterLink, DateI18nPipe, MapaComponent, TranslocoModule, EstatusComponent, CommonModule, ImagenesCarruselComponent],
+  imports: [MaterialModule, RouterLink, DateI18nPipe, MapaComponent, TranslocoModule, EstatusComponent, CommonModule, ImagenesCarruselComponent, BannerComponent],
   templateUrl: './cotizacion.component.html',
   styleUrl: './cotizacion.component.scss',
   standalone: true
@@ -132,6 +134,7 @@ export class CotizacionComponent implements OnInit {
   private _translocoService = inject(TranslocoService);
   private sanitizer = inject(DomSanitizer);
   cargando = true;
+  empleadoFirma: EmpleadoFirma | null = null;
 
   informacionCotizacion: ICotizacion
   @ViewChild(ImagenesCarruselComponent) galeriaHotel?: ImagenesCarruselComponent;
@@ -543,6 +546,7 @@ export class CotizacionComponent implements OnInit {
         })
 
       }
+      await this.cargarEmpleadoFirma(id);
       this.politicasApartado = this.informacionCotizacion.politicas_tarifas.apartado
       this.politicasNoReembolsable = this.informacionCotizacion.politicas_tarifas.noReembolsable
       this.politicasApartadoMeses = this.informacionCotizacion.politicas_tarifas.apartadoMeses
@@ -593,6 +597,14 @@ export class CotizacionComponent implements OnInit {
         this.preciosList = precios;
 
       })
+    }
+  }
+
+  private async cargarEmpleadoFirma(publicId: string | null): Promise<void> {
+    try {
+      this.empleadoFirma = await this.supabase.obtenerEmpleadoFirmaPorCotizacion(publicId ?? '');
+    } catch {
+      this.empleadoFirma = null;
     }
   }
 

@@ -1020,7 +1020,21 @@ export class SupabaseService {
   empleados(options?: { incluirInhabilitados?: boolean }) {
     let query = this.client
       .from('empleados')
-      .select('id, nombre, estatus_id, email, auth_user_id, primera_vez_login')
+      .select(`
+        id,
+        nombre,
+        cargo_id,
+        cargo:roles_empresa!empleados_cargo_id_fkey (
+          id,
+          rol,
+          descripcion_rol,
+          estatus
+        ),
+        estatus_id,
+        email,
+        auth_user_id,
+        primera_vez_login
+      `)
       .order('id', { ascending: true });
 
     if (!options?.incluirInhabilitados) {
@@ -1092,25 +1106,57 @@ export class SupabaseService {
     return data;
   }
 
-  async crearEmpleadoAdmin(payload: { nombre: string }) {
+  async crearEmpleadoAdmin(payload: { nombre: string; cargo_id?: number | null }) {
     const nombre = String(payload.nombre ?? '').trim();
+    const cargoId = Number(payload.cargo_id);
+    const cargo_id = Number.isFinite(cargoId) && cargoId > 0 ? cargoId : null;
     const { data, error } = await this.client
       .from('empleados')
-      .insert({ nombre, estatus_id: 1 })
-      .select('id, nombre, estatus_id, email, auth_user_id, primera_vez_login')
+      .insert({ nombre, cargo_id, estatus_id: 1 })
+      .select(`
+        id,
+        nombre,
+        cargo_id,
+        cargo:roles_empresa!empleados_cargo_id_fkey (
+          id,
+          rol,
+          descripcion_rol,
+          estatus
+        ),
+        estatus_id,
+        email,
+        auth_user_id,
+        primera_vez_login
+      `)
       .single();
 
     if (error) throw error;
     return data;
   }
 
-  async actualizarEmpleadoAdmin(id: number, payload: { nombre: string }) {
+  async actualizarEmpleadoAdmin(id: number, payload: { nombre: string; cargo_id?: number | null }) {
     const nombre = String(payload.nombre ?? '').trim();
+    const cargoId = Number(payload.cargo_id);
+    const cargo_id = Number.isFinite(cargoId) && cargoId > 0 ? cargoId : null;
     const { data, error } = await this.client
       .from('empleados')
-      .update({ nombre })
+      .update({ nombre, cargo_id })
       .eq('id', id)
-      .select('id, nombre, estatus_id, email, auth_user_id, primera_vez_login')
+      .select(`
+        id,
+        nombre,
+        cargo_id,
+        cargo:roles_empresa!empleados_cargo_id_fkey (
+          id,
+          rol,
+          descripcion_rol,
+          estatus
+        ),
+        estatus_id,
+        email,
+        auth_user_id,
+        primera_vez_login
+      `)
       .single();
 
     if (error) throw error;
@@ -1122,7 +1168,21 @@ export class SupabaseService {
       .from('empleados')
       .update({ estatus_id: estatusId })
       .eq('id', id)
-      .select('id, nombre, estatus_id, email, auth_user_id, primera_vez_login')
+      .select(`
+        id,
+        nombre,
+        cargo_id,
+        cargo:roles_empresa!empleados_cargo_id_fkey (
+          id,
+          rol,
+          descripcion_rol,
+          estatus
+        ),
+        estatus_id,
+        email,
+        auth_user_id,
+        primera_vez_login
+      `)
       .single();
 
     if (error) throw error;

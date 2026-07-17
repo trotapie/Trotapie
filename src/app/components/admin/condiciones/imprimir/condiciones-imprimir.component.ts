@@ -12,6 +12,7 @@ interface CondicionesDocumento {
   titulo: string;
   descripcion: string;
   html_content: string;
+  vista_previa_html: SafeHtml;
   activo: boolean;
   orden: number | null;
 }
@@ -52,6 +53,7 @@ export class CondicionesImprimirComponent implements OnInit {
 
   mostrarExito = false;
   mensajeExito = '';
+  pdfUrl = '';
 
   async ngOnInit() {
     await this.cargarPlantillas();
@@ -94,6 +96,10 @@ export class CondicionesImprimirComponent implements OnInit {
   abrirModalSeleccion() {
     this.mostrarModal = true;
     this.busquedaPlantillas = '';
+  }
+
+  cerrarModal() {
+    this.mostrarModal = false;
   }
 
   seleccionarPlantilla(plantilla: CondicionesDocumento) {
@@ -144,15 +150,42 @@ export class CondicionesImprimirComponent implements OnInit {
 
     this.generandoPdf = true;
     this.error = '';
+    const ventanaPdf = window.open('', '_blank');
+    if (this.pdfUrl) URL.revokeObjectURL(this.pdfUrl);
+    this.pdfUrl = '';
+    let iframe: HTMLIFrameElement | null = null;
 
     try {
       const { jsPDF } = await import('jspdf');
       const html2canvas = (await import('html2canvas')).default;
+      const htmlPdf = this.obtenerHtmlConValores();
+      iframe = document.createElement('iframe');
+      iframe.style.cssText = 'position:fixed;left:-10000px;top:0;width:794px;height:1123px;border:0;visibility:hidden;pointer-events:none;';
+      iframe.setAttribute('aria-hidden', 'true');
+      iframe.setAttribute('sandbox', 'allow-same-origin');
+      document.body.appendChild(iframe);
 
-      const element = document.querySelector('.preview-content') as HTMLElement;
-      if (!element) throw new Error('No se encontro el contenido de la vista previa.');
+      const documentPdf = iframe.contentDocument;
+      if (!documentPdf) throw new Error('No se pudo preparar el documento para imprimir.');
 
-      const canvas = await html2canvas(element, {
+      // html2canvas does not support oklch, so the PDF is rendered in an isolated document.
+      const iframeCargado = new Promise<void>((resolve) => iframe!.onload = () => resolve());
+      documentPdf.open();
+      documentPdf.write(`<!doctype html>
+        <html><head><style>
+          * { box-sizing: border-box; }
+          body { margin: 0; padding: 40px; background: #ffffff; color: #1e293b; font-family: Arial, sans-serif; font-size: 16px; line-height: 1.55; }
+          h1, h2, h3, h4, h5, h6 { color: inherit; font-weight: 700; }
+          p { margin: 0 0 12px; }
+          img { max-width: 100%; height: auto; }
+          table { width: 100%; border-collapse: collapse; }
+          td, th { border: 1px solid #cbd5e1; padding: 8px; }
+          pre { overflow: auto; white-space: pre-wrap; }
+        </style></head><body>${htmlPdf}</body></html>`);
+      documentPdf.close();
+
+      await iframeCargado;
+      const canvas = await html2canvas(documentPdf.body, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
@@ -179,25 +212,43 @@ export class CondicionesImprimirComponent implements OnInit {
         remaining -= pageHeight;
       }
 
-      const slug = this.plantillaSeleccionada.slug || 'condiciones';
-      pdf.save(`${slug}.pdf`);
+      this.pdfUrl = URL.createObjectURL(pdf.output('blob'));
+      if (ventanaPdf) {
+        ventanaPdf.location.href = this.pdfUrl;
+      }
 
       this.mostrarExito = true;
-      this.mensajeExito = 'PDF generado correctamente.';
+      this.mensajeExito = ventanaPdf
+        ? 'PDF generado y abierto en una nueva pestaña.'
+        : 'El navegador bloqueo la nueva pestaña. Descarga el PDF desde este modal.';
     } catch (err: any) {
+      ventanaPdf?.close();
       this.error = err?.message ?? 'No se pudo generar el PDF.';
     } finally {
+      iframe?.remove();
       this.generandoPdf = false;
     }
   }
 
   reiniciar() {
+    if (this.pdfUrl) URL.revokeObjectURL(this.pdfUrl);
+    this.pdfUrl = '';
     this.plantillaSeleccionada = null;
     this.placeholderFields = [];
     this.form = this.fb.group<Record<string, any>>({});
     this.currentFieldIndex = 0;
     this.previewHtml = '';
     this.mostrarModal = true;
+  }
+
+  descargarPdf() {
+    if (!this.pdfUrl) return;
+    const enlace = document.createElement('a');
+    enlace.href = this.pdfUrl;
+    enlace.download = `${this.plantillaSeleccionada?.slug || 'condiciones'}.pdf`;
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
   }
 
   private construirFormulario(html: string) {
@@ -227,12 +278,22 @@ export class CondicionesImprimirComponent implements OnInit {
 
   private actualizarVistaPrevia() {
     if (!this.plantillaSeleccionada) return;
+    this.previewHtml = this.sanitizer.bypassSecurityTrustHtml(this.obtenerHtmlConValores());
+  }
+
+  private obtenerHtmlConValores(): string {
+    if (!this.plantillaSeleccionada) return '';
     let html = this.plantillaSeleccionada.html_content;
     const values = this.form.getRawValue();
     for (const [key, value] of Object.entries(values)) {
       html = html.replace(new RegExp(`\\{\\{\\s*${this.escapeRegex(key)}\\s*\\}\\}`, 'g'), String(value ?? ''));
     }
-    this.previewHtml = this.sanitizer.bypassSecurityTrustHtml(html);
+    return html;
+  }
+
+  private crearVistaPreviaPlantilla(html: string): SafeHtml {
+    const contenidoDeMuestra = html.replace(/{{\s*[\w.]+\s*}}/g, 'Informacion por completar');
+    return this.sanitizer.bypassSecurityTrustHtml(contenidoDeMuestra);
   }
 
   private escapeRegex(str: string): string {
@@ -265,6 +326,7 @@ export class CondicionesImprimirComponent implements OnInit {
       titulo: String(item.titulo ?? item.nombre ?? item.clave ?? 'Sin titulo').trim(),
       descripcion: String(item.descripcion ?? item.resumen ?? '').trim(),
       html_content: String(item.html_content ?? ''),
+      vista_previa_html: this.crearVistaPreviaPlantilla(String(item.html_content ?? '')),
       activo: item.activo === undefined || item.activo === null ? true : Boolean(item.activo),
       orden: item.orden === null || item.orden === undefined ? null : Number(item.orden),
     };

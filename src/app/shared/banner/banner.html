@@ -1,0 +1,258 @@
+<style>
+    :host {
+        display: block;
+    }
+
+    .signature-banner {
+        --green: #008b78;
+        --deep-green: #006d63;
+        --gold: #ffb900;
+        position: relative;
+        width: min(100%, 2000px);
+        aspect-ratio: 3 / 1;
+        container-type: inline-size;
+        overflow: hidden;
+        border-radius: 2.4cqw;
+        background: #fff;
+        box-shadow: 0 14px 30px rgb(0 62 57 / 16%);
+        color: var(--deep-green);
+        font-family: Montserrat, 'Trebuchet MS', sans-serif;
+    }
+
+    .artwork,
+    .travel-art {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+    }
+
+    .travel-art {
+        left: auto;
+        width: 52%;
+    }
+
+    .qr-column {
+        position: absolute;
+        top: 10%;
+        bottom: 31%;
+        left: 2.1%;
+        display: flex;
+        align-items: center;
+        width: 18%;
+    }
+
+    .qr-column::after,
+    .details::before {
+        position: absolute;
+        top: 14%;
+        right: 0;
+        width: 2px;
+        height: 14.75cqw;
+        background: var(--green);
+        content: '';
+    }
+
+    .qr-frame {
+        width: 88%;
+        aspect-ratio: 1;
+        overflow: hidden;
+    }
+
+    .qr-frame img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform: scale(1.22);
+    }
+
+    .details {
+        position: absolute;
+        top: 17%;
+        left: 45.4%;
+        width: 26%;
+        padding-left: 2.25%;
+    }
+
+    .center-gif {
+        position: absolute;
+        top: 12%;
+        left: 20.1%;
+        display: grid;
+        width: 25.3%;
+        height: 60%;
+        place-items: center;
+    }
+
+    .center-gif img {
+        display: block;
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+
+    .details::before {
+        top: 0;
+        right: auto;
+        left: 0;
+    }
+
+    .name {
+        margin: 0 0 1.5%;
+        color: var(--green);
+        font-size: 2.7cqw;
+        font-weight: 800;
+        letter-spacing: -0.035em;
+        line-height: 1.05;
+    }
+
+    .role {
+        margin: 0 0 7%;
+        font-size: 1.75cqw;
+        font-weight: 500;
+        line-height: 1;
+    }
+
+    .contact {
+        display: flex;
+        align-items: center;
+        gap: 1.15cqw;
+        margin-top: 2.8%;
+        color: #007868;
+        font-size: 2.15cqw;
+        font-weight: 500;
+        line-height: 1;
+        white-space: nowrap;
+    }
+
+    .contact-icon {
+        flex: 0 0 auto;
+        width: 3.1cqw;
+        height: 3.1cqw;
+    }
+
+    .contact-icon path {
+        transform: scale(.82);
+        transform-box: view-box;
+        transform-origin: center;
+    }
+
+    .socials {
+        position: absolute;
+        bottom: 5.1%;
+        left: 5.6%;
+        display: flex;
+        align-items: center;
+        gap: 1.35cqw;
+    }
+
+    .social {
+        display: grid;
+        width: 3.75cqw;
+        aspect-ratio: 1;
+        place-items: center;
+        border: .1cqw solid var(--green);
+        border-radius: 50%;
+        color: var(--green);
+    }
+
+    .social svg {
+        width: 56%;
+        height: 56%;
+        fill: currentColor;
+        stroke: currentColor;
+    }
+
+    .social-divider {
+        width: 1px;
+        height: 4cqw;
+        background: var(--gold);
+    }
+
+</style>
+
+<section class="signature-banner" [attr.aria-label]="'Firma de ' + (empleado()?.nombre || 'empleado')">
+    <svg class="artwork" viewBox="0 0 2000 667" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M987 667C1115 485 1388 422 1424 0H2000V667Z" fill="#ffb900" />
+        <path d="M1015 667C1144 493 1426 423 1461 0H2000V667Z" fill="#006d63" />
+        <path d="M1035 667C1163 509 1458 431 1499 0H2000V667Z" fill="#008b78" />
+    </svg>
+
+    <svg class="travel-art" viewBox="0 0 1040 667" preserveAspectRatio="none" aria-hidden="true">
+        <g fill="none" stroke="#10a295" stroke-width="5" stroke-linecap="round" stroke-dasharray="9 12" opacity=".68">
+            <path d="M0 610C120 524 231 624 311 541S402 399 466 445s-10 128 61 104c108-35 72-268 209-349" />
+            <path d="M270 450c-1-89 85-80 88-6 2 59-84 68-88 6Z" />
+        </g>
+        <g fill="#07988a" opacity=".55">
+            <path d="M685 78l18 21 34-12 11 11-28 22 5 40-12 12-17-37-28-8-6-10 28-1z" />
+            <path d="M652 84l-17-14 9-4 21 13z" />
+            <path d="M700 91l15-12 8 5-13 14z" />
+        </g>
+        <g fill="#07988a" opacity=".42">
+            <path d="M385 370c8-20 22-29 40-29 18 0 31 10 39 29h-79Z" />
+            <path d="M477 500c9-21 24-30 43-30 18 0 32 10 41 30h-84Z" />
+            <path d="M571 554c11-27 30-39 55-39 26 0 44 12 56 39H571Z" />
+        </g>
+        <g transform="translate(756 86)" fill="none" stroke="#005f58" stroke-width="4" opacity=".66">
+            <path d="M137 6c-91 0-137 61-137 149 0 80 53 165 113 206v58h48v-58c60-41 113-126 113-206C274 67 228 6 137 6Z" />
+            <path d="M137 6C77 68 75 226 113 361M137 6c34 62 36 220-24 355M137 6c-1 108 3 243 24 355M137 6c61 62 62 220 24 355" />
+            <path d="M9 121c71 42 188 42 256 0M3 220c78 39 194 39 268 0M113 361h48M99 419h76v47c0 10-8 18-18 18h-40c-10 0-18-8-18-18v-47Z" fill="#005f58" />
+            <circle cx="119" cy="445" r="5" fill="#008b78" stroke="none" />
+            <circle cx="154" cy="445" r="5" fill="#008b78" stroke="none" />
+        </g>
+    </svg>
+
+    <div class="qr-column">
+        <div class="qr-frame"><img src="assets/images/qr.png" alt="Codigo QR de Trotapie" /></div>
+    </div>
+
+    <div class="center-gif">
+        <img src="https://drive.google.com/thumbnail?id=1fgRGCqG9IFQgdx4WFPzFDLb80N11iJw1&sz=w1000" alt="Animacion de Trotapie" />
+    </div>
+
+    <div class="details">
+        <h1 class="name">{{ empleado()?.nombre || '' }}</h1>
+        <p class="role">{{ empleado()?.cargo || '' }}</p>
+        @if (empleado()?.email; as email) {
+        <a class="contact" [href]="emailHref()" [attr.aria-label]="'Enviar correo a ' + email">
+            <svg class="contact-icon" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="#00a18e" /><path d="M8 14h32v21H8zM9 15l15 12 15-12" fill="none" stroke="white" stroke-width="3" /></svg>
+            <span>{{ email }}</span>
+        </a>
+        } @else {
+        <div class="contact">
+            <svg class="contact-icon" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="#00a18e" /><path d="M8 14h32v21H8zM9 15l15 12 15-12" fill="none" stroke="white" stroke-width="3" /></svg>
+            <span></span>
+        </div>
+        }
+        @if (empleado()?.telefono; as telefono) {
+        <a class="contact" [href]="whatsappHref()" target="_blank" rel="noopener noreferrer" [attr.aria-label]="'Contactar a ' + (empleado()?.nombre || 'Trotapie') + ' por WhatsApp'">
+            <svg class="contact-icon" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="#00a18e" /><path d="M16 10c2 0 5 7 5 9 0 2-3 3-3 5 1 4 6 9 10 10 2 0 3-3 5-3 2 0 9 3 9 5 0 4-4 7-7 7-11 0-27-16-27-27 0-3 3-6 7-6Z" fill="white" /></svg>
+            <span>{{ telefono }}</span>
+        </a>
+        } @else {
+        <div class="contact">
+            <svg class="contact-icon" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="#00a18e" /><path d="M16 10c2 0 5 7 5 9 0 2-3 3-3 5 1 4 6 9 10 10 2 0 3-3 5-3 2 0 9 3 9 5 0 4-4 7-7 7-11 0-27-16-27-27 0-3 3-6 7-6Z" fill="white" /></svg>
+            <span></span>
+        </div>
+        }
+    </div>
+
+    <div class="socials" aria-label="Redes sociales de Trotapie">
+        <a class="social" href="https://instagram.com/trotapie" target="_blank" rel="noopener noreferrer" aria-label="Instagram de Trotapie"><svg viewBox="0 0 48 48" fill="none" stroke-width="4"><rect x="8" y="8" width="32" height="32" rx="9" /><circle cx="24" cy="24" r="7" /><circle cx="34" cy="14" r="2" fill="currentColor" stroke="none" /></svg></a>
+        <span class="social-divider"></span>
+        <a class="social" href="https://facebook.com/trotapie" target="_blank" rel="noopener noreferrer" aria-label="Facebook de Trotapie"><svg viewBox="0 0 48 48"><path d="M28 41V26h5l1-6h-6v-4c0-2 1-3 4-3h3V7h-5c-6 0-9 3-9 9v4h-5v6h5v15h7Z" /></svg></a>
+        <span class="social-divider"></span>
+        <a class="social" href="https://www.tiktok.com/@trotapie" target="_blank" rel="noopener noreferrer" aria-label="TikTok de Trotapie"><svg viewBox="0 0 48 48"><path d="M30 7c1 6 4 9 10 10v7c-4 0-7-1-10-3v12c0 11-15 12-20 5-5-7-1-17 9-18v7c-4 1-4 6-1 7 3 1 5-1 5-4V7h7Z" /></svg></a>
+        @if (whatsappHref()) {
+        <span class="social-divider"></span>
+        <a class="social" [href]="whatsappHref()" target="_blank" rel="noopener noreferrer" [attr.aria-label]="'WhatsApp de ' + (empleado()?.nombre || 'Trotapie')"><svg viewBox="0 0 48 48" fill="none" stroke-width="4"><path d="M39 23c0 9-7 16-16 16-3 0-5-1-7-2l-7 2 2-7c-1-3-2-5-2-8 0-9 7-16 15-16s15 7 15 15Z" /><path d="M18 16c1-2 2-1 3 1l1 3c0 1-2 2-2 3 1 3 4 5 7 6 1 0 2-2 3-2l3 1c2 1 3 2 1 3-2 2-5 2-8 1-5-2-10-7-12-12-1-3-1-6 1-8Z" /></svg></a>
+        } @else {
+        <span class="social-divider"></span>
+        <span class="social" aria-label="WhatsApp no disponible"><svg viewBox="0 0 48 48" fill="none" stroke-width="4"><path d="M39 23c0 9-7 16-16 16-3 0-5-1-7-2l-7 2 2-7c-1-3-2-5-2-8 0-9 7-16 15-16s15 7 15 15Z" /><path d="M18 16c1-2 2-1 3 1l1 3c0 1-2 2-2 3 1 3 4 5 7 6 1 0 2-2 3-2l3 1c2 1 3 2 1 3-2 2-5 2-8 1-5-2-10-7-12-12-1-3-1-6 1-8Z" /></svg></span>
+        }
+        <span class="social-divider"></span>
+        <a class="social" href="https://www.trotapie.com" target="_blank" rel="noopener noreferrer" aria-label="Sitio web de Trotapie"><svg viewBox="0 0 48 48" fill="none" stroke-width="3.5"><circle cx="24" cy="24" r="16" /><path d="M8 24h32M24 8c-7 8-7 24 0 32M24 8c7 8 7 24 0 32" /></svg></a>
+    </div>
+</section>

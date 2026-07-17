@@ -9,8 +9,8 @@ table {
 }
 
 .actions-col {
-  width: 180px;
-  min-width: 180px;
+  width: 260px;
+  min-width: 260px;
   text-align: center;
 }
 
@@ -31,6 +31,11 @@ table {
 }
 
 .fixed .max-w-lg {
+  max-height: 90vh;
+  overflow: auto;
+}
+
+.firma-modal {
   max-height: 90vh;
   overflow: auto;
 }

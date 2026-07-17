@@ -3,11 +3,38 @@ import { SupabaseService } from './supabase.service';
 import { ISolicitudCotizacionListado } from 'app/interface/solicitudes-cotizacion.interface';
 import { construirNombreClienteVisible } from './cliente-nombre.util';
 
+export interface EmpleadoFirma {
+  nombre: string;
+  cargo: string | null;
+  email: string | null;
+  telefono: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class CotizacionesService {
   private readonly supabase = inject(SupabaseService);
 
   private get client() { return this.supabase.getClient(); }
+
+  async obtenerEmpleadoFirmaPorCotizacion(publicId: string): Promise<EmpleadoFirma | null> {
+    const id = String(publicId ?? '').trim();
+    if (!id) return null;
+
+    const { data, error } = await this.client
+      .rpc('obtener_empleado_firma_por_cotizacion_publica', { p_public_id: id });
+
+    if (error) throw error;
+
+    const empleado = data?.[0];
+    if (!empleado) return null;
+
+    return {
+      nombre: String(empleado.nombre ?? '').trim(),
+      cargo: empleado.cargo ? String(empleado.cargo).trim() : null,
+      email: empleado.email ? String(empleado.email).trim() : null,
+      telefono: empleado.telefono ? String(empleado.telefono).trim() : null,
+    };
+  }
 
   async crearSolicitudCotizacion(payload: {
     cliente_id: number;

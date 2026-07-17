@@ -2530,6 +2530,9 @@
                             <app-imagenes-carrusel [imagenesCargadas]="informacionCotizacion.imagenes" />
                         </div> -->
                         @if (!esEdicion) {
+                        @if (empleadoFirma) {
+                        <app-banner class="mb-6 block" [empleado]="empleadoFirma"></app-banner>
+                        }
                         <section class="quote-legal-card mt-2">
                             <div class="quote-legal-notice p-8 flex gap-5">
                                 <mat-icon class="icon-size-5 icon-thick text-blue-800 dark:text-blue-300"

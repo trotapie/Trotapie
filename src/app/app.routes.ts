@@ -63,6 +63,7 @@ export const appRoutes: Route[] = [
         },
         children: [
             { path: 'home', loadChildren: () => import('app/modules/landing/home/home.routes') },
+            { path: 'preview/firma', loadComponent: () => import('app/shared/banner/banner-preview.component').then(m => m.BannerPreviewComponent) },
         ]
     },
 
