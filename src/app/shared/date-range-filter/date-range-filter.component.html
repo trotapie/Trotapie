@@ -1,0 +1,66 @@
+<div class="date-range-filter">
+  <span class="date-range-filter__label" [id]="labelId">{{ label }}</span>
+  <button
+    #rangeMenuTrigger="matMenuTrigger"
+    type="button"
+    class="date-range-filter__trigger"
+    [matMenuTriggerFor]="rangeMenu"
+    [disabled]="disabled"
+    [attr.aria-labelledby]="labelId"
+    (menuOpened)="open()">
+    <span>{{ triggerValue }}</span>
+    <mat-icon aria-hidden="true">calendar_month</mat-icon>
+  </button>
+
+  <mat-menu #rangeMenu="matMenu" class="date-range-filter-menu" xPosition="after" yPosition="below">
+    <div class="date-range-filter-menu__content" (click)="$event.stopPropagation()">
+      <div class="calendar-toolbar">
+        <button mat-icon-button type="button" aria-label="Mes anterior" (click)="moveMonth(-1)">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <span>Selecciona un rango</span>
+        <button mat-icon-button type="button" aria-label="Mes siguiente" (click)="moveMonth(1)">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+
+      <div class="calendars">
+        @for (month of months; track month.getTime(); let index = $index) {
+        <section class="calendar" [class.calendar--secondary]="index === 1" [attr.aria-label]="monthLabel(month)">
+          <h3>{{ monthLabel(month) }}</h3>
+          <div class="calendar__weekdays">
+            @for (weekday of weekdays; track weekday) {
+            <span>{{ weekday }}</span>
+            }
+          </div>
+          <div class="calendar__days">
+            @for (day of daysForMonth(month); track day.key) {
+            <button
+              type="button"
+              class="calendar__day"
+              [class.calendar__day--outside]="!day.currentMonth"
+              [class.calendar__day--start]="isStart(day.key)"
+              [class.calendar__day--end]="isEnd(day.key)"
+              [class.calendar__day--range]="isInRange(day.key)"
+              [disabled]="!day.currentMonth || isDisabled(day.key)"
+              [attr.aria-label]="day.key"
+              (click)="select(day)">
+              {{ day.day }}
+            </button>
+            }
+          </div>
+        </section>
+        }
+      </div>
+
+      <footer class="calendar-footer">
+        @if (mostrarEstadia) {
+        <span class="calendar-footer__stay">{{ estadiaLabel }}</span>
+        }
+        <span class="calendar-footer__spacer"></span>
+        <button mat-button type="button" (click)="clear()">Borrar</button>
+        <button mat-flat-button color="primary" type="button" (click)="apply(rangeMenuTrigger)">Aplicar</button>
+      </footer>
+    </div>
+  </mat-menu>
+</div>

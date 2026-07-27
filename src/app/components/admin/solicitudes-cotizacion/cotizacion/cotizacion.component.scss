@@ -279,7 +279,19 @@
 }
 
 .quick-quote-settings--deadline {
-  grid-template-columns: minmax(0, 14rem);
+  grid-template-columns: minmax(0, 34rem);
+}
+
+.quick-quote-deadline-fields {
+  width: 100%;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+}
+
+
+@media (max-width: 640px) {
+  .quick-quote-deadline-fields {
+    grid-template-columns: 1fr;
+  }
 }
 
 .quick-quote-policy {
@@ -967,6 +979,27 @@
   text-align: right;
 }
 
+/* Align the payment deadline with the pending balance without affecting immediate-payment summaries. */
+.quote-rate-amount-group--deferred {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: baseline;
+  column-gap: 0.5rem;
+}
+
+.quote-rate-amount-group--deferred .quote-rate-payment-breakdown {
+  display: contents;
+}
+
+.quote-rate-amount-group--deferred .quote-rate-payment-breakdown p {
+  grid-column: 1;
+}
+
+.quote-rate-amount-group--deferred .quote-rate-deadline {
+  grid-column: 2;
+  grid-row: 3;
+}
+
 @media (max-width: 640px) {
   .quote-rate-summary {
     align-items: flex-start;
@@ -984,6 +1017,14 @@
 
   .quote-rate-deadline {
     margin: 0;
+  }
+
+  .quote-rate-amount-group--deferred {
+    display: flex;
+  }
+
+  .quote-rate-amount-group--deferred .quote-rate-payment-breakdown {
+    display: grid;
   }
 }
 

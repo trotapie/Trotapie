@@ -340,13 +340,13 @@
                                                 </div>
                                             </mat-menu>
                                         </div>
-                                        <div class="quote-rate-amount-group">
+                                        <div class="quote-rate-amount-group quote-rate-amount-group--deferred">
                                             <div class="quote-rate-payment-breakdown">
                                                 <p><span>Tarifa final</span><strong>MXN {{ totalPorCampoPublico('precioConSeguro') | currency }}</strong></p>
                                                 <p><span>Apartado</span><strong>MXN {{ totalPagoPublicoPorCampo('apartadoSeguro') | currency }}</strong></p>
                                                 <p><span>Pague después</span><strong>MXN {{ totalPagoPublicoPorCampo('pagueDespuesSeguro') | currency }}</strong></p>
                                             </div>
-                                            <p class="quote-rate-deadline">| Pague antes de {{ informacionCotizacion.fecha_limite_seguro | dateI18n:'dd/MM/yyyy':informacionCotizacion.idioma }}</p>
+                                            <p class="quote-rate-deadline">| Pague antes de {{ fechaLimitePublica('seguro') | dateI18n:'dd/MM/yyyy | hh:mm a':informacionCotizacion.idioma }}</p>
                                         </div>
                                     </section>
                                 </article>
@@ -436,13 +436,13 @@
                                                 </div>
                                             </mat-menu>
                                         </div>
-                                        <div class="quote-rate-amount-group">
+                                        <div class="quote-rate-amount-group quote-rate-amount-group--deferred">
                                             <div class="quote-rate-payment-breakdown">
                                                 <p><span>Tarifa final</span><strong>MXN {{ totalPorCampoPublico('precioMeses') | currency }}</strong></p>
                                                 <p><span>Apartado</span><strong>MXN {{ totalPagoPublicoPorCampo('apartadoMeses') | currency }}</strong></p>
                                                 <p><span>Pague después</span><strong>MXN {{ totalPagoPublicoPorCampo('pagueDespuesMeses') | currency }}</strong></p>
                                             </div>
-                                            <p class="quote-rate-deadline">| Pague antes de {{ informacionCotizacion.fecha_limite_meses | dateI18n:'dd/MM/yyyy':informacionCotizacion.idioma }}</p>
+                                            <p class="quote-rate-deadline">| Pague antes de {{ fechaLimitePublica('meses') | dateI18n:'dd/MM/yyyy | hh:mm a':informacionCotizacion.idioma }}</p>
                                         </div>
                                     </section>
                                 </article>
@@ -594,13 +594,13 @@
                                                 </div>
                                             </mat-menu>
                                         </div>
-                                        <div class="quote-rate-amount-group">
+                                        <div class="quote-rate-amount-group quote-rate-amount-group--deferred">
                                             <div class="quote-rate-payment-breakdown">
                                                 <p><span>Tarifa final</span><strong>MXN {{ precioConSeguro.precio | currency }}</strong></p>
                                                 <p><span>Apartado</span><strong>MXN {{ edicionForm.get('cantidadApartado')?.value | currency }}</strong></p>
                                                 <p><span>Pague después</span><strong>MXN {{ edicionForm.get('pagueDespuesApartado')?.value | currency }}</strong></p>
                                             </div>
-                                            <p class="quote-rate-deadline">| Pague antes de {{ informacionCotizacion.fecha_limite_seguro | dateI18n:'dd/MM/yyyy':informacionCotizacion.idioma }}</p>
+                                            <p class="quote-rate-deadline">| Pague antes de {{ fechaLimitePublica('seguro') | dateI18n:'dd/MM/yyyy | hh:mm a':informacionCotizacion.idioma }}</p>
                                         </div>
                                     </section>
                                 </article>
@@ -685,13 +685,13 @@
                                                 </div>
                                             </mat-menu>
                                         </div>
-                                        <div class="quote-rate-amount-group">
+                                        <div class="quote-rate-amount-group quote-rate-amount-group--deferred">
                                             <div class="quote-rate-payment-breakdown">
                                                 <p><span>Tarifa final</span><strong>MXN {{ precioAMeses.precio | currency }}</strong></p>
                                                 <p><span>Apartado</span><strong>MXN {{ edicionForm.get('cantidadMeses')?.value | currency }}</strong></p>
                                                 <p><span>Pague después</span><strong>MXN {{ edicionForm.get('pagueDespuesMeses')?.value | currency }}</strong></p>
                                             </div>
-                                            <p class="quote-rate-deadline">| Pague antes de {{ informacionCotizacion.fecha_limite_meses | dateI18n:'dd/MM/yyyy':informacionCotizacion.idioma }}</p>
+                                            <p class="quote-rate-deadline">| Pague antes de {{ fechaLimitePublica('meses') | dateI18n:'dd/MM/yyyy | hh:mm a':informacionCotizacion.idioma }}</p>
                                         </div>
                                     </section>
                                 </article>
@@ -822,7 +822,7 @@
                                             </table>
                                         </div>
                                         <div class="quick-quote-settings quick-quote-settings--deadline mt-4">
-                                            <mat-form-field><mat-label>Fecha límite</mat-label><input matInput [matDatepicker]="fechaSeguro" formControlName="fechaLimiteSeguro"><mat-datepicker-toggle matIconSuffix [for]="fechaSeguro"></mat-datepicker-toggle><mat-datepicker #fechaSeguro></mat-datepicker></mat-form-field>
+                                            <div class="quick-quote-deadline-fields grid grid-cols-1 sm:grid-cols-2 gap-3"><mat-form-field><mat-label>Fecha límite</mat-label><input matInput [matDatepicker]="fechaSeguro" formControlName="fechaLimiteSeguro"><mat-datepicker-toggle matIconSuffix [for]="fechaSeguro"></mat-datepicker-toggle><mat-datepicker #fechaSeguro></mat-datepicker></mat-form-field><app-time-picker formControlName="horaLimiteSeguro"></app-time-picker></div>
                                         </div>
                                     </div>
                                 </mat-tab>
@@ -854,7 +854,7 @@
                                             </tr> }</tbody>
                                         </table></div>
                                         <div class="quick-quote-settings quick-quote-settings--deadline mt-4">
-                                            @if (edicionForm.get('tipoTarifa')?.value === 'apartado') { <mat-form-field><mat-label>Fecha límite</mat-label><input matInput [matDatepicker]="fechaMeses" formControlName="fechaLimiteMeses"><mat-datepicker-toggle matIconSuffix [for]="fechaMeses"></mat-datepicker-toggle><mat-datepicker #fechaMeses></mat-datepicker></mat-form-field> }
+                                            @if (edicionForm.get('tipoTarifa')?.value === 'apartado') { <div class="quick-quote-deadline-fields grid grid-cols-1 sm:grid-cols-2 gap-3"><mat-form-field><mat-label>Fecha límite</mat-label><input matInput [matDatepicker]="fechaMeses" formControlName="fechaLimiteMeses"><mat-datepicker-toggle matIconSuffix [for]="fechaMeses"></mat-datepicker-toggle><mat-datepicker #fechaMeses></mat-datepicker></mat-form-field><app-time-picker formControlName="horaLimiteMeses"></app-time-picker></div> }
                                         </div>
                                     </div>
                                 </mat-tab>
@@ -1809,17 +1809,18 @@
                                     @if(esEdicion){
                                     <div
                                         class="grid grid-cols-1  text-[10px] dark:bg-slate-900/50 rounded-xl font-medium space-y-2 -mt-6">
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         <mat-form-field>
                                             <mat-label
                                                 class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
-                                                Fecha
-                                                Límite
+                                                Fecha límite
                                             </mat-label>
-                                            <input matInput [matDatepicker]="picker" (click)="picker.open()"
-                                                formControlName="fechaLimiteSeguro">
-                                            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-                                            <mat-datepicker #picker></mat-datepicker>
-                                        </mat-form-field>
+                                             <input matInput [matDatepicker]="picker" (click)="picker.open()" formControlName="fechaLimiteSeguro">
+                                             <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+                                             <mat-datepicker #picker></mat-datepicker>
+                                         </mat-form-field>
+                                         <app-time-picker formControlName="horaLimiteSeguro"></app-time-picker>
+                                         </div>
                                     </div>
                                     <div
                                         class="grid grid-cols-1  text-[10px] text-slate-400 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl font-medium space-y-2">
@@ -2060,16 +2061,18 @@
                                     @if(edicionForm.get('tipoTarifa').value === 'apartado'){
                                     <div
                                         class="grid grid-cols-1  text-[10px] dark:bg-slate-900/50 rounded-xl font-medium space-y-2 -mt-6">
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         <mat-form-field>
                                             <mat-label
                                                 class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
                                                 {{t('fecha_limite')}}
                                             </mat-label>
-                                            <input matInput [matDatepicker]="picker" (click)="picker.open()"
-                                                formControlName="fechaLimiteMeses">
-                                            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-                                            <mat-datepicker #picker></mat-datepicker>
-                                        </mat-form-field>
+                                             <input matInput [matDatepicker]="picker" (click)="picker.open()" formControlName="fechaLimiteMeses">
+                                             <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+                                             <mat-datepicker #picker></mat-datepicker>
+                                         </mat-form-field>
+                                         <app-time-picker formControlName="horaLimiteMeses"></app-time-picker>
+                                         </div>
                                     </div>
                                     }
                                     <div
@@ -2260,16 +2263,18 @@
                                             </div>
 
                                             <div class="grid grid-cols-1 text-[10px] rounded-xl font-medium space-y-2 -mt-2">
+                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                 <mat-form-field>
                                                     <mat-label
                                                         class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
-                                                        Fecha Límite
+                                                        Fecha límite
                                                     </mat-label>
-                                                    <input matInput [matDatepicker]="pickerRoomSeguro" (click)="pickerRoomSeguro.open()"
-                                                        formControlName="fechaLimiteSeguro">
-                                                    <mat-datepicker-toggle matIconSuffix [for]="pickerRoomSeguro"></mat-datepicker-toggle>
-                                                    <mat-datepicker #pickerRoomSeguro></mat-datepicker>
-                                                </mat-form-field>
+                                                     <input matInput [matDatepicker]="pickerRoomSeguro" (click)="pickerRoomSeguro.open()" formControlName="fechaLimiteSeguro">
+                                                     <mat-datepicker-toggle matIconSuffix [for]="pickerRoomSeguro"></mat-datepicker-toggle>
+                                                     <mat-datepicker #pickerRoomSeguro></mat-datepicker>
+                                                 </mat-form-field>
+                                                 <app-time-picker formControlName="horaLimiteSeguro"></app-time-picker>
+                                                 </div>
                                             </div>
                                             <div class="grid grid-cols-1 text-[10px] text-slate-500 dark:text-slate-300 p-3 rounded-xl font-medium space-y-2 bg-slate-100 dark:bg-slate-800/70">
                                                 @for (e of habitacion.get('condicionesPrecioConSeguro')?.value; track e.id) {
@@ -2365,16 +2370,18 @@
 
                                             @if(habitacion.get('tipoTarifa')?.value === 'apartado'){
                                             <div class="grid grid-cols-1 text-[10px] rounded-xl font-medium space-y-2 -mt-2">
+                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                 <mat-form-field>
                                                     <mat-label
                                                         class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
                                                         {{t('fecha_limite')}}
                                                     </mat-label>
-                                                    <input matInput [matDatepicker]="pickerRoomMeses" (click)="pickerRoomMeses.open()"
-                                                        formControlName="fechaLimiteMeses">
-                                                    <mat-datepicker-toggle matIconSuffix [for]="pickerRoomMeses"></mat-datepicker-toggle>
-                                                    <mat-datepicker #pickerRoomMeses></mat-datepicker>
-                                                </mat-form-field>
+                                                     <input matInput [matDatepicker]="pickerRoomMeses" (click)="pickerRoomMeses.open()" formControlName="fechaLimiteMeses">
+                                                     <mat-datepicker-toggle matIconSuffix [for]="pickerRoomMeses"></mat-datepicker-toggle>
+                                                     <mat-datepicker #pickerRoomMeses></mat-datepicker>
+                                                 </mat-form-field>
+                                                 <app-time-picker formControlName="horaLimiteMeses"></app-time-picker>
+                                                 </div>
                                             </div>
                                             }
                                             <div class="grid grid-cols-1 text-[10px] text-slate-500 dark:text-slate-300 p-3 rounded-xl font-medium space-y-2 bg-slate-100 dark:bg-slate-800/70">
@@ -2530,9 +2537,9 @@
                             <app-imagenes-carrusel [imagenesCargadas]="informacionCotizacion.imagenes" />
                         </div> -->
                         @if (!esEdicion) {
-                        @if (empleadoFirma) {
+                        <!-- @if (empleadoFirma) {
                         <app-banner class="mb-6 block" [empleado]="empleadoFirma"></app-banner>
-                        }
+                        } -->
                         <section class="quote-legal-card mt-2">
                             <div class="quote-legal-notice p-8 flex gap-5">
                                 <mat-icon class="icon-size-5 icon-thick text-blue-800 dark:text-blue-300"

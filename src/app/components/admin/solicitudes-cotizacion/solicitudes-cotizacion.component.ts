@@ -10,20 +10,22 @@ import { formatearFolioCotizacion } from 'app/core/cotizacion-folio.util';
 import { ISolicitudCotizacionListado } from 'app/interface/solicitudes-cotizacion.interface';
 import { EstatusComponent } from 'app/shared/estatus/estatus.component';
 import { MaterialModule } from 'app/shared/material.module';
+import { DateRangeFilterComponent } from 'app/shared/date-range-filter/date-range-filter.component';
+import { DateRangeFilterValue, EMPTY_DATE_RANGE } from 'app/shared/date-range-filter/date-range-filter.model';
 
 type ColumnFilterKey =
   | 'id'
   | 'cliente'
+  | 'correo'
+  | 'telefono'
   | 'hotel'
   | 'habitaciones'
   | 'destino'
-  | 'tipoDestino'
-  | 'empleado'
-  | 'estatus';
+  | 'tipoDestino';
 
 @Component({
   selector: 'app-solicitudes-cotizacion',
-  imports: [MaterialModule, RouterLink, EstatusComponent],
+  imports: [MaterialModule, RouterLink, EstatusComponent, DateRangeFilterComponent],
   templateUrl: './solicitudes-cotizacion.component.html',
   styleUrl: './solicitudes-cotizacion.component.scss'
 })
@@ -40,43 +42,33 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
     'fecha',
     'cliente',
     'hotel',
-    'habitaciones',
     'destino',
+    'habitaciones',
     'tipoDestino',
     'empleado',
     'estatus',
     'acciones',
   ];
 
-  readonly filterColumns: string[] = [
-    'idFilter',
-    'fechaFilter',
-    'clienteFilter',
-    'hotelFilter',
-    'habitacionesFilter',
-    'destinoFilter',
-    'tipoDestinoFilter',
-    'empleadoFilter',
-    'estatusFilter',
-    'accionesFilter',
-  ];
-
   dataSource = new MatTableDataSource<ISolicitudCotizacionListado>([]);
   estatusOptions: string[] = [];
+  empleadoOptions: string[] = [];
 
   quickFilter: '' | 'pendiente' | 'confirmada' | 'cancelada' = '';
   showColumnFilters = false;
-  fechaFiltro = '';
+  fechaRangoFiltro: DateRangeFilterValue = { ...EMPTY_DATE_RANGE };
   columnFilters: Record<ColumnFilterKey, string> = {
     id: '',
     cliente: '',
+    correo: '',
+    telefono: '',
     hotel: '',
     habitaciones: '',
     destino: '',
     tipoDestino: '',
-    empleado: '',
-    estatus: '',
   };
+  empleadosSeleccionados: string[] = [];
+  estatusSeleccionados: string[] = [];
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -86,6 +78,7 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
       const data = await this.cotizacionesService.obtenerSolicitudesCotizacion();
       this.dataSource.data = await this.filtrarSolicitudesPorUsuario(data ?? []);
       this.estatusOptions = this.obtenerOpcionesEstatus(this.dataSource.data);
+      this.empleadoOptions = this.obtenerOpcionesEmpleados(this.dataSource.data);
 
       if (this.paginator) this.dataSource.paginator = this.paginator;
       if (this.sort) this.dataSource.sort = this.sort;
@@ -163,28 +156,34 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
     ) => {
       const normalized = this.parseFilter(filter);
       const idFilter = this.normalize(normalized.id ?? '');
-      const fechaFilter = this.normalize(normalized.fecha ?? '');
+      const fechaDesde = this.normalize(normalized.fechaDesde ?? '');
+      const fechaHasta = this.normalize(normalized.fechaHasta ?? '');
       const clienteFilter = this.normalize(normalized.cliente ?? '');
+      const correoFilter = this.normalize(normalized.correo ?? '');
+      const telefonoFilter = this.normalizarTelefono(normalized.telefono);
       const hotelFilter = this.normalize(normalized.hotel ?? '');
       const habitacionesFilter = this.normalize(normalized.habitaciones ?? '');
       const destinoFilter = this.normalize(normalized.destino ?? '');
       const tipoDestinoFilter = this.normalize(normalized.tipoDestino ?? '');
-      const empleadoFilter = this.normalize(normalized.empleado ?? '');
-      const estatusFilter = this.normalize(normalized.estatus ?? '');
+      const empleadosSeleccionados = this.normalizarSeleccionMultiple(normalized.empleados);
+      const estatusSeleccionados = this.normalizarSeleccionMultiple(normalized.estatuses);
       const fechaSolicitud = this._obtenerFechaSolicitud(data);
       const fechaSolicitudNormalizada = fechaSolicitud ? this._formatearFechaClaveLocal(fechaSolicitud) : '';
       const folioCotizacion = this.folioCotizacionVisual(data);
 
       const byColumn =
         this.normalize(folioCotizacion).includes(idFilter) &&
-        (!fechaFilter || fechaSolicitudNormalizada === fechaFilter) &&
+        (!fechaDesde || fechaSolicitudNormalizada >= fechaDesde) &&
+        (!fechaHasta || fechaSolicitudNormalizada <= fechaHasta) &&
         this.normalize(data.cliente_nombre).includes(clienteFilter) &&
+        this.normalize(data.cliente_email).includes(correoFilter) &&
+        this.normalizarTelefono(data.cliente_telefono).includes(telefonoFilter) &&
         this.normalize(data.hotel_nombre).includes(hotelFilter) &&
         this.normalize(this.obtenerResumenHabitaciones(data)).includes(habitacionesFilter) &&
         this.normalize(data.destino_nombre).includes(destinoFilter) &&
         this.normalize(data.tipo_destino).includes(tipoDestinoFilter) &&
-        this.normalize(data.empleado_nombre).includes(empleadoFilter) &&
-        this.normalize(data.estatus_nombre).includes(estatusFilter);
+        this.coincideSeleccionMultiple(data.empleado_nombre, empleadosSeleccionados) &&
+        this.coincideSeleccionMultiple(data.estatus_nombre, estatusSeleccionados);
 
       if (
         this.quickFilter === 'pendiente' &&
@@ -218,8 +217,13 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
     this.applyCombinedFilters();
   }
 
-  setEstatusFilter(value: string | null): void {
-    this.columnFilters.estatus = value ?? '';
+  setEmpleadosFiltro(values: string[] | null): void {
+    this.empleadosSeleccionados = [...(values ?? [])];
+    this.applyCombinedFilters();
+  }
+
+  setEstatusFilter(values: string[] | null): void {
+    this.estatusSeleccionados = [...(values ?? [])];
     this.applyCombinedFilters();
   }
 
@@ -227,14 +231,16 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
     this.columnFilters = {
       id: '',
       cliente: '',
+      correo: '',
+      telefono: '',
       hotel: '',
       habitaciones: '',
       destino: '',
       tipoDestino: '',
-      empleado: '',
-      estatus: '',
     };
-    this.fechaFiltro = '';
+    this.empleadosSeleccionados = [];
+    this.estatusSeleccionados = [];
+    this.fechaRangoFiltro = { ...EMPTY_DATE_RANGE };
     this.quickFilter = '';
     this.applyCombinedFilters();
 
@@ -243,6 +249,8 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
       queryParams: {
         estatus: null,
         fecha: null,
+        fechaDesde: null,
+        fechaHasta: null,
       },
       queryParamsHandling: 'merge',
       replaceUrl: true,
@@ -261,40 +269,29 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
   get hasActiveFilters(): boolean {
     return (
       Object.values(this.columnFilters).some((value) => this.normalize(value).length > 0) ||
-      this.normalize(this.fechaFiltro).length > 0
+      this.empleadosSeleccionados.length > 0 ||
+      this.estatusSeleccionados.length > 0 ||
+      !!this.fechaRangoFiltro.start ||
+      !!this.fechaRangoFiltro.end
     );
-  }
-
-  get fechaFiltroEtiqueta(): string {
-    if (!this.fechaFiltro) return '';
-
-    const fecha = this._parseFechaSoloFechaLocal(this.fechaFiltro);
-    if (!fecha) return this.fechaFiltro;
-
-    return new Intl.DateTimeFormat('es-MX', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    }).format(fecha);
-  }
-
-  get fechaFiltroDate(): Date | null {
-    return this._parseFechaSoloFechaLocal(this.fechaFiltro);
   }
 
   private applyCombinedFilters(): void {
     this.dataSource.filter = JSON.stringify({
       ...this.columnFilters,
-      fecha: this.fechaFiltro,
+      empleados: this.empleadosSeleccionados,
+      estatuses: this.estatusSeleccionados,
+      fechaDesde: this.fechaRangoFiltro.start,
+      fechaHasta: this.fechaRangoFiltro.end,
     });
     this.dataSource.paginator?.firstPage();
   }
 
-  private parseFilter(filter: string): Record<string, string> {
+  private parseFilter(filter: string): Record<string, unknown> {
     if (!filter) return {};
 
     try {
-      const parsed = JSON.parse(filter) as Record<string, string>;
+      const parsed = JSON.parse(filter) as Record<string, unknown>;
       return parsed ?? {};
     } catch {
       return {};
@@ -305,39 +302,50 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
     return (value ?? '').toString().trim().toLowerCase();
   }
 
+  private normalizarTelefono(value: unknown): string {
+    return this.normalize(value).replace(/\D/g, '');
+  }
+
+  private normalizarSeleccionMultiple(value: unknown): string[] {
+    if (!Array.isArray(value)) return [];
+    return value.map((item) => this.normalize(item)).filter(Boolean);
+  }
+
+  private coincideSeleccionMultiple(value: unknown, seleccionados: string[]): boolean {
+    return seleccionados.length === 0 || seleccionados.includes(this.normalize(value));
+  }
+
   private aplicarFiltroInicialDesdeRuta(): void {
     const estatus = (this.route.snapshot.queryParamMap.get('estatus') ?? '').trim();
     const fecha = (this.route.snapshot.queryParamMap.get('fecha') ?? '').trim();
+    const fechaDesde = (this.route.snapshot.queryParamMap.get('fechaDesde') ?? '').trim();
+    const fechaHasta = (this.route.snapshot.queryParamMap.get('fechaHasta') ?? '').trim();
 
-    if (!estatus && !fecha) return;
+    if (!estatus && !fecha && !fechaDesde && !fechaHasta) return;
 
     this.quickFilter = '';
     this.showColumnFilters = true;
 
     if (estatus) {
-      this.setEstatusFilter(estatus);
+      this.setEstatusFilter([estatus]);
     }
 
-    if (fecha) {
-      const fechaNormalizada = this._normalizarFechaFiltro(fecha);
-      this.fechaFiltro = fechaNormalizada;
+    if (fecha || fechaDesde || fechaHasta) {
+      const inicio = this._normalizarFechaFiltro(fechaDesde || fecha);
+      const fin = this._normalizarFechaFiltro(fechaHasta || fecha);
+      this.fechaRangoFiltro = {
+        start: inicio || null,
+        end: fin || null,
+      };
       this.applyCombinedFilters();
     }
   }
 
-  quitarFiltroFecha(): void {
-    this.fechaFiltro = '';
-    this.applyCombinedFilters();
-
-    void this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { fecha: null },
-      queryParamsHandling: 'merge',
-    });
-  }
-
-  setFechaFiltroDesdeDate(valor: Date | null): void {
-    this.fechaFiltro = valor ? this._normalizarFechaFiltro(this._formatearFechaClaveLocal(valor)) : '';
+  setFechaRangoFiltro(value: DateRangeFilterValue): void {
+    this.fechaRangoFiltro = {
+      start: value.start ? this._normalizarFechaFiltro(value.start) : null,
+      end: value.end ? this._normalizarFechaFiltro(value.end) : null,
+    };
     this.applyCombinedFilters();
   }
 
@@ -352,6 +360,25 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
     }
 
     return Array.from(unicos).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+  }
+
+  private obtenerOpcionesEmpleados(data: ISolicitudCotizacionListado[]): string[] {
+    const unicos = new Set<string>();
+
+    for (const item of data ?? []) {
+      const empleado = (item?.empleado_nombre ?? '').toString().trim();
+      if (empleado) {
+        unicos.add(empleado);
+      }
+    }
+
+    return Array.from(unicos).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+  }
+
+  resumenSeleccion(values: string[], fallback: string): string {
+    if (!values.length) return fallback;
+    if (values.length === 1) return values[0];
+    return `${values.length} seleccionados`;
   }
 
   obtenerResumenHabitaciones(item: ISolicitudCotizacionListado): string {
@@ -484,18 +511,13 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
     const fecha = this._obtenerFechaSolicitud(item);
     if (!fecha) return 'Sin fecha';
 
-    return new Intl.DateTimeFormat('es-MX', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(fecha);
-  }
+    const dia = String(fecha.getDate()).padStart(2, '0');
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const minutos = String(fecha.getMinutes()).padStart(2, '0');
+    const periodo = fecha.getHours() >= 12 ? 'pm' : 'am';
+    const hora = fecha.getHours() % 12 || 12;
 
-  setFechaFiltro(value: string | null): void {
-    this.fechaFiltro = this._normalizarFechaFiltro((value ?? '').trim());
-    this.applyCombinedFilters();
+    return `${dia}/${mes}/${fecha.getFullYear()} | ${hora}:${minutos} ${periodo}`;
   }
 
   private _normalizarFechaFiltro(valor: string): string {

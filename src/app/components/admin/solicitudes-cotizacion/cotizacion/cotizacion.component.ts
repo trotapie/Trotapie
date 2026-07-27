@@ -17,6 +17,7 @@ import { find } from 'lodash';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { formatearFolioCotizacion } from 'app/core/cotizacion-folio.util';
 import { BannerComponent } from 'app/shared/banner/banner.component';
+import { TimePickerComponent } from 'app/shared/time-picker/time-picker.component';
 import type { EmpleadoFirma } from 'app/core/cotizaciones.service';
 
 type Tile = { key: string; url: string; alt: string; class: string };
@@ -65,6 +66,8 @@ interface CotizacionHabitacionForm {
   porcentajeMeses: number | string | null;
   fechaLimiteSeguro: Date | string | null;
   fechaLimiteMeses: Date | string | null;
+  horaLimiteSeguro: string;
+  horaLimiteMeses: string;
   tipoTarifa: string | null;
 }
 
@@ -117,7 +120,7 @@ interface OrigenReservacionOption {
 }
 @Component({
   selector: 'app-modificar-cotizacion',
-  imports: [MaterialModule, RouterLink, DateI18nPipe, MapaComponent, TranslocoModule, EstatusComponent, CommonModule, ImagenesCarruselComponent, BannerComponent],
+  imports: [MaterialModule, RouterLink, DateI18nPipe, MapaComponent, TranslocoModule, EstatusComponent, CommonModule, ImagenesCarruselComponent, BannerComponent, TimePickerComponent],
   templateUrl: './cotizacion.component.html',
   styleUrl: './cotizacion.component.scss',
   standalone: true
@@ -252,6 +255,8 @@ export class CotizacionComponent implements OnInit {
     porcentajeMeses: [null],
     fechaLimiteSeguro: [null],
     fechaLimiteMeses: [null],
+    horaLimiteSeguro: ['00:00'],
+    horaLimiteMeses: ['00:00'],
     tipoTarifa: [''],
     pagueDespuesApartado: [null],
     cantidadApartado: [null],
@@ -911,13 +916,30 @@ export class CotizacionComponent implements OnInit {
     return valores.length ? valores.reduce((total, valor) => total + valor, 0) : null;
   }
 
+  fechaLimitePublica(tipo: 'seguro' | 'meses'): string | null {
+    const primeraHabitacion = this.cotizacionMultipleRespuesta[0] as any;
+    const campo = tipo === 'seguro' ? 'fecha_limite_seguro' : 'fecha_limite_meses';
+    const campoAlterno = tipo === 'seguro' ? 'fechaLimiteSeguro' : 'fechaLimiteMeses';
+    const fechaGlobal = tipo === 'seguro'
+      ? this.informacionCotizacion?.fecha_limite_seguro
+      : this.informacionCotizacion?.fecha_limite_meses;
+
+    return primeraHabitacion?.[campo] ?? primeraHabitacion?.[campoAlterno] ?? fechaGlobal ?? null;
+  }
+
   private obtenerPayloadEdicion(): any {
-    const cotizacionMultiple = this.habitacionesAdicionales.length > 0
-      ? this.obtenerCotizacionMultiple()
-      : null;
+    const cotizacionMultiple = this.obtenerCotizacionMultiple();
 
     return {
       ...this.edicionForm.value,
+      fechaLimiteSeguro: this.formatearFechaHoraParaDb(
+        this.edicionForm.get('fechaLimiteSeguro')?.value,
+        this.edicionForm.get('horaLimiteSeguro')?.value
+      ),
+      fechaLimiteMeses: this.formatearFechaHoraParaDb(
+        this.edicionForm.get('fechaLimiteMeses')?.value,
+        this.edicionForm.get('horaLimiteMeses')?.value
+      ),
       cotizacionMultiple
     };
   }
@@ -1857,6 +1879,8 @@ export class CotizacionComponent implements OnInit {
       porcentajeMeses: [value?.porcentajeMeses ?? null],
       fechaLimiteSeguro: [value?.fechaLimiteSeguro ?? null],
       fechaLimiteMeses: [value?.fechaLimiteMeses ?? null],
+      horaLimiteSeguro: [value?.horaLimiteSeguro ?? '00:00'],
+      horaLimiteMeses: [value?.horaLimiteMeses ?? '00:00'],
       tipoTarifa: [value?.tipoTarifa ?? null]
     });
 
@@ -2132,6 +2156,8 @@ export class CotizacionComponent implements OnInit {
         porcentajeMeses: this.obtenerNumeroLimpio(item?.porcentaje_meses ?? item?.porcentajeMeses),
         fechaLimiteSeguro: this.parseLocalDate(item?.fecha_limite_seguro ?? item?.fechaLimiteSeguro),
         fechaLimiteMeses: this.parseLocalDate(item?.fecha_limite_meses ?? item?.fechaLimiteMeses),
+        horaLimiteSeguro: this.obtenerHoraLimite(item?.fecha_limite_seguro ?? item?.fechaLimiteSeguro),
+        horaLimiteMeses: this.obtenerHoraLimite(item?.fecha_limite_meses ?? item?.fechaLimiteMeses),
         tipoTarifa: item?.tipo_tarifa ?? item?.tipoTarifa ?? null
       };
     });
@@ -2165,6 +2191,8 @@ export class CotizacionComponent implements OnInit {
       porcentajeMeses: this.informacionCotizacion.porcentaje_meses,
       fechaLimiteSeguro: this.parseLocalDate(this.informacionCotizacion.fecha_limite_seguro),
       fechaLimiteMeses: this.parseLocalDate(this.informacionCotizacion.fecha_limite_meses),
+      horaLimiteSeguro: this.obtenerHoraLimite(this.informacionCotizacion.fecha_limite_seguro),
+      horaLimiteMeses: this.obtenerHoraLimite(this.informacionCotizacion.fecha_limite_meses),
       tipoTarifa: this.edicionForm.get('tipoTarifa')?.value ?? null
     };
 
@@ -2183,6 +2211,8 @@ export class CotizacionComponent implements OnInit {
       porcentajeMeses: primeraHabitacion.porcentajeMeses,
       fechaLimiteSeguro: primeraHabitacion.fechaLimiteSeguro,
       fechaLimiteMeses: primeraHabitacion.fechaLimiteMeses,
+      horaLimiteSeguro: primeraHabitacion.horaLimiteSeguro,
+      horaLimiteMeses: primeraHabitacion.horaLimiteMeses,
       tipoTarifa: primeraHabitacion.tipoTarifa
     }, { emitEvent: false });
 
@@ -2212,6 +2242,8 @@ export class CotizacionComponent implements OnInit {
         porcentajeMeses: null,
         fechaLimiteSeguro: null,
         fechaLimiteMeses: null,
+        horaLimiteSeguro: '00:00',
+        horaLimiteMeses: '00:00',
         tipoTarifa: null
       };
       this.habitacionesAdicionales.push(this.crearHabitacionAdicionalForm(value));
@@ -2303,12 +2335,16 @@ export class CotizacionComponent implements OnInit {
       porcentajeMeses: this.edicionForm.get('porcentajeMeses')?.value,
       fechaLimiteSeguro: this.edicionForm.get('fechaLimiteSeguro')?.value,
       fechaLimiteMeses: this.edicionForm.get('fechaLimiteMeses')?.value,
+      horaLimiteSeguro: this.edicionForm.get('horaLimiteSeguro')?.value,
+      horaLimiteMeses: this.edicionForm.get('horaLimiteMeses')?.value,
       tipoTarifa: this.edicionForm.get('tipoTarifa')?.value
     };
 
     const politicasSinSeguro = this.edicionForm.get('condicionesPrecioSinSeguro')?.value ?? [];
     const fechaLimiteSeguro = this.edicionForm.get('fechaLimiteSeguro')?.value;
     const fechaLimiteMeses = this.edicionForm.get('fechaLimiteMeses')?.value;
+    const horaLimiteSeguro = this.edicionForm.get('horaLimiteSeguro')?.value;
+    const horaLimiteMeses = this.edicionForm.get('horaLimiteMeses')?.value;
     const tipoTarifa = this.edicionForm.get('tipoTarifa')?.value;
 
     const habitaciones = [
@@ -2319,6 +2355,8 @@ export class CotizacionComponent implements OnInit {
         condicionesPrecioSinSeguro: politicasSinSeguro,
         fechaLimiteSeguro,
         fechaLimiteMeses,
+        horaLimiteSeguro,
+        horaLimiteMeses,
         tipoTarifa
       }))
     ];
@@ -2341,8 +2379,8 @@ export class CotizacionComponent implements OnInit {
         })),
         porcentaje_seguro: this.obtenerNumeroLimpio(item?.porcentajeSeguro),
         porcentaje_meses: this.obtenerNumeroLimpio(item?.porcentajeMeses),
-        fecha_limite_seguro: this.formatearFechaParaDb(item?.fechaLimiteSeguro),
-        fecha_limite_meses: this.formatearFechaParaDb(item?.fechaLimiteMeses),
+        fecha_limite_seguro: this.formatearFechaHoraParaDb(item?.fechaLimiteSeguro, item?.horaLimiteSeguro),
+        fecha_limite_meses: this.formatearFechaHoraParaDb(item?.fechaLimiteMeses, item?.horaLimiteMeses),
         tipo_tarifa: item?.tipoTarifa ?? null,
         origen_reservacion_precio_id: this.obtenerNumeroLimpio(item?.origenReservacionPrecio),
         origen_reservacion_con_seguro_id: this.obtenerNumeroLimpio(item?.origenReservacionConSeguro),
@@ -2388,6 +2426,8 @@ export class CotizacionComponent implements OnInit {
         porcentajeMeses: this.informacionCotizacion.porcentaje_meses,
         fechaLimiteSeguro: this.parseLocalDate(this.informacionCotizacion.fecha_limite_seguro),
         fechaLimiteMeses: this.parseLocalDate(this.informacionCotizacion.fecha_limite_meses),
+        horaLimiteSeguro: this.obtenerHoraLimite(this.informacionCotizacion.fecha_limite_seguro),
+        horaLimiteMeses: this.obtenerHoraLimite(this.informacionCotizacion.fecha_limite_meses),
 
       });
       this.construirCotizacionMultipleEdicion();
@@ -2434,8 +2474,10 @@ export class CotizacionComponent implements OnInit {
     if (!dateStr) return null;
     if (dateStr instanceof Date) return dateStr;
 
-    const [year, month, day] = dateStr.split('-').map(Number);
-    return new Date(year, month - 1, day);
+    const [datePart, timePart] = dateStr.split(/[T ]/, 2);
+    const [year, month, day] = datePart.split('-').map(Number);
+    const [hours = 0, minutes = 0] = (timePart ?? '').split(':').map(Number);
+    return new Date(year, month - 1, day, hours, minutes);
   }
 
   formatearRangoFechaCompacto(
@@ -2493,15 +2535,27 @@ export class CotizacionComponent implements OnInit {
     return `${fechaEntradaCompleta} - ${fechaSalidaCompleta}`;
   }
 
-  private formatearFechaParaDb(value: unknown): string | null {
-    if (!value) return null;
-    if (typeof value === 'string') return value;
-    if (!(value instanceof Date) || Number.isNaN(value.getTime())) return null;
+  private obtenerHoraLimite(value: string | Date | null | undefined): string {
+    if (!value) return '00:00';
+    if (value instanceof Date) {
+      return `${String(value.getHours()).padStart(2, '0')}:${String(value.getMinutes()).padStart(2, '0')}`;
+    }
 
-    const year = value.getFullYear();
-    const month = String(value.getMonth() + 1).padStart(2, '0');
-    const day = String(value.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    return value.match(/[T ](\d{2}:\d{2})/)?.[1] ?? '00:00';
+  }
+
+  private formatearFechaHoraParaDb(fecha: unknown, hora: unknown): string | null {
+    const date = this.parseLocalDate(fecha as string | Date | null | undefined);
+    if (!date || Number.isNaN(date.getTime())) return null;
+
+    const [hours = '00', minutes = '00'] = String(hora ?? '00:00').split(':');
+    const horaNormalizada = /^\d{2}$/.test(hours) && /^\d{2}$/.test(minutes)
+      ? `${hours}:${minutes}`
+      : '00:00';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}T${horaNormalizada}:00`;
   }
 
 

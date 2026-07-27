@@ -1,0 +1,47 @@
+<div class="time-picker">
+  <span class="time-picker__label" [id]="labelId">{{ label }}</span>
+  <button
+    #timeMenuTrigger="matMenuTrigger"
+    type="button"
+    class="time-picker__trigger"
+    [matMenuTriggerFor]="timeMenu"
+    [disabled]="disabled"
+    [attr.aria-labelledby]="labelId"
+    (blur)="marcarTocado()">
+    <span>{{ valorVisible }}</span>
+    <span class="material-symbols-outlined" aria-hidden="true">schedule</span>
+  </button>
+
+  <mat-menu #timeMenu="matMenu" class="time-picker-menu" xPosition="after" yPosition="below">
+    <div class="time-picker-menu__content" (click)="$event.stopPropagation()">
+      <p>Selecciona la hora</p>
+      <div class="time-picker-menu__fields">
+        <mat-form-field appearance="outline">
+          <mat-label>Hora</mat-label>
+          <mat-select [value]="hora" (selectionChange)="hora = $event.value; actualizarHora()">
+            @for (opcion of horas; track opcion) {
+              <mat-option [value]="opcion">{{ opcion }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Minutos</mat-label>
+          <mat-select [value]="minuto" (selectionChange)="minuto = $event.value; actualizarHora()">
+            @for (opcion of minutos; track opcion) {
+              <mat-option [value]="opcion">{{ opcion }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Periodo</mat-label>
+          <mat-select [value]="periodo" (selectionChange)="periodo = $event.value; actualizarHora()">
+            @for (opcion of periodos; track opcion) {
+              <mat-option [value]="opcion">{{ opcion }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <button type="button" mat-flat-button color="primary" (click)="timeMenuTrigger.closeMenu(); marcarTocado()">Listo</button>
+    </div>
+  </mat-menu>
+</div>
