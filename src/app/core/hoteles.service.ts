@@ -601,6 +601,27 @@ export class HotelesService {
     if (errorTraduccion) throw errorTraduccion;
   }
 
+  async asignarTipoHabitacionHotel(hotelId: number, tipoHabitacionId: number) {
+    if (!Number.isFinite(hotelId) || hotelId <= 0) {
+      throw new Error('Hotel invalido para asignar el tipo de habitacion.');
+    }
+    if (!Number.isFinite(tipoHabitacionId) || tipoHabitacionId <= 0) {
+      throw new Error('Tipo de habitacion invalido.');
+    }
+
+    const { error } = await this.client
+      .from('hotel_tipos_habitacion')
+      .upsert(
+        {
+          hotel_id: hotelId,
+          tipo_habitacion_id: tipoHabitacionId
+        },
+        { onConflict: 'hotel_id,tipo_habitacion_id', ignoreDuplicates: true }
+      );
+
+    if (error) throw error;
+  }
+
   async crearHotelDetalleAdmin(payload: {
     nombre_hotel: string;
     descripcion: string | null;

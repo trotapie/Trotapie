@@ -979,6 +979,33 @@
   text-align: right;
 }
 
+.quick-quote-room-select {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.quick-quote-room-select mat-select {
+  min-width: 0;
+  flex: 1;
+}
+
+.quick-quote-room-add {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 2.7rem;
+  height: 2.7rem;
+  color: #0f766e;
+}
+
+.quick-quote-room-add mat-icon {
+  width: 2rem;
+  height: 2rem;
+  font-size: 2rem;
+}
+
 /* Align the payment deadline with the pending balance without affecting immediate-payment summaries. */
 .quote-rate-amount-group--deferred {
   display: grid;

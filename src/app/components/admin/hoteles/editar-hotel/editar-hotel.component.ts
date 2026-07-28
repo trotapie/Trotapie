@@ -25,6 +25,13 @@ interface IActividadAdmin {
   activo?: boolean;
 }
 
+interface ITipoHabitacionAdmin {
+  id: number;
+  nombre_habitacion: string;
+  capacidad_maxima: number | null;
+  descripcion: string;
+}
+
 interface IDescuentoAdmin {
   id: number;
   tipo_descuento: string;
@@ -93,12 +100,14 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
   destinos: IDestinoAdmin[] = [];
   regimenes: IRegimenAdmin[] = [];
   actividades: IActividadAdmin[] = [];
+  tiposHabitacion: ITipoHabitacionAdmin[] = [];
   descuentos: IDescuentoAdmin[] = [];
   tiposImagen: ITipoImagenAdmin[] = [];
   idiomas: IIdiomaHotel[] = [];
 
   filtroRegimenes = '';
   filtroActividades = '';
+  filtroTiposHabitacion = '';
   imagenes: IImagenEditable[] = [];
   imagenesEliminadasPendientes: IImagenEditable[] = [];
   imagenesSeleccionadas = new Set<string>();
@@ -114,6 +123,7 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
 
   regimenesSeleccionados = new Set<number>();
   actividadesSeleccionadas = new Set<number>();
+  tiposHabitacionSeleccionados = new Set<number>();
   actividadesSeleccionadasDetalleMap = new Map<number, string>();
   ultimaLlaveTraduccionHotel = '';
   concentradoTraduccionesHotel: Record<string, { nombre: string; descripcion: string }> = {};
@@ -140,6 +150,10 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.serializarEstadoActual() !== this.snapshotEstadoInicial;
   }
 
+  desplazarASeccion(id: string): void {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   ngAfterViewInit(): void {
     this.actualizarPreviewUbicacion();
   }
@@ -152,13 +166,14 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     try {
-      const [destinos, regimenes, actividades, descuentos, tiposImagen, idiomas] = await Promise.all([
+      const [destinos, regimenes, actividades, descuentos, tiposImagen, idiomas, tiposHabitacion] = await Promise.all([
         this.supabase.obtenerDestinosAdmin(),
         this.supabase.obtenerRegimenesAdmin(),
         this.supabase.obtenerActividadesAdmin(),
         this.supabase.obtenerDescuentosAdmin(),
         this.supabase.obtenerTiposImagenAdmin(),
-        this.supabase.obtenerIdiomasPreviewAdmin()
+        this.supabase.obtenerIdiomasPreviewAdmin(),
+        this.supabase.obtenerTiposHabitacionAdmin()
       ]);
 
       this.destinos = (destinos ?? []) as IDestinoAdmin[];
@@ -177,6 +192,7 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
         .filter((item: IDescuentoAdmin) => Number.isFinite(item.id)) as IDescuentoAdmin[];
       this.tiposImagen = (tiposImagen ?? []) as ITipoImagenAdmin[];
       this.idiomas = (idiomas ?? []) as IIdiomaHotel[];
+      this.tiposHabitacion = (tiposHabitacion ?? []) as ITipoHabitacionAdmin[];
 
       if (this.esCreacion) {
         this.prellenarDestinoDesdeContexto();
@@ -219,6 +235,10 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
 
       regimenIds.forEach((idRegimen: number) => this.regimenesSeleccionados.add(idRegimen));
       actividadIds.forEach((idActividad: number) => this.actividadesSeleccionadas.add(idActividad));
+      (detalleHotel.tipos_habitacion_ids ?? []).forEach((tipoId: unknown) => {
+        const idTipo = Number(tipoId);
+        if (Number.isFinite(idTipo)) this.tiposHabitacionSeleccionados.add(idTipo);
+      });
       actividadesDetalle.forEach((actividad: { id: number; descripcion: string }) => {
         const fallbackDescripcion = actividad.descripcion || `Actividad #${actividad.id}`;
         this.actividadesSeleccionadasDetalleMap.set(actividad.id, fallbackDescripcion);
@@ -285,12 +305,25 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.actividades.filter((item) => item.descripcion.toLowerCase().includes(filtro));
   }
 
+  get tiposHabitacionFiltrados(): ITipoHabitacionAdmin[] {
+    const filtro = this.filtroTiposHabitacion.trim().toLowerCase();
+    if (!filtro) return this.tiposHabitacion;
+    return this.tiposHabitacion.filter((item) =>
+      item.nombre_habitacion.toLowerCase().includes(filtro) ||
+      item.descripcion.toLowerCase().includes(filtro)
+    );
+  }
+
   get totalRegimenesSeleccionados(): number {
     return this.regimenesSeleccionados.size;
   }
 
   get totalActividadesSeleccionadas(): number {
     return this.actividadesSeleccionadas.size;
+  }
+
+  get totalTiposHabitacionSeleccionados(): number {
+    return this.tiposHabitacionSeleccionados.size;
   }
 
   get actividadesSeleccionadasDetalle(): IActividadAdmin[] {
@@ -316,6 +349,10 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
   esActividadSeleccionada(actividadId: number): boolean {
     const id = Number(actividadId);
     return Number.isFinite(id) && this.actividadesSeleccionadas.has(id);
+  }
+
+  esTipoHabitacionSeleccionado(tipoHabitacionId: number): boolean {
+    return this.tiposHabitacionSeleccionados.has(Number(tipoHabitacionId));
   }
 
   toggleRegimen(regimenId: number, checked: boolean) {
@@ -354,6 +391,16 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.actividadesSeleccionadas.delete(id);
     this.actividadesSeleccionadasDetalleMap.delete(id);
+  }
+
+  toggleTipoHabitacion(tipoHabitacionId: number, checked: boolean): void {
+    const id = Number(tipoHabitacionId);
+    if (!Number.isFinite(id)) return;
+    if (checked) {
+      this.tiposHabitacionSeleccionados.add(id);
+      return;
+    }
+    this.tiposHabitacionSeleccionados.delete(id);
   }
 
   onRegimenPrincipalChange(regimenId: number | null) {
@@ -872,6 +919,7 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
         regimen_id: regimenPrincipalId,
         regimen_ids: Array.from(this.regimenesSeleccionados.values()),
         actividad_ids: Array.from(this.actividadesSeleccionadas.values()),
+        room_type_ids: Array.from(this.tiposHabitacionSeleccionados.values()),
         imagenes: [
           ...this.imagenes.map((item) => ({
             id: this.parseNumber(item.id),
@@ -1082,6 +1130,7 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       regimenes: Array.from(this.regimenesSeleccionados).sort((a, b) => a - b),
       actividades: Array.from(this.actividadesSeleccionadas).sort((a, b) => a - b),
+      tipos_habitacion: Array.from(this.tiposHabitacionSeleccionados).sort((a, b) => a - b),
       imagenes: imagenesNormalizadas,
       imagenes_eliminadas: imagenesEliminadas
     };

@@ -1,24 +1,31 @@
-<div class="flex min-w-0 flex-auto flex-col bg-gray-50">
-    <div class="mx-auto flex w-full max-w-screen-2xl flex-col px-6 py-6 sm:px-8">
-        <div class="sticky top-0 z-[100] mb-4 w-full rounded-xl border border-transparent bg-transparent px-2 py-2 shadow-none backdrop-blur-md transition-all duration-300 md:px-4">
-            <div class="w-full md:flex md:items-center md:justify-between">
-                <div class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">
-                    {{ esCreacion ? 'Nuevo hotel' : 'Editar hotel' }}
-                </div>
+<div class="flex min-w-0 flex-auto flex-col bg-slate-50">
+    <div class="mx-auto flex w-full max-w-screen-2xl flex-col px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
+        <header class="sticky top-0 z-[100] -mx-2 mb-5 bg-slate-50/95 px-2 pb-3 pt-2 backdrop-blur-md sm:mx-0 sm:px-0">
+            <div class="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm sm:px-6">
+                <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                    <div class="min-w-0">
+                        <p class="text-xs font-semibold uppercase tracking-[0.16em] text-primary-600">Administración de hoteles</p>
+                        <h1 class="mt-1 truncate text-2xl font-semibold leading-tight text-slate-950 sm:text-3xl dark:text-white">
+                            {{ esCreacion ? 'Nuevo hotel' : 'Editar hotel' }}
+                        </h1>
+                        <p class="mt-1 text-sm text-slate-500">
+                            {{ esCreacion ? 'Completa los datos esenciales y configura su contenido.' : 'Organiza la ficha, servicios y recursos visuales del hotel.' }}
+                        </p>
+                    </div>
 
-                <div class="my-2 flex items-center gap-3 md:my-0">
-                    <button mat-raised-button color="warn" type="button" class="text-white" (click)="solicitarRegresar()">
-                        <mat-icon class="icon-size-5 text-white" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
+                    <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
+                    <button mat-stroked-button type="button" class="w-full sm:w-auto" (click)="solicitarRegresar()">
+                        <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
                         Regresar
                     </button>
                     @if (esCreacion) {
-                    <button mat-raised-button color="accent" type="button" class="text-white inline-flex items-center gap-3"
+                    <button mat-stroked-button color="accent" type="button" class="w-full sm:w-auto"
                         (click)="abrirModalCargaImagenesDriveCreacion()">
-                        <mat-icon class="icon-size-5 text-white">cloud_download</mat-icon>
+                        <mat-icon class="icon-size-5">cloud_download</mat-icon>
                         Cargar imagenes de drive
                     </button>
                     }
-                    <button mat-raised-button color="primary" type="submit" form="form-editar-hotel" class="text-white"
+                    <button mat-raised-button color="primary" type="submit" form="form-editar-hotel" class="w-full text-white sm:w-auto"
                         [disabled]="guardando || !tieneCambiosPendientes">
                         <mat-icon class="mr-2 icon-size-5 text-white">save</mat-icon>
                         @if (guardando) {
@@ -27,15 +34,17 @@
                         <span class="text-white">{{ esCreacion ? 'Crear hotel' : 'Guardar cambios' }}</span>
                         }
                     </button>
+                    </div>
                 </div>
+                <nav aria-label="Secciones del editor" class="editor-section-nav mt-4 border-t border-slate-100 pt-3">
+                    <button type="button" (click)="desplazarASeccion('datos-generales')">Datos generales</button>
+                    <button type="button" (click)="desplazarASeccion('ubicacion-portada')">Ubicación y portada</button>
+                    <button type="button" (click)="desplazarASeccion('traducciones')">Idiomas</button>
+                    <button type="button" (click)="desplazarASeccion('servicios')">Servicios</button>
+                    <button type="button" (click)="desplazarASeccion('galeria')">Galería <span>{{ imagenes.length }}</span></button>
+                </nav>
             </div>
-
-            <p class="mt-1 text-sm text-gray-500">
-                {{ esCreacion
-                ? 'Captura informacion general, relaciones, regimenes, actividades e imagenes.'
-                : 'Actualiza informacion general, relaciones, regimenes, actividades e imagenes.' }}
-            </p>
-        </div>
+        </header>
 
         @if (cargando) {
         <div class="rounded-2xl border border-gray-200 bg-white p-8 text-center">
@@ -43,9 +52,16 @@
             <p class="mt-4 text-sm text-gray-500">{{ esCreacion ? 'Preparando formulario de creacion...' : 'Cargando informacion del hotel...' }}</p>
         </div>
         } @else {
-        <form id="form-editar-hotel" [formGroup]="form" (ngSubmit)="guardar()"
-            class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
-            <div class="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+        <form id="form-editar-hotel" [formGroup]="form" (ngSubmit)="guardar()" class="space-y-5">
+            <section id="datos-generales" class="editor-section scroll-mt-52">
+                <div class="editor-section__header">
+                    <div class="editor-section__icon bg-primary-50 text-primary-600"><mat-icon>apartment</mat-icon></div>
+                    <div>
+                        <h2>Datos generales</h2>
+                        <p>Identificación, clasificación y condiciones comerciales.</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 gap-x-5 gap-y-2 md:grid-cols-2 lg:grid-cols-3">
                 <mat-form-field class="w-full">
                     <mat-label>Nombre del hotel</mat-label>
                     <input matInput formControlName="nombre_hotel" maxlength="160" (blur)="traducirHotelDesdeEspanol()" />
@@ -103,15 +119,22 @@
                     }
                 </mat-form-field>
 
-                
-                
                 <mat-form-field class="w-full md:col-span-2 lg:col-span-3">
                     <mat-label>Descripcion</mat-label>
                     <textarea matInput rows="5" formControlName="descripcion" (blur)="traducirHotelDesdeEspanol()"></textarea>
                 </mat-form-field>
-            </div>
+                </div>
+            </section>
 
-            <div class="mt-2 grid w-full grid-cols-1 gap-4 md:grid-cols-2">
+            <section id="ubicacion-portada" class="editor-section scroll-mt-52">
+                <div class="editor-section__header">
+                    <div class="editor-section__icon bg-amber-50 text-amber-600"><mat-icon>location_on</mat-icon></div>
+                    <div>
+                        <h2>Ubicación y portada</h2>
+                        <p>Enlace de mapa e imagen que representa al hotel.</p>
+                    </div>
+                </div>
+            <div class="grid w-full grid-cols-1 gap-5 lg:grid-cols-2">
                 <div class="space-y-2">
                     <mat-form-field class="w-full">
                         <mat-label>Ubicacion</mat-label>
@@ -119,7 +142,7 @@
                     </mat-form-field>
 
                     @if (form.get('ubicacion')?.value) {
-                    <div class="rounded-xl border border-gray-200 bg-gray-50 p-3">
+                    <div class="preview-panel">
                         <div class="mb-2 flex min-h-10 items-center justify-between gap-3">
                             <p class="text-sm font-medium text-gray-700">Vista previa de ubicacion</p>
                             <a mat-stroked-button color="primary" [href]="form.get('ubicacion')?.value" target="_blank"
@@ -140,7 +163,7 @@
                         }
                     </div>
                     } @else {
-                    <div class="flex h-44 items-center justify-center rounded-xl border border-gray-200 bg-gray-100 text-sm text-gray-500">
+                    <div class="flex h-44 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 text-sm text-slate-500">
                         Sin ubicacion
                     </div>
                     }
@@ -161,7 +184,7 @@
                         </button>
                     </mat-form-field>
 
-                    <div class="rounded-xl border border-gray-200 bg-gray-50 p-3">
+                    <div class="preview-panel">
                         <div class="mb-2 flex min-h-10 items-center justify-between gap-3">
                             <p class="text-sm font-medium text-gray-700">Vista previa de imagen</p>
                         </div>
@@ -179,22 +202,26 @@
                     </div>
                 </div>
             </div>
+            </section>
 
             @if (traduciendoContenido) {
-            <div class="mt-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm text-blue-700">
+            <div class="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
                 Traduciendo nombre y descripcion a los idiomas configurados...
             </div>
             }
 
-            <section class="mt-5 rounded-xl border border-gray-200 bg-gray-50 p-4">
-                <div class="mb-3 flex items-center justify-between">
-                    <h3 class="text-base font-semibold text-gray-900">Textos por idioma</h3>
-                    <span class="text-xs text-gray-500">Vista previa de nombre y descripcion</span>
+            <section id="traducciones" class="editor-section scroll-mt-52">
+                <div class="editor-section__header">
+                    <div class="editor-section__icon bg-violet-50 text-violet-600"><mat-icon>translate</mat-icon></div>
+                    <div>
+                        <h2>Textos por idioma</h2>
+                        <p>Vista previa de las traducciones generadas desde el contenido principal.</p>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
                     @for (idioma of idiomas; track idioma.id) {
-                    <article class="rounded-lg border border-gray-200 bg-white p-3">
+                    <article class="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
                         <div class="mb-2 flex items-center justify-between">
                             <span class="text-sm font-semibold text-gray-800">{{ idioma.nombre }}</span>
                             <span class="rounded bg-gray-100 px-2 py-0.5 text-xs uppercase text-gray-600">
@@ -221,11 +248,19 @@
                 </div>
             </section>
 
-            <div class="mt-7 grid grid-cols-1 gap-5 xl:grid-cols-2">
-                <section class="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                    <div class="mb-3 flex items-center justify-between">
-                        <h3 class="text-base font-semibold text-gray-900">Regimenes del hotel</h3>
-                        <span class="text-xs text-gray-500">{{ totalRegimenesSeleccionados }} seleccionados</span>
+            <section id="servicios" class="editor-section scroll-mt-52">
+                <div class="editor-section__header">
+                    <div class="editor-section__icon bg-emerald-50 text-emerald-600"><mat-icon>room_service</mat-icon></div>
+                    <div>
+                        <h2>Servicios y habitaciones</h2>
+                        <p>Selecciona las opciones disponibles para este hotel.</p>
+                    </div>
+                </div>
+            <div class="grid grid-cols-1 gap-4 xl:grid-cols-3">
+                <section class="selector-card">
+                    <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+                        <h3>Regimenes del hotel</h3>
+                        <span class="selection-count">{{ totalRegimenesSeleccionados }} seleccionados</span>
                     </div>
 
                     <mat-form-field class="w-full">
@@ -247,11 +282,11 @@
                     </div>
                 </section>
 
-                <section class="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                    <div class="mb-3 flex items-center justify-between">
-                        <h3 class="text-base font-semibold text-gray-900">Actividades del hotel</h3>
-                        <div class="flex items-center gap-3">
-                            <span class="text-xs text-gray-500">{{ totalActividadesSeleccionadas }} seleccionadas</span>
+                <section class="selector-card">
+                    <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+                        <h3>Actividades del hotel</h3>
+                        <div class="flex items-center gap-2">
+                            <span class="selection-count">{{ totalActividadesSeleccionadas }} seleccionadas</span>
                             <button mat-stroked-button type="button" (click)="abrirModalActividadesSeleccionadas()">
                                 Ver seleccionadas
                             </button>
@@ -276,16 +311,43 @@
                         }
                     </div>
                 </section>
-            </div>
 
-            <section class="mt-7 rounded-xl border border-gray-200 bg-gray-50 p-4">
-                <div class="mb-4 flex items-center justify-between">
-                    <div>
-                        <h3 class="text-base font-semibold text-gray-900">Imagenes del hotel</h3>
-                        <p class="text-xs text-gray-500">Miniatura clickeable para abrir imagen completa.</p>
+                <section class="selector-card">
+                    <div class="mb-3 flex items-center justify-between gap-3">
+                        <h3>Habitaciones del hotel</h3>
+                        <span class="selection-count">{{ totalTiposHabitacionSeleccionados }} seleccionadas</span>
                     </div>
 
-                    <div class="flex items-center gap-2">
+                    <mat-form-field class="w-full">
+                        <mat-label>Filtrar habitaciones</mat-label>
+                        <input matInput [(ngModel)]="filtroTiposHabitacion" [ngModelOptions]="{ standalone: true }" />
+                    </mat-form-field>
+
+                    <div class="selector-list">
+                        @if (tiposHabitacionFiltrados.length) {
+                        @for (tipo of tiposHabitacionFiltrados; track tipo.id) {
+                        <mat-checkbox class="w-full" [checked]="esTipoHabitacionSeleccionado(tipo.id)"
+                            (change)="toggleTipoHabitacion(tipo.id, $event.checked)">
+                            {{ tipo.nombre_habitacion }}
+                            @if (tipo.capacidad_maxima) { ({{ tipo.capacidad_maxima }} personas) }
+                        </mat-checkbox>
+                        }
+                        } @else {
+                        <p class="text-sm text-gray-500">No hay habitaciones que coincidan con el filtro.</p>
+                        }
+                    </div>
+                </section>
+            </div>
+            </section>
+
+            <section id="galeria" class="editor-section scroll-mt-52">
+                <div class="editor-section__header editor-section__header--gallery">
+                    <div class="editor-section__icon bg-rose-50 text-rose-600"><mat-icon>photo_library</mat-icon></div>
+                    <div>
+                        <h2>Galería de imágenes</h2>
+                        <p>Administra las imágenes, sus URL y el tipo de uso de cada una.</p>
+                    </div>
+                    <div class="gallery-actions">
                         <button mat-stroked-button type="button" (click)="abrirModalAgregarImagenes()">
                             <mat-icon class="icon-size-5">add</mat-icon>
                             Agregar imagen
@@ -308,7 +370,7 @@
                 } @else {
                 <div class="space-y-4">
                     @for (imagen of imagenes; track imagen.key; let i = $index) {
-                    <div class="grid grid-cols-1 gap-3 rounded-xl border border-gray-200 bg-white p-3 lg:grid-cols-[44px_140px_1fr_220px_auto]">
+                    <div class="image-row grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-white p-3 lg:grid-cols-[44px_140px_minmax(0,1fr)_220px_auto]">
                         <div class="flex items-center justify-center">
                             <mat-checkbox [checked]="esImagenSeleccionada(imagen.key)"
                                 (change)="toggleSeleccionImagen(imagen.key, $event.checked)"></mat-checkbox>
@@ -356,7 +418,7 @@
             </section>
 
             @if (error) {
-            <div class="mt-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {{ error }}
             </div>
             }

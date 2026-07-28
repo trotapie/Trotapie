@@ -7,11 +7,139 @@ mat-form-field {
 }
 
 .selector-list {
-  max-height: 280px;
+  max-height: 300px;
   overflow: auto;
   display: grid;
   gap: 8px;
-  padding: 2px;
+  padding: 4px 6px 4px 2px;
+}
+
+.editor-section {
+  border: 1px solid rgb(226 232 240);
+  border-radius: 1rem;
+  background: white;
+  padding: 1.25rem;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
+}
+
+.editor-section__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  margin-bottom: 1.25rem;
+}
+
+.editor-section__header h2,
+.selector-card h3 {
+  margin: 0;
+  color: rgb(15 23 42);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.editor-section__header p {
+  margin: 0.2rem 0 0;
+  color: rgb(100 116 139);
+  font-size: 0.8125rem;
+}
+
+.editor-section__icon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+}
+
+.editor-section__icon mat-icon {
+  transform: scale(0.88);
+}
+
+.editor-section__header--gallery {
+  flex-wrap: wrap;
+}
+
+.gallery-actions {
+  display: flex;
+  flex: 1 1 100%;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.gallery-actions button {
+  flex: 1 1 auto;
+}
+
+.preview-panel,
+.selector-card {
+  border: 1px solid rgb(226 232 240);
+  border-radius: 0.875rem;
+  background: rgb(248 250 252);
+  padding: 0.875rem;
+}
+
+.preview-panel {
+  isolation: isolate;
+}
+
+/* Leaflet uses high z-index values for tiles and controls. Keep them inside this preview. */
+.preview-panel .leaflet-container {
+  position: relative;
+  z-index: 0;
+}
+
+.selection-count {
+  border-radius: 9999px;
+  background: rgb(226 232 240);
+  padding: 0.2rem 0.5rem;
+  color: rgb(71 85 105);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.editor-section-nav {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding-bottom: 0.15rem;
+  scrollbar-width: thin;
+}
+
+.editor-section-nav button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 0;
+  border-radius: 9999px;
+  background: transparent;
+  padding: 0.45rem 0.7rem;
+  color: rgb(71 85 105);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.editor-section-nav button:hover,
+.editor-section-nav button:focus-visible {
+  background: rgb(239 246 255);
+  color: rgb(2 132 199);
+  outline: none;
+}
+
+.editor-section-nav span {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 9999px;
+  background: rgb(226 232 240);
+  color: rgb(51 65 85);
+  font-size: 0.625rem;
 }
 
 .miniatura {
@@ -28,3 +156,63 @@ mat-form-field {
   cursor: not-allowed;
 }
 
+@media (min-width: 640px) {
+  .editor-section {
+    padding: 1.5rem;
+  }
+
+  .gallery-actions {
+    flex: 0 1 auto;
+    margin-left: auto;
+  }
+
+  .gallery-actions button {
+    flex: 0 0 auto;
+  }
+}
+
+@media (min-width: 1024px) {
+  .editor-section__header--gallery {
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+}
+
+:host-context(.dark) {
+  .editor-section,
+  .selector-card {
+    border-color: rgb(51 65 85);
+    background: rgb(15 23 42);
+  }
+
+  .preview-panel {
+    border-color: rgb(51 65 85);
+    background: rgb(30 41 59);
+  }
+
+  .editor-section__header h2,
+  .selector-card h3 {
+    color: rgb(241 245 249);
+  }
+
+  .editor-section__header p,
+  .editor-section-nav button {
+    color: rgb(148 163 184);
+  }
+
+  .editor-section-nav {
+    border-color: rgb(51 65 85);
+  }
+
+  .editor-section-nav button:hover,
+  .editor-section-nav button:focus-visible {
+    background: rgb(30 41 59);
+    color: rgb(125 211 252);
+  }
+
+  .selection-count,
+  .editor-section-nav span {
+    background: rgb(51 65 85);
+    color: rgb(226 232 240);
+  }
+}

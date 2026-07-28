@@ -419,6 +419,51 @@ export class CotizacionesService {
       .select('*')
   }
 
+  async obtenerHotelIdPorCotizacionPublica(publicId: string | null | undefined): Promise<number | null> {
+    const id = String(publicId ?? '').trim();
+    if (!id) return null;
+
+    const { data, error } = await this.client
+      .from('solicitudes_cotizacion')
+      .select('hotel_id')
+      .eq('public_id', id)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    const hotelId = Number(data?.hotel_id);
+    return Number.isFinite(hotelId) && hotelId > 0 ? hotelId : null;
+  }
+
+  async tiposHabitacionPorHotel(hotelId: number) {
+    const id = Number(hotelId);
+    if (!Number.isFinite(id) || id <= 0) return [];
+
+    const { data, error } = await this.client
+      .from('hotel_tipos_habitacion')
+      .select(`
+        tipo_habitacion:tipos_habitacion!hotel_tipos_habitacion_tipo_habitacion_id_fkey (
+          id,
+          nombre_habitacion,
+          capacidad_maxima,
+          descripcion
+        )
+      `)
+      .eq('hotel_id', id);
+
+    if (error) throw error;
+
+    return (data ?? [])
+      .map((item: any) => item?.tipo_habitacion)
+      .filter(Boolean)
+      .map((item: any) => ({
+        id: Number(item.id),
+        nombre_habitacion: String(item.nombre_habitacion ?? ''),
+        capacidad_maxima: item.capacidad_maxima ?? null,
+        descripcion: String(item.descripcion ?? '')
+      }));
+  }
+
   estatusCotizaciones() {
     return this.client
       .from('estatus_cotizacion')

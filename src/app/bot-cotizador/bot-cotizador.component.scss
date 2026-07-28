@@ -1,0 +1,134 @@
+.booking-field {
+  width: 100%;
+  min-height: 3.5rem;
+  padding: 0 0.9rem;
+  border: 1px solid var(--fuse-border);
+  border-radius: 0.75rem;
+  background: var(--fuse-bg-card);
+  color: var(--fuse-text-default);
+  font: inherit;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.booking-field:hover:not(:disabled) {
+  border-color: var(--primary, #00a67c);
+}
+
+.booking-field:focus {
+  border-color: var(--primary, #00a67c);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary, #00a67c) 20%, transparent);
+}
+
+.booking-field::placeholder {
+  color: var(--fuse-text-secondary);
+}
+
+.booking-field--textarea {
+  min-height: 7rem;
+  padding-block: 0.8rem;
+  resize: vertical;
+}
+
+.booking-select {
+  width: 100%;
+  --mdc-outlined-text-field-container-shape: 1rem;
+}
+
+:host ::ng-deep .booking-select .mat-mdc-form-field-subscript-wrapper {
+  display: none;
+}
+
+:host ::ng-deep .booking-select .mat-mdc-text-field-wrapper {
+  height: 3.5rem;
+  padding-inline: 0.9rem;
+  border-radius: 1rem;
+  background: var(--fuse-bg-card);
+}
+
+:host ::ng-deep .booking-select .mat-mdc-form-field-flex,
+:host ::ng-deep .booking-select .mat-mdc-form-field-infix {
+  height: 100%;
+  min-height: 0;
+  padding-block: 0;
+  align-items: center;
+}
+
+:host ::ng-deep .booking-select .mat-mdc-form-field-infix,
+:host ::ng-deep .booking-select .mat-mdc-select,
+:host ::ng-deep .booking-select .mat-mdc-select-trigger {
+  display: flex;
+  align-items: center;
+}
+
+:host ::ng-deep .booking-select .mat-mdc-select,
+:host ::ng-deep .booking-select .mat-mdc-select-trigger {
+  height: 100%;
+  width: 100%;
+}
+
+:host ::ng-deep .booking-select .mat-mdc-select-value,
+:host ::ng-deep .booking-select .mat-mdc-select-arrow-wrapper {
+  align-self: center;
+}
+
+:host ::ng-deep .booking-select .mdc-notched-outline__leading,
+:host ::ng-deep .booking-select .mdc-notched-outline__notch,
+:host ::ng-deep .booking-select .mdc-notched-outline__trailing {
+  border-color: var(--fuse-border) !important;
+}
+
+:host ::ng-deep .booking-select.mat-focused .mdc-notched-outline__leading,
+:host ::ng-deep .booking-select.mat-focused .mdc-notched-outline__notch,
+:host ::ng-deep .booking-select.mat-focused .mdc-notched-outline__trailing {
+  border-color: var(--primary, #00a67c) !important;
+}
+
+::ng-deep .booking-select-panel.mat-mdc-select-panel {
+  padding: 0.4rem;
+  border: 1px solid var(--fuse-border);
+  border-radius: 1rem;
+  background: var(--fuse-bg-card);
+}
+
+::ng-deep .booking-select-panel .mat-mdc-option {
+  min-height: 3rem;
+  border-radius: 0.5rem;
+  color: var(--fuse-text-default);
+}
+
+::ng-deep .booking-select-panel .mat-mdc-option:hover:not(.mdc-list-item--disabled),
+::ng-deep .booking-select-panel .mat-mdc-option.mdc-list-item--selected {
+  background: color-mix(in srgb, var(--primary, #00a67c) 14%, transparent);
+}
+
+.booking-rooms-field {
+  align-self: flex-end;
+  height: 3.5rem !important;
+  min-height: 3.5rem !important;
+  max-height: 3.5rem !important;
+  padding-block: 0 !important;
+  border-radius: 0.75rem !important;
+}
+
+:host ::ng-deep .booking-date-range .date-range-filter__label {
+  color: var(--primary, #15803d);
+}
+
+:host ::ng-deep .booking-date-range .date-range-filter__trigger {
+  height: 3.5rem;
+  min-height: 3.5rem;
+  border-color: var(--primary, #15803d);
+  // background: var(--primary, #15803d);
+  // color: #fff;
+}
+
+:host ::ng-deep .booking-date-range .date-range-filter__trigger:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--primary, #00a67c) 85%, #000);
+  // background: color-mix(in srgb, var(--primary, #00a67c) 85%, #000);
+}
+
+:host ::ng-deep .booking-date-range .date-range-filter__trigger:focus-visible {
+  outline-color: var(--primary, #00a67c);
+}

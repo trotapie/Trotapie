@@ -962,6 +962,12 @@ export class SupabaseService {
           descripcion
         )
       )
+    ),
+
+    tipos_habitacion:hotel_tipos_habitacion!hotel_tipos_habitacion_hotel_id_fkey (
+      tipo_habitacion:tipos_habitacion!hotel_tipos_habitacion_tipo_habitacion_id_fkey (
+        id
+      )
     )
   `)
       .eq('id', idHotel)
@@ -1006,12 +1012,17 @@ export class SupabaseService {
         : [];
     });
 
+    const tiposHabitacionIds = (data?.tipos_habitacion ?? [])
+      .map((item: any) => Number(item?.tipo_habitacion?.id))
+      .filter((id: number) => Number.isFinite(id));
+
     const datos = {
       ...data,
       nombre_hotel: traducida?.nombre_hotel ?? tEs?.nombre_hotel,
       descripcion: traducida?.descripcion ?? this.transloco.translate('sin-descripcion'),
       actividades: actividadesTraducidas,
-      regimenes: regimenesTraducidos
+      regimenes: regimenesTraducidos,
+      tipos_habitacion_ids: tiposHabitacionIds
     };
 
     return datos;
@@ -4066,6 +4077,13 @@ export class SupabaseService {
       throw new Error('Hotel invalido para eliminar.');
     }
 
+    const { error: errorTiposHabitacion } = await this.client
+      .from('hotel_tipos_habitacion')
+      .delete()
+      .eq('hotel_id', hotelId);
+
+    if (errorTiposHabitacion) throw errorTiposHabitacion;
+
     const { error: errorRegimenes } = await this.client
       .from('regimen_hotel')
       .delete()
@@ -4232,6 +4250,7 @@ export class SupabaseService {
     regimen_id: number | null;
     regimen_ids: number[];
     actividad_ids: number[];
+    room_type_ids?: number[];
     imagenes: Array<{
       id?: number | null;
       url_imagen: string;
@@ -4260,6 +4279,7 @@ export class SupabaseService {
     regimen_id: number | null;
     regimen_ids: number[];
     actividad_ids: number[];
+    room_type_ids?: number[];
     imagenes: Array<{
       id?: number | null;
       url_imagen: string;
@@ -4293,6 +4313,7 @@ export class SupabaseService {
       regimen_id: number | null;
       regimen_ids: number[];
       actividad_ids: number[];
+      room_type_ids?: number[];
       imagenes: Array<{
         id?: number | null;
         url_imagen: string;
@@ -4328,6 +4349,13 @@ export class SupabaseService {
     const actividadesIds = [
       ...new Set(
         (payload.actividad_ids ?? [])
+          .map((id) => Number(id))
+          .filter((id) => Number.isFinite(id) && id > 0)
+      )
+    ];
+    const roomTypeIds = [
+      ...new Set(
+        (payload.room_type_ids ?? [])
           .map((id) => Number(id))
           .filter((id) => Number.isFinite(id) && id > 0)
       )
@@ -4385,7 +4413,25 @@ export class SupabaseService {
       throw new Error('No se pudo guardar el hotel.');
     }
 
+    await this.sincronizarTiposHabitacionHotel(hotelIdGuardado, roomTypeIds);
+
     return hotelIdGuardado;
+  }
+
+  private async sincronizarTiposHabitacionHotel(hotelId: number, tipoIds: number[]): Promise<void> {
+    const { error: deleteError } = await this.client
+      .from('hotel_tipos_habitacion')
+      .delete()
+      .eq('hotel_id', hotelId);
+
+    if (deleteError) throw deleteError;
+    if (!tipoIds.length) return;
+
+    const { error: insertError } = await this.client
+      .from('hotel_tipos_habitacion')
+      .insert(tipoIds.map((tipo_habitacion_id) => ({ hotel_id: hotelId, tipo_habitacion_id })));
+
+    if (insertError) throw insertError;
   }
 
 }

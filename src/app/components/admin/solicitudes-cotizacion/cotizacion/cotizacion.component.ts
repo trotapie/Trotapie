@@ -3,6 +3,7 @@ import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CatalogosAdminService } from 'app/core/catalogos-admin.service';
 import { CotizacionesService } from 'app/core/cotizaciones.service';
+import { HotelesService } from 'app/core/hoteles.service';
 import { MaterialModule } from 'app/shared/material.module';
 import { Condicione, CotizacionMultipleItem, ICotizacion, IEstatusCotizacion, PoliticaHotel, PreciosYCondiciones } from './cotizacion.interface';
 import { DateI18nPipe } from 'app/core/i18n/date-i18n.pipe';
@@ -132,6 +133,7 @@ export class CotizacionComponent implements OnInit {
   private meta = inject(Meta);
   private route = inject(ActivatedRoute)
   private supabase = inject(CotizacionesService);
+  private hotelesService = inject(HotelesService);
   private catalogosAdmin = inject(CatalogosAdminService);
   private fb = inject(FormBuilder);
   private _translocoService = inject(TranslocoService);
@@ -266,6 +268,19 @@ export class CotizacionComponent implements OnInit {
   });
 
   tiposHabitacion: TipoHabitacion[] = [];
+  tiposHabitacionHotel: TipoHabitacion[] = [];
+  hotelIdCotizacion: number | null = null;
+  modalTipoHabitacionAbierto = false;
+  indiceTipoHabitacionActivo = 0;
+  busquedaTipoHabitacion = '';
+  tiposHabitacionSeleccionados = new Set<number>();
+  guardandoTipoHabitacion = false;
+  errorTipoHabitacion = '';
+  readonly tipoHabitacionForm = this.fb.group({
+    nombre_habitacion: ['', [Validators.required, Validators.maxLength(120)]],
+    capacidad_maxima: [null as number | null, [Validators.required, Validators.min(1)]],
+    descripcion: ['', [Validators.maxLength(500)]]
+  });
   origenReservacionOpciones: OrigenReservacionOption[] = [];
   filteredOptions$: TipoHabitacion[] = [];
 
@@ -620,6 +635,19 @@ export class CotizacionComponent implements OnInit {
     this.estatusOpciones = estatus.data
 
     this.tiposHabitacion = data ?? [];
+    const hotelIdEnCotizacion = Number(
+      (this.informacionCotizacion as any)?.hotel_id ??
+      (this.informacionCotizacion as any)?.hotelId ??
+      (this.informacionCotizacion as any)?.cotizacion_multiple?.[0]?.hotel_id ??
+      (this.informacionCotizacion as any)?.cotizacion_multiple?.[0]?.hotelId
+    );
+    const hotelId = Number.isFinite(hotelIdEnCotizacion) && hotelIdEnCotizacion > 0
+      ? hotelIdEnCotizacion
+      : await this.supabase.obtenerHotelIdPorCotizacionPublica(this.informacionCotizacion?.public_id);
+    this.hotelIdCotizacion = hotelId ? Number(hotelId) : null;
+    this.tiposHabitacionHotel = hotelId
+      ? await this.supabase.tiposHabitacionPorHotel(hotelId)
+      : [];
     this.origenReservacionOpciones = (origenReservacion ?? [])
       .filter((item: any) => Boolean(item?.estatus))
       .map((item: any) => ({
@@ -711,6 +739,129 @@ export class CotizacionComponent implements OnInit {
     const full = Math.floor(rating);
     const half = this.hasHalfStar(rating) ? 1 : 0;
     return Array(5 - full - half);
+  }
+
+  get tiposHabitacionCoincidentes(): TipoHabitacion[] {
+    const busqueda = this.busquedaTipoHabitacion.trim().toLocaleLowerCase();
+    if (!busqueda) return this.tiposHabitacion;
+
+    return this.tiposHabitacion.filter((tipo) =>
+      tipo.nombre_habitacion.toLocaleLowerCase().includes(busqueda)
+    );
+  }
+
+  get tiposHabitacionEncontrados(): TipoHabitacion[] {
+    return this.tiposHabitacionCoincidentes.filter(
+      (tipo) => !this.tiposHabitacionHotel.some((asignado) => asignado.id === tipo.id)
+    );
+  }
+
+  get puedeCrearTipoHabitacion(): boolean {
+    return Boolean(this.busquedaTipoHabitacion.trim()) && !this.tiposHabitacionCoincidentes.length;
+  }
+
+  actualizarBusquedaTipoHabitacion(busqueda: string): void {
+    if (this.puedeCrearTipoHabitacion) {
+      this.tipoHabitacionForm.patchValue({ nombre_habitacion: busqueda.trim() });
+    }
+  }
+
+  abrirModalTipoHabitacion(indiceHabitacion: number): void {
+    this.indiceTipoHabitacionActivo = indiceHabitacion;
+    this.busquedaTipoHabitacion = '';
+    this.tiposHabitacionSeleccionados.clear();
+    this.errorTipoHabitacion = '';
+    this.tipoHabitacionForm.reset({
+      nombre_habitacion: '',
+      capacidad_maxima: null,
+      descripcion: ''
+    });
+    this.modalTipoHabitacionAbierto = true;
+  }
+
+  cerrarModalTipoHabitacion(): void {
+    if (this.guardandoTipoHabitacion) return;
+    this.modalTipoHabitacionAbierto = false;
+  }
+
+  alternarTipoHabitacionSeleccionado(tipoId: number): void {
+    if (this.tiposHabitacionSeleccionados.has(tipoId)) {
+      this.tiposHabitacionSeleccionados.delete(tipoId);
+    } else {
+      this.tiposHabitacionSeleccionados.add(tipoId);
+    }
+  }
+
+  async asignarTiposHabitacionSeleccionados(): Promise<void> {
+    if (!this.hotelIdCotizacion || this.guardandoTipoHabitacion) {
+      this.errorTipoHabitacion = 'No se pudo identificar el hotel de esta cotizacion.';
+      return;
+    }
+    const tiposSeleccionados = this.tiposHabitacion.filter(
+      (tipo) => this.tiposHabitacionSeleccionados.has(tipo.id) &&
+        !this.tiposHabitacionHotel.some((asignado) => asignado.id === tipo.id)
+    );
+    if (!tiposSeleccionados.length) return;
+
+    this.guardandoTipoHabitacion = true;
+    this.errorTipoHabitacion = '';
+    try {
+      await Promise.all(
+        tiposSeleccionados.map((tipo) =>
+          this.hotelesService.asignarTipoHabitacionHotel(this.hotelIdCotizacion!, tipo.id)
+        )
+      );
+      this.tiposHabitacionHotel = [...this.tiposHabitacionHotel, ...tiposSeleccionados];
+      this.asignarTipoHabitacionActiva(tiposSeleccionados[0]);
+      this.modalTipoHabitacionAbierto = false;
+    } catch {
+      this.errorTipoHabitacion = 'No se pudo asignar la habitacion al hotel. Intenta nuevamente.';
+    } finally {
+      this.guardandoTipoHabitacion = false;
+    }
+  }
+
+  async crearTipoHabitacionParaHotel(): Promise<void> {
+    if (this.tipoHabitacionForm.invalid || this.guardandoTipoHabitacion) {
+      this.tipoHabitacionForm.markAllAsTouched();
+      return;
+    }
+
+    const value = this.tipoHabitacionForm.getRawValue();
+    const nombreHabitacion = value.nombre_habitacion?.trim() ?? '';
+    const tipoExistente = this.tiposHabitacion.find(
+      (tipo) => tipo.nombre_habitacion.trim().toLocaleLowerCase() === nombreHabitacion.toLocaleLowerCase()
+    );
+    if (tipoExistente) {
+      return;
+    }
+
+    this.guardandoTipoHabitacion = true;
+    this.errorTipoHabitacion = '';
+    try {
+      const creado = await this.catalogosAdmin.crearCatalogoAdmin('tipos_habitacion', {
+        nombre_habitacion: nombreHabitacion,
+        capacidad_maxima: value.capacidad_maxima,
+        descripcion: value.descripcion?.trim() || null
+      }) as TipoHabitacion;
+      await this.hotelesService.asignarTipoHabitacionHotel(this.hotelIdCotizacion!, creado.id);
+      this.tiposHabitacion = [...this.tiposHabitacion, creado];
+      this.tiposHabitacionHotel = [...this.tiposHabitacionHotel, creado];
+      this.asignarTipoHabitacionActiva(creado);
+      this.modalTipoHabitacionAbierto = false;
+    } catch {
+      this.errorTipoHabitacion = 'No se pudo crear la habitacion. Intenta nuevamente.';
+    } finally {
+      this.guardandoTipoHabitacion = false;
+    }
+  }
+
+  private asignarTipoHabitacionActiva(tipo: TipoHabitacion): void {
+    const control = this.indiceTipoHabitacionActivo === 0
+      ? this.edicionForm.get('tipoHabitacion')
+      : this.habitacionesAdicionales.at(this.indiceTipoHabitacionActivo - 1)?.get('tipoHabitacion');
+    control?.setValue(tipo);
+    this.filteredOptions$ = this.obtenerTiposHabitacionDisponibles(0);
   }
 
   modalCotizacion() {
@@ -2270,7 +2421,7 @@ export class CotizacionComponent implements OnInit {
     const capacidadRequerida = Number(detalle.adultos ?? 0) + Number(detalle.ninos ?? 0);
     if (!Number.isFinite(capacidadRequerida) || capacidadRequerida <= 0) return null;
 
-    const tiposOrdenados = [...this.tiposHabitacion]
+    const tiposOrdenados = [...this.tiposHabitacionDisponiblesParaCotizacion]
       .filter((item) => {
         const capacidad = Number(item.capacidad_maxima);
         return Number.isFinite(capacidad) && capacidad > 0;
@@ -2292,13 +2443,14 @@ export class CotizacionComponent implements OnInit {
       ? Number(detalle.adultos ?? 0) + Number(detalle.ninos ?? 0)
       : 0;
 
-    const tiposConCapacidad = this.tiposHabitacion.filter((item) => {
+    const tiposDisponibles = this.tiposHabitacionDisponiblesParaCotizacion;
+    const tiposConCapacidad = tiposDisponibles.filter((item) => {
       const capacidad = Number(item.capacidad_maxima);
       return Number.isFinite(capacidad) && capacidad > 0;
     });
 
     if (!tiposConCapacidad.length || capacidadRequerida <= 0) {
-      return this.tiposHabitacion;
+      return tiposDisponibles;
     }
 
     return tiposConCapacidad
@@ -2542,6 +2694,10 @@ export class CotizacionComponent implements OnInit {
     }
 
     return value.match(/[T ](\d{2}:\d{2})/)?.[1] ?? '00:00';
+  }
+
+  private get tiposHabitacionDisponiblesParaCotizacion(): TipoHabitacion[] {
+    return this.esEdicion ? this.tiposHabitacionHotel : this.tiposHabitacion;
   }
 
   private formatearFechaHoraParaDb(fecha: unknown, hora: unknown): string | null {

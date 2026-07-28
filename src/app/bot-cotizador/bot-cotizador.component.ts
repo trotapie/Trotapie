@@ -1,9 +1,11 @@
 import { Component, computed, EventEmitter, inject, Input, OnInit, Output, signal } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { AbstractControl, FormArray, FormBuilder, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { IAsesores, IDetalleHotel } from 'app/components/hoteles/hoteles.interface';
 import { TratamientoCliente } from 'app/core/cliente-nombre.util';
 import { SupabaseService } from 'app/core/supabase.service';
+import { DateRangeFilterComponent } from 'app/shared/date-range-filter/date-range-filter.component';
+import { DateRangeFilterValue, EMPTY_DATE_RANGE } from 'app/shared/date-range-filter/date-range-filter.model';
 import { MaterialModule } from 'app/shared/material.module';
 import { firstValueFrom } from 'rxjs';
 type Room = { adults: number; children: number; childAges: (number | null)[] };
@@ -19,7 +21,7 @@ type BotPrefillCliente = {
 
 @Component({
   selector: 'bot-cotizador',
-  imports: [MaterialModule, TranslocoModule],
+  imports: [MaterialModule, TranslocoModule, DateRangeFilterComponent],
   templateUrl: './bot-cotizador.component.html',
   styleUrl: './bot-cotizador.component.scss'
 })
@@ -35,7 +37,7 @@ export class BotCotizadorComponent implements OnInit {
   form: boolean = false;
   noches: number = 0;
   opcionesRegimen: any[]
-  hoy: string;
+  readonly fechaMinima = new Date();
   error = '';
   otroId: number;
   asesores: IAsesores[] = [];
@@ -58,18 +60,6 @@ export class BotCotizadorComponent implements OnInit {
     return this.reservacionForm.get('edadesNinos') as FormArray;
   }
 
-  dateFilter = (date: Date | null): boolean => {
-    if (!date) return false;
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const d = new Date(date);
-    d.setHours(0, 0, 0, 0);
-
-
-    return d >= today;
-  }
   @Input() hotel: IDetalleHotel;
   @Output() cerrar = new EventEmitter<Boolean>();
 
@@ -82,18 +72,13 @@ export class BotCotizadorComponent implements OnInit {
 
   formulario() {
     this.opcionesRegimen = this.hotel.regimenes
-    const hoyDate = new Date();
-    this.hoy = hoyDate.toISOString().split('T')[0];
     // this.modalAbierto = true;
     this.reservacionForm = this.formBuilder.group({
       regimen: ['', [Validators.required]],
       tratamiento_id: [''],
       nombre_completo: ['', [Validators.required]],
       correo: ['', [Validators.email]],
-      rangoFechas: this.formBuilder.group({
-        start: [null],
-        end: [null],
-      }),
+      rangoFechas: [{ ...EMPTY_DATE_RANGE }, this.validarRangoFechas],
       ofertas: [false],
       telefono: ['', [Validators.required, Validators.minLength(10)]],
       asesor: ['', Validators.required],
@@ -136,13 +121,10 @@ export class BotCotizadorComponent implements OnInit {
     }
   }
 
-  calcularNoches(start: Date | null, end: Date | null): void {
+  calcularNoches(start: string | null, end: string | null): void {
     if (start && end) {
-      const startDate = start;
-      const endDate = end;
-
-      startDate.setHours(0, 0, 0, 0);
-      endDate.setHours(0, 0, 0, 0);
+      const startDate = this.fechaDesdeClave(start);
+      const endDate = this.fechaDesdeClave(end);
 
       const diffMs = endDate.getTime() - startDate.getTime();
       this.noches = Math.floor(diffMs / (1000 * 60 * 60 * 24));
@@ -257,10 +239,10 @@ export class BotCotizadorComponent implements OnInit {
 
     const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
-    const fechaInicio = new Date(rangoFechas.start);
+    const fechaInicio = this.fechaDesdeClave(rangoFechas.start);
     const fechaFormateadaInicio = `${String(fechaInicio.getDate()).padStart(2, '0')}/${meses[fechaInicio.getMonth()]}/${fechaInicio.getFullYear()}`;
 
-    const fechaFin = new Date(rangoFechas.end);
+    const fechaFin = this.fechaDesdeClave(rangoFechas.end);
     const fechaFormateadaFin = `${String(fechaFin.getDate()).padStart(2, '0')}/${meses[fechaFin.getMonth()]}/${fechaFin.getFullYear()}`;
 
     const rooms = this.rooms();
@@ -432,6 +414,16 @@ export class BotCotizadorComponent implements OnInit {
   private parseTratamientoId(tratamientoId: number | null | undefined): number | null {
     const value = Number(tratamientoId);
     return Number.isFinite(value) && value > 0 ? value : null;
+  }
+
+  private fechaDesdeClave(fecha: string): Date {
+    const [year, month, day] = fecha.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  private validarRangoFechas(control: AbstractControl): ValidationErrors | null {
+    const rango = control.value as DateRangeFilterValue | null;
+    return rango?.start && rango?.end ? null : { rangoFechasRequerido: true };
   }
 
   private hidratarPrefillCliente() {
