@@ -53,6 +53,8 @@ export interface IDetalleRapidoPreviewAdmin {
 
 export interface IActividadPreviewAdmin {
   id: number | null;
+  catalogo_atraccion_id?: number | null;
+  tipo_actividad?: string | null;
   imagen_fondo: string;
   icono?: string | null;
   imagen_fondo_id?: number | null;
@@ -95,6 +97,11 @@ export interface IPreviewDestinoAdmin {
   traducciones: ITraduccionPreviewAdmin[];
   detalles_rapidos: IDetalleRapidoPreviewAdmin[];
   actividades: IActividadPreviewAdmin[];
+  catalogo_atracciones: Array<{
+    id: number;
+    clave: string;
+    nombre: string;
+  }>;
   catalogo_tipos_dato_rapido: Array<{
     id: number;
     clave: string;
@@ -1705,6 +1712,7 @@ export class SupabaseService {
         .from('atracciones_principales')
         .select(`
           id,
+          catalogo_atraccion_id,
           imagen_fondo,
           detalles_destino_id
         `)
@@ -1847,6 +1855,7 @@ export class SupabaseService {
       idiomas,
       traducciones: datosPreview,
       catalogo_tipos_dato_rapido: catalogoTipos,
+      catalogo_atracciones: catalogoAtracciones,
       actividades: (actividades ?? []).map((actividad: any) => {
         const traduccionesActividad = traduccionesActividadPorId.get(actividad.id) ?? new Map();
         const imagenesActividad = imagenesActividadPorId.get(Number(actividad.id)) ?? [];
@@ -1907,6 +1916,9 @@ export class SupabaseService {
 
         return {
           id: actividad.id,
+          catalogo_atraccion_id: this.parseNumber(actividad.catalogo_atraccion_id),
+          tipo_actividad:
+            catalogoAtracciones.find((item: any) => Number(item.id) === Number(actividad.catalogo_atraccion_id))?.nombre ?? null,
           imagen_fondo: imagenFondoUrl,
           imagen_fondo_id: imagenFondoId,
           imagen_seleccionada: imagenFondoUrl,
@@ -1980,6 +1992,7 @@ export class SupabaseService {
     }>;
     actividades: Array<{
       id: number | null;
+      catalogo_atraccion_id?: number | null;
       imagen_fondo: string | null;
       imagenes?: Array<{
         id?: number | null;
@@ -2131,7 +2144,10 @@ export class SupabaseService {
       if (idActividad && idsExistentes.has(idActividad)) {
         const { error: updateActividadError } = await this.client
           .from('atracciones_principales')
-          .update({ imagen_fondo: actividad.imagen_fondo })
+          .update({
+            imagen_fondo: actividad.imagen_fondo,
+            catalogo_atraccion_id: actividad.catalogo_atraccion_id ?? null
+          })
           .eq('id', idActividad)
           .eq('detalles_destino_id', detallesDestinosId);
 
@@ -2145,7 +2161,8 @@ export class SupabaseService {
         .from('atracciones_principales')
         .insert({
           detalles_destino_id: detallesDestinosId,
-          imagen_fondo: actividad.imagen_fondo
+          imagen_fondo: actividad.imagen_fondo,
+          catalogo_atraccion_id: actividad.catalogo_atraccion_id ?? null
         })
         .select('id')
         .single();
@@ -2244,6 +2261,7 @@ export class SupabaseService {
   async guardarActividadDestinoAdmin(payload: {
     destino_id: number;
     actividad_id?: number | null;
+    catalogo_atraccion_id?: number | null;
     imagen_fondo: string | null;
     imagen_activa_id?: number | null;
     imagenes?: Array<{
@@ -2297,12 +2315,20 @@ export class SupabaseService {
     let actividadId = payload.actividad_id ?? null;
 
     if (actividadId) {
+      const { error: actualizarActividadError } = await this.client
+        .from('atracciones_principales')
+        .update({ catalogo_atraccion_id: payload.catalogo_atraccion_id ?? null })
+        .eq('id', actividadId)
+        .eq('detalles_destino_id', detallesDestinoId);
+
+      if (actualizarActividadError) throw actualizarActividadError;
       await this.sincronizarImagenesActividad(actividadId, payload.imagenes, payload.imagen_activa_id);
     } else {
       const { data: nuevaActividad, error: crearActividadError } = await this.client
         .from('atracciones_principales')
         .insert({
-          detalles_destino_id: detallesDestinoId
+          detalles_destino_id: detallesDestinoId,
+          catalogo_atraccion_id: payload.catalogo_atraccion_id ?? null
         })
         .select('id')
         .single();

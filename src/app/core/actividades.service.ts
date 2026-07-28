@@ -541,6 +541,7 @@ export class ActividadesService {
   async guardarActividadDestinoAdmin(payload: {
     destino_id: number;
     actividad_id?: number | null;
+    catalogo_atraccion_id?: number | null;
     imagen_fondo: string | null;
     imagen_activa_id?: number | null;
       imagenes?: Array<{
@@ -594,12 +595,20 @@ export class ActividadesService {
     let actividadId = payload.actividad_id ?? null;
 
     if (actividadId) {
+      const { error: actualizarActividadError } = await this.client
+        .from('atracciones_principales')
+        .update({ catalogo_atraccion_id: payload.catalogo_atraccion_id ?? null })
+        .eq('id', actividadId)
+        .eq('detalles_destino_id', detallesDestinoId);
+
+      if (actualizarActividadError) throw actualizarActividadError;
       await this.sincronizarImagenesActividad(actividadId, payload.imagenes, payload.imagen_activa_id);
     } else {
       const { data: nuevaActividad, error: crearActividadError } = await this.client
         .from('atracciones_principales')
         .insert({
-          detalles_destino_id: detallesDestinoId
+          detalles_destino_id: detallesDestinoId,
+          catalogo_atraccion_id: payload.catalogo_atraccion_id ?? null
         })
         .select('id')
         .single();
@@ -734,6 +743,38 @@ export class ActividadesService {
     }
 
     return { id: payload.actividad_id };
+  }
+
+  async actualizarCatalogoAtraccionActividadAdmin(payload: {
+    destino_id: number;
+    actividad_id: number;
+    catalogo_atraccion_id: number | null;
+  }) {
+    const { data: detalleExistente, error: detalleExistenteError } = await this.client
+      .from('detalles_destinos')
+      .select('id')
+      .eq('destino_id', payload.destino_id)
+      .maybeSingle();
+
+    if (detalleExistenteError) throw detalleExistenteError;
+    if (!detalleExistente?.id) {
+      throw new Error('No se encontro el detalle del destino.');
+    }
+
+    const { data: actividadActualizada, error: actualizarActividadError } = await this.client
+      .from('atracciones_principales')
+      .update({ catalogo_atraccion_id: payload.catalogo_atraccion_id })
+      .eq('id', payload.actividad_id)
+      .eq('detalles_destino_id', detalleExistente.id)
+      .select('id')
+      .maybeSingle();
+
+    if (actualizarActividadError) throw actualizarActividadError;
+    if (!actividadActualizada) {
+      throw new Error('La actividad no pertenece al destino seleccionado.');
+    }
+
+    return { id: actividadActualizada.id };
   }
 
   async actualizarImagenesActividadDestinoAdmin(payload: {

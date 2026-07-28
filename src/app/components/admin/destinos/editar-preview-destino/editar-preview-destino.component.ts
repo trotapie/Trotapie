@@ -103,6 +103,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
   });
 
   formActividad = this.fb.group({
+    catalogo_atraccion_id: [null as number | null, [Validators.required]],
     imagen_fondo: [''],
     imagenes: this.fb.array([]),
     traducciones: this.fb.group({})
@@ -122,6 +123,57 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
 
   get imagenesActividadArray(): UntypedFormArray {
     return this.formActividad.get('imagenes') as UntypedFormArray;
+  }
+
+  catalogoAtracciones: Array<{ id: number; clave: string; nombre: string }> = [];
+  busquedaActividades = '';
+  tipoActividadActivo: number | null = null;
+
+  get tiposConActividades(): Array<{ id: number; clave: string; nombre: string }> {
+    const tiposCargados = new Set(
+      this.actividadesArray.controls
+        .map((actividad) => this.parseNumber(actividad.get('catalogo_atraccion_id')?.value))
+        .filter((tipoId): tipoId is number => tipoId !== null)
+    );
+
+    return this.catalogoAtracciones.filter((tipo) => tiposCargados.has(tipo.id));
+  }
+
+  get actividadesFiltradas(): Array<{ control: any; formIndex: number }> {
+    const busqueda = this.normalizarTextoFiltro(this.busquedaActividades);
+
+    return this.actividadesArray.controls
+      .map((control, formIndex) => ({ control, formIndex }))
+      .filter(({ control }) => {
+        const tipoId = this.parseNumber(control.get('catalogo_atraccion_id')?.value);
+        const nombre = control.get(['traducciones', 'es', 'nombre'])?.value;
+
+        return (
+          (this.tipoActividadActivo === null || tipoId === this.tipoActividadActivo) &&
+          (!busqueda || this.normalizarTextoFiltro(nombre).includes(busqueda))
+        );
+      });
+  }
+
+  actualizarBusquedaActividades(event: Event): void {
+    this.busquedaActividades = (event.target as HTMLInputElement).value;
+  }
+
+  seleccionarTipoActividad(tipoId: number | null): void {
+    this.tipoActividadActivo = tipoId;
+    setTimeout(() => this.desplazarASeccion('atracciones'));
+  }
+
+  limpiarFiltrosActividades(): void {
+    this.busquedaActividades = '';
+    this.tipoActividadActivo = null;
+  }
+
+  obtenerNombreTipoActividad(actividad: any): string {
+    const tipoId = this.parseNumber(actividad.get('catalogo_atraccion_id')?.value);
+    const nombreCatalogo = this.catalogoAtracciones.find((tipo) => tipo.id === tipoId)?.nombre;
+
+    return nombreCatalogo || actividad.get('tipo_actividad')?.value || 'Sin clasificar';
   }
 
   get bloqueandoPantalla(): boolean {
@@ -225,6 +277,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
 
           return {
             id: this.parseNumber(actividad.id),
+            catalogo_atraccion_id: this.parseNumber(actividad.catalogo_atraccion_id),
             imagen_fondo: imagenPrincipal,
             imagenes,
             traducciones: this.idiomas.map((idioma) => ({
@@ -247,6 +300,10 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
 
   regresar() {
     this.router.navigate(['/admin/destinos/configurar-destinos']);
+  }
+
+  desplazarASeccion(id: string): void {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   cerrarModalExito() {
@@ -384,7 +441,12 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
       return acc;
     }, {} as Record<string, any>);
 
-    this.formActividad.reset({ imagen_fondo: '' });
+    this.formActividad.reset({
+      catalogo_atraccion_id: null,
+      imagen_fondo: ''
+    });
+    this.formActividad.get('catalogo_atraccion_id')?.setValidators(Validators.required);
+    this.formActividad.get('catalogo_atraccion_id')?.updateValueAndValidity();
     this.formActividad.setControl('traducciones', this.fb.group(traducciones));
     this.formActividad.setControl('imagenes', this.fb.array([]));
     this.concentradoTraduccionesActividad = {};
@@ -406,8 +468,11 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     }, {} as Record<string, any>);
 
     this.formActividad.reset({
+      catalogo_atraccion_id: this.parseNumber(actividad.get('catalogo_atraccion_id')?.value),
       imagen_fondo: actividad.get('imagen_fondo')?.value ?? ''
     });
+    this.formActividad.get('catalogo_atraccion_id')?.clearValidators();
+    this.formActividad.get('catalogo_atraccion_id')?.updateValueAndValidity();
     this.formActividad.setControl('traducciones', this.fb.group(traducciones));
     this.formActividad.setControl(
       'imagenes',
@@ -507,6 +572,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
       const guardada = await this.actividadesService.guardarActividadDestinoAdmin({
         destino_id: this.destinoId,
         actividad_id: actividadId,
+        catalogo_atraccion_id: this.parseNumber(raw.catalogo_atraccion_id),
         imagen_fondo: imagenPrincipal,
         imagenes: imagenes.length
           ? imagenes
@@ -530,6 +596,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
         const actividadForm = actividadExistente as any;
         actividadExistente.patchValue({
           id: guardada.id,
+          catalogo_atraccion_id: this.parseNumber(raw.catalogo_atraccion_id),
           imagen_fondo: imagenPrincipal ?? ''
         });
         actividadForm.setControl('imagenes', this.buildImagenesFormArray(imagenes));
@@ -545,6 +612,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
       } else {
         const actividadGroup = this.buildActividadGroup({
           id: guardada.id,
+          catalogo_atraccion_id: this.parseNumber(raw.catalogo_atraccion_id),
           imagen_fondo: imagenPrincipal ?? '',
           imagenes,
           traducciones: raw.traducciones ?? {}
@@ -848,6 +916,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
   private inicializarFormulario(data: IPreviewDestinoAdmin) {
     this.destinoNombre = data.destino_nombre;
     this.idiomas = this.ordenarIdiomas(data.idiomas);
+    this.catalogoAtracciones = data.catalogo_atracciones ?? [];
     const catalogoUnico = new Map<number, { id: number; clave: string; nombre: string }>();
     data.catalogo_tipos_dato_rapido.forEach((item) => {
       const id = Number(item.id);
@@ -930,6 +999,8 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
 
     return this.fb.group({
       id: [this.parseNumber(item?.id)],
+      catalogo_atraccion_id: [this.parseNumber(item?.catalogo_atraccion_id)],
+      tipo_actividad: [item?.tipo_actividad ?? ''],
       imagen_fondo: [item?.imagen_fondo ?? ''],
       imagenes: this.buildImagenesFormArray(imagenes),
       traducciones: this.fb.group(traducciones)
@@ -1125,6 +1196,14 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
   private limpiarTexto(value: string | null | undefined): string | null {
     const limpio = (value ?? '').trim();
     return limpio ? limpio : null;
+  }
+
+  private normalizarTextoFiltro(value: unknown): string {
+    return String(value ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLocaleLowerCase()
+      .trim();
   }
 
   private parseNumber(value: number | string | null | undefined): number | null {

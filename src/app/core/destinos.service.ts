@@ -325,6 +325,7 @@ export class DestinosService {
         .from('atracciones_principales')
         .select(`
           id,
+          catalogo_atraccion_id,
           imagen_fondo,
           detalles_destino_id
         `)
@@ -465,6 +466,7 @@ export class DestinosService {
       idiomas,
       traducciones: datosPreview,
       catalogo_tipos_dato_rapido: catalogoTipos,
+      catalogo_atracciones: catalogoAtracciones,
       actividades: (actividades ?? []).map((actividad: any) => {
         const traduccionesActividad = traduccionesActividadPorId.get(actividad.id) ?? new Map();
         const imagenesActividad = imagenesActividadPorId.get(Number(actividad.id)) ?? [];
@@ -523,6 +525,9 @@ export class DestinosService {
 
         return {
           id: actividad.id,
+          catalogo_atraccion_id: this.parseNumber(actividad.catalogo_atraccion_id),
+          tipo_actividad:
+            catalogoAtracciones.find((item: any) => Number(item.id) === Number(actividad.catalogo_atraccion_id))?.nombre ?? null,
           imagen_fondo: imagenFondoUrl,
           imagen_fondo_id: imagenFondoId,
           imagen_seleccionada: imagenFondoUrl,
@@ -596,6 +601,7 @@ export class DestinosService {
     }>;
     actividades: Array<{
       id: number | null;
+      catalogo_atraccion_id?: number | null;
       imagen_fondo: string | null;
       imagenes?: Array<{
         id?: number | null;
@@ -747,7 +753,10 @@ export class DestinosService {
       if (idActividad && idsExistentes.has(idActividad)) {
         const { error: updateActividadError } = await this.client
           .from('atracciones_principales')
-          .update({ imagen_fondo: actividad.imagen_fondo })
+          .update({
+            imagen_fondo: actividad.imagen_fondo,
+            catalogo_atraccion_id: actividad.catalogo_atraccion_id ?? null
+          })
           .eq('id', idActividad)
           .eq('detalles_destino_id', detallesDestinosId);
 
@@ -761,7 +770,8 @@ export class DestinosService {
         .from('atracciones_principales')
         .insert({
           detalles_destino_id: detallesDestinosId,
-          imagen_fondo: actividad.imagen_fondo
+          imagen_fondo: actividad.imagen_fondo,
+          catalogo_atraccion_id: actividad.catalogo_atraccion_id ?? null
         })
         .select('id')
         .single();

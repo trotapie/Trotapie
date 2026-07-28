@@ -1,1 +1,59 @@
 
+.preview-section-nav {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding-bottom: 0.15rem;
+  scrollbar-width: thin;
+}
+
+.preview-section-nav button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 0;
+  border-radius: 9999px;
+  background: transparent;
+  padding: 0.45rem 0.7rem;
+  color: rgb(75 85 99);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.preview-section-nav button:hover,
+.preview-section-nav button:focus-visible {
+  background: rgb(239 246 255);
+  color: rgb(2 132 199);
+  outline: none;
+}
+
+.preview-section-nav span {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 9999px;
+  background: rgb(226 232 240);
+  color: rgb(51 65 85);
+  font-size: 0.625rem;
+}
+
+:host-context(.dark) {
+  .preview-section-nav button {
+    color: rgb(148 163 184);
+  }
+
+  .preview-section-nav button:hover,
+  .preview-section-nav button:focus-visible {
+    background: rgb(30 41 59);
+    color: rgb(125 211 252);
+  }
+
+  .preview-section-nav span {
+    background: rgb(51 65 85);
+    color: rgb(226 232 240);
+  }
+}

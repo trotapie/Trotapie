@@ -133,8 +133,10 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   }> = [];
 
   idiomas: IIdiomaPreviewAdmin[] = [];
+  catalogoAtracciones: Array<{ id: number; clave: string; nombre: string }> = [];
 
   form = this.fb.group({
+    catalogo_atraccion_id: [null as number | null],
     traducciones: this.fb.array([]),
     imagenes: this.fb.array([])
   });
@@ -436,6 +438,15 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       this.destinoNombre = preview.destino_nombre;
       this.actividadNombre = this.obtenerNombreActividad(actividad, preview);
       this.idiomas = this.ordenarIdiomas(preview.idiomas);
+      this.catalogoAtracciones = [...(preview.catalogo_atracciones ?? [])];
+      const catalogoAtraccionId = this.parseNumber(actividad.catalogo_atraccion_id);
+      if (catalogoAtraccionId !== null && !this.catalogoAtracciones.some((tipo) => tipo.id === catalogoAtraccionId)) {
+        this.catalogoAtracciones.push({
+          id: catalogoAtraccionId,
+          clave: '',
+          nombre: actividad.tipo_actividad ?? 'Tipo desactivado'
+        });
+      }
       this.carpetasActividad = actividad.carpetas ?? [];
 
       const traducciones = this.idiomas.map((idioma) =>
@@ -449,6 +460,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
 
       this.form.setControl('traducciones', this.fb.array(traducciones));
       this.form.setControl('imagenes', this.buildImagenesFormArray(actividad.imagenes ?? []));
+      this.form.get('catalogo_atraccion_id')?.setValue(catalogoAtraccionId);
       this.carpetaActiva = this.carpetasDisponibles[0]?.nombre ?? 'Todas';
       this.normalizarOrdenImagenes();
       this.concentradoTraduccionesActividad = this.construirConcentradoTraduccionesDesdeActividad(actividad);
@@ -1691,6 +1703,11 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     this.error = '';
 
     try {
+      await this.actividadesService.actualizarCatalogoAtraccionActividadAdmin({
+        destino_id: this.destinoId,
+        actividad_id: this.actividadId,
+        catalogo_atraccion_id: this.parseNumber(raw.catalogo_atraccion_id)
+      });
       await this.actividadesService.guardarTraduccionesActividadAdmin({
         destino_id: this.destinoId,
         actividad_id: this.actividadId,

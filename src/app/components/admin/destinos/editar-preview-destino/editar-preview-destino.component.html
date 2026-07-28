@@ -1,24 +1,31 @@
-<div class="flex min-w-0 flex-auto flex-col bg-gray-50">
-  <div class="mx-auto flex w-full max-w-screen-xl flex-col px-6 py-6 sm:px-8">
+<div class="flex min-w-0 flex-auto flex-col bg-gray-50 dark:bg-gray-950">
+  <div class="mx-auto flex w-full max-w-screen-xl flex-col px-4 py-5 sm:px-8 sm:py-7">
     <app-blocking-loader
       [open]="bloqueandoPantalla"
       [title]="cargando ? 'Cargando preview' : guardando ? 'Guardando preview' : traduciendoActividad ? 'Traduciendo actividad' : actualizandoOrden ? 'Actualizando orden' : eliminandoActividadIndex !== null ? 'Eliminando actividad' : 'Procesando'"
       [message]="cargando ? 'Estamos cargando la informacion para mostrarte el preview.' : guardando ? 'No cierres la pantalla mientras guardamos los cambios.' : traduciendoActividad ? 'Estamos completando las traducciones automaticamente.' : actualizandoOrden ? 'Estamos reordenando la informacion.' : eliminandoActividadIndex !== null ? 'Eliminamos la actividad seleccionada.' : 'Espera un momento.'"
     />
 
-    <div class="sticky top-0 z-[100] mb-4 w-full rounded-xl border border-transparent bg-transparent px-2 py-2 backdrop-blur-md transition-all duration-300 md:px-4">
-      <div class="w-full md:flex md:items-center md:justify-between">
-        <div>
-          <h1 class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">Editar preview del destino</h1>
-          <p class="mt-1 text-sm text-gray-500">{{ destinoNombre }}</p>
+    <header class="sticky top-0 z-[100] mb-5 rounded-2xl border border-gray-200/80 bg-white/95 p-4 shadow-sm backdrop-blur-md dark:border-gray-800 dark:bg-gray-900/95 sm:p-5">
+      <nav aria-label="Ruta de navegación" class="mb-4 flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-gray-400">
+        <button type="button" (click)="regresar()" class="transition-colors hover:text-primary">Destinos</button>
+        <mat-icon class="icon-size-3">chevron_right</mat-icon>
+        <span>Preview</span>
+      </nav>
+
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div class="min-w-0">
+          <p class="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Configuración editorial</p>
+          <h1 class="mt-1 truncate text-2xl font-semibold leading-tight text-gray-900 dark:text-white sm:text-3xl">{{ destinoNombre || 'Editar preview del destino' }}</h1>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Contenido, información práctica y atracciones visibles en la ficha pública.</p>
         </div>
 
-        <div class="my-2 flex items-center gap-3 md:my-0">
-          <button mat-raised-button color="warn" class="text-white" (click)="regresar()">
-            <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
+        <div class="flex flex-col-reverse gap-2 sm:flex-row sm:items-center">
+          <button mat-stroked-button type="button" (click)="regresar()" class="!border-gray-300 dark:!border-gray-700 dark:!text-gray-200">
+            <mat-icon class="mr-2 icon-size-5" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
             Regresar
           </button>
-          <button mat-raised-button color="primary" class="text-white" type="submit" form="form-editar-preview" [disabled]="guardando">
+          <button mat-flat-button color="primary" class="text-white" type="submit" form="form-editar-preview" [disabled]="guardando">
             <mat-icon class="mr-2 icon-size-5 text-white">save</mat-icon>
             @if (guardando) {
               Guardando...
@@ -28,21 +35,35 @@
           </button>
         </div>
       </div>
-    </div>
+
+      <nav aria-label="Secciones del preview" class="preview-section-nav mt-4 border-t border-gray-100 pt-3 dark:border-gray-800">
+        <button type="button" (click)="desplazarASeccion('ubicacion')">Ubicación</button>
+        <button type="button" (click)="desplazarASeccion('textos')">Textos <span>{{ idiomas.length }}</span></button>
+        <button type="button" (click)="desplazarASeccion('datos-rapidos')">Datos rápidos <span>{{ detallesRapidosArray.length }}</span></button>
+        <button type="button" (click)="desplazarASeccion('atracciones')">Atracciones <span>{{ actividadesArray.length }}</span></button>
+      </nav>
+    </header>
 
     @if (!cargando) {
       <form id="form-editar-preview" [formGroup]="form" (ngSubmit)="guardar()" class="space-y-6">
-        <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
-          <h2 class="mb-4 text-lg font-semibold text-gray-900">Informacion general</h2>
+        <main class="min-w-0 space-y-6">
+        <section id="ubicacion" class="scroll-mt-56 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-7">
+          <div class="mb-5">
+            <p class="text-xs font-semibold uppercase tracking-[0.16em] text-primary">01 · Contexto</p>
+            <h2 class="mt-1 text-xl font-semibold text-gray-900 dark:text-white">Ubicación del destino</h2>
+          </div>
+          <div class="grid gap-5 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:items-start">
+            <div>
           <mat-form-field class="w-full">
             <mat-label>Ubicacion (URL)</mat-label>
             <input matInput formControlName="ubicacion" />
           </mat-form-field>
 
+            </div>
           @if (form.get('ubicacion')?.value) {
-            <div class="mt-3 rounded-xl border border-gray-200 bg-gray-50 p-4">
+            <div class="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/60">
               <div class="mb-3 flex items-center justify-between gap-3">
-                <p class="text-sm font-medium text-gray-700">Vista previa de ubicacion</p>
+                <p class="text-sm font-medium text-gray-700 dark:text-gray-200">Vista previa de ubicación</p>
                 <a
                   mat-stroked-button
                   color="primary"
@@ -55,43 +76,52 @@
               </div>
 
               @if (coordenadasUbicacion) {
-                <div class="relative z-0 overflow-hidden rounded-lg border border-gray-200 bg-white">
+                  <div class="relative z-0 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
                   <div #ubicacionMapPreview class="h-72 w-full"></div>
                 </div>
               } @else {
-                <p class="text-xs text-gray-500">
+                <p class="text-xs text-gray-500 dark:text-gray-400">
                   No se detectaron coordenadas en la URL. Puedes abrirla con el boton.
                 </p>
               }
             </div>
+          } @else {
+            <div class="flex min-h-36 flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-gray-50 p-5 text-center dark:border-gray-700 dark:bg-gray-800/40">
+              <mat-icon class="mb-2 text-gray-400">location_on</mat-icon>
+              <p class="text-sm font-medium text-gray-700 dark:text-gray-200">Agrega una URL de ubicación</p>
+              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Se mostrará un mapa cuando la URL incluya coordenadas.</p>
+            </div>
           }
+          </div>
         </section>
 
-        <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8" formArrayName="traducciones">
-          <h2 class="mb-4 text-lg font-semibold text-gray-900">Textos del preview
-          </h2>
+        <section id="textos" class="scroll-mt-56 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-7" formArrayName="traducciones">
+          <div class="mb-5 flex items-end justify-between gap-4">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-[0.16em] text-primary">02 · Narrativa</p>
+              <h2 class="mt-1 text-xl font-semibold text-gray-900 dark:text-white">Textos del preview</h2>
+              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Edita cada idioma desde su ficha de contenido.</p>
+            </div>
+            <span class="rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">{{ idiomas.length }} idiomas</span>
+          </div>
 
-          <div class="overflow-x-auto rounded-xl border border-gray-200">
-            <table class="min-w-[560px] w-full">
-              <thead class="bg-gray-50">
+          <div class="hidden overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 md:block">
+            <table class="w-full">
+              <thead class="bg-gray-50 dark:bg-gray-800/70">
                 <tr>
-                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Idioma</th>
-                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Titulo descripcion</th>
-                  <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-600">Acciones</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">Idioma</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">Título de descripción</th>
+                  <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 @for (idioma of idiomas; track idioma.id; let i = $index) {
-                  <tr class="border-t border-gray-100 bg-white" [formGroupName]="i">
-                    <td class="px-4 py-3 text-sm font-semibold text-gray-700 uppercase">
-                      {{ getNombreIdioma(idioma.codigo) }}
-                    </td>
-                    <td class="px-4 py-3 text-sm text-gray-700">
-                      {{ getControlTraduccion(i, 'titulo_descripcion')?.value || 'Sin titulo' }}
-                    </td>
+                  <tr class="border-t border-gray-100 bg-white transition-colors hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-gray-800/60" [formGroupName]="i">
+                    <td class="px-4 py-3 text-sm font-semibold text-gray-700 uppercase dark:text-gray-200">{{ getNombreIdioma(idioma.codigo) }}</td>
+                    <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{{ getControlTraduccion(i, 'titulo_descripcion')?.value || 'Sin título' }}</td>
                     <td class="px-4 py-3">
                       <div class="flex items-center justify-end gap-2">
-                        <button mat-icon-button type="button" [matTooltip]="'Editar texto'" (click)="abrirModalEditarTextoPreview(i)">
+                        <button mat-icon-button type="button" aria-label="Editar texto" [matTooltip]="'Editar texto'" (click)="abrirModalEditarTextoPreview(i)">
                           <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
                         </button>
                       </div>
@@ -101,85 +131,162 @@
               </tbody>
             </table>
           </div>
-        </section>
 
-        <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8" formArrayName="detallesRapidos">
-          <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h2 class="text-lg font-semibold text-gray-900">Datos rapidos</h2>
-            <div class="flex items-center gap-2">
-              <!-- <button mat-stroked-button type="button" (click)="actualizarOrdenDetallesRapidos()" [disabled]="actualizandoOrden">
-                @if (actualizandoOrden) {
-                  Actualizando...
-                } @else {
-                  Actualizar orden
-                }
-              </button>
-              <button mat-flat-button color="primary" type="button" (click)="abrirModalNuevoDatoRapido()">
-                Crear nuevo dato rapido
-              </button> -->
-            </div>
-          </div>
-
-          <div class="overflow-x-auto rounded-xl border border-gray-200">
-            <table class="min-w-[560px] w-full">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Orden</th>
-                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Dato rapido</th>
-                  <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-600">Acciones</th>
-                </tr>
-              </thead>
-              <tbody cdkDropList [cdkDropListData]="detallesRapidosArray.controls" (cdkDropListDropped)="dropDetalleRapido($event)">
-                @for (detalle of detallesRapidosArray.controls; track $index; let i = $index) {
-                  <tr class="border-t border-gray-100 bg-white" [formGroupName]="i" cdkDrag>
-                    <td class="px-4 py-3 text-sm text-gray-700">
-                      {{ i + 1 }}
-                    </td>
-                    <td class="px-4 py-3">
-                      <div class="font-medium text-gray-800">{{ detalle.get('nombre')?.value }}</div>
-                    </td>
-                    <td class="px-4 py-3">
-                      <div class="flex items-center justify-end gap-2">
-                        <button mat-icon-button type="button" [matTooltip]="'Editar dato rapido'" (click)="abrirModalEditarDatoRapido(i)">
-                          <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
-                        </button>
-                        <!-- <button mat-icon-button type="button" cdkDragHandle [matTooltip]="'Reordenar'">
-                          <mat-icon class="cursor-move">drag_indicator</mat-icon>
-                        </button> -->
-                      </div>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
+          <div class="space-y-3 md:hidden">
+            @for (idioma of idiomas; track idioma.id; let i = $index) {
+              <article class="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="min-w-0">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-primary">{{ getNombreIdioma(idioma.codigo) }}</p>
+                    <p class="mt-1 truncate text-sm font-medium text-gray-800 dark:text-gray-100">{{ getControlTraduccion(i, 'titulo_descripcion')?.value || 'Sin título' }}</p>
+                  </div>
+                  <button mat-icon-button type="button" aria-label="Editar texto" (click)="abrirModalEditarTextoPreview(i)">
+                    <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
+                  </button>
+                </div>
+              </article>
+            }
           </div>
         </section>
 
-        <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8" formArrayName="actividades">
-          <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h2 class="text-lg font-semibold text-gray-900">Atracciones principales</h2>
-            <button mat-flat-button color="primary" type="button" (click)="abrirModalNuevaActividad()">
-              Crear nueva actividad
-            </button>
+        <section id="datos-rapidos" class="scroll-mt-56 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-7" formArrayName="detallesRapidos">
+          <div class="mb-5">
+            <p class="text-xs font-semibold uppercase tracking-[0.16em] text-primary">03 · Esenciales</p>
+            <h2 class="mt-1 text-xl font-semibold text-gray-900 dark:text-white">Datos rápidos</h2>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Información práctica que acompaña al viajero.</p>
           </div>
 
-          <div class="overflow-x-auto rounded-xl border border-gray-200">
-            <table class="min-w-[560px] w-full">
-              <thead class="bg-gray-50">
+          <div class="hidden overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 md:block">
+            <table class="w-full">
+              <thead class="bg-gray-50 dark:bg-gray-800/70">
                 <tr>
-                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Nombre (Español)</th>
-                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Imagenes</th>
-                  <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-600">Acciones</th>
+                  <th class="w-20 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">#</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">Dato rápido</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">Vista en español</th>
+                  <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                @for (actividad of actividadesArray.controls; track $index; let i = $index) {
-                  <tr class="border-t border-gray-100 bg-white" [formGroupName]="i">
-                    <td class="px-4 py-3 text-sm text-gray-700">
-                      {{ actividad.get(['traducciones', 'es', 'nombre'])?.value || 'Sin nombre' }}
+                @for (detalle of detallesRapidosArray.controls; track $index; let i = $index) {
+                  <tr class="border-t border-gray-100 bg-white transition-colors hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-gray-800/60" [formGroupName]="i">
+                    <td class="px-4 py-3 text-sm font-semibold text-primary">{{ i + 1 }}</td>
+                    <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">{{ detalle.get('nombre')?.value }}</td>
+                    <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ getControlDetalleRapido(i, 'es')?.value || 'Sin valor' }}</td>
+                    <td class="px-4 py-3">
+                      <div class="flex justify-end">
+                        <button mat-icon-button type="button" aria-label="Editar dato rápido" [matTooltip]="'Editar dato rápido'" (click)="abrirModalEditarDatoRapido(i)">
+                          <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="4" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">No hay datos rápidos configurados.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <div class="space-y-3 md:hidden">
+            @for (detalle of detallesRapidosArray.controls; track $index; let i = $index) {
+              <article class="flex items-center gap-3 rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-50 text-sm font-bold text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">{{ i + 1 }}</span>
+                <div class="min-w-0 flex-1">
+                  <p class="font-medium text-gray-800 dark:text-gray-100">{{ detalle.get('nombre')?.value }}</p>
+                  <p class="mt-0.5 truncate text-sm text-gray-500 dark:text-gray-400">{{ getControlDetalleRapido(i, 'es')?.value || 'Sin valor en español' }}</p>
+                </div>
+                <button mat-icon-button type="button" aria-label="Editar dato rápido" (click)="abrirModalEditarDatoRapido(i)">
+                  <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
+                </button>
+              </article>
+            } @empty {
+              <div class="rounded-xl border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">No hay datos rápidos configurados.</div>
+            }
+          </div>
+        </section>
+
+        <section id="atracciones" class="scroll-mt-56 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-7" formArrayName="actividades">
+          <div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-[0.16em] text-primary">04 · Descubrimiento</p>
+              <div class="mt-1 flex flex-wrap items-center gap-3">
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Atracciones principales</h2>
+                <span class="rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">{{ actividadesArray.length }} registradas</span>
+              </div>
+              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Organiza las experiencias que verán los viajeros en este destino.</p>
+            </div>
+            <button mat-flat-button color="primary" type="button" (click)="abrirModalNuevaActividad()">
+              <mat-icon class="mr-2 icon-size-5">add</mat-icon>
+              Crear atracción
+            </button>
+          </div>
+
+          <div class="mb-3 rounded-xl border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800/50">
+            <div class="flex flex-col gap-3">
+            <mat-form-field class="w-full sm:max-w-xs" subscriptSizing="dynamic">
+              <mat-label>Buscar actividad</mat-label>
+              <input matInput type="search" [value]="busquedaActividades" (input)="actualizarBusquedaActividades($event)" />
+              <mat-icon matPrefix [svgIcon]="'heroicons_outline:magnifying-glass'"></mat-icon>
+            </mat-form-field>
+
+            <div class="-mx-1 overflow-x-auto px-1" role="tablist" aria-label="Filtrar actividades por tipo">
+              <div class="flex w-max gap-2">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-controls="tabla-atracciones"
+                  [attr.aria-selected]="tipoActividadActivo === null"
+                  [class]="tipoActividadActivo === null
+                    ? 'rounded-full bg-primary px-4 py-2 text-sm font-medium text-on-primary shadow-sm'
+                    : 'rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'"
+                  (click)="seleccionarTipoActividad(null)"
+                >
+                  Todas
+                </button>
+                @for (tipo of tiposConActividades; track tipo.id) {
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-controls="tabla-atracciones"
+                    [attr.aria-selected]="tipoActividadActivo === tipo.id"
+                    [class]="tipoActividadActivo === tipo.id
+                      ? 'rounded-full bg-primary px-4 py-2 text-sm font-medium text-on-primary shadow-sm'
+                      : 'rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'"
+                    (click)="seleccionarTipoActividad(tipo.id)"
+                  >
+                    {{ tipo.nombre }}
+                  </button>
+                }
+              </div>
+            </div>
+            </div>
+          </div>
+
+          <div class="mb-4 flex flex-wrap items-center justify-between gap-2 text-sm">
+            <p class="text-gray-500 dark:text-gray-400">Mostrando <span class="font-semibold text-gray-800 dark:text-gray-200">{{ actividadesFiltradas.length }}</span> de {{ actividadesArray.length }} atracciones</p>
+            @if (busquedaActividades || tipoActividadActivo !== null) {
+              <button type="button" class="font-medium text-primary hover:underline" (click)="limpiarFiltrosActividades()">Limpiar filtros</button>
+            }
+          </div>
+
+          <div class="hidden overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 md:block">
+            <table id="tabla-atracciones" class="w-full">
+              <thead class="bg-gray-50 dark:bg-gray-800/70">
+                <tr>
+                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">Atracción</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">Imágenes</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">Tipo</th>
+                  <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (fila of actividadesFiltradas; track fila.formIndex) {
+                  <tr class="border-t border-gray-100 bg-white transition-colors hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-gray-800/60" [formGroupName]="fila.formIndex">
+                    <td class="px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200">
+                      {{ fila.control.get(['traducciones', 'es', 'nombre'])?.value || 'Sin nombre' }}
                     </td>
                     <td class="px-4 py-3">
-                      @if (getImagenesActivasActividad(i); as imagenesActivas) {
+                      @if (getImagenesActivasActividad(fila.formIndex); as imagenesActivas) {
                         @if (imagenesActivas.length > 0) {
                           <div class="flex flex-wrap items-center gap-1.5">
                             @for (img of imagenesActivas.slice(0, 4); track img.id) {
@@ -187,58 +294,107 @@
                                 <img
                                   [src]="img.imagen_url"
                                   alt="Imagen de actividad"
-                                  class="h-10 w-14 rounded-md border border-gray-200 object-cover"
+                                  class="h-10 w-14 rounded-md border border-gray-200 object-cover dark:border-gray-600"
                                 />
                               </a>
                             }
                             @if (imagenesActivas.length > 4) {
-                              <div class="flex h-10 w-14 items-center justify-center rounded-md border border-gray-200 bg-gray-100 text-sm font-semibold text-gray-500">
+                              <div class="flex h-10 w-14 items-center justify-center rounded-md border border-gray-200 bg-gray-100 text-sm font-semibold text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300">
                                 +{{ imagenesActivas.length - 4 }}
                               </div>
                             }
                           </div>
-                        } @else if (actividad.get('imagen_fondo')?.value) {
-                          <a [href]="actividad.get('imagen_fondo')?.value" target="_blank" rel="noopener noreferrer" class="block">
+                        } @else if (fila.control.get('imagen_fondo')?.value) {
+                          <a [href]="fila.control.get('imagen_fondo')?.value" target="_blank" rel="noopener noreferrer" class="block">
                             <img
-                              [src]="actividad.get('imagen_fondo')?.value"
+                              [src]="fila.control.get('imagen_fondo')?.value"
                               alt="Imagen de actividad"
-                              class="h-10 w-14 rounded-md border border-gray-200 object-cover"
+                              class="h-10 w-14 rounded-md border border-gray-200 object-cover dark:border-gray-600"
                             />
                           </a>
                         } @else {
-                          <span class="text-sm text-amber-700">Sin imagen cargada</span>
+                          <span class="text-sm text-amber-700 dark:text-amber-400">Sin imagen cargada</span>
                         }
                       }
                     </td>
+                    <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                      <span class="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium dark:bg-gray-800">{{ obtenerNombreTipoActividad(fila.control) }}</span>
+                    </td>
                     <td class="px-4 py-3">
                       <div class="flex items-center justify-end gap-2">
-                        <button mat-icon-button type="button" [matTooltip]="'Editar actividad'" (click)="abrirPantallaEditarActividad(i)">
+                        <button mat-icon-button type="button" aria-label="Editar actividad" [matTooltip]="'Editar actividad'" (click)="abrirPantallaEditarActividad(fila.formIndex)">
                           <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
                         </button>
                         <button
                           mat-icon-button
                           type="button"
+                          aria-label="Eliminar actividad"
                           [matTooltip]="'Eliminar actividad'"
-                          [disabled]="eliminandoActividadIndex === i"
-                          (click)="abrirModalConfirmarEliminarActividad(i)"
+                          [disabled]="eliminandoActividadIndex === fila.formIndex"
+                          (click)="abrirModalConfirmarEliminarActividad(fila.formIndex)"
                         >
                           <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
                         </button>
                       </div>
                     </td>
                   </tr>
+                } @empty {
+                  <tr class="border-t border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900">
+                    <td colspan="4" class="px-4 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
+                    @if (actividadesArray.length === 0) {
+                        Aún no hay atracciones. Crea la primera para enriquecer este destino.
+                      } @else {
+                        No hay atracciones que coincidan con los filtros seleccionados.
+                      }
+                    </td>
+                  </tr>
                 }
               </tbody>
             </table>
           </div>
+
+          <div class="space-y-3 md:hidden">
+            @for (fila of actividadesFiltradas; track fila.formIndex) {
+              <article class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
+                <div class="flex gap-3 p-3">
+                  @if (getImagenActivaActividad(fila.formIndex); as imagen) {
+                    <img [src]="imagen.imagen_url" alt="Imagen de actividad" class="h-20 w-20 shrink-0 rounded-lg object-cover" />
+                  } @else {
+                    <div class="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-400 dark:bg-gray-800"><mat-icon>image</mat-icon></div>
+                  }
+                  <div class="min-w-0 flex-1">
+                    <p class="truncate font-semibold text-gray-800 dark:text-gray-100">{{ fila.control.get(['traducciones', 'es', 'nombre'])?.value || 'Sin nombre' }}</p>
+                    <span class="mt-2 inline-flex rounded-full bg-primary-50 px-2.5 py-1 text-xs font-medium text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">{{ obtenerNombreTipoActividad(fila.control) }}</span>
+                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ getImagenesActivasActividad(fila.formIndex).length }} imágenes activas</p>
+                  </div>
+                </div>
+                <div class="flex border-t border-gray-100 dark:border-gray-800">
+                  <button type="button" class="flex-1 px-4 py-3 text-sm font-semibold text-primary" (click)="abrirPantallaEditarActividad(fila.formIndex)">Editar</button>
+                  <button type="button" class="border-l border-gray-100 px-4 py-3 text-sm font-semibold text-red-600 dark:border-gray-800 dark:text-red-400" [disabled]="eliminandoActividadIndex === fila.formIndex" (click)="abrirModalConfirmarEliminarActividad(fila.formIndex)">Eliminar</button>
+                </div>
+              </article>
+            } @empty {
+              <div class="rounded-xl border border-dashed border-gray-300 bg-gray-50 px-5 py-10 text-center dark:border-gray-700 dark:bg-gray-800/40">
+                <mat-icon class="text-gray-400">explore</mat-icon>
+                @if (actividadesArray.length === 0) {
+                  <p class="mt-2 text-sm font-medium text-gray-700 dark:text-gray-200">Aún no hay atracciones</p>
+                  <button type="button" class="mt-3 text-sm font-semibold text-primary" (click)="abrirModalNuevaActividad()">Crear primera atracción</button>
+                } @else {
+                  <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">No hay resultados con los filtros actuales.</p>
+                  <button type="button" class="mt-3 text-sm font-semibold text-primary" (click)="limpiarFiltrosActividades()">Limpiar filtros</button>
+                }
+              </div>
+            }
+          </div>
         </section>
 
         @if (error) {
-          <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300" role="alert">
             {{ error }}
           </div>
         }
 
+        </main>
       </form>
     }
   </div>
@@ -246,8 +402,8 @@
 
 @if (mostrarModalExito) {
   <div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
-    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
-      <h3 class="text-xl font-semibold text-gray-900">Actualizacion completada</h3>
+    <div role="dialog" aria-modal="true" aria-labelledby="titulo-modal-exito" class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900">
+      <h3 id="titulo-modal-exito" class="text-xl font-semibold text-gray-900 dark:text-white">Actualizacion completada</h3>
       <p class="mt-2 text-sm text-gray-600">{{ mensajeModalExito }}</p>
 
       <div class="mt-6 flex justify-end">
@@ -259,8 +415,8 @@
 
 @if (mostrarModalConfirmarEliminarActividad) {
   <div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
-    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
-      <h3 class="text-xl font-semibold text-gray-900">Confirmar eliminacion</h3>
+    <div role="dialog" aria-modal="true" aria-labelledby="titulo-modal-eliminar-actividad" class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900">
+      <h3 id="titulo-modal-eliminar-actividad" class="text-xl font-semibold text-gray-900 dark:text-white">Confirmar eliminacion</h3>
       <p class="mt-2 text-sm text-gray-600">Seguro que quieres eliminar esta atraccion principal?</p>
 
       <div class="mt-6 flex justify-end gap-2">
@@ -405,6 +561,17 @@
 
       <div class="mt-4 flex-1 overflow-y-auto pr-1">
         <form [formGroup]="formActividad" class="space-y-4">
+          <mat-form-field class="w-full">
+            <mat-label>Tipo de actividad</mat-label>
+            <mat-select formControlName="catalogo_atraccion_id">
+              @for (tipo of catalogoAtracciones; track tipo.id) {
+                <mat-option [value]="tipo.id">{{ tipo.nombre }}</mat-option>
+              }
+            </mat-select>
+            @if (formActividad.get('catalogo_atraccion_id')?.invalid && formActividad.get('catalogo_atraccion_id')?.touched) {
+              <mat-error>Selecciona un tipo de actividad.</mat-error>
+            }
+          </mat-form-field>
           @if (mostrarModalEditarActividad) {
             <mat-form-field class="w-full">
               <mat-label>Imagen principal / respaldo (URL)</mat-label>
