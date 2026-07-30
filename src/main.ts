@@ -25,16 +25,16 @@ const unlockAppScroll = (): void => {
   document.body.classList.add('app-skeleton-hidden');
 };
 
-const wireAppSkeleton = (): void => {
+const wireAppSkeleton = (): (() => void) => {
   if (typeof document === 'undefined' || typeof window === 'undefined') {
-    return;
+    return () => undefined;
   }
 
   const skeleton = document.getElementById('app-skeleton');
 
   if (!skeleton) {
     unlockAppScroll();
-    return;
+    return () => undefined;
   }
 
   let unlocked = false;
@@ -46,24 +46,24 @@ const wireAppSkeleton = (): void => {
 
     unlocked = true;
     unlockAppScroll();
-    skeleton.removeEventListener('animationend', handleAnimationEnd);
   };
 
-  const handleAnimationEnd = (event: AnimationEvent): void => {
-    if (event.target !== skeleton) {
-      return;
-    }
+  // Keep a safety net for a failed bootstrap, but do not hide the app before
+  // Angular has mounted the router outlet.
+  window.setTimeout(releaseScroll, 10_000);
 
-    releaseScroll();
-  };
-
-  skeleton.addEventListener('animationend', handleAnimationEnd);
-  window.setTimeout(releaseScroll, 3500);
+  return releaseScroll;
 };
+
+const releaseSkeleton = wireAppSkeleton();
 
 if (typeof window !== 'undefined') {
   injectSpeedInsights();
-  wireAppSkeleton();
 }
 
-bootstrapApplication(AppComponent, appConfig).catch((err) => console.error(err));
+bootstrapApplication(AppComponent, appConfig)
+  .then(() => releaseSkeleton())
+  .catch((err) => {
+    releaseSkeleton();
+    console.error('No se pudo iniciar la aplicacion.', err);
+  });

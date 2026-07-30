@@ -24,6 +24,8 @@ import { mockApiInterceptor } from '@fuse/lib/mock-api';
 import { getDefaultLang } from './lang.utils';
 import { MatPaginatorIntl } from '@angular/material/paginator';
 import { getSpanishPaginatorIntl } from './core/i18n/mat-paginator-es';
+import { authInterceptor } from './core/auth/auth.interceptor';
+import { fuseLoadingInterceptor } from '@fuse/services/loading';
 
 export const appConfig: ApplicationConfig = {
     providers: [
@@ -32,7 +34,8 @@ export const appConfig: ApplicationConfig = {
             withJsonpSupport(),
             withInterceptors([
                 mockApiInterceptor,
-                // fuseLoadingInterceptor,
+                authInterceptor,
+                fuseLoadingInterceptor,
             ])
         ),
         provideRouter(
@@ -112,12 +115,12 @@ export const appConfig: ApplicationConfig = {
 
             return firstValueFrom(
                 translocoService.load(lang).pipe(
-                    timeout(10_000),
+                    timeout(3_000),
                     catchError(() => {
                         translocoService.setActiveLang('es');
 
                         return translocoService.load('es').pipe(
-                            timeout(10_000),
+                            timeout(3_000),
                             // Do not prevent Angular from bootstrapping if translations are unavailable.
                             catchError(() => of({}))
                         );

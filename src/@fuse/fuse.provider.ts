@@ -1,4 +1,3 @@
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import {
     EnvironmentProviders,
     Provider,
@@ -12,14 +11,12 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import {
     FUSE_MOCK_API_DEFAULT_DELAY,
-    mockApiInterceptor,
 } from '@fuse/lib/mock-api';
 import { FuseConfig } from '@fuse/services/config';
 import { FUSE_CONFIG } from '@fuse/services/config/config.constants';
 import { FuseConfirmationService } from '@fuse/services/confirmation';
 import {
     FuseLoadingService,
-    fuseLoadingInterceptor,
 } from '@fuse/services/loading';
 import { FuseMediaWatcherService } from '@fuse/services/media-watcher';
 import { FusePlatformService } from '@fuse/services/platform';
@@ -69,7 +66,6 @@ export const provideFuse = (
         importProvidersFrom(MatDialogModule),
         provideEnvironmentInitializer(() => inject(FuseConfirmationService)),
 
-        provideHttpClient(withInterceptors([fuseLoadingInterceptor])),
         provideEnvironmentInitializer(() => inject(FuseLoadingService)),
 
         provideEnvironmentInitializer(() => inject(FuseMediaWatcherService)),
@@ -80,7 +76,6 @@ export const provideFuse = (
     // Mock Api services
     if (config?.mockApi?.service) {
         providers.push(
-            provideHttpClient(withInterceptors([mockApiInterceptor])),
             provideAppInitializer(() => {
                 const mockApiService = inject(config.mockApi.service);
             })

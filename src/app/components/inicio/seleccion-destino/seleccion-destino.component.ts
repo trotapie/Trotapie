@@ -210,22 +210,27 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
   }
 
   async obtenerImagenesFondo() {
-    this.imagenesFondo = await this.supabase.getImagenesFondo();
-    if (!this.imagenesFondo?.length) return;
+    try {
+      this.imagenesFondo = await this.supabase.getImagenesFondo();
+      if (!this.imagenesFondo?.length) return;
 
-    // ✅ 1) Mostrar la primera imagen inmediatamente (sin esperar al interval)
-    const firstIndex = Math.floor(Math.random() * this.imagenesFondo.length);
-    this.previousIndex = firstIndex;
+      // Mostrar la primera imagen sin bloquear el resto de la pantalla.
+      const firstIndex = Math.floor(Math.random() * this.imagenesFondo.length);
+      this.previousIndex = firstIndex;
 
-    const firstUrl = this.imagenesFondo[firstIndex];
+      const firstUrl = this.imagenesFondo[firstIndex];
 
-    // (opcional pero recomendado) precarga para evitar parpadeo/latencia
-    await this.preloadImage(firstUrl.url_imagen);
+      await this.preloadImage(firstUrl.url_imagen);
 
-    this.cambiarFondoConTransicion(firstUrl.url_imagen, firstUrl.nombre_destino);
+      this.cambiarFondoConTransicion(firstUrl.url_imagen, firstUrl.nombre_destino);
 
-    // ✅ 2) Ya después arrancas el carrusel
-    this.startRandomCarousel();
+      this.startRandomCarousel();
+    } catch (error) {
+      this.error = error instanceof Error
+        ? error.message
+        : 'No se pudieron cargar las imagenes de inicio.';
+      console.error('No se pudieron cargar las imagenes de fondo.', error);
+    }
   }
 
   private preloadImage(url: string): Promise<void> {
