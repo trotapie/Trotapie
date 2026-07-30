@@ -12,6 +12,7 @@ import { EstatusComponent } from 'app/shared/estatus/estatus.component';
 import { MaterialModule } from 'app/shared/material.module';
 import { DateRangeFilterComponent } from 'app/shared/date-range-filter/date-range-filter.component';
 import { DateRangeFilterValue, EMPTY_DATE_RANGE } from 'app/shared/date-range-filter/date-range-filter.model';
+import * as XLSX from 'xlsx';
 
 type ColumnFilterKey =
   | 'id'
@@ -38,8 +39,8 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
   readonly fechaMaximaFiltro = new Date();
 
   displayedColumns: string[] = [
-    'id',
     'fecha',
+    'id',
     'cliente',
     'hotel',
     'destino',
@@ -276,6 +277,41 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
     );
   }
 
+  get hasSolicitudesParaExportar(): boolean {
+    return this.solicitudesParaExportar.length > 0;
+  }
+
+  descargarExcel(): void {
+    const solicitudes = this.solicitudesParaExportar;
+    if (!solicitudes.length) return;
+
+    const filas = solicitudes.map((solicitud) => ({
+      Folio: this.folioCotizacionVisual(solicitud),
+      'Fecha de cotizacion': this.fechaCotizacionVisual(solicitud),
+      Cliente: solicitud.cliente_nombre ?? '',
+      Correo: solicitud.cliente_email ?? '',
+      Telefono: solicitud.cliente_telefono?.toString() ?? '',
+      Hotel: solicitud.hotel_nombre ?? '',
+      Destino: solicitud.destino_nombre ?? '',
+      'Tipo de destino': solicitud.tipo_destino ?? '',
+      Habitaciones: this.obtenerResumenHabitaciones(solicitud),
+      'Detalle de habitaciones': this.obtenerDetalleHabitaciones(solicitud),
+      Empleado: solicitud.empleado_nombre ?? '',
+      Estatus: solicitud.estatus_nombre ?? '',
+    }));
+    const hoja = XLSX.utils.json_to_sheet(filas);
+    hoja['!cols'] = [
+      { wch: 16 }, { wch: 23 }, { wch: 28 }, { wch: 32 }, { wch: 16 }, { wch: 28 },
+      { wch: 24 }, { wch: 20 }, { wch: 16 }, { wch: 48 }, { wch: 28 }, { wch: 18 },
+    ];
+
+    const libro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(libro, hoja, 'Solicitudes');
+    const fecha = this._formatearFechaLocal(new Date());
+    const sufijo = this.hasActiveFilters || this.quickFilter ? '-filtradas' : '';
+    XLSX.writeFile(libro, `solicitudes-cotizacion${sufijo}-${fecha}.xlsx`);
+  }
+
   private applyCombinedFilters(): void {
     this.dataSource.filter = JSON.stringify({
       ...this.columnFilters,
@@ -285,6 +321,12 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
       fechaHasta: this.fechaRangoFiltro.end,
     });
     this.dataSource.paginator?.firstPage();
+  }
+
+  private get solicitudesParaExportar(): ISolicitudCotizacionListado[] {
+    return this.hasActiveFilters || this.quickFilter
+      ? this.dataSource.filteredData
+      : this.dataSource.data;
   }
 
   private parseFilter(filter: string): Record<string, unknown> {
@@ -429,14 +471,24 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
     const habitaciones = item?.habitaciones;
 
     if (typeof habitaciones === 'string') {
-      return habitaciones.trim();
+      return this.normalizarTextoHabitaciones(habitaciones);
     }
 
     if (habitaciones && typeof habitaciones === 'object') {
-      return String(habitaciones.es ?? habitaciones.traduccion ?? '').trim();
+      return this.normalizarTextoHabitaciones(
+        String(habitaciones.es ?? habitaciones.traduccion ?? '')
+      );
     }
 
     return '';
+  }
+
+  private normalizarTextoHabitaciones(texto: string): string {
+    return texto
+      .replace(/habitaci\uFFFDn/gi, 'Habitación')
+      .replace(/ni\uFFFDo/gi, 'niño')
+      .replace(/\s*\uFFFD\s*/g, ' | ')
+      .trim();
   }
 
   private _obtenerFechaSolicitud(solicitud: ISolicitudCotizacionListado): Date | null {
@@ -513,11 +565,10 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
 
     const dia = String(fecha.getDate()).padStart(2, '0');
     const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const horas = String(fecha.getHours()).padStart(2, '0');
     const minutos = String(fecha.getMinutes()).padStart(2, '0');
-    const periodo = fecha.getHours() >= 12 ? 'pm' : 'am';
-    const hora = fecha.getHours() % 12 || 12;
 
-    return `${dia}/${mes}/${fecha.getFullYear()} | ${hora}:${minutos} ${periodo}`;
+    return `${dia}/${mes}/${fecha.getFullYear()} | ${horas}:${minutos}`;
   }
 
   private _normalizarFechaFiltro(valor: string): string {

@@ -3,7 +3,9 @@
     overflow: hidden;
     background: var(--fuse-bg-card, var(--mat-sys-surface, #fff));
     color: var(--fuse-text-default);
-    height: 100%;
+    flex: 0 0 600px !important;
+    height: 600px;
+    min-height: 600px;
     display: flex;
     flex-direction: column;
     min-height: 0;
@@ -22,9 +24,11 @@
 }
 
 .table-scroll {
-    overflow: auto;
+    overflow-x: auto;
+    overflow-y: auto;
     flex: 1;
     min-height: 0;
+    -webkit-overflow-scrolling: touch;
 }
 
 .table-toolbar {
@@ -75,6 +79,54 @@
 
 .pretty-table {
     width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+}
+
+/* Keep every desktop column inside the available panel width. */
+.pretty-table .mat-column-fecha {
+    width: 9%;
+}
+
+.pretty-table .mat-column-id {
+    width: 11%;
+}
+
+.pretty-table .mat-column-cliente {
+    width: 12%;
+}
+
+.pretty-table .mat-column-hotel {
+    width: 13%;
+}
+
+.pretty-table .mat-column-destino {
+    width: 10%;
+}
+
+.pretty-table .mat-column-habitaciones {
+    width: 12%;
+}
+
+.pretty-table .mat-column-tipoDestino {
+    width: 8%;
+}
+
+.pretty-table .mat-column-empleado {
+    width: 11%;
+}
+
+.pretty-table .mat-column-estatus {
+    width: 10%;
+}
+
+.pretty-table .mat-column-acciones {
+    width: 6%;
+}
+
+.status-cell {
+    min-width: max-content;
+    white-space: nowrap;
 }
 
 // .mat-mdc-header-row {
@@ -83,8 +135,10 @@
 // }
 
 .mat-mdc-header-cell {
-    font-size: 18px;
+    font-size: 14px;
     font-weight: 700;
+    line-height: 1.2;
+    white-space: normal;
 }
 
 :host ::ng-deep .mat-mdc-button-base.mat-primary {
@@ -211,9 +265,12 @@
 
 .mat-mdc-cell,
 .mat-mdc-header-cell {
-    padding: 14px 16px !important;
+    padding: 12px 10px !important;
     color: var(--fuse-text-default);
     border-bottom-color: var(--fuse-border) !important;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: normal;
 }
 
 .mono {
@@ -269,9 +326,28 @@
 }
 
 .actions-col {
-    width: 60px;
-    min-width: 60px;
-    text-align: right;
+    width: 64px;
+    min-width: 64px;
+    text-align: center;
+}
+
+.row-actions-trigger {
+    color: var(--fuse-text-secondary);
+    transition: color 160ms ease, background-color 160ms ease;
+}
+
+.row-actions-trigger:hover,
+.row-actions-trigger:focus-visible {
+    color: var(--fuse-text-default);
+    background: var(--table-row-hover-bg);
+}
+
+:host ::ng-deep .row-actions-menu .mat-mdc-menu-item {
+    min-height: 44px;
+}
+
+:host ::ng-deep .row-actions-menu .mat-icon {
+    color: var(--fuse-text-secondary);
 }
 
 .danger-item {
@@ -310,4 +386,78 @@
 mat-form-field.search {
   --mat-form-field-container-shape: 60px;
   --mdc-outlined-text-field-container-shape: 30px;
+}
+
+@media (max-width: 767px) {
+    .pretty-table {
+        min-width: 72rem;
+        table-layout: auto;
+    }
+
+    .pretty-table .mat-column-acciones {
+        width: 64px;
+        min-width: 64px;
+    }
+
+    .mat-mdc-header-cell {
+        font-size: 15px;
+    }
+
+    .mat-mdc-cell,
+    .mat-mdc-header-cell {
+        padding: 14px 16px !important;
+    }
+
+    :host ::ng-deep .pretty-table .mat-column-acciones {
+        position: sticky;
+        right: 0;
+        z-index: 12;
+        background: var(--fuse-bg-card, var(--mat-sys-surface, #fff));
+        box-shadow: -8px 0 14px rgba(15, 23, 42, 0.08);
+    }
+
+    :host-context(.dark) ::ng-deep .pretty-table .mat-column-acciones {
+        background: var(--fuse-bg-card, var(--mat-sys-surface, #1e293b));
+        box-shadow: -8px 0 14px rgba(0, 0, 0, 0.2);
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1279px) {
+    .mat-mdc-header-cell {
+        font-size: 13px;
+    }
+
+    .mat-mdc-cell,
+    .mat-mdc-header-cell {
+        padding: 10px 8px !important;
+    }
+
+    :host ::ng-deep .status-cell .text-sm {
+        font-size: 0.75rem;
+    }
+
+    :host ::ng-deep .status-cell app-status-badge > div > span {
+        gap: 0.35rem;
+        padding: 0.3rem 0.5rem;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1100px) {
+    .mat-mdc-header-cell {
+        font-size: 12px;
+    }
+
+    .mat-mdc-cell,
+    .mat-mdc-header-cell {
+        padding: 8px 6px !important;
+    }
+
+    :host ::ng-deep .status-cell .text-sm {
+        font-size: 0.68rem;
+    }
+
+    :host ::ng-deep .status-cell app-status-badge > div > span {
+        gap: 0.25rem;
+        padding: 0.25rem 0.4rem;
+    }
 }

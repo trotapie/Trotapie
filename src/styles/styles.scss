@@ -3,6 +3,33 @@
 /*  @ Styles from this file will override 'vendors.scss' and Fuse's base styles.
 /* ----------------------------------------------------------------------------------------------------- */
 
+@font-face {
+    font-family: 'Mont Blanc';
+    src: url('/assets/fonts/mont-blanc-regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-003F, U+0041-10FFFF;
+}
+
+@font-face {
+    font-family: 'Mont Blanc';
+    src: url('/assets/fonts/mont-blanc-semibold.woff2') format('woff2');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-003F, U+0041-10FFFF;
+}
+
+@font-face {
+    font-family: 'Mont Blanc';
+    src: url('/assets/fonts/mont-blanc-extrabold.woff2') format('woff2');
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-003F, U+0041-10FFFF;
+}
+
 @tailwind components;
 @tailwind utilities;
 

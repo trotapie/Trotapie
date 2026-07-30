@@ -429,7 +429,7 @@
 .quick-quote-table td:nth-child(5) { min-width: 8rem; }
 .quick-quote-table td:nth-child(6) { min-width: 15rem; }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .quick-quote-editor__header { align-items: stretch; flex-direction: column; padding: 1.25rem; }
   .quick-quote-hotel-card { grid-template-columns: 1fr; margin-top: 1.5rem; padding: 1.15rem; }
   .quick-quote-hotel-card__details { grid-template-columns: 1fr; gap: 0.75rem; }
@@ -1246,7 +1246,7 @@
   color: #cbd5e1;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 767px) {
   .public-quote-hero {
     grid-template-columns: 1fr;
     gap: 2rem;
@@ -1261,7 +1261,7 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .public-quote-hero {
     gap: 1.5rem;
   }
@@ -1607,14 +1607,14 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 767px) {
   .quote-top-layout {
     grid-template-columns: 1fr;
     max-width: 32rem;
   }
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 767px) {
   .quote-rate-table tr:has(> .quote-payment-details):has(> .quote-policy-cell) > :nth-child(5),
   .quote-rate-table tr:has(> .quote-payment-details):has(> .quote-policy-cell) > :nth-child(6),
   .quote-rate-table tr:has(> .quote-payment-details):has(> .quote-policy-cell) > .quote-policy-cell {
@@ -1658,6 +1658,55 @@
   .quote-payment-popover .quote-payment-details__policies p:first-child {
     color: #087f6f;
     font-weight: 900;
+  }
+}
+
+/* Keep wide rate tables usable on phones without shrinking or hiding their content. */
+@media (max-width: 767px) {
+  .quote-rate-table-wrap {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .quote-rate-table {
+    min-width: 44rem !important;
+    table-layout: auto !important;
+  }
+
+  .quote-rate-table thead {
+    display: table-header-group !important;
+  }
+
+  .quote-rate-table tbody {
+    display: table-row-group !important;
+  }
+
+  .quote-rate-table tr {
+    display: table-row !important;
+    width: auto !important;
+  }
+
+  .quote-rate-table th,
+  .quote-rate-table td,
+  .quote-rate-table tr:has(> .quote-policy-cell) > .quote-policy-cell,
+  .quote-rate-table tr:has(> .quote-payment-details) > .quote-payment-details {
+    display: table-cell !important;
+    width: auto !important;
+    min-width: 0;
+    flex: none !important;
+    padding: 0.75rem;
+    font-size: 0.78rem;
+    overflow-wrap: normal;
+  }
+
+  .quote-rate-table .quote-policy-cell {
+    width: 5.5rem !important;
+    text-align: center !important;
+  }
+
+  .quote-rate-table .quote-money {
+    white-space: nowrap;
   }
 }
 

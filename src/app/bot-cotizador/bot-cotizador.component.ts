@@ -7,6 +7,7 @@ import { SupabaseService } from 'app/core/supabase.service';
 import { DateRangeFilterComponent } from 'app/shared/date-range-filter/date-range-filter.component';
 import { DateRangeFilterValue, EMPTY_DATE_RANGE } from 'app/shared/date-range-filter/date-range-filter.model';
 import { MaterialModule } from 'app/shared/material.module';
+import { PhoneInputComponent } from 'app/shared/phone-input/phone-input.component';
 import { firstValueFrom } from 'rxjs';
 type Room = { adults: number; children: number; childAges: (number | null)[] };
 
@@ -21,7 +22,7 @@ type BotPrefillCliente = {
 
 @Component({
   selector: 'bot-cotizador',
-  imports: [MaterialModule, TranslocoModule, DateRangeFilterComponent],
+  imports: [MaterialModule, TranslocoModule, DateRangeFilterComponent, PhoneInputComponent],
   templateUrl: './bot-cotizador.component.html',
   styleUrl: './bot-cotizador.component.scss'
 })
@@ -81,6 +82,7 @@ export class BotCotizadorComponent implements OnInit {
       rangoFechas: [{ ...EMPTY_DATE_RANGE }, this.validarRangoFechas],
       ofertas: [false],
       telefono: ['', [Validators.required, Validators.minLength(10)]],
+      lada: ['52'],
       asesor: ['', Validators.required],
       especiales: ['']
     });

@@ -5,6 +5,7 @@ import type { EmpleadoFirma } from 'app/core/cotizaciones.service';
   selector: 'app-banner',
   standalone: true,
   templateUrl: './banner.html',
+  styleUrl: './banner.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BannerComponent {

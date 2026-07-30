@@ -1,8 +1,9 @@
-import { Component, Input, forwardRef } from '@angular/core';
+import { Component, Input, QueryList, ViewChildren, forwardRef } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { MatMenuTrigger } from '@angular/material/menu';
 import { MaterialModule } from 'app/shared/material.module';
 import { DateRangeFilterValue, EMPTY_DATE_RANGE } from './date-range-filter.model';
-import { emptyDateRange, selectDateInRange } from './date-range-selection.util';
+import { DateRangeEndpoint, emptyDateRange, selectDateInRange } from './date-range-selection.util';
 
 interface CalendarDay {
   key: string;
@@ -36,6 +37,9 @@ export class DateRangeFilterComponent implements ControlValueAccessor {
   value: DateRangeFilterValue = { ...EMPTY_DATE_RANGE };
   pendingValue: DateRangeFilterValue = { ...EMPTY_DATE_RANGE };
   disabled = false;
+  activeEndpoint: DateRangeEndpoint = 'start';
+
+  @ViewChildren(MatMenuTrigger) private readonly menuTriggers!: QueryList<MatMenuTrigger>;
 
   private onChange: (value: DateRangeFilterValue) => void = () => undefined;
   private onTouched: () => void = () => undefined;
@@ -45,18 +49,17 @@ export class DateRangeFilterComponent implements ControlValueAccessor {
   }
 
   get triggerValue(): string {
-    if (!this.value.start) return 'Seleccionar fechas';
-    if (!this.value.end) return `Desde ${this.formatDate(this.value.start)}`;
-    return `${this.formatDate(this.value.start)} - ${this.formatDate(this.value.end)}`;
+    if (!this.value.start || !this.value.end) return '';
+
+    const range = `${this.formatDate(this.value.start)} - ${this.formatDate(this.value.end)}`;
+    const nights = this.nights(this.value);
+    return this.mostrarEstadia ? `${range} (${nights} ${nights === 1 ? 'noche' : 'noches'})` : range;
   }
 
   get estadiaLabel(): string {
     if (!this.pendingValue.start || !this.pendingValue.end) return 'Selecciona inicio y fin';
 
-    const nights = Math.round(
-      (this.dateFromKey(this.pendingValue.end).getTime() - this.dateFromKey(this.pendingValue.start).getTime()) /
-      86_400_000,
-    );
+    const nights = this.nights(this.pendingValue);
     return `Estadía de ${nights} ${nights === 1 ? 'noche' : 'noches'}`;
   }
 
@@ -82,30 +85,30 @@ export class DateRangeFilterComponent implements ControlValueAccessor {
     this.disabled = disabled;
   }
 
-  open(): void {
+  open(endpoint: DateRangeEndpoint): void {
+    this.activeEndpoint = endpoint;
     this.pendingValue = { ...this.value };
   }
 
   select(day: CalendarDay): void {
     if (!day.currentMonth || this.isDisabled(day.key)) return;
-    this.pendingValue = selectDateInRange(this.pendingValue, day.key);
+    const selectingFirstDate = !this.pendingValue.start;
+    this.pendingValue = selectDateInRange(this.pendingValue, day.key, this.activeEndpoint);
+
+    if (this.activeEndpoint === 'start' || selectingFirstDate) {
+      this.activeEndpoint = 'end';
+    }
   }
 
   clear(): void {
     this.pendingValue = emptyDateRange();
   }
 
-  apply(menuTrigger: { closeMenu: () => void }): void {
+  apply(): void {
     this.value = { ...this.pendingValue };
     this.onChange({ ...this.value });
     this.onTouched();
-    menuTrigger.closeMenu();
-  }
-
-  cancel(menuTrigger: { closeMenu: () => void }): void {
-    this.pendingValue = { ...this.value };
-    this.onTouched();
-    menuTrigger.closeMenu();
+    this.menuTriggers.forEach(trigger => trigger.closeMenu());
   }
 
   moveMonth(offset: number): void {
@@ -154,9 +157,17 @@ export class DateRangeFilterComponent implements ControlValueAccessor {
     return new Intl.DateTimeFormat('es-MX', { month: 'long', year: 'numeric' }).format(month);
   }
 
-  private formatDate(key: string): string {
+  formatDate(key: string): string {
     const [year, month, day] = key.split('-');
     return `${day}/${month}/${year}`;
+  }
+
+  nights(range: DateRangeFilterValue): number {
+    if (!range.start || !range.end) return 0;
+
+    return Math.round(
+      (this.dateFromKey(range.end).getTime() - this.dateFromKey(range.start).getTime()) / 86_400_000,
+    );
   }
 
   private keyFromDate(date: Date): string {

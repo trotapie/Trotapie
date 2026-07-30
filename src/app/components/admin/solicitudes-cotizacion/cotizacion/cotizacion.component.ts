@@ -19,6 +19,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { formatearFolioCotizacion } from 'app/core/cotizacion-folio.util';
 import { BannerComponent } from 'app/shared/banner/banner.component';
 import { TimePickerComponent } from 'app/shared/time-picker/time-picker.component';
+import { PhoneInputComponent } from 'app/shared/phone-input/phone-input.component';
 import type { EmpleadoFirma } from 'app/core/cotizaciones.service';
 
 type Tile = { key: string; url: string; alt: string; class: string };
@@ -121,7 +122,7 @@ interface OrigenReservacionOption {
 }
 @Component({
   selector: 'app-modificar-cotizacion',
-  imports: [MaterialModule, RouterLink, DateI18nPipe, MapaComponent, TranslocoModule, CommonModule, ImagenesCarruselComponent, TimePickerComponent],
+  imports: [MaterialModule, RouterLink, DateI18nPipe, MapaComponent, TranslocoModule, CommonModule, ImagenesCarruselComponent, TimePickerComponent, PhoneInputComponent],
   templateUrl: './cotizacion.component.html',
   styleUrl: './cotizacion.component.scss',
   standalone: true
@@ -1143,12 +1144,6 @@ export class CotizacionComponent implements OnInit {
 
     const precioBase = this.informacionCotizacion?.precios?.find((precio) => precio.tipo === tipo);
     return this.obtenerNumeroLimpio(precioBase?.precio);
-  }
-
-  soloNumeros(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const limpio = input.value.replace(/\D/g, '');
-    this.telefonoCtrl?.setValue(limpio, { emitEvent: false });
   }
 
   async sendCotizacion() {

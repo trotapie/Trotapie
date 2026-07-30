@@ -1,24 +1,49 @@
 <div class="date-range-filter">
-  <span class="date-range-filter__label" [id]="labelId">{{ label }}</span>
-  <button
-    #rangeMenuTrigger="matMenuTrigger"
-    type="button"
-    class="date-range-filter__trigger"
-    [matMenuTriggerFor]="rangeMenu"
-    [disabled]="disabled"
-    [attr.aria-labelledby]="labelId"
-    (menuOpened)="open()">
-    <span>{{ triggerValue }}</span>
-    <mat-icon aria-hidden="true">calendar_month</mat-icon>
-  </button>
-
-  <mat-menu #rangeMenu="matMenu" class="date-range-filter-menu" xPosition="after" yPosition="below">
+  <div class="date-range-filter__label-row">
+    <span class="date-range-filter__label" [id]="labelId">{{ label }}</span>
+    @if (mostrarEstadia && triggerValue) {
+    <span class="date-range-filter__nights">({{ nights(value) }} {{ nights(value) === 1 ? 'noche' : 'noches' }})</span>
+    }
+  </div>
+  <div class="date-range-filter__trigger" [attr.aria-labelledby]="labelId">
+    <button
+      type="button"
+      class="date-range-filter__field"
+      [matMenuTriggerFor]="rangeMenu"
+      [disabled]="disabled"
+      aria-label="Fecha de inicio"
+      (menuOpened)="open('start')">
+      <span class="date-range-filter__field-label">Inicio</span>
+      <span [class.date-range-filter__placeholder]="!value.start">{{ value.start ? formatDate(value.start) : 'Seleccionar' }}</span>
+    </button>
+    <span class="date-range-filter__separator" aria-hidden="true"></span>
+    <button
+      type="button"
+      class="date-range-filter__field"
+      [matMenuTriggerFor]="rangeMenu"
+      [disabled]="disabled"
+      aria-label="Fecha de fin"
+      (menuOpened)="open('end')">
+      <span class="date-range-filter__field-label">Fin</span>
+      <span [class.date-range-filter__placeholder]="!value.end">{{ value.end ? formatDate(value.end) : 'Seleccionar' }}</span>
+    </button>
+    <button
+      type="button"
+      class="date-range-filter__calendar-button"
+      [matMenuTriggerFor]="rangeMenu"
+      [disabled]="disabled"
+      aria-label="Abrir calendario"
+      (menuOpened)="open('start')">
+      <mat-icon class="date-range-filter__icon" aria-hidden="true">calendar_month</mat-icon>
+    </button>
+  </div>
+  <mat-menu #rangeMenu="matMenu" class="date-range-filter-menu" xPosition="after" yPosition="below" [hasBackdrop]="false">
     <div class="date-range-filter-menu__content" (click)="$event.stopPropagation()">
       <div class="calendar-toolbar">
         <button mat-icon-button type="button" aria-label="Mes anterior" (click)="moveMonth(-1)">
           <mat-icon>chevron_left</mat-icon>
         </button>
-        <span>Selecciona un rango</span>
+        <span>Selecciona fecha de {{ activeEndpoint === 'start' ? 'inicio' : 'fin' }}</span>
         <button mat-icon-button type="button" aria-label="Mes siguiente" (click)="moveMonth(1)">
           <mat-icon>chevron_right</mat-icon>
         </button>
@@ -59,7 +84,7 @@
         }
         <span class="calendar-footer__spacer"></span>
         <button mat-button type="button" (click)="clear()">Borrar</button>
-        <button mat-flat-button color="primary" type="button" (click)="apply(rangeMenuTrigger)">Aplicar</button>
+        <button mat-flat-button color="primary" type="button" (click)="apply()">Aplicar</button>
       </footer>
     </div>
   </mat-menu>

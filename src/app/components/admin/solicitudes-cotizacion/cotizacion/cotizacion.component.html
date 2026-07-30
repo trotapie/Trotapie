@@ -2727,31 +2727,12 @@
                 <form [formGroup]="telefonoForm" class="space-y-5 sm:space-y-6">
 
                     <div>
-                        <label class="block text-sm font-semibold mb-2" [ngClass]="telefonoInvalido
-        ? 'text-red-600'
-        : 'text-slate-700 dark:text-slate-300'">
-                            Número de teléfono
-                        </label>
-
-                        <div class="relative grid grid-cols-[10.5rem_minmax(0,1fr)] items-center gap-2">
-                            <select formControlName="lada"
-                                class="h-12 w-full px-3 border-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-sm leading-tight text-slate-700 dark:text-slate-200"
-                                [ngClass]="telefonoInvalido
-          ? 'border-red-500'
-          : 'border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-primary'">
-                                <option *ngFor="let item of countryDialCodes" [value]="item.dialCode">
-                                    {{ item.country }} (+{{ item.dialCode }})
-                                </option>
-                            </select>
-
-                            <!-- Input -->
-                            <input type="tel" formControlName="telefono" inputmode="numeric" maxlength="15"
-                                (input)="soloNumeros($event)" placeholder="Numero de telefono" class="h-12 w-full px-4 border-2 rounded-xl
-               focus:outline-none transition-colors
-               dark:bg-slate-800 dark:text-white" [ngClass]="telefonoInvalido
-          ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-          : 'border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-primary'" />
-                        </div>
+                        <app-phone-input
+                            formControlName="telefono"
+                            [dialCode]="ladaCtrl?.value ?? defaultDialCode"
+                            [invalid]="telefonoInvalido"
+                            (dialCodeChange)="ladaCtrl?.setValue($event)">
+                        </app-phone-input>
 
                         <!-- Mensajes de error -->
                         <p *ngIf="telefonoInvalido" class="mt-2 text-xs text-red-600 font-medium">

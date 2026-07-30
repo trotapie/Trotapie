@@ -8,41 +8,113 @@
   gap: 0.25rem;
 }
 
+.date-range-filter__label-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+}
+
 .date-range-filter__label {
   color: var(--fuse-text-secondary);
   font-size: 0.75rem;
   font-weight: 600;
 }
 
+.date-range-filter__nights {
+  color: var(--fuse-text-secondary);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
 .date-range-filter__trigger {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   width: 100%;
   min-height: 3.5rem;
-  padding: 0 0.9rem;
   border: 1px solid var(--fuse-border);
   border-radius: 0.75rem;
   background: var(--fuse-bg-card);
   color: var(--fuse-text-default);
   font: inherit;
   font-variant-numeric: tabular-nums;
-  text-align: left;
-  cursor: pointer;
 }
 
-.date-range-filter__trigger:hover:not(:disabled) {
+.date-range-filter__trigger:focus-within,
+.date-range-filter__trigger:hover {
   border-color: var(--primary, #00a67c);
 }
 
-.date-range-filter__trigger:focus-visible {
+.date-range-filter__trigger:focus-within {
   outline: 2px solid var(--primary, #00a67c);
   outline-offset: 2px;
 }
 
-.date-range-filter__trigger:disabled {
+.date-range-filter__field {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 0.1rem;
+  padding: 0.55rem 0.9rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.date-range-filter__field:focus-visible {
+  outline: none;
+}
+
+.date-range-filter__field:disabled {
   cursor: not-allowed;
   opacity: 0.55;
+}
+
+.date-range-filter__field-label {
+  color: var(--fuse-text-secondary);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.date-range-filter__placeholder {
+  color: var(--fuse-text-secondary);
+}
+
+.date-range-filter__separator {
+  width: 1px;
+  height: 2rem;
+  background: var(--fuse-border);
+}
+
+.date-range-filter__calendar-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.45rem;
+  padding: 0.25rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fuse-text-secondary);
+  cursor: pointer;
+}
+
+.date-range-filter__calendar-button:hover,
+.date-range-filter__calendar-button:focus-visible {
+  background: color-mix(in srgb, var(--primary, #00a67c) 12%, transparent);
+  outline: none;
+}
+
+.date-range-filter__calendar-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.date-range-filter__icon {
+  color: var(--fuse-text-secondary);
 }
 
 ::ng-deep .date-range-filter-menu {
