@@ -121,7 +121,7 @@ interface OrigenReservacionOption {
 }
 @Component({
   selector: 'app-modificar-cotizacion',
-  imports: [MaterialModule, RouterLink, DateI18nPipe, MapaComponent, TranslocoModule, EstatusComponent, CommonModule, ImagenesCarruselComponent, BannerComponent, TimePickerComponent],
+  imports: [MaterialModule, RouterLink, DateI18nPipe, MapaComponent, TranslocoModule, CommonModule, ImagenesCarruselComponent, TimePickerComponent],
   templateUrl: './cotizacion.component.html',
   styleUrl: './cotizacion.component.scss',
   standalone: true
