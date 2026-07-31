@@ -188,7 +188,7 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-template-areas:
-    '. dates dates'
+    'destination dates dates'
     'destination regimen nights';
   gap: 1rem;
 }
@@ -197,7 +197,10 @@
   min-width: 0;
 }
 
-.quick-quote-hotel-card__detail--destination { grid-area: destination; }
+.quick-quote-hotel-card__detail--destination {
+  grid-area: destination;
+  align-self: center;
+}
 .quick-quote-hotel-card__detail--dates { grid-area: dates; }
 .quick-quote-hotel-card__detail--nights { grid-area: nights; }
 .quick-quote-hotel-card__detail--regimen { grid-area: regimen; }
