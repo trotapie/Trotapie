@@ -40,6 +40,8 @@ export interface CotizacionMultipleItem {
     regimen_id?: number | null;
     regimen?: string | null;
     tipo_habitacion_id: number | null;
+    tipo_habitacion_id_con_seguro?: number | null;
+    tipo_habitacion_id_a_meses?: number | null;
     precio: number | null;
     precio_con_seguro: number | null;
     precio_a_meses: number | null;

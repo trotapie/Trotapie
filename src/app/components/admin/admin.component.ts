@@ -58,7 +58,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   totalContinentes = 0;
   totalTiposDestino = 0;
   totalIdiomas = 0;
-  totalCatalogoAtracciones = 0;
+  totalAtraccionesPrincipales = 0;
   totalTiposHabitacion = 0;
 
   destinosEnSolicitudes = 0;
@@ -136,7 +136,7 @@ export class AdminComponent implements OnInit, OnDestroy {
           empleados,
           continentes,
           idiomas,
-          atracciones,
+          atraccionesPrincipales,
           tiposHabitacion,
           hotelesCount
         ] = await Promise.all([
@@ -153,7 +153,15 @@ export class AdminComponent implements OnInit, OnDestroy {
             return data ?? [];
           }, [] as any[]),
           this._safeCall('idiomas', () => this._catalogosAdmin.obtenerCatalogoAdmin('idiomas'), [] as any[]),
-          this._safeCall('catalogo de atracciones', () => this._catalogosAdmin.obtenerCatalogoAdmin('atracciones'), [] as any[]),
+          this._safeCall('atracciones', async () => {
+            const { count, error } = await this._supabase
+              .getClient()
+              .from('atracciones_principales')
+              .select('id', { count: 'exact', head: true });
+
+            if (error) throw error;
+            return count ?? 0;
+          }, 0),
           this._safeCall('tipos de habitacion', () => this._catalogosAdmin.obtenerCatalogoAdmin('tipos_habitacion'), [] as any[]),
           this._safeCall('hoteles', async () => {
             const { count, error } = await this._supabase
@@ -172,7 +180,7 @@ export class AdminComponent implements OnInit, OnDestroy {
         this.totalContinentes = continentes.length;
         this.totalTiposDestino = tiposDestino.length;
         this.totalIdiomas = idiomas.length;
-        this.totalCatalogoAtracciones = atracciones.length;
+        this.totalAtraccionesPrincipales = atraccionesPrincipales;
         this.totalTiposHabitacion = tiposHabitacion.length;
 
         this._calcularResumenSolicitudes(listaSolicitudes);
@@ -208,7 +216,7 @@ export class AdminComponent implements OnInit, OnDestroy {
         this.totalContinentes = 0;
         this.totalTiposDestino = 0;
         this.totalIdiomas = 0;
-        this.totalCatalogoAtracciones = 0;
+        this.totalAtraccionesPrincipales = 0;
         this.totalTiposHabitacion = 0;
 
         this._calcularResumenSolicitudes(solicitudesFiltradas);

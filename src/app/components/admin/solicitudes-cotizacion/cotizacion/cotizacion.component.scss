@@ -186,13 +186,21 @@
 
 .quick-quote-hotel-card__details {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-areas:
+    '. dates dates'
+    'destination regimen nights';
   gap: 1rem;
 }
 
-.quick-quote-hotel-card__details div {
+.quick-quote-hotel-card__detail {
   min-width: 0;
 }
+
+.quick-quote-hotel-card__detail--destination { grid-area: destination; }
+.quick-quote-hotel-card__detail--dates { grid-area: dates; }
+.quick-quote-hotel-card__detail--nights { grid-area: nights; }
+.quick-quote-hotel-card__detail--regimen { grid-area: regimen; }
 
 .quick-quote-hotel-card__details dt {
   display: flex;
@@ -432,7 +440,11 @@
 @media (max-width: 767px) {
   .quick-quote-editor__header { align-items: stretch; flex-direction: column; padding: 1.25rem; }
   .quick-quote-hotel-card { grid-template-columns: 1fr; margin-top: 1.5rem; padding: 1.15rem; }
-  .quick-quote-hotel-card__details { grid-template-columns: 1fr; gap: 0.75rem; }
+  .quick-quote-hotel-card__details {
+    grid-template-columns: 1fr;
+    grid-template-areas: 'destination' 'dates' 'regimen' 'nights';
+    gap: 0.75rem;
+  }
   .quick-quote-editor__status { width: 100%; }
   .quick-quote-tab-content { padding: 1rem; }
   .quick-quote-settings { grid-template-columns: 1fr; }

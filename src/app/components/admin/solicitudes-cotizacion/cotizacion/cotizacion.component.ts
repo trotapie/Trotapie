@@ -51,6 +51,8 @@ interface TipoHabitacion {
 
 interface CotizacionHabitacionForm {
   tipoHabitacion: TipoHabitacion | null;
+  tipoHabitacionConSeguro?: TipoHabitacion | null;
+  tipoHabitacionMeses?: TipoHabitacion | null;
   hotelId?: number | null;
   hotelNombre?: string | null;
   regimenId?: number | null;
@@ -76,6 +78,8 @@ interface CotizacionHabitacionForm {
 interface HabitacionCotizacionPublicaVista {
   indice: number;
   tipoHabitacion: string | null;
+  tipoHabitacionConSeguro?: string | null;
+  tipoHabitacionMeses?: string | null;
   hotelNombre?: string | null;
   detalleHabitacion: string | null;
   precioSinSeguro: number | null;
@@ -250,6 +254,8 @@ export class CotizacionComponent implements OnInit {
     precioConSeguro: [null],
     precioMeses: [null],
     tipoHabitacion: [null as TipoHabitacion, [Validators.required]],
+    tipoHabitacionConSeguro: [null as TipoHabitacion | null],
+    tipoHabitacionMeses: [null as TipoHabitacion | null],
     estatus: ['', [Validators.required]],
     condicionesPrecioSinSeguro: this.fb.control<Condicione[]>([]),
     condicionesPrecioConSeguro: this.fb.control<Condicione[]>([]),
@@ -273,6 +279,7 @@ export class CotizacionComponent implements OnInit {
   hotelIdCotizacion: number | null = null;
   modalTipoHabitacionAbierto = false;
   indiceTipoHabitacionActivo = 0;
+  campoTipoHabitacionActivo: 'tipoHabitacion' | 'tipoHabitacionConSeguro' | 'tipoHabitacionMeses' = 'tipoHabitacion';
   busquedaTipoHabitacion = '';
   tiposHabitacionSeleccionados = new Set<number>();
   guardandoTipoHabitacion = false;
@@ -387,6 +394,12 @@ export class CotizacionComponent implements OnInit {
       return {
         indice: idx + 1,
         tipoHabitacion: this.obtenerNombreTipoHabitacion(item?.tipo_habitacion_id),
+        tipoHabitacionConSeguro: this.obtenerNombreTipoHabitacion(
+          item?.tipo_habitacion_id_con_seguro ?? item?.tipo_habitacion_id
+        ),
+        tipoHabitacionMeses: this.obtenerNombreTipoHabitacion(
+          item?.tipo_habitacion_id_a_meses ?? item?.tipo_habitacion_id
+        ),
         hotelNombre: String(item?.hotel_nombre ?? item?.hotelNombre ?? '').trim() || null,
         detalleHabitacion,
         precioSinSeguro,
@@ -767,8 +780,12 @@ export class CotizacionComponent implements OnInit {
     }
   }
 
-  abrirModalTipoHabitacion(indiceHabitacion: number): void {
+  abrirModalTipoHabitacion(
+    indiceHabitacion: number,
+    campo: 'tipoHabitacion' | 'tipoHabitacionConSeguro' | 'tipoHabitacionMeses' = 'tipoHabitacion'
+  ): void {
     this.indiceTipoHabitacionActivo = indiceHabitacion;
+    this.campoTipoHabitacionActivo = campo;
     this.busquedaTipoHabitacion = '';
     this.tiposHabitacionSeleccionados.clear();
     this.errorTipoHabitacion = '';
@@ -859,8 +876,8 @@ export class CotizacionComponent implements OnInit {
 
   private asignarTipoHabitacionActiva(tipo: TipoHabitacion): void {
     const control = this.indiceTipoHabitacionActivo === 0
-      ? this.edicionForm.get('tipoHabitacion')
-      : this.habitacionesAdicionales.at(this.indiceTipoHabitacionActivo - 1)?.get('tipoHabitacion');
+      ? this.edicionForm.get(this.campoTipoHabitacionActivo)
+      : this.habitacionesAdicionales.at(this.indiceTipoHabitacionActivo - 1)?.get(this.campoTipoHabitacionActivo);
     control?.setValue(tipo);
     this.filteredOptions$ = this.obtenerTiposHabitacionDisponibles(0);
   }
@@ -1523,6 +1540,8 @@ export class CotizacionComponent implements OnInit {
       : [{
         indice: 1,
         tipoHabitacion: this.obtenerNombreTipoHabitacion(cotizacion?.tipo_habitacion as number | null),
+        tipoHabitacionConSeguro: this.obtenerNombreTipoHabitacion(cotizacion?.tipo_habitacion as number | null),
+        tipoHabitacionMeses: this.obtenerNombreTipoHabitacion(cotizacion?.tipo_habitacion as number | null),
         hotelNombre: cotizacion?.nombre_hotel ?? null,
         detalleHabitacion: this.formatearDetalleHabitacionTexto(detalleHabitaciones[0]) || habitacionesFuente || null,
         precioSinSeguro: this.obtenerNumeroLimpio(precioSinSeguro?.precio),
@@ -1653,8 +1672,13 @@ export class CotizacionComponent implements OnInit {
       habitacionesVista.forEach((habitacion) => {
         const precio = habitacion[opcion.field];
         if (precio === null) return;
+        const tipoHabitacion = opcion.field === 'precioConSeguro'
+          ? habitacion.tipoHabitacionConSeguro
+          : opcion.field === 'precioMeses'
+            ? habitacion.tipoHabitacionMeses
+            : habitacion.tipoHabitacion;
         drawIcon('bed', x + 4, yy - 3.3, mutedColor, 0.58);
-        drawText(limpiar(habitacion.tipoHabitacion) || limpiar(habitacion.hotelNombre) || `Habitacion ${habitacion.indice}`, x + 8, yy, { size: 6.3, color: textColor, maxWidth: w - 38 });
+        drawText(limpiar(tipoHabitacion) || limpiar(habitacion.hotelNombre) || `Habitacion ${habitacion.indice}`, x + 8, yy, { size: 6.3, color: textColor, maxWidth: w - 38 });
         drawText(moneda(precio), x + w - 4, yy, { size: 6.6, bold: true, color: greenDark, align: 'right' });
         yy += 4.2;
         if (habitacion.detalleHabitacion) {
@@ -2015,6 +2039,8 @@ export class CotizacionComponent implements OnInit {
       origenReservacionConSeguro: [value?.origenReservacionConSeguro ?? null],
       origenReservacionMeses: [value?.origenReservacionMeses ?? null],
       tipoHabitacion: [value?.tipoHabitacion ?? null, [Validators.required]],
+      tipoHabitacionConSeguro: [value?.tipoHabitacionConSeguro ?? value?.tipoHabitacion ?? null],
+      tipoHabitacionMeses: [value?.tipoHabitacionMeses ?? value?.tipoHabitacion ?? null],
       precio: [value?.precio ?? null],
       precioConSeguro: [value?.precioConSeguro ?? null],
       precioMeses: [value?.precioMeses ?? null],
@@ -2266,6 +2292,20 @@ export class CotizacionComponent implements OnInit {
         item?.tipoHabitacion?.id ??
         item?.tipoHabitacion ??
         null;
+      const tipoHabitacionConSeguroId =
+        item?.tipo_habitacion_id_con_seguro ??
+        item?.tipoHabitacionConSeguroId ??
+        item?.tipo_habitacion_con_seguro ??
+        item?.tipoHabitacionConSeguro?.id ??
+        item?.tipoHabitacionConSeguro ??
+        tipoHabitacionId;
+      const tipoHabitacionMesesId =
+        item?.tipo_habitacion_id_a_meses ??
+        item?.tipoHabitacionMesesId ??
+        item?.tipo_habitacion_a_meses ??
+        item?.tipoHabitacionMeses?.id ??
+        item?.tipoHabitacionMeses ??
+        tipoHabitacionId;
       const hotelId = item?.hotel_id ?? item?.hotelId ?? null;
       const hotelNombre = String(item?.hotel_nombre ?? item?.hotelNombre ?? '').trim();
       const tipoHabitacion = hotelId
@@ -2292,6 +2332,12 @@ export class CotizacionComponent implements OnInit {
           item?.origen_reservacion_meses_id ?? item?.origenReservacionMeses
         ),
         tipoHabitacion,
+        tipoHabitacionConSeguro: hotelId
+          ? tipoHabitacion
+          : this.normalizarTipoHabitacion(tipoHabitacionConSeguroId),
+        tipoHabitacionMeses: hotelId
+          ? tipoHabitacion
+          : this.normalizarTipoHabitacion(tipoHabitacionMesesId),
         precio: this.obtenerNumeroLimpio(item?.precio),
         precioConSeguro: this.obtenerNumeroLimpio(item?.precio_con_seguro ?? item?.precioConSeguro),
         precioMeses: this.obtenerNumeroLimpio(item?.precio_a_meses ?? item?.precioMeses),
@@ -2321,9 +2367,13 @@ export class CotizacionComponent implements OnInit {
     const primeraHabitacionDb = desdeDb[0];
     const primeraHabitacion: CotizacionHabitacionForm = primeraHabitacionDb ? {
       ...primeraHabitacionDb,
-      tipoHabitacion: primeraHabitacionDb.tipoHabitacion ?? tipoHabitacionPrincipalAuto
+      tipoHabitacion: primeraHabitacionDb.tipoHabitacion ?? tipoHabitacionPrincipalAuto,
+      tipoHabitacionConSeguro: primeraHabitacionDb.tipoHabitacionConSeguro ?? primeraHabitacionDb.tipoHabitacion ?? tipoHabitacionPrincipalAuto,
+      tipoHabitacionMeses: primeraHabitacionDb.tipoHabitacionMeses ?? primeraHabitacionDb.tipoHabitacion ?? tipoHabitacionPrincipalAuto
     } : {
       tipoHabitacion: tipoHabitacionPrincipalAuto,
+      tipoHabitacionConSeguro: tipoHabitacionPrincipalAuto,
+      tipoHabitacionMeses: tipoHabitacionPrincipalAuto,
       origenReservacionPrecio: null,
       origenReservacionConSeguro: null,
       origenReservacionMeses: null,
@@ -2350,6 +2400,8 @@ export class CotizacionComponent implements OnInit {
       origenReservacionConSeguro: primeraHabitacion.origenReservacionConSeguro,
       origenReservacionMeses: primeraHabitacion.origenReservacionMeses,
       tipoHabitacion: primeraHabitacion.tipoHabitacion,
+      tipoHabitacionConSeguro: primeraHabitacion.tipoHabitacionConSeguro ?? primeraHabitacion.tipoHabitacion,
+      tipoHabitacionMeses: primeraHabitacion.tipoHabitacionMeses ?? primeraHabitacion.tipoHabitacion,
       condicionesPrecioSinSeguro: primeraHabitacion.condicionesPrecioSinSeguro,
       condicionesPrecioConSeguro: primeraHabitacion.condicionesPrecioConSeguro,
       condicionesPrecioMeses: primeraHabitacion.condicionesPrecioMeses,
@@ -2372,9 +2424,13 @@ export class CotizacionComponent implements OnInit {
       const valueDb = habitacionesAdicionalesDb[i];
       const value = valueDb ? {
         ...valueDb,
-        tipoHabitacion: valueDb.tipoHabitacion ?? this.obtenerTipoHabitacionAutomatica(detalleHabitacion)
+        tipoHabitacion: valueDb.tipoHabitacion ?? this.obtenerTipoHabitacionAutomatica(detalleHabitacion),
+        tipoHabitacionConSeguro: valueDb.tipoHabitacionConSeguro ?? valueDb.tipoHabitacion ?? this.obtenerTipoHabitacionAutomatica(detalleHabitacion),
+        tipoHabitacionMeses: valueDb.tipoHabitacionMeses ?? valueDb.tipoHabitacion ?? this.obtenerTipoHabitacionAutomatica(detalleHabitacion)
       } : {
         tipoHabitacion: this.obtenerTipoHabitacionAutomatica(detalleHabitacion),
+        tipoHabitacionConSeguro: this.obtenerTipoHabitacionAutomatica(detalleHabitacion),
+        tipoHabitacionMeses: this.obtenerTipoHabitacionAutomatica(detalleHabitacion),
         origenReservacionPrecio: null,
         origenReservacionConSeguro: null,
         origenReservacionMeses: null,
@@ -2469,6 +2525,8 @@ export class CotizacionComponent implements OnInit {
   private obtenerCotizacionMultiple(): CotizacionMultipleItem[] {
     const primeraHabitacion = {
       tipoHabitacion: this.normalizarTipoHabitacion(this.edicionForm.get('tipoHabitacion')?.value),
+      tipoHabitacionConSeguro: this.normalizarTipoHabitacion(this.edicionForm.get('tipoHabitacionConSeguro')?.value),
+      tipoHabitacionMeses: this.normalizarTipoHabitacion(this.edicionForm.get('tipoHabitacionMeses')?.value),
       origenReservacionPrecio: this.obtenerNumeroLimpio(this.edicionForm.get('origenReservacionPrecio')?.value),
       origenReservacionConSeguro: this.obtenerNumeroLimpio(this.edicionForm.get('origenReservacionConSeguro')?.value),
       origenReservacionMeses: this.obtenerNumeroLimpio(this.edicionForm.get('origenReservacionMeses')?.value),
@@ -2499,6 +2557,8 @@ export class CotizacionComponent implements OnInit {
       ...this.habitacionesAdicionales.controls.map((control) => ({
         ...(control.value as CotizacionHabitacionForm),
         tipoHabitacion: this.normalizarTipoHabitacion(control.get('tipoHabitacion')?.value),
+        tipoHabitacionConSeguro: this.normalizarTipoHabitacion(control.get('tipoHabitacionConSeguro')?.value),
+        tipoHabitacionMeses: this.normalizarTipoHabitacion(control.get('tipoHabitacionMeses')?.value),
         condicionesPrecioSinSeguro: politicasSinSeguro,
         fechaLimiteSeguro,
         fechaLimiteMeses,
@@ -2515,6 +2575,8 @@ export class CotizacionComponent implements OnInit {
         regimen_id: (item as any)?.regimenId ?? null,
         regimen: String((item as any)?.regimen ?? '').trim() || null,
         tipo_habitacion_id: (item as any)?.hotelId ? null : item?.tipoHabitacion?.id ?? null,
+        tipo_habitacion_id_con_seguro: (item as any)?.hotelId ? null : item?.tipoHabitacionConSeguro?.id ?? item?.tipoHabitacion?.id ?? null,
+        tipo_habitacion_id_a_meses: (item as any)?.hotelId ? null : item?.tipoHabitacionMeses?.id ?? item?.tipoHabitacion?.id ?? null,
         precio: this.obtenerNumeroLimpio(item?.precio),
         precio_con_seguro: this.obtenerNumeroLimpio(item?.precioConSeguro),
         precio_a_meses: this.obtenerNumeroLimpio(item?.precioMeses),

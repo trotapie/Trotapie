@@ -212,7 +212,7 @@
                                                 <tr>
                                                     <td data-label="Habitación">{{ claveOrigenReservacion(habitacionCotizacion.origenReservacionPrecio) }}</td>
                                                     <td data-label="Acomodo">{{ habitacionCotizacion.detalleHabitacion || '-' }}</td>
-                                                    <td data-label="Categoría">{{ habitacionCotizacion.tipoHabitacion || habitacionCotizacion.hotelNombre || '-' }}</td>
+                                                     <td data-label="Categoría">{{ habitacionCotizacion.tipoHabitacion || habitacionCotizacion.hotelNombre || '-' }}</td>
                                                     <td data-label="Tarifa" class="quote-money quote-price-cell">MXN {{ habitacionCotizacion.precioSinSeguro | currency }}</td>
                                                     <td data-label="Políticas" class="quote-policy-cell">
                                                         <button type="button" mat-icon-button class="quote-policy-trigger"
@@ -286,7 +286,7 @@
                                                 <tr>
                                                     <td data-label="Habitación">{{ claveOrigenReservacion(habitacionCotizacion.origenReservacionConSeguro) }}</td>
                                                     <td data-label="Acomodo">{{ habitacionCotizacion.detalleHabitacion || '-' }}</td>
-                                                    <td data-label="Categoría">{{ habitacionCotizacion.tipoHabitacion || habitacionCotizacion.hotelNombre || '-' }}</td>
+                                                     <td data-label="Categoría">{{ habitacionCotizacion.tipoHabitacionConSeguro || habitacionCotizacion.hotelNombre || '-' }}</td>
                                                      <td data-label="Tarifa" class="quote-money quote-price-cell">MXN {{ habitacionCotizacion.precioConSeguro | currency }}</td>
                                                      <td data-label="Apartado" class="quote-price-cell">{{ habitacionCotizacion.apartadoSeguro | currency }} MXN</td>
                                                      <td data-label="Pague después" class="quote-price-cell">{{ habitacionCotizacion.pagueDespuesSeguro | currency }} MXN</td>
@@ -382,7 +382,7 @@
                                                 <tr>
                                                     <td data-label="Habitación">{{ claveOrigenReservacion(habitacionCotizacion.origenReservacionMeses) }}</td>
                                                     <td data-label="Acomodo">{{ habitacionCotizacion.detalleHabitacion || '-' }}</td>
-                                                    <td data-label="Categoría">{{ habitacionCotizacion.tipoHabitacion || habitacionCotizacion.hotelNombre || '-' }}</td>
+                                                     <td data-label="Categoría">{{ habitacionCotizacion.tipoHabitacionMeses || habitacionCotizacion.hotelNombre || '-' }}</td>
                                                      <td data-label="Tarifa" class="quote-money quote-price-cell">MXN {{ habitacionCotizacion.precioMeses | currency }}</td>
                                                      <td data-label="Apartado" class="quote-price-cell">{{ habitacionCotizacion.apartadoMeses | currency }} MXN</td>
                                                      <td data-label="Pague después" class="quote-price-cell">{{ habitacionCotizacion.pagueDespuesMeses | currency }} MXN</td>
@@ -707,19 +707,19 @@
                                 <h2 id="quick-quote-hotel-title">{{ informacionCotizacion.nombre_hotel || 'Hotel pendiente de confirmar' }}</h2>
                             </div>
                             <dl class="quick-quote-hotel-card__details">
-                                <div>
+                                <div class="quick-quote-hotel-card__detail quick-quote-hotel-card__detail--destination">
                                     <dt><mat-icon [svgIcon]="'heroicons_outline:map-pin'"></mat-icon> Destino</dt>
                                     <dd>{{ informacionCotizacion.destino_nombre || 'Sin destino definido' }}</dd>
                                 </div>
-                                <div>
+                                <div class="quick-quote-hotel-card__detail quick-quote-hotel-card__detail--dates">
                                     <dt><mat-icon [svgIcon]="'heroicons_outline:calendar-days'"></mat-icon> Fechas</dt>
                                     <dd>{{ formatearRangoFechaCompacto(informacionCotizacion.fecha_entrada, informacionCotizacion.fecha_salida, informacionCotizacion.idioma) }}</dd>
                                 </div>
-                                <div>
+                                <div class="quick-quote-hotel-card__detail quick-quote-hotel-card__detail--nights">
                                     <dt><mat-icon [svgIcon]="'heroicons_outline:moon'"></mat-icon> Noches</dt>
                                     <dd>{{ t('noches-s', { noches: informacionCotizacion.noches }) }}</dd>
                                 </div>
-                                <div>
+                                <div class="quick-quote-hotel-card__detail quick-quote-hotel-card__detail--regimen">
                                     <dt><mat-icon [svgIcon]="'heroicons_outline:check-badge'"></mat-icon> Régimen</dt>
                                     <dd>{{ informacionCotizacion.regimen || 'Sin régimen definido' }}</dd>
                                 </div>
@@ -806,7 +806,9 @@
                                                 <tbody><tr>
                                                     <td data-label="Origen"><mat-select formControlName="origenReservacionConSeguro" placeholder="Seleccionar"><mat-option [value]="null">Sin seleccionar</mat-option>@for (origen of origenReservacionOpciones; track origen.id) { <mat-option [value]="origen.id">{{ origen.clave }}</mat-option> }</mat-select></td>
                                                     <td data-label="Personas">{{ detallePersonasHabitacion(0) }}</td>
-                                                    <td data-label="Habitación">{{ displayHabitacion(edicionForm.get('tipoHabitacion')?.value) || 'Selecciona en No reembolsable' }}</td>
+                                                     <td data-label="Habitación"><div class="quick-quote-room-select"><mat-select formControlName="tipoHabitacionConSeguro" [compareWith]="compareTipoHabitacion" placeholder="Seleccionar habitación">
+                                                         @for (tipo of obtenerTiposHabitacionDisponibles(0); track tipo.id) { <mat-option [value]="tipo">{{ tipo.nombre_habitacion }}</mat-option> }
+                                                     </mat-select><button type="button" mat-icon-button class="quick-quote-room-add" (click)="abrirModalTipoHabitacion(0, 'tipoHabitacionConSeguro')" aria-label="Agregar tipo de habitación para apartado" matTooltip="Agregar tipo de habitación a hotel"><mat-icon svgIcon="heroicons_outline:plus-circle"></mat-icon></button></div></td>
                                                     <td data-label="Precio"><input type="tel" inputmode="numeric" formControlName="precioConSeguro" importeMxnBlur placeholder="$0"></td>
                                                     <td data-label="% apartado"><input type="tel" inputmode="decimal" formControlName="porcentajeSeguro" porcentajeBlur placeholder="0%"></td>
                                                     <td data-label="Políticas"><div class="quick-quote-policy-cell"><mat-select formControlName="condicionesPrecioConSeguro" multiple panelClass="tp-select-panel quick-quote-policy-panel" panelWidth="min(56rem, calc(100vw - 1.5rem))" [compareWith]="comparePolitica" placeholder="Seleccionar"><mat-select-trigger>{{ edicionForm.get('condicionesPrecioConSeguro')?.value?.length ? edicionForm.get('condicionesPrecioConSeguro')?.value?.length + ' seleccionadas' : 'Seleccionar' }}</mat-select-trigger>@for (politica of politicasApartado; track politica.id) { <mat-option [value]="politica">{{ politica.descripcion }}</mat-option> }</mat-select><button type="button" mat-icon-button class="quick-quote-policy-info" [matMenuTriggerFor]="politicasApartadoPrincipal" [disabled]="!edicionForm.get('condicionesPrecioConSeguro')?.value?.length" aria-label="Ver políticas seleccionadas"><mat-icon [svgIcon]="'heroicons_outline:information-circle'"></mat-icon></button><mat-menu #politicasApartadoPrincipal="matMenu" class="quick-quote-selected-policies-menu">@for (politica of edicionForm.get('condicionesPrecioConSeguro')?.value ?? []; track politica.id) { <span class="quick-quote-selected-policy">{{ politica.descripcion }}</span> }</mat-menu></div></td>
@@ -814,7 +816,9 @@
                                                 <tbody formArrayName="habitacionesAdicionales">@for (habitacion of habitacionesAdicionales.controls; track $index) { <tr [formGroupName]="$index">
                                                     <td data-label="Origen"><mat-select formControlName="origenReservacionConSeguro" placeholder="Seleccionar"><mat-option [value]="null">Sin seleccionar</mat-option>@for (origen of origenReservacionOpciones; track origen.id) { <mat-option [value]="origen.id">{{ origen.clave }}</mat-option> }</mat-select></td>
                                                     <td data-label="Personas">{{ detallePersonasHabitacion($index + 1) }}</td>
-                                                    <td data-label="Habitación">{{ displayHabitacion(habitacion.get('tipoHabitacion')?.value) || 'Selecciona en No reembolsable' }}</td>
+                                                     <td data-label="Habitación"><div class="quick-quote-room-select"><mat-select formControlName="tipoHabitacionConSeguro" [compareWith]="compareTipoHabitacion" placeholder="Seleccionar habitación">
+                                                         @for (tipo of obtenerTiposHabitacionDisponibles($index + 1); track tipo.id) { <mat-option [value]="tipo">{{ tipo.nombre_habitacion }}</mat-option> }
+                                                     </mat-select><button type="button" mat-icon-button class="quick-quote-room-add" (click)="abrirModalTipoHabitacion($index + 1, 'tipoHabitacionConSeguro')" aria-label="Agregar tipo de habitación para apartado" matTooltip="Agregar tipo de habitación a hotel"><mat-icon svgIcon="heroicons_outline:plus-circle"></mat-icon></button></div></td>
                                                     <td data-label="Precio"><input type="tel" inputmode="numeric" formControlName="precioConSeguro" importeMxnBlur placeholder="$0"></td>
                                                     <td data-label="% apartado"><input type="tel" inputmode="decimal" formControlName="porcentajeSeguro" porcentajeBlur placeholder="0%"></td>
                                                     <td data-label="Políticas"><div class="quick-quote-policy-cell"><mat-select formControlName="condicionesPrecioConSeguro" multiple panelClass="tp-select-panel quick-quote-policy-panel" panelWidth="min(56rem, calc(100vw - 1.5rem))" [compareWith]="comparePolitica" placeholder="Seleccionar"><mat-select-trigger>{{ habitacion.get('condicionesPrecioConSeguro')?.value?.length ? habitacion.get('condicionesPrecioConSeguro')?.value?.length + ' seleccionadas' : 'Seleccionar' }}</mat-select-trigger>@for (politica of politicasApartado; track politica.id) { <mat-option [value]="politica">{{ politica.descripcion }}</mat-option> }</mat-select><button type="button" mat-icon-button class="quick-quote-policy-info" [matMenuTriggerFor]="politicasApartadoHabitacion" [disabled]="!habitacion.get('condicionesPrecioConSeguro')?.value?.length" aria-label="Ver políticas seleccionadas"><mat-icon [svgIcon]="'heroicons_outline:information-circle'"></mat-icon></button><mat-menu #politicasApartadoHabitacion="matMenu" class="quick-quote-selected-policies-menu">@for (politica of habitacion.get('condicionesPrecioConSeguro')?.value ?? []; track politica.id) { <span class="quick-quote-selected-policy">{{ politica.descripcion }}</span> }</mat-menu></div></td>
@@ -839,7 +843,9 @@
                                             <tbody><tr>
                                                 <td data-label="Origen"><mat-select formControlName="origenReservacionMeses" placeholder="Seleccionar"><mat-option [value]="null">Sin seleccionar</mat-option>@for (origen of origenReservacionOpciones; track origen.id) { <mat-option [value]="origen.id">{{ origen.clave }}</mat-option> }</mat-select></td>
                                                 <td data-label="Personas">{{ detallePersonasHabitacion(0) }}</td>
-                                                <td data-label="Habitación">{{ displayHabitacion(edicionForm.get('tipoHabitacion')?.value) || 'Selecciona en No reembolsable' }}</td>
+                                                 <td data-label="Habitación"><div class="quick-quote-room-select"><mat-select formControlName="tipoHabitacionMeses" [compareWith]="compareTipoHabitacion" placeholder="Seleccionar habitación">
+                                                     @for (tipo of obtenerTiposHabitacionDisponibles(0); track tipo.id) { <mat-option [value]="tipo">{{ tipo.nombre_habitacion }}</mat-option> }
+                                                 </mat-select><button type="button" mat-icon-button class="quick-quote-room-add" (click)="abrirModalTipoHabitacion(0, 'tipoHabitacionMeses')" aria-label="Agregar tipo de habitación para meses" matTooltip="Agregar tipo de habitación a hotel"><mat-icon svgIcon="heroicons_outline:plus-circle"></mat-icon></button></div></td>
                                                 <td data-label="Precio"><input type="tel" inputmode="numeric" formControlName="precioMeses" importeMxnBlur placeholder="$0"></td>
                                                 <td data-label="% apartado"><input type="tel" inputmode="decimal" formControlName="porcentajeMeses" porcentajeBlur placeholder="0%"></td>
                                                 <td data-label="Políticas"><div class="quick-quote-policy-cell"><mat-select formControlName="condicionesPrecioMeses" multiple panelClass="tp-select-panel quick-quote-policy-panel" panelWidth="min(56rem, calc(100vw - 1.5rem))" [compareWith]="comparePolitica" placeholder="Seleccionar"><mat-select-trigger>{{ edicionForm.get('condicionesPrecioMeses')?.value?.length ? edicionForm.get('condicionesPrecioMeses')?.value?.length + ' seleccionadas' : 'Seleccionar' }}</mat-select-trigger>@for (politica of politicas; track politica.id) { <mat-option [value]="politica">{{ politica.descripcion }}</mat-option> }</mat-select><button type="button" mat-icon-button class="quick-quote-policy-info" [matMenuTriggerFor]="politicasMesesPrincipal" [disabled]="!edicionForm.get('condicionesPrecioMeses')?.value?.length" aria-label="Ver políticas seleccionadas"><mat-icon [svgIcon]="'heroicons_outline:information-circle'"></mat-icon></button><mat-menu #politicasMesesPrincipal="matMenu" class="quick-quote-selected-policies-menu">@for (politica of edicionForm.get('condicionesPrecioMeses')?.value ?? []; track politica.id) { <span class="quick-quote-selected-policy">{{ politica.descripcion }}</span> }</mat-menu></div></td>
@@ -847,7 +853,9 @@
                                             <tbody formArrayName="habitacionesAdicionales">@for (habitacion of habitacionesAdicionales.controls; track $index) { <tr [formGroupName]="$index">
                                                 <td data-label="Origen"><mat-select formControlName="origenReservacionMeses" placeholder="Seleccionar"><mat-option [value]="null">Sin seleccionar</mat-option>@for (origen of origenReservacionOpciones; track origen.id) { <mat-option [value]="origen.id">{{ origen.clave }}</mat-option> }</mat-select></td>
                                                 <td data-label="Personas">{{ detallePersonasHabitacion($index + 1) }}</td>
-                                                <td data-label="Habitación">{{ displayHabitacion(habitacion.get('tipoHabitacion')?.value) || 'Selecciona en No reembolsable' }}</td>
+                                                 <td data-label="Habitación"><div class="quick-quote-room-select"><mat-select formControlName="tipoHabitacionMeses" [compareWith]="compareTipoHabitacion" placeholder="Seleccionar habitación">
+                                                     @for (tipo of obtenerTiposHabitacionDisponibles($index + 1); track tipo.id) { <mat-option [value]="tipo">{{ tipo.nombre_habitacion }}</mat-option> }
+                                                 </mat-select><button type="button" mat-icon-button class="quick-quote-room-add" (click)="abrirModalTipoHabitacion($index + 1, 'tipoHabitacionMeses')" aria-label="Agregar tipo de habitación para meses" matTooltip="Agregar tipo de habitación a hotel"><mat-icon svgIcon="heroicons_outline:plus-circle"></mat-icon></button></div></td>
                                                 <td data-label="Precio"><input type="tel" inputmode="numeric" formControlName="precioMeses" importeMxnBlur placeholder="$0"></td>
                                                 <td data-label="% apartado"><input type="tel" inputmode="decimal" formControlName="porcentajeMeses" porcentajeBlur placeholder="0%"></td>
                                                 <td data-label="Políticas"><div class="quick-quote-policy-cell"><mat-select formControlName="condicionesPrecioMeses" multiple panelClass="tp-select-panel quick-quote-policy-panel" panelWidth="min(56rem, calc(100vw - 1.5rem))" [compareWith]="comparePolitica" placeholder="Seleccionar"><mat-select-trigger>{{ habitacion.get('condicionesPrecioMeses')?.value?.length ? habitacion.get('condicionesPrecioMeses')?.value?.length + ' seleccionadas' : 'Seleccionar' }}</mat-select-trigger>@for (politica of politicas; track politica.id) { <mat-option [value]="politica">{{ politica.descripcion }}</mat-option> }</mat-select><button type="button" mat-icon-button class="quick-quote-policy-info" [matMenuTriggerFor]="politicasMesesHabitacion" [disabled]="!habitacion.get('condicionesPrecioMeses')?.value?.length" aria-label="Ver políticas seleccionadas"><mat-icon [svgIcon]="'heroicons_outline:information-circle'"></mat-icon></button><mat-menu #politicasMesesHabitacion="matMenu" class="quick-quote-selected-policies-menu">@for (politica of habitacion.get('condicionesPrecioMeses')?.value ?? []; track politica.id) { <span class="quick-quote-selected-policy">{{ politica.descripcion }}</span> }</mat-menu></div></td>
