@@ -31,6 +31,7 @@
       </label>
 
       <div class="fm-tabs" role="tablist" aria-label="Filtros de galeria">
+        @if (showFolders) {
         <button
           type="button"
           class="fm-tab"
@@ -47,6 +48,8 @@
         >
           Carpetas
         </button>
+        }
+        @if (showActiveView) {
         <button
           type="button"
           class="fm-tab"
@@ -63,6 +66,7 @@
         >
           Activas
         </button>
+        }
       </div>
 
       <div class="fm-summary">
@@ -77,10 +81,12 @@
           <mat-icon class="mr-2 icon-size-4" [svgIcon]="selectionModeActive ? 'heroicons_outline:x-mark' : 'heroicons_outline:check'"></mat-icon>
           {{ selectionModeActive ? 'Salir selección' : 'Seleccionar' }}
         </button>
+        @if (showFolderManagement) {
         <button mat-stroked-button type="button" (click)="openCreateFolder()">
           <mat-icon class="mr-2 icon-size-4" [svgIcon]="'heroicons_outline:plus'"></mat-icon>
           Nueva carpeta
         </button>
+        }
         <button mat-flat-button color="primary" type="button" (click)="emitAddImage()">
           <mat-icon class="mr-2 icon-size-4 text-white" [svgIcon]="'heroicons_outline:photo'"></mat-icon>
           Agregar imagen
@@ -102,9 +108,15 @@
         </div>
 
         <div class="fm-bulk-bar__actions">
+          @if (bulkPrimaryActionLabel) {
+          <button mat-flat-button color="primary" type="button" (click)="requestBulkPrimaryAction()">
+            {{ bulkPrimaryActionLabel }}
+          </button>
+          } @else if (showImageActiveControls) {
           <button mat-flat-button [color]="areAllSelectedImagesActive ? 'warn' : 'primary'" type="button" (click)="requestToggleSelectedImagesActive()">
             {{ selectedImagesActionLabel }}
           </button>
+          }
           <button mat-stroked-button type="button" (click)="clearBulkSelection()">Limpiar selección</button>
         </div>
       </div>
@@ -152,6 +164,7 @@
                       }
                     </div>
 
+                    @if (showFolderManagement) {
                     <div class="fm-folder-actions-container">
                       <button
                         mat-icon-button
@@ -180,6 +193,7 @@
                         </div>
                       }
                     </div>
+                    }
 
                     <div class="fm-folder-meta">
                       <div class="fm-folder-name">{{ folder.name }}</div>
@@ -293,7 +307,24 @@
               </div>
               <div class="fm-detail-item">
                 <dt>Tipo</dt>
-                <dd>{{ getImageTypeLabel(detailImage) }}</dd>
+                @if (imageTypeOptions.length) {
+                  <dd>
+                    <mat-form-field class="w-full">
+                      <mat-select
+                        [value]="detailImage.typeValue ?? null"
+                        aria-label="Tipo de imagen"
+                        (valueChange)="requestImageTypeChange(detailImage, $event)"
+                      >
+                        <mat-option [value]="null">Sin tipo</mat-option>
+                        @for (option of imageTypeOptions; track option.value) {
+                          <mat-option [value]="option.value">{{ option.label }}</mat-option>
+                        }
+                      </mat-select>
+                    </mat-form-field>
+                  </dd>
+                } @else {
+                  <dd>{{ getImageTypeLabel(detailImage) }}</dd>
+                }
               </div>
               @if (detailImage.sizeLabel) {
                 <div class="fm-detail-item">
@@ -303,21 +334,27 @@
               }
             </dl>
 
-            <div class="fm-detail-switches">
-              <app-custom-switch
+              @if (showImageDarkenControl || showImageActiveControls) {
+              <div class="fm-detail-switches">
+                @if (showImageDarkenControl) {
+                <app-custom-switch
                 [checked]="detailImageDarkenChecked"
                 label="Oscurecer fondo"
                 [disabled]="isSaving"
                 (change)="requestToggleImageDarken(detailImage, $event)"
-              ></app-custom-switch>
+                ></app-custom-switch>
+                }
 
-              <app-custom-switch
+                @if (showImageActiveControls) {
+                <app-custom-switch
                 [checked]="detailImageActiveChecked"
                 [label]="detailImageActiveChecked ? 'Activo' : 'Inactivo'"
                 [disabled]="isSaving"
                 (change)="requestSetImageActive(detailImage, $event)"
-              ></app-custom-switch>
-            </div>
+                ></app-custom-switch>
+                }
+              </div>
+              }
 
             <div class="fm-detail-actions">
               <button mat-flat-button color="primary" type="button" (click)="requestEditImage(detailImage)">

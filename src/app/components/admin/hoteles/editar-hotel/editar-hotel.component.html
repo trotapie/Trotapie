@@ -347,74 +347,27 @@
                         <h2>Galería de imágenes</h2>
                         <p>Administra las imágenes, sus URL y el tipo de uso de cada una.</p>
                     </div>
-                    <div class="gallery-actions">
-                        <button mat-stroked-button type="button" (click)="abrirModalAgregarImagenes()">
-                            <mat-icon class="icon-size-5">add</mat-icon>
-                            Agregar imagen
-                        </button>
-                        <button mat-stroked-button color="accent" type="button" (click)="toggleSeleccionTodasImagenes()"
-                            [disabled]="!imagenes.length">
-                            {{ todasImagenesSeleccionadas ? 'Deseleccionar todas' : 'Seleccionar todas' }}
-                        </button>
-                        <button mat-flat-button color="warn" class="text-white" type="button"
-                            (click)="solicitarEliminarImagenesSeleccionadas()"
-                            [disabled]="!totalImagenesSeleccionadas">
-                            <mat-icon class="mr-2 icon-size-5 text-white">delete</mat-icon>
-                            Borrar ({{ totalImagenesSeleccionadas }})
-                        </button>
-                    </div>
                 </div>
 
-                @if (!imagenes.length) {
-                <p class="text-sm text-gray-500">Este hotel no tiene imagenes registradas.</p>
-                } @else {
-                <div class="space-y-4">
-                    @for (imagen of imagenes; track imagen.key; let i = $index) {
-                    <div class="image-row grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-white p-3 lg:grid-cols-[44px_140px_minmax(0,1fr)_220px_auto]">
-                        <div class="flex items-center justify-center">
-                            <mat-checkbox [checked]="esImagenSeleccionada(imagen.key)"
-                                (change)="toggleSeleccionImagen(imagen.key, $event.checked)"></mat-checkbox>
-                        </div>
-                        <button type="button"
-                            class="miniatura border border-gray-200 bg-gray-100"
-                            [disabled]="!imagen.url_imagen"
-                            (click)="abrirImagen(imagen.url_imagen)">
-                            @if (imagen.url_imagen) {
-                            <img [src]="imagen.url_imagen" alt="Imagen hotel" class="h-full w-full object-cover" />
-                            } @else {
-                            <span class="text-xs text-gray-500">Sin vista previa</span>
-                            }
-                        </button>
-
-                        <mat-form-field class="w-full">
-                            <mat-label>URL de imagen</mat-label>
-                            <input matInput [value]="imagen.url_imagen"
-                                (input)="actualizarUrlImagen(i, $any($event.target).value)" />
-                        </mat-form-field>
-
-                        <mat-form-field class="w-full">
-                            <mat-label>Tipo de imagen</mat-label>
-                            <mat-select [value]="imagen.tipo_imagen_id"
-                                (valueChange)="actualizarTipoImagen(i, $event)">
-                                <mat-option [value]="null">Sin tipo</mat-option>
-                                @for (tipo of tiposImagen; track tipo.id) {
-                                <mat-option [value]="tipo.id">{{ tipo.descripcion }}</mat-option>
-                                }
-                            </mat-select>
-                        </mat-form-field>
-
-                        <div class="flex items-center justify-center">
-                            @if (!totalImagenesSeleccionadas) {
-                            <button mat-icon-button color="warn" type="button" [matTooltip]="'Eliminar imagen'"
-                                (click)="eliminarImagen(i)">
-                                <mat-icon class="icon-size-7">delete</mat-icon>
-                            </button>
-                            }
-                        </div>
-                    </div>
-                    }
-                </div>
-                }
+                <app-folder-image-manager
+                    title="Galería del hotel"
+                    subtitle="Las imágenes se organizan visualmente por tipo. Clasifica las pendientes desde Sin tipo asignado."
+                    [folders]="galeriaHotel"
+                    [selectedImageId]="imagenSeleccionadaKey"
+                    [showActiveView]="false"
+                    [showFolderManagement]="false"
+                    [showImageActiveControls]="false"
+                    [showImageDarkenControl]="false"
+                    [imageTypeOptions]="opcionesTipoImagenGaleria"
+                    [bulkPrimaryActionLabel]="'Asignar tipo'"
+                    [selectionResetKey]="reinicioSeleccionGaleria"
+                    (addImage)="abrirModalAgregarImagenes()"
+                    (imageSelected)="seleccionarImagenGaleria($event)"
+                    (editImage)="abrirModalEditarImagen($event)"
+                    (deleteImage)="eliminarImagenDesdeGaleria($event)"
+                    (imageTypeChanged)="cambiarTipoImagenDesdeDetalle($event)"
+                    (bulkPrimaryAction)="abrirModalAsignarTipoImagenes($event)">
+                </app-folder-image-manager>
             </section>
 
             @if (error) {
@@ -507,6 +460,68 @@
                 } @else {
                 {{ esModalFondoDesdeDrive ? 'Asignar fondo' : 'Agregar imagenes' }}
                 }
+            </button>
+        </div>
+    </div>
+</div>
+}
+
+@if (mostrarModalEditarImagen) {
+<div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
+    <div class="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="editar-imagen-title">
+        <h3 id="editar-imagen-title" class="text-xl font-semibold text-gray-900">Editar imagen</h3>
+        <p class="mt-2 text-sm text-gray-600">Actualiza la URL o el tipo de uso de esta imagen.</p>
+
+        <div class="mt-5 grid gap-3 sm:grid-cols-[minmax(0,1fr)_220px]">
+            <mat-form-field class="w-full">
+                <mat-label>URL de imagen</mat-label>
+                <input matInput [value]="urlImagenEditando" (input)="urlImagenEditando = $any($event.target).value" />
+            </mat-form-field>
+
+            <mat-form-field class="w-full">
+                <mat-label>Tipo de imagen</mat-label>
+                <mat-select [value]="tipoImagenEdicionId" (valueChange)="tipoImagenEdicionId = $event">
+                    <mat-option [value]="null">Sin tipo</mat-option>
+                    @for (tipo of tiposImagen; track tipo.id) {
+                    <mat-option [value]="tipo.id">{{ tipo.descripcion }}</mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+        </div>
+
+        <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button mat-stroked-button type="button" (click)="cerrarModalEditarImagen()">Cancelar</button>
+            <button mat-flat-button color="primary" class="text-white" type="button"
+                [disabled]="!urlImagenEditando.trim()" (click)="guardarEdicionImagen()">
+                Guardar cambios
+            </button>
+        </div>
+    </div>
+</div>
+}
+
+@if (mostrarModalAsignarTipoImagenes) {
+<div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
+    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="asignar-tipo-imagenes-title">
+        <h3 id="asignar-tipo-imagenes-title" class="text-xl font-semibold text-gray-900">Asignar tipo de imagen</h3>
+        <p class="mt-2 text-sm text-gray-600">
+            El tipo seleccionado se aplicará a {{ imagenesParaAsignarTipo.size }} imagen(es).
+        </p>
+
+        <mat-form-field class="mt-5 w-full">
+            <mat-label>Tipo de imagen</mat-label>
+            <mat-select [value]="tipoImagenMasivoId" (valueChange)="tipoImagenMasivoId = $event">
+                @for (tipo of tiposImagen; track tipo.id) {
+                <mat-option [value]="tipo.id">{{ tipo.descripcion }}</mat-option>
+                }
+            </mat-select>
+        </mat-form-field>
+
+        <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button mat-stroked-button type="button" (click)="cerrarModalAsignarTipoImagenes()">Cancelar</button>
+            <button mat-flat-button color="primary" class="text-white" type="button"
+                [disabled]="tipoImagenMasivoId === null" (click)="confirmarAsignarTipoImagenes()">
+                Aplicar tipo
             </button>
         </div>
     </div>

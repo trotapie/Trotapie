@@ -5,6 +5,12 @@ import * as L from 'leaflet';
 import { Subscription } from 'rxjs';
 import { MaterialModule } from 'app/shared/material.module';
 import { SupabaseService } from 'app/core/supabase.service';
+import {
+  FolderImageManagerComponent,
+  FolderImageManagerFolder,
+  FolderImageManagerImage,
+  FolderImageManagerTypeOption
+} from 'app/shared/folder-image-manager/folder-image-manager.component';
 
 interface IDestinoAdmin {
   id: number;
@@ -65,7 +71,7 @@ interface IImagenEditable {
 @Component({
   selector: 'app-editar-hotel',
   standalone: true,
-  imports: [MaterialModule],
+  imports: [MaterialModule, FolderImageManagerComponent],
   templateUrl: './editar-hotel.component.html',
   styleUrl: './editar-hotel.component.scss'
 })
@@ -96,6 +102,8 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
   mostrarModalCambiosPendientes = false;
   mostrarModalActividadesSeleccionadas = false;
   mostrarModalEliminarImagenesSeleccionadas = false;
+  mostrarModalEditarImagen = false;
+  mostrarModalAsignarTipoImagenes = false;
 
   destinos: IDestinoAdmin[] = [];
   regimenes: IRegimenAdmin[] = [];
@@ -111,6 +119,13 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
   imagenes: IImagenEditable[] = [];
   imagenesEliminadasPendientes: IImagenEditable[] = [];
   imagenesSeleccionadas = new Set<string>();
+  imagenSeleccionadaKey: string | null = null;
+  imagenEditandoKey: string | null = null;
+  urlImagenEditando = '';
+  tipoImagenEdicionId: number | null = null;
+  tipoImagenMasivoId: number | null = null;
+  imagenesParaAsignarTipo = new Set<string>();
+  reinicioSeleccionGaleria = 0;
   traduciendoContenido = false;
   mostrarModalAgregarImagenes = false;
   esModalFondoDesdeDrive = false;
@@ -639,6 +654,47 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.imagenesSeleccionadas.size;
   }
 
+  get galeriaHotel(): FolderImageManagerFolder[] {
+    const carpetas = new Map<string, FolderImageManagerFolder>();
+
+    this.imagenes.forEach((imagen, index) => {
+      const tipoImagenId = this.parseNumber(imagen.tipo_imagen_id);
+      const sinTipo = tipoImagenId === null;
+      const carpetaId = sinTipo ? 'sin-tipo' : `tipo-${tipoImagenId}`;
+      const nombreCarpeta = sinTipo ? 'Sin tipo asignado' : this.obtenerDescripcionTipoImagen(tipoImagenId);
+
+      if (!carpetas.has(carpetaId)) {
+        carpetas.set(carpetaId, {
+          id: carpetaId,
+          name: nombreCarpeta,
+          description: sinTipo ? 'Imagenes pendientes de clasificar' : 'Imagenes clasificadas por tipo',
+          images: []
+        });
+      }
+
+      carpetas.get(carpetaId)?.images.push({
+        id: imagen.key,
+        draftKey: imagen.key,
+        name: `Imagen ${index + 1}`,
+        imageUrl: imagen.url_imagen,
+        folderId: carpetaId,
+        folderName: nombreCarpeta,
+        typeLabel: nombreCarpeta,
+        typeValue: tipoImagenId
+      });
+    });
+
+    return Array.from(carpetas.values()).sort((a, b) => {
+      if (a.id === 'sin-tipo') return -1;
+      if (b.id === 'sin-tipo') return 1;
+      return a.name.localeCompare(b.name);
+    });
+  }
+
+  get opcionesTipoImagenGaleria(): FolderImageManagerTypeOption[] {
+    return this.tiposImagen.map((tipo) => ({ value: tipo.id, label: tipo.descripcion }));
+  }
+
   get todasImagenesSeleccionadas(): boolean {
     return this.imagenes.length > 0 && this.imagenesSeleccionadas.size === this.imagenes.length;
   }
@@ -859,6 +915,83 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
     const value = (url ?? '').trim();
     if (!value) return;
     window.open(value, '_blank', 'noopener,noreferrer');
+  }
+
+  seleccionarImagenGaleria(imagen: FolderImageManagerImage): void {
+    this.imagenSeleccionadaKey = String(imagen.id);
+  }
+
+  abrirModalEditarImagen(imagen: FolderImageManagerImage): void {
+    const imagenHotel = this.imagenes.find((item) => item.key === String(imagen.id));
+    if (!imagenHotel) return;
+
+    this.imagenEditandoKey = imagenHotel.key;
+    this.urlImagenEditando = imagenHotel.url_imagen;
+    this.tipoImagenEdicionId = imagenHotel.tipo_imagen_id;
+    this.mostrarModalEditarImagen = true;
+  }
+
+  cerrarModalEditarImagen(): void {
+    this.mostrarModalEditarImagen = false;
+    this.imagenEditandoKey = null;
+    this.urlImagenEditando = '';
+    this.tipoImagenEdicionId = null;
+  }
+
+  guardarEdicionImagen(): void {
+    if (!this.imagenEditandoKey) return;
+
+    this.imagenes = this.imagenes.map((imagen) =>
+      imagen.key === this.imagenEditandoKey
+        ? { ...imagen, url_imagen: this.urlImagenEditando.trim(), tipo_imagen_id: this.tipoImagenEdicionId }
+        : imagen
+    );
+    this.cerrarModalEditarImagen();
+  }
+
+  eliminarImagenDesdeGaleria(imagen: FolderImageManagerImage): void {
+    const index = this.imagenes.findIndex((item) => item.key === String(imagen.id));
+    if (index >= 0) {
+      this.eliminarImagen(index);
+      if (this.imagenSeleccionadaKey === String(imagen.id)) {
+        this.imagenSeleccionadaKey = null;
+      }
+    }
+  }
+
+  cambiarTipoImagenDesdeDetalle(evento: { image: FolderImageManagerImage; value: string | number | null }): void {
+    const tipoImagenId = this.parseNumber(evento.value);
+    this.imagenes = this.imagenes.map((imagen) =>
+      imagen.key === String(evento.image.id) ? { ...imagen, tipo_imagen_id: tipoImagenId } : imagen
+    );
+  }
+
+  abrirModalAsignarTipoImagenes(imagenes: FolderImageManagerImage[]): void {
+    this.imagenesParaAsignarTipo = new Set(imagenes.map((imagen) => String(imagen.id)));
+    this.tipoImagenMasivoId = null;
+    this.mostrarModalAsignarTipoImagenes = true;
+  }
+
+  cerrarModalAsignarTipoImagenes(): void {
+    this.mostrarModalAsignarTipoImagenes = false;
+    this.imagenesParaAsignarTipo.clear();
+    this.tipoImagenMasivoId = null;
+  }
+
+  confirmarAsignarTipoImagenes(): void {
+    if (!this.imagenesParaAsignarTipo.size) return;
+
+    this.imagenes = this.imagenes.map((imagen) =>
+      this.imagenesParaAsignarTipo.has(imagen.key)
+        ? { ...imagen, tipo_imagen_id: this.tipoImagenMasivoId }
+        : imagen
+    );
+    this.reinicioSeleccionGaleria++;
+    this.cerrarModalAsignarTipoImagenes();
+  }
+
+  private obtenerDescripcionTipoImagen(tipoImagenId: number | null): string {
+    return this.tiposImagen.find((tipo) => tipo.id === tipoImagenId)?.descripcion ?? 'Sin tipo';
   }
 
   async guardar() {

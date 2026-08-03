@@ -16,7 +16,13 @@ export interface FolderImageManagerImage {
   extension?: string | null;
   mimeType?: string | null;
   sizeLabel?: string | null;
+  typeValue?: string | number | null;
   oscurecerFondo?: boolean;
+}
+
+export interface FolderImageManagerTypeOption {
+  value: string | number;
+  label: string;
 }
 
 export interface FolderImageManagerFolder {
@@ -42,6 +48,14 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
   @Input() selectedImageId: string | number | null = null;
   @Input() activeImageIds: Array<string | number> | Set<string | number> = [];
   @Input() showDetailPanel = true;
+  @Input() showFolders = true;
+  @Input() showActiveView = true;
+  @Input() showFolderManagement = true;
+  @Input() showImageActiveControls = true;
+  @Input() showImageDarkenControl = true;
+  @Input() imageTypeOptions: FolderImageManagerTypeOption[] = [];
+  @Input() bulkPrimaryActionLabel: string | null = null;
+  @Input() selectionResetKey = 0;
   @Input() isSaving = false;
   @Input() isSavingFolder = false;
   @Input() showDeleteAllImages = false;
@@ -61,6 +75,8 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
   @Output() toggleImageDarken = new EventEmitter<{ image: FolderImageManagerImage; checked: boolean }>();
   @Output() toggleFolderActive = new EventEmitter<FolderImageManagerFolder>();
   @Output() toggleSelectedImagesActive = new EventEmitter<FolderImageManagerImage[]>();
+  @Output() bulkPrimaryAction = new EventEmitter<FolderImageManagerImage[]>();
+  @Output() imageTypeChanged = new EventEmitter<{ image: FolderImageManagerImage; value: string | number | null }>();
 
   activeFolderId: string | number | null = null;
   searchTerm = '';
@@ -92,6 +108,11 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
       !!changes['selectedImageId'] && changes['selectedImageId'].previousValue !== changes['selectedImageId'].currentValue;
     const foldersChanged = !!changes['folders'];
     const activeImageIdsChanged = !!changes['activeImageIds'];
+
+    if (changes['selectionResetKey'] && !changes['selectionResetKey'].firstChange) {
+      this.selectedImageIds.clear();
+      this.selectionModeActive = false;
+    }
 
     if (this.creatingFolder && changes['folders']) {
       const prevLength = changes['folders'].previousValue?.length ?? 0;
@@ -235,7 +256,7 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
   }
 
   get shouldShowFoldersSection(): boolean {
-    return this.activeView === 'all' || this.activeView === 'folders';
+    return this.showFolders && (this.activeView === 'all' || this.activeView === 'folders');
   }
 
   get shouldShowImagesSection(): boolean {
@@ -443,6 +464,12 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
     this.deleteImage.emit(image);
   }
 
+  requestImageTypeChange(image: FolderImageManagerImage | null, value: string | number | null): void {
+    if (image) {
+      this.imageTypeChanged.emit({ image, value });
+    }
+  }
+
   requestToggleFolderActive(folder: FolderImageManagerFolder): void {
     this.toggleFolderActive.emit(folder);
   }
@@ -456,6 +483,13 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
     this.toggleSelectedImagesActive.emit(selected);
     this.selectedImageIds.clear();
     this.selectionModeActive = false;
+  }
+
+  requestBulkPrimaryAction(): void {
+    const selected = this.selectedImages;
+    if (selected.length) {
+      this.bulkPrimaryAction.emit(selected);
+    }
   }
 
   toggleFolderActions(folder: FolderImageManagerFolder, event: Event): void {
