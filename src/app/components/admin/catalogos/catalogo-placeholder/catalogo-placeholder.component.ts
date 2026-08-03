@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
+import { A11yModule } from '@angular/cdk/a11y';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, HostListener, inject, OnInit } from '@angular/core';
 import { PageEvent } from '@angular/material/paginator';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { sanitizeSvg } from 'app/shared/utils/svg-sanitizer';
@@ -41,7 +42,7 @@ interface CatalogoVistaConfig {
 @Component({
   selector: 'app-catalogo-placeholder',
   standalone: true,
-  imports: [CommonModule, MaterialModule, RouterLink, DragDropModule, EstatusComponent, CustomSwitchComponent],
+  imports: [CommonModule, A11yModule, MaterialModule, RouterLink, DragDropModule, EstatusComponent, CustomSwitchComponent],
   templateUrl: './catalogo-placeholder.component.html',
   styleUrl: './catalogo-placeholder.component.scss',
   animations: [modalScaleFade, backdropFade],
@@ -261,6 +262,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
   traduciendoDescuento = false;
   traduccionesAtraccionPreview: Record<string, IAtraccionTraduccionPreview> = {};
   traduciendoAtraccion = false;
+  cargandoTraduccionesAtraccion = false;
   traduccionesTipoImagenPreview: Record<string, { descripcion: string }> = {};
   traduciendoTipoImagen = false;
   politicasDisponiblesTarifa: IPoliticaTarifaAdmin[] = [];
@@ -1132,7 +1134,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
     }
   }
 
-  iniciarEdicion(item: any) {
+  async iniciarEdicion(item: any) {
     if (this.esCatalogoAtracciones) {
       this.error = '';
       this.errorModalEdicion = '';
@@ -1147,12 +1149,21 @@ export class CatalogoPlaceholderComponent implements OnInit {
         orden: item?.orden ?? null,
         activo: Boolean(item?.activo)
       };
-      this.traduccionesAtraccionPreview = this.normalizarTraduccionesAtraccion(item?.traducciones_preview);
+      this.traduccionesAtraccionPreview = {};
       this.ultimaLlaveTraduccionAtraccion = this.obtenerLlaveTraduccionAtraccion(
         item?.nombre,
         item?.descripcion
       );
       this.modalEdicionAbierto = true;
+      this.cargandoTraduccionesAtraccion = true;
+      try {
+        const traducciones = await this.catalogosAdmin.obtenerTraduccionesCatalogoAtraccionAdmin(this.editingId);
+        this.traduccionesAtraccionPreview = this.normalizarTraduccionesAtraccion(traducciones);
+      } catch (error: any) {
+        this.errorModalEdicion = error?.message ?? 'No se pudieron cargar las traducciones de esta atracción.';
+      } finally {
+        this.cargandoTraduccionesAtraccion = false;
+      }
       return;
     }
 
@@ -1239,6 +1250,13 @@ export class CatalogoPlaceholderComponent implements OnInit {
     this.politicasTarifaSeleccionadas.clear();
   }
 
+  @HostListener('document:keydown.escape')
+  cerrarModalConEscape() {
+    if (this.modalEdicionAbierto && !this.guardandoEdicion && !this.traduciendoAtraccion && !this.cargandoTraduccionesAtraccion) {
+      this.cerrarModalEdicion();
+    }
+  }
+
   private limpiarVistaPreviaAmenidad() {
     this.traduccionesAmenidadPreview = {};
     this.ultimaLlaveTraduccionAmenidad = '';
@@ -1254,6 +1272,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
     this.traduccionesAtraccionPreview = {};
     this.ultimaLlaveTraduccionAtraccion = '';
     this.traduciendoAtraccion = false;
+    this.cargandoTraduccionesAtraccion = false;
   }
 
   private limpiarVistaPreviaTipoImagen() {
@@ -1448,7 +1467,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
       this.traduccionesAtraccionPreview = concentrado;
       this.ultimaLlaveTraduccionAtraccion = llaveActual;
     } catch (error: any) {
-      this.error = error?.message ?? 'No se pudo traducir la atraccion.';
+      this.errorModalEdicion = error?.message ?? 'No se pudo actualizar la vista previa de traducciones.';
     } finally {
       this.traduciendoAtraccion = false;
     }

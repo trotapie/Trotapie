@@ -4,30 +4,35 @@
 /* ----------------------------------------------------------------------------------------------------- */
 
 @font-face {
-    font-family: 'Mont Blanc';
-    src: url('/assets/fonts/mont-blanc-regular.woff2') format('woff2');
+    font-family: 'Arial';
+    src: url('/assets/fonts/ARIAL.TTF') format('truetype');
     font-weight: 400;
     font-style: normal;
     font-display: swap;
-    unicode-range: U+0000-003F, U+0041-10FFFF;
 }
 
 @font-face {
-    font-family: 'Mont Blanc';
-    src: url('/assets/fonts/mont-blanc-semibold.woff2') format('woff2');
-    font-weight: 600;
+    font-family: 'Arial';
+    src: url('/assets/fonts/ARIALBD.TTF') format('truetype');
+    font-weight: 700;
     font-style: normal;
     font-display: swap;
-    unicode-range: U+0000-003F, U+0041-10FFFF;
 }
 
 @font-face {
-    font-family: 'Mont Blanc';
-    src: url('/assets/fonts/mont-blanc-extrabold.woff2') format('woff2');
-    font-weight: 800;
+    font-family: 'Century Gothic';
+    src: url('/assets/fonts/centurygothic.ttf') format('truetype');
+    font-weight: 400;
     font-style: normal;
     font-display: swap;
-    unicode-range: U+0000-003F, U+0041-10FFFF;
+}
+
+@font-face {
+    font-family: 'Century Gothic';
+    src: url('/assets/fonts/centurygothic_bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
 }
 
 @tailwind components;
@@ -329,7 +334,7 @@ body .cdk-overlay-container .cdk-overlay-pane:has(.empleados-roles-panel) {
 .promo-badge {
     @apply text-white px-4 py-2 rounded-[1.5rem] shadow-lg text-right w-36;
     background: linear-gradient(90deg, #ff7c00, #ff4d00);
-    font-family: 'Poppins', sans-serif;
+    // font-family: 'Poppins', sans-serif;
 }
 
 ::ng-deep mat-button-toggle {

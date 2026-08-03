@@ -23,7 +23,7 @@ export class AtraccionesDetalleComponent implements OnInit {
   error = '';
   catalogo: any = null;
   atracciones: any[] = [];
-  displayedColumns = ['id', 'nombre', 'descripcion', 'imagenes', 'orden', 'activo', 'acciones'];
+  displayedColumns = ['id', 'clave', 'nombre', 'descripcion', 'icono', 'orden', 'activo', 'acciones'];
   editingId: number | null = null;
   editingDraft: Record<string, any> = {};
 
@@ -72,8 +72,9 @@ export class AtraccionesDetalleComponent implements OnInit {
     this.guardando = true;
     this.error = '';
     try {
-      await this.catalogosAdmin.actualizarRegistroCatalogoAtraccionAdmin({
-        atraccion_id: Number(item.id),
+      await this.catalogosAdmin.actualizarCatalogoAdmin('atracciones', Number(item.id), {
+        clave: item.clave,
+        icono: item.icono,
         nombre: this.cleanText(this.editingDraft['nombre']),
         descripcion: this.cleanText(this.editingDraft['descripcion']),
         orden: this.parseNumber(this.editingDraft['orden']),
@@ -102,7 +103,7 @@ export class AtraccionesDetalleComponent implements OnInit {
   private async cargarDetalle(catalogoId: number) {
     const detalle = await this.catalogosAdmin.obtenerDetalleCatalogoAtraccionesAdmin(catalogoId);
     this.catalogo = detalle.catalogo;
-    this.atracciones = detalle.atracciones ?? [];
+    this.atracciones = [detalle.catalogo];
   }
 
   private cleanText(value: string | null | undefined): string | null {

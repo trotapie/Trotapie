@@ -9,17 +9,37 @@ import { Hotel, ICoordenadas } from '../hoteles.interface';
 export class MapaComponent implements OnInit, AfterViewInit {
     private map: any;
     private L: any = null;
-    coordenadas: ICoordenadas;
-    hotel: Hotel;
+    private viewInitialized = false;
+    private mapInitialized = false;
+    coordenadas: ICoordenadas | null = null;
+    hotel: Hotel | null = null;
+
     async ngOnInit() {
         this.L = await import('leaflet');
-        this.hotel = JSON.parse(sessionStorage.getItem('hotel'))       
+        const hotel = sessionStorage.getItem('hotel');
+
+        if (!hotel) {
+            return;
+        }
+
+        this.hotel = JSON.parse(hotel);
         const url = this.hotel.ubicacion;
         this.coordenadas = this.extraerCoordenadasDesdeUrl(url);
+        this.inicializarMapa();
     }
 
     ngAfterViewInit(): void {
-        this.map = this.L.map('map').setView([this.coordenadas.lat, this.coordenadas.lng], this.hotel?.vistaLejana ? 12 : 17);
+        this.viewInitialized = true;
+        this.inicializarMapa();
+    }
+
+    private inicializarMapa(): void {
+        if (!this.viewInitialized || !this.L || !this.coordenadas || !this.hotel || this.mapInitialized) {
+            return;
+        }
+
+        this.mapInitialized = true;
+        this.map = this.L.map('map').setView([this.coordenadas.lat, this.coordenadas.lng], this.hotel.vistaLejana ? 12 : 17);
         const icon = this.L.icon({
             iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
             shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',

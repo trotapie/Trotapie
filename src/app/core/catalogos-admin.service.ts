@@ -59,35 +59,9 @@ export class CatalogosAdminService {
     if (catalogoError) throw catalogoError;
     if (!catalogo) throw new Error('No se encontro el catalogo de atracciones solicitado.');
 
-    const { data: atracciones, error: atraccionesError } = await this.client
-      .from('atracciones')
-      .select(`
-        id,
-        catalogo_atraccion_id,
-        imagen_fondo,
-        orden,
-        activo,
-        created_at,
-        imagenes:atracciones_imagenes (
-          id,
-          imagen_url,
-          activa,
-          orden,
-          created_at
-        ),
-        traducciones:atracciones_traducciones (
-          idioma_id,
-          nombre,
-          descripcion
-        )
-      `)
-      .eq('catalogo_atraccion_id', catalogoAtraccionId)
-      .order('orden', { ascending: true })
-      .order('id', { ascending: true });
-
-    if (atraccionesError) throw atraccionesError;
-
-    const traduccionCatalogoEs = catalogo?.traducciones?.find((x: any) => Number(x.idioma_id) === ES_ID);
+    const traduccionCatalogoEs = catalogo?.traducciones?.find(
+      (x: any) => String(x?.idioma?.codigo ?? '').toLowerCase() === 'es'
+    );
 
     return {
       catalogo: {
@@ -99,75 +73,35 @@ export class CatalogosAdminService {
         created_at: catalogo.created_at ?? null,
         nombre: traduccionCatalogoEs?.nombre ?? '',
         descripcion: traduccionCatalogoEs?.descripcion ?? ''
-      },
-      atracciones: (atracciones ?? []).map((item: any) => {
-        const traduccionEs = item?.traducciones?.find((x: any) => Number(x.idioma_id) === ES_ID);
-        const imagenesOrdenadas = [...(item?.imagenes ?? [])].sort((a: any, b: any) => {
-          const ordenA = a?.orden ?? Number.MAX_SAFE_INTEGER;
-          const ordenB = b?.orden ?? Number.MAX_SAFE_INTEGER;
-          if (ordenA !== ordenB) {
-            return ordenA - ordenB;
-          }
-          return Number(a?.id ?? 0) - Number(b?.id ?? 0);
-        });
-
-        const imagenActiva = imagenesOrdenadas.find((imagen: any) => Boolean(imagen?.activa));
-        return {
-          id: item.id,
-          imagen_fondo: imagenActiva?.imagen_url ?? item.imagen_fondo ?? '',
-          imagenes: imagenesOrdenadas.map((imagen: any) => ({
-            id: imagen.id,
-            imagen_url: imagen.imagen_url ?? '',
-            activa: Boolean(imagen.activa),
-            orden: imagen.orden ?? null,
-            created_at: imagen.created_at ?? null
-          })),
-          orden: item.orden ?? null,
-          activo: Boolean(item.activo),
-          created_at: item.created_at ?? null,
-          nombre: traduccionEs?.nombre ?? '',
-          descripcion: traduccionEs?.descripcion ?? ''
-        };
-      })
+      }
     };
   }
 
-  async actualizarRegistroCatalogoAtraccionAdmin(payload: {
-    atraccion_id: number;
-    nombre: string | null;
-    descripcion: string | null;
-    orden: number | null;
-    activo: boolean;
-  }) {
-    const { data: updatedAtraccion, error: atraccionError } = await this.client
-      .from('atracciones')
-      .update({
-        orden: payload.orden,
-        activo: payload.activo
-      })
-      .eq('id', payload.atraccion_id)
-      .select('id')
+  async obtenerTraduccionesCatalogoAtraccionAdmin(catalogoAtraccionId: number) {
+    const { data, error } = await this.client
+      .from('catalogo_atracciones')
+      .select(`
+        traducciones:catalogo_atracciones_traducciones (
+          idioma:idiomas(codigo),
+          nombre,
+          descripcion
+        )
+      `)
+      .eq('id', catalogoAtraccionId)
       .maybeSingle();
 
-    if (atraccionError) throw atraccionError;
-    if (!updatedAtraccion?.id) {
-      throw new Error('No se encontro la atraccion a actualizar.');
-    }
+    if (error) throw error;
 
-    const { error: traduccionError } = await this.client
-      .from('atracciones_traducciones')
-      .upsert(
-        {
-          atraccion_id: payload.atraccion_id,
-          idioma_id: ES_ID,
-          nombre: payload.nombre ?? '',
-          descripcion: payload.descripcion ?? ''
-        },
-        { onConflict: 'atraccion_id,idioma_id' }
-      );
-
-    if (traduccionError) throw traduccionError;
-    return { id: payload.atraccion_id };
+    return (data?.traducciones ?? []).reduce((acc: Record<string, { nombre: string; descripcion: string }>, traduccion: any) => {
+      const codigo = String(traduccion?.idioma?.codigo ?? '').toLowerCase();
+      if (codigo) {
+        acc[codigo] = {
+          nombre: traduccion?.nombre ?? '',
+          descripcion: traduccion?.descripcion ?? ''
+        };
+      }
+      return acc;
+    }, {});
   }
 
   async obtenerCatalogoAdmin(catalogo: CatalogoAdminKey): Promise<any[]> {
@@ -496,6 +430,7 @@ export class CatalogosAdminService {
             created_at,
             traducciones:catalogo_atracciones_traducciones (
               idioma_id,
+              idioma:idiomas(codigo),
               nombre,
               descripcion
             )
@@ -503,18 +438,6 @@ export class CatalogosAdminService {
           .order('orden', { ascending: true })
           .order('id', { ascending: true });
         if (error) throw error;
-        const { data: atraccionesRows, error: atraccionesError } = await this.client
-          .from('atracciones')
-          .select('id, catalogo_atraccion_id')
-          .eq('activo', true);
-        if (atraccionesError) throw atraccionesError;
-
-        const conteoPorCatalogo = new Map<number, number>();
-        (atraccionesRows ?? []).forEach((row: any) => {
-          const key = Number(row.catalogo_atraccion_id);
-          conteoPorCatalogo.set(key, (conteoPorCatalogo.get(key) ?? 0) + 1);
-        });
-
         return (data ?? []).map((item: any) => {
           const traduccionEs = item?.traducciones?.find((x: any) => String(x?.idioma?.codigo ?? '').toLowerCase() === 'es');
           return {
@@ -538,8 +461,7 @@ export class CatalogosAdminService {
               };
 
               return acc;
-            }, {}),
-            total_registros: conteoPorCatalogo.get(Number(item.id)) ?? 0
+            }, {})
           };
         });
       }
@@ -1298,19 +1220,11 @@ export class CatalogosAdminService {
           .maybeSingle();
         if (error) throw error;
 
-        const { error: traduccionError } = await this.client
-          .from('catalogo_atracciones_traducciones')
-          .upsert(
-            {
-              catalogo_atraccion_id: id,
-              idioma_id: ES_ID,
-              nombre: payload.nombre ?? '',
-              descripcion: payload.descripcion ?? ''
-            },
-            { onConflict: 'catalogo_atraccion_id,idioma_id' }
-          );
-
-        if (traduccionError) throw traduccionError;
+        await this.guardarTraduccionesCatalogoAtraccion(
+          id,
+          String(payload.nombre ?? '').trim(),
+          String(payload.descripcion ?? '').trim()
+        );
         return data;
       }
       default:

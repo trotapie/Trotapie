@@ -62,6 +62,24 @@
   overflow: visible;
 }
 
+.catalogo-form-modal button:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.catalogo-form-modal ::ng-deep textarea {
+  resize: vertical;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .catalogo-form-modal,
+  .catalogo-form-modal * {
+    scroll-behavior: auto;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
 
 
 .table-footer {

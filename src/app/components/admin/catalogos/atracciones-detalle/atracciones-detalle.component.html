@@ -7,7 +7,7 @@
             Detalle de catalogo: {{ catalogo?.nombre || catalogo?.clave || 'Atracciones' }}
           </h1>
           <p class="mt-2 text-base text-gray-500">
-            Aqui se muestran los registros asociados a este valor del catalogo.
+            Aqui se muestra la informacion del valor seleccionado del catalogo de atracciones.
           </p>
         </div>
 
@@ -38,6 +38,11 @@
           <ng-container matColumnDef="id">
             <th mat-header-cell *matHeaderCellDef>ID</th>
             <td mat-cell *matCellDef="let item">{{ item.id }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="clave">
+            <th mat-header-cell *matHeaderCellDef>Clave</th>
+            <td mat-cell *matCellDef="let item">{{ item.clave || '-' }}</td>
           </ng-container>
 
           <ng-container matColumnDef="nombre">
@@ -71,38 +76,9 @@
             </td>
           </ng-container>
 
-          <ng-container matColumnDef="imagenes">
-            <th mat-header-cell *matHeaderCellDef>Imagenes</th>
-            <td mat-cell *matCellDef="let item">
-              @if ((item.imagenes?.length ?? 0) > 0) {
-                <div class="flex min-w-[260px] flex-col gap-2 py-1">
-                  @for (imagen of item.imagenes; track imagen.id) {
-                    <div class="flex items-center gap-2">
-                      <img
-                        [src]="imagen.imagen_url"
-                        alt="Imagen de atraccion"
-                        class="h-10 w-14 rounded-md border border-gray-200 object-cover"
-                      />
-                      <a
-                        class="max-w-[180px] truncate text-xs text-blue-700 hover:underline"
-                        [href]="imagen.imagen_url"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {{ imagen.imagen_url }}
-                      </a>
-                      @if (imagen.activa) {
-                        <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
-                          Activa
-                        </span>
-                      }
-                    </div>
-                  }
-                </div>
-              } @else {
-                -
-              }
-            </td>
+          <ng-container matColumnDef="icono">
+            <th mat-header-cell *matHeaderCellDef>Icono</th>
+            <td mat-cell *matCellDef="let item">{{ item.icono || '-' }}</td>
           </ng-container>
 
           <ng-container matColumnDef="orden">
@@ -166,7 +142,7 @@
 
       @if (!loading && atracciones.length === 0) {
         <div class="mt-4 shrink-0 text-sm text-gray-500">
-          No hay registros asociados a este catalogo.
+          No se encontro el registro del catalogo.
         </div>
       }
     </div>

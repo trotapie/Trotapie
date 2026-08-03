@@ -58,7 +58,6 @@ export class DetalleDestinoComponent implements OnInit {
       return;
     }
     this.detallesDestino = informacionDestino[0];
-    console.log('[detalle-destino] detalle inicial recibido:', this.detallesDestino);
     this.construirSlidesCarrusel();
 
     this.ipQueryService.getCurrentIpInfo().subscribe((response) => {
@@ -81,7 +80,6 @@ export class DetalleDestinoComponent implements OnInit {
     this._translocoService.langChanges$.subscribe(async (activeLang) => {
       const informacionDestino = await this.supabase.obtenerDetalleDestino(id, activeLang);
       this.detallesDestino = informacionDestino[0];
-      console.log('[detalle-destino] detalle actualizado por idioma:', activeLang, this.detallesDestino);
       this.construirSlidesCarrusel();
     });
     
