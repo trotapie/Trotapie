@@ -192,6 +192,36 @@ export class DestinosService {
       })) as IIdiomaPreviewAdmin[];
   }
 
+  async obtenerCatalogoAtraccionesActivas(): Promise<Array<{ id: number; clave: string; nombre: string }>> {
+    const idiomas = await this.obtenerIdiomasPreviewAdmin();
+    const idiomaEspanolId = idiomas.find((idioma: any) => idioma.codigo === 'es')?.id;
+    const { data, error } = await this.client
+      .from('catalogo_atracciones')
+      .select(`
+        id,
+        clave,
+        traducciones:catalogo_atracciones_traducciones (
+          idioma_id,
+          nombre
+        )
+      `)
+      .eq('activo', true)
+      .order('orden', { ascending: true })
+      .order('id', { ascending: true });
+
+    if (error) throw error;
+
+    return (data ?? []).map((item: any) => ({
+      id: Number(item.id),
+      clave: item.clave ?? '',
+      nombre:
+        item.traducciones?.find((traduccion: any) => traduccion.idioma_id === idiomaEspanolId)?.nombre ??
+        item.traducciones?.[0]?.nombre ??
+        item.clave ??
+        ''
+    }));
+  }
+
   async obtenerPreviewDestinoAdmin(destinoId: number): Promise<IPreviewDestinoAdmin> {
     const [idiomas, destino] = await Promise.all([
       this.obtenerIdiomasPreviewAdmin(),

@@ -2303,7 +2303,7 @@ export class SupabaseService {
         .from('detalles_destinos')
         .insert({
           destino_id: payload.destino_id,
-          ubicacion: null
+          ubicacion: ''
         })
         .select('id')
         .single();

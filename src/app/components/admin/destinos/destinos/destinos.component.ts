@@ -40,6 +40,12 @@ export class DestinosComponent implements OnInit {
   actualizandoOrden = false;
   errorOrden = '';
   mostrarModalOrdenExito = false;
+  mostrarModalAgregarAtracciones = false;
+  cargandoCatalogoAtracciones = false;
+  errorAgregarAtracciones = '';
+  catalogoAtracciones: Array<{ id: number; clave: string; nombre: string }> = [];
+  tiposAtraccionSeleccionados: number[] = [];
+  destinosSeleccionados: number[] = [];
 
   async ngOnInit() {
     const [informacionDestino, destinosAdmin, continentesResponse] = await Promise.all([
@@ -197,6 +203,65 @@ export class DestinosComponent implements OnInit {
 
   cerrarModalOrdenExito() {
     this.mostrarModalOrdenExito = false;
+  }
+
+  async abrirModalAgregarAtracciones() {
+    this.errorAgregarAtracciones = '';
+    this.tiposAtraccionSeleccionados = [];
+    this.destinosSeleccionados = [];
+    this.mostrarModalAgregarAtracciones = true;
+
+    if (this.catalogoAtracciones.length || this.cargandoCatalogoAtracciones) {
+      return;
+    }
+
+    this.cargandoCatalogoAtracciones = true;
+    try {
+      this.catalogoAtracciones = await this.supabase.obtenerCatalogoAtraccionesActivas();
+    } catch (error: any) {
+      this.errorAgregarAtracciones = error?.message ?? 'No se pudieron cargar los tipos de atracción.';
+    } finally {
+      this.cargandoCatalogoAtracciones = false;
+    }
+  }
+
+  cerrarModalAgregarAtracciones() {
+    this.mostrarModalAgregarAtracciones = false;
+  }
+
+  quitarTipoAtraccion(id: number) {
+    this.tiposAtraccionSeleccionados = this.tiposAtraccionSeleccionados.filter((tipoId) => tipoId !== id);
+  }
+
+  quitarDestinoSeleccionado(id: number) {
+    this.destinosSeleccionados = this.destinosSeleccionados.filter((destinoId) => destinoId !== id);
+  }
+
+  obtenerTipoAtraccionSeleccionado(id: number) {
+    return this.catalogoAtracciones.find((tipo) => tipo.id === id) ?? null;
+  }
+
+  obtenerDestinoSeleccionado(id: number) {
+    return this.destinosParaSeleccion.find((destino) => destino.id === id) ?? null;
+  }
+
+  continuarConfiguracionAtracciones() {
+    if (!this.tiposAtraccionSeleccionados.length || !this.destinosSeleccionados.length) {
+      return;
+    }
+
+    this.router.navigate(['/admin/destinos/configurar-destinos/configurar-atracciones'], {
+      queryParams: {
+        tipos: this.tiposAtraccionSeleccionados.join(','),
+        destinos: this.destinosSeleccionados.join(',')
+      }
+    });
+  }
+
+  get destinosParaSeleccion(): any[] {
+    return [...this.destinosNacionales, ...this.destinosInternacionales]
+      .filter((destino, index, lista) => lista.findIndex((item) => item.id === destino.id) === index)
+      .sort((a, b) => String(a.destino ?? a.nombre ?? '').localeCompare(String(b.destino ?? b.nombre ?? '')));
   }
 
   async verHoteles(item: any) {

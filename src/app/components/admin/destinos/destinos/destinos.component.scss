@@ -32,3 +32,41 @@ table {
 .cursor-move {
   cursor: move;
 }
+
+.modal-selector {
+  ::ng-deep .mat-mdc-text-field-wrapper {
+    border-radius: 9999px;
+    background: var(--fuse-bg-card);
+  }
+
+  ::ng-deep .mdc-notched-outline__leading {
+    border-radius: 9999px 0 0 9999px;
+  }
+
+  ::ng-deep .mdc-notched-outline__trailing {
+    border-radius: 0 9999px 9999px 0;
+  }
+
+  ::ng-deep .mat-mdc-form-field-infix {
+    min-height: 4rem;
+    padding-top: 1.05rem;
+    padding-bottom: 0.5rem;
+  }
+
+  ::ng-deep .mat-mdc-select-trigger {
+    min-height: 1.75rem;
+  }
+}
+
+.modal-selector__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid var(--fuse-border);
+  border-radius: 9999px;
+  background: var(--fuse-bg-hover);
+  padding: 0.25rem 0.625rem;
+  color: var(--fuse-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}

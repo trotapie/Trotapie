@@ -25,9 +25,86 @@
                     </mat-icon>
                     Nuevo destino
                 </button>
+
+                <!-- <button mat-stroked-button type="button" class="w-full sm:w-auto" (click)="abrirModalAgregarAtracciones()">
+                    <mat-icon class="mr-2 icon-size-5" [svgIcon]="'heroicons_outline:map-pin'"></mat-icon>
+                    Agregar atracciones
+                </button> -->
             </div>
         </div>
     </div>
+
+    @if (mostrarModalAgregarAtracciones) {
+    <div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm sm:p-6">
+        <button type="button" class="absolute inset-0 cursor-default" aria-label="Cerrar modal" (click)="cerrarModalAgregarAtracciones()"></button>
+        <section role="dialog" aria-modal="true" aria-labelledby="titulo-agregar-atracciones" class="relative z-10 flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-[2.5rem] border border-outline-variant bg-surface-container-lowest shadow-2xl dark:border-gray-800 dark:bg-gray-900">
+            <header class="flex items-center justify-between border-b border-outline-variant px-7 py-7 dark:border-gray-800 sm:px-9">
+                <div>
+                    <h2 id="titulo-agregar-atracciones" class="text-2xl font-semibold text-on-surface dark:text-white">Agregar atracciones</h2>
+                </div>
+                <button mat-icon-button type="button" aria-label="Cerrar" matTooltip="Cerrar" class="!rounded-full" (click)="cerrarModalAgregarAtracciones()">
+                    <mat-icon [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
+                </button>
+            </header>
+
+            <div class="space-y-8 overflow-y-auto px-7 py-9 sm:px-9">
+                @if (errorAgregarAtracciones) {
+                <p class="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300" role="alert">{{ errorAgregarAtracciones }}</p>
+                }
+
+                <div class="space-y-3">
+                    <label class="block text-base font-semibold text-on-surface dark:text-white">Tipo de atracción</label>
+                    <mat-form-field appearance="outline" class="modal-selector w-full" subscriptSizing="dynamic">
+                        <mat-label>Seleccionar tipos...</mat-label>
+                        <mat-select multiple [value]="tiposAtraccionSeleccionados" (selectionChange)="tiposAtraccionSeleccionados = $event.value" [disabled]="cargandoCatalogoAtracciones">
+                            <mat-select-trigger>
+                                <span class="flex flex-wrap items-center gap-2 py-1">
+                                    @for (tipoId of tiposAtraccionSeleccionados; track tipoId) {
+                                    @if (obtenerTipoAtraccionSeleccionado(tipoId); as tipo) {
+                                    <button type="button" class="modal-selector__chip" (click)="$event.stopPropagation(); quitarTipoAtraccion(tipoId)">{{ tipo.nombre }} <mat-icon class="icon-size-4">close</mat-icon></button>
+                                    }
+                                    }
+                                </span>
+                            </mat-select-trigger>
+                            @for (tipo of catalogoAtracciones; track tipo.id) {
+                            <mat-option [value]="tipo.id">{{ tipo.nombre }}</mat-option>
+                            }
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+
+                <div class="space-y-3">
+                    <label class="block text-base font-semibold text-on-surface dark:text-white">Destino</label>
+                    <mat-form-field appearance="outline" class="modal-selector w-full" subscriptSizing="dynamic">
+                        <mat-label>Seleccionar destinos...</mat-label>
+                        <mat-select multiple [value]="destinosSeleccionados" (selectionChange)="destinosSeleccionados = $event.value">
+                            <mat-select-trigger>
+                                <span class="flex flex-wrap items-center gap-2 py-1">
+                                    @for (destinoId of destinosSeleccionados; track destinoId) {
+                                    @if (obtenerDestinoSeleccionado(destinoId); as destino) {
+                                    <button type="button" class="modal-selector__chip" (click)="$event.stopPropagation(); quitarDestinoSeleccionado(destinoId)">{{ destino.destino }} <mat-icon class="icon-size-4">close</mat-icon></button>
+                                    }
+                                    }
+                                </span>
+                            </mat-select-trigger>
+                            @for (destino of destinosParaSeleccion; track destino.id) {
+                            <mat-option [value]="destino.id">{{ destino.destino }}@if (destino.destino_padre) {, {{ destino.destino_padre }}}</mat-option>
+                            }
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+            </div>
+
+            <footer class="flex flex-col-reverse gap-3 border-t border-outline-variant px-7 py-5 dark:border-gray-800 sm:flex-row sm:justify-end sm:px-9">
+                <button mat-stroked-button type="button" class="!min-w-34 !rounded-full !px-7" (click)="cerrarModalAgregarAtracciones()">Cancelar</button>
+                <button mat-flat-button color="primary" type="button" class="!min-w-34 !rounded-full !px-7" [disabled]="!tiposAtraccionSeleccionados.length || !destinosSeleccionados.length || cargandoCatalogoAtracciones" (click)="continuarConfiguracionAtracciones()">
+                    Continuar
+                    <mat-icon class="ml-2 icon-size-5">arrow_forward</mat-icon>
+                </button>
+            </footer>
+        </section>
+    </div>
+    }
 
     <div class="mx-6 mb-2 mt-3 flex items-center gap-2">
         <button mat-stroked-button [color]="tipoVisible === 'NACIONAL' ? 'primary' : undefined"
