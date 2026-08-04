@@ -35,6 +35,11 @@
     animation-delay: 9s;
 }
 
+.carousel-text-effect {
+    backdrop-filter: blur(var(--effect-blur, 0px));
+    -webkit-backdrop-filter: blur(var(--effect-blur, 0px));
+}
+
 @keyframes dot-blink {
 
     0%,

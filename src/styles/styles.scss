@@ -135,12 +135,19 @@
     width: 100% !important;
     max-width: 100% !important;
     overflow-x: hidden;
-    border-radius: 0.75rem;
+    padding: 0.5rem;
+    border: 1px solid var(--fuse-border);
+    border-radius: 1rem;
+    background: var(--fuse-bg-card);
+    box-shadow: 0 0.75rem 1.5rem rgb(15 23 42 / 18%);
 }
 
 .tp-select-panel .mat-mdc-option {
     min-width: 0;
-    height: auto;
+    min-height: 3rem;
+    margin-block: 0.125rem;
+    padding-inline: 0.75rem;
+    border-radius: 0.625rem;
     white-space: normal;
 }
 
@@ -149,6 +156,59 @@
     white-space: normal;
     overflow-wrap: anywhere;
     line-height: 1.4;
+}
+
+.tp-select-panel .mat-mdc-option:hover:not(.mdc-list-item--disabled),
+.tp-select-panel .mat-mdc-option.mdc-list-item--selected {
+    background: color-mix(in srgb, var(--primary, #00a67c) 12%, transparent);
+}
+
+.mat-mdc-form-field:has(.tp-select) {
+    width: 100%;
+    --mdc-outlined-text-field-container-shape: 1rem;
+}
+
+.mat-mdc-form-field:has(.tp-select) .mat-mdc-form-field-subscript-wrapper {
+    display: none;
+}
+
+.mat-mdc-form-field:has(.tp-select) .mat-mdc-text-field-wrapper {
+    height: 3.5rem;
+    padding-inline: 0.9rem;
+    border-radius: 1rem;
+    background: var(--fuse-bg-card);
+}
+
+.mat-mdc-form-field:has(.tp-select) .mat-mdc-form-field-flex,
+.mat-mdc-form-field:has(.tp-select) .mat-mdc-form-field-infix,
+.mat-mdc-form-field:has(.tp-select) .mat-mdc-select,
+.mat-mdc-form-field:has(.tp-select) .mat-mdc-select-trigger {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.mat-mdc-form-field:has(.tp-select) .mat-mdc-form-field-infix,
+.mat-mdc-form-field:has(.tp-select) .mat-mdc-select,
+.mat-mdc-form-field:has(.tp-select) .mat-mdc-select-trigger {
+    width: 100%;
+    min-height: 0;
+    padding-block: 0;
+}
+
+.mat-mdc-form-field:has(.tp-select) .mdc-notched-outline__leading,
+.mat-mdc-form-field:has(.tp-select) .mdc-notched-outline__notch,
+.mat-mdc-form-field:has(.tp-select) .mdc-notched-outline__trailing {
+    border-color: var(--fuse-border) !important;
+}
+
+.mat-mdc-form-field:has(.tp-select):hover .mdc-notched-outline__leading,
+.mat-mdc-form-field:has(.tp-select):hover .mdc-notched-outline__notch,
+.mat-mdc-form-field:has(.tp-select):hover .mdc-notched-outline__trailing,
+.mat-mdc-form-field:has(.tp-select).mat-focused .mdc-notched-outline__leading,
+.mat-mdc-form-field:has(.tp-select).mat-focused .mdc-notched-outline__notch,
+.mat-mdc-form-field:has(.tp-select).mat-focused .mdc-notched-outline__trailing {
+    border-color: var(--primary, #00a67c) !important;
 }
 
 .quick-quote-policy-panel.mat-mdc-select-panel {

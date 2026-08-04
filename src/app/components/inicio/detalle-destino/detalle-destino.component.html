@@ -192,17 +192,36 @@
                                         class="absolute inset-0 transition-opacity duration-1000 ease-in-out"
                                         [class.opacity-100]="i === currentIndex" [class.opacity-0]="i !== currentIndex">
                                         <img [src]="slide.imagen_url" class="w-full h-full object-cover"
+                                            [style.filter]="slide.efecto_destino !== 'texto' ? 'blur(' + slide.blur_px + 'px)' : null"
+                                            [style.transform]="slide.efecto_destino !== 'texto' && slide.blur_px ? 'scale(1.05)' : null"
                                             alt="carousel image" />
+                                        @if (slide.efecto_destino !== 'texto') {
+                                            <div class="absolute inset-0" [style.background-color]="colorConOpacidad(slide.overlay_color, slide.overlay_opacidad)"></div>
+                                        }
                                         <div class="absolute inset-0 flex flex-col justify-end p-8 md:p-16 z-10">
                                             <div
-                                                [class]="slide.oscurecer_fondo ? 'max-w-3xl rounded-2xl border border-white/20 bg-white/12 p-6 md:p-8 backdrop-blur-xl backdrop-saturate-150 shadow-[0_24px_80px_rgba(15,23,42,0.18)]' : 'max-w-3xl'">
+                                                [class]="'relative max-w-3xl overflow-hidden' +
+                                                    (slide.oscurecer_fondo || slide.efecto_destino !== 'fondo' ? ' rounded-2xl p-6 md:p-8' : '') +
+                                                    (slide.oscurecer_fondo ? ' border border-white/20 shadow-[0_24px_80px_rgba(15,23,42,0.18)]' : '')">
+                                                @if (slide.efecto_destino !== 'fondo') {
+                                                    <div class="carousel-text-effect absolute inset-0" [style.background-color]="colorConOpacidad(slide.overlay_color, slide.overlay_opacidad)"
+                                                        [style.--effect-blur]="slide.blur_px + 'px'"></div>
+                                                } @else if (slide.oscurecer_fondo) {
+                                                    <div class="absolute inset-0 bg-white/12 backdrop-blur-xl backdrop-saturate-150"></div>
+                                                }
+                                                <div class="relative">
                                                 <span
-                                                    class="mb-4 inline-block w-fit rounded-full bg-[#F9B44B] px-4 py-1 text-xs font-bold uppercase tracking-widest text-white">{{detallesDestino?.nombre}}</span>
-                                                <h1 class="text-4xl md:text-6xl font-black text-white leading-tight mb-4">
+                                                    class="mb-4 inline-block w-fit rounded-full px-4 py-1 font-bold uppercase tracking-widest text-white"
+                                                    [style.font-size.px]="slide.etiqueta_font_size"
+                                                    [style.background-color]="slide.etiqueta_color">{{detallesDestino?.nombre}}</span>
+                                                <h1 class="font-black leading-tight mb-4" [style.color]="slide.texto_color"
+                                                    [style.font-size]="'clamp(2rem, 5vw, ' + slide.titulo_font_size + 'px)'">
                                                     {{slide.nombre}}
                                                 </h1>
-                                                <p class="text-lg text-white/90 font-medium">{{slide.descripcion}}
+                                                <p class="font-medium opacity-90" [style.color]="slide.texto_color"
+                                                    [style.font-size]="'clamp(1rem, 2vw, ' + slide.descripcion_font_size + 'px)'">{{slide.descripcion}}
                                                 </p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

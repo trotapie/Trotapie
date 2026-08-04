@@ -42,6 +42,30 @@ export class ActividadesService {
     return Math.trunc(numberValue);
   }
 
+  private normalizarColorHex(valor: string | null | undefined, predeterminado: string): string {
+    const color = String(valor ?? '').trim();
+    return /^#[0-9a-fA-F]{6}$/.test(color) ? color.toUpperCase() : predeterminado;
+  }
+
+  private normalizarNumeroEnRango(
+    valor: number | string | null | undefined,
+    minimo: number,
+    maximo: number,
+    predeterminado: number
+  ): number {
+    const numero = this.parseNumber(valor);
+    if (numero === null) {
+      return predeterminado;
+    }
+
+    return Math.min(maximo, Math.max(minimo, numero));
+  }
+
+  private normalizarDestinoEfecto(valor: string | null | undefined): 'fondo' | 'texto' | 'ambos' {
+    const destino = String(valor ?? '').trim().toLowerCase();
+    return destino === 'texto' || destino === 'ambos' ? destino : 'fondo';
+  }
+
   private extraerIdCarpetaDrive(value: string): string {
     const limpio = String(value ?? '').trim();
     if (!limpio) {
@@ -388,8 +412,17 @@ export class ActividadesService {
       size?: number | null;
       size_formatted?: string | null;
       sizeFormatted?: string | null;
-      activa?: boolean;
-      oscurecer_fondo?: boolean;
+       activa?: boolean;
+       oscurecer_fondo?: boolean;
+       texto_color?: string;
+       titulo_font_size?: number;
+       descripcion_font_size?: number;
+       overlay_color?: string;
+       overlay_opacidad?: number;
+       blur_px?: number;
+       efecto_destino?: string;
+       etiqueta_font_size?: number;
+       etiqueta_color?: string;
       orden?: number | null;
       vigencia_desde?: string | null;
       vigencia_hasta?: string | null;
@@ -416,6 +449,15 @@ export class ActividadesService {
           || this.formatearTamanoArchivo(this.parseBigint(imagen?.size)),
         activa: Boolean(imagen?.activa),
         oscurecer_fondo: Boolean(imagen?.oscurecer_fondo ?? false),
+        texto_color: this.normalizarColorHex(imagen?.texto_color, '#FFFFFF'),
+        titulo_font_size: this.normalizarNumeroEnRango(imagen?.titulo_font_size, 24, 72, 48),
+        descripcion_font_size: this.normalizarNumeroEnRango(imagen?.descripcion_font_size, 14, 32, 18),
+        overlay_color: this.normalizarColorHex(imagen?.overlay_color, '#0F172A'),
+        overlay_opacidad: this.normalizarNumeroEnRango(imagen?.overlay_opacidad, 0, 1, 0),
+        blur_px: this.normalizarNumeroEnRango(imagen?.blur_px, 0, 24, 0),
+        efecto_destino: this.normalizarDestinoEfecto(imagen?.efecto_destino),
+        etiqueta_font_size: this.normalizarNumeroEnRango(imagen?.etiqueta_font_size, 8, 32, 12),
+        etiqueta_color: this.normalizarColorHex(imagen?.etiqueta_color, '#F9B44B'),
         orden: Number.isFinite(Number(imagen?.orden)) ? Number(imagen?.orden) : index + 1,
         vigencia_desde: this.normalizarFecha(imagen?.vigencia_desde),
         vigencia_hasta: this.normalizarFecha(imagen?.vigencia_hasta)
@@ -488,6 +530,15 @@ export class ActividadesService {
             size_formatted: imagen.size_formatted,
             activa: Boolean(imagen.activa),
             oscurecer_fondo: Boolean(imagen.oscurecer_fondo),
+            texto_color: imagen.texto_color,
+            titulo_font_size: imagen.titulo_font_size,
+            descripcion_font_size: imagen.descripcion_font_size,
+            overlay_color: imagen.overlay_color,
+            overlay_opacidad: imagen.overlay_opacidad,
+            blur_px: imagen.blur_px,
+            efecto_destino: imagen.efecto_destino,
+            etiqueta_font_size: imagen.etiqueta_font_size,
+            etiqueta_color: imagen.etiqueta_color,
             orden: imagen.orden,
             vigencia_desde: imagen.vigencia_desde,
             vigencia_hasta: imagen.vigencia_hasta
@@ -513,6 +564,15 @@ export class ActividadesService {
           size_formatted: imagen.size_formatted,
           activa: Boolean(imagen.activa),
           oscurecer_fondo: Boolean(imagen.oscurecer_fondo),
+          texto_color: imagen.texto_color,
+          titulo_font_size: imagen.titulo_font_size,
+          descripcion_font_size: imagen.descripcion_font_size,
+          overlay_color: imagen.overlay_color,
+          overlay_opacidad: imagen.overlay_opacidad,
+          blur_px: imagen.blur_px,
+          efecto_destino: imagen.efecto_destino,
+          etiqueta_font_size: imagen.etiqueta_font_size,
+          etiqueta_color: imagen.etiqueta_color,
           orden: imagen.orden,
           vigencia_desde: imagen.vigencia_desde,
           vigencia_hasta: imagen.vigencia_hasta
@@ -559,6 +619,15 @@ export class ActividadesService {
         sizeFormatted?: string | null;
         activa?: boolean;
         oscurecer_fondo?: boolean;
+        texto_color?: string;
+        titulo_font_size?: number;
+        descripcion_font_size?: number;
+        overlay_color?: string;
+        overlay_opacidad?: number;
+        blur_px?: number;
+        efecto_destino?: string;
+        etiqueta_font_size?: number;
+        etiqueta_color?: string;
         orden?: number | null;
         vigencia_desde?: string | null;
         vigencia_hasta?: string | null;
@@ -677,6 +746,15 @@ export class ActividadesService {
         sizeFormatted?: string | null;
         activa?: boolean;
         oscurecer_fondo?: boolean;
+        texto_color?: string;
+        titulo_font_size?: number;
+        descripcion_font_size?: number;
+        overlay_color?: string;
+        overlay_opacidad?: number;
+        blur_px?: number;
+        efecto_destino?: string;
+        etiqueta_font_size?: number;
+        etiqueta_color?: string;
         orden?: number | null;
         vigencia_desde?: string | null;
         vigencia_hasta?: string | null;
@@ -797,6 +875,15 @@ export class ActividadesService {
         sizeFormatted?: string | null;
         activa?: boolean;
         oscurecer_fondo?: boolean;
+        texto_color?: string;
+        titulo_font_size?: number;
+        descripcion_font_size?: number;
+        overlay_color?: string;
+        overlay_opacidad?: number;
+        blur_px?: number;
+        efecto_destino?: string;
+        etiqueta_font_size?: number;
+        etiqueta_color?: string;
         orden?: number | null;
         vigencia_desde?: string | null;
         vigencia_hasta?: string | null;

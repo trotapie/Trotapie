@@ -13,7 +13,20 @@ export interface AtraccionesPrincipale {
   nombre:       string;
   descripcion:  string;
   imagen_fondo?: string;
-  imagenes?:    Array<{ imagen_url: string; activa?: boolean; oscurecer_fondo?: boolean }>;
+  imagenes?: Array<{
+    imagen_url: string;
+    activa?: boolean;
+    oscurecer_fondo?: boolean;
+    texto_color?: string;
+    titulo_font_size?: number;
+    descripcion_font_size?: number;
+    overlay_color?: string;
+    overlay_opacidad?: number;
+    blur_px?: number;
+    efecto_destino?: 'fondo' | 'texto' | 'ambos';
+    etiqueta_font_size?: number;
+    etiqueta_color?: string;
+  }>;
 }
 
 export interface DatosRapido {

@@ -80,6 +80,15 @@ export interface IActividadPreviewAdmin {
     size_formatted?: string | null;
     activa: boolean;
     oscurecer_fondo?: boolean;
+    texto_color?: string;
+    titulo_font_size?: number;
+    descripcion_font_size?: number;
+    overlay_color?: string;
+    overlay_opacidad?: number;
+    blur_px?: number;
+    efecto_destino?: 'fondo' | 'texto' | 'ambos';
+    etiqueta_font_size?: number;
+    etiqueta_color?: string;
     orden: number | null;
     vigencia_desde: string | null;
     vigencia_hasta: string | null;

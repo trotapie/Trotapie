@@ -19,6 +19,15 @@ interface CarouselSlide {
   nombre: string;
   descripcion: string;
   oscurecer_fondo: boolean;
+  texto_color: string;
+  titulo_font_size: number;
+  descripcion_font_size: number;
+  overlay_color: string;
+  overlay_opacidad: number;
+  blur_px: number;
+  efecto_destino: 'fondo' | 'texto' | 'ambos';
+  etiqueta_font_size: number;
+  etiqueta_color: string;
 }
 
 @Component({
@@ -101,6 +110,18 @@ export class DetalleDestinoComponent implements OnInit {
     }, 3000);
   }
 
+  colorConOpacidad(color: string | null | undefined, opacidad: number | string | null | undefined): string {
+    const hex = /^#[0-9a-fA-F]{6}$/.test(String(color ?? '').trim())
+      ? String(color).trim()
+      : '#0F172A';
+    const valor = Number(opacidad);
+    const alpha = Number.isFinite(valor) ? Math.min(1, Math.max(0, valor)) : 0;
+    const red = Number.parseInt(hex.slice(1, 3), 16);
+    const green = Number.parseInt(hex.slice(3, 5), 16);
+    const blue = Number.parseInt(hex.slice(5, 7), 16);
+    return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+  }
+
   private construirSlidesCarrusel() {
     this.currentIndex = 0;
     const actividadesMostradas = new Set<number>();
@@ -132,7 +153,18 @@ export class DetalleDestinoComponent implements OnInit {
           imagen_url: imagen.imagen_url,
           nombre: actividad.nombre,
           descripcion: actividad.descripcion,
-          oscurecer_fondo: Boolean(imagen.oscurecer_fondo ?? false)
+          oscurecer_fondo: Boolean(imagen.oscurecer_fondo ?? false),
+          texto_color: imagen.texto_color ?? '#FFFFFF',
+          titulo_font_size: Number(imagen.titulo_font_size ?? 48),
+          descripcion_font_size: Number(imagen.descripcion_font_size ?? 18),
+          overlay_color: imagen.overlay_color ?? '#0F172A',
+          overlay_opacidad: Number(imagen.overlay_opacidad ?? 0),
+          blur_px: Number(imagen.blur_px ?? 0),
+          efecto_destino: imagen.efecto_destino === 'texto' || imagen.efecto_destino === 'ambos'
+            ? imagen.efecto_destino
+            : 'fondo',
+          etiqueta_font_size: Number(imagen.etiqueta_font_size ?? 12),
+          etiqueta_color: imagen.etiqueta_color ?? '#F9B44B'
         }));
     });
 

@@ -19,6 +19,8 @@ import {
 } from 'app/shared/folder-image-manager/folder-image-manager.component';
 import { MaterialModule } from 'app/shared/material.module';
 import { backdropFade, modalScaleFade } from 'app/shared/animations';
+import { CustomSwitchComponent } from 'app/shared/custom-switch/custom-switch.component';
+import { ColorPickerComponent } from 'app/shared/color-picker/color-picker.component';
 
 interface ILangConfig {
   code: string;
@@ -49,16 +51,38 @@ type ImagenActividadForm = {
   size_formatted: string | null;
   activa: boolean;
   oscurecer_fondo: boolean;
+  texto_color: string;
+  titulo_font_size: number;
+  descripcion_font_size: number;
+  overlay_color: string;
+  overlay_opacidad: number;
+  blur_px: number;
+  efecto_destino: 'fondo' | 'texto' | 'ambos';
+  etiqueta_font_size: number;
+  etiqueta_color: string;
   orden: number | null;
   vigencia_desde: string | null;
   vigencia_hasta: string | null;
   created_at: string | null;
 };
 
+const VALORES_PREDETERMINADOS_ESTILO_IMAGEN = {
+  oscurecer_fondo: false,
+  texto_color: '#FFFFFF',
+  titulo_font_size: 48,
+  descripcion_font_size: 18,
+  overlay_color: '#0F172A',
+  overlay_opacidad: 0,
+  blur_px: 0,
+  efecto_destino: 'fondo',
+  etiqueta_font_size: 12,
+  etiqueta_color: '#F9B44B'
+} as const;
+
 @Component({
   selector: 'app-editar-actividad-destino',
   standalone: true,
-  imports: [CommonModule, MaterialModule, ReactiveFormsModule, FolderImageManagerComponent, BlockingLoaderComponent],
+  imports: [CommonModule, MaterialModule, ReactiveFormsModule, FolderImageManagerComponent, BlockingLoaderComponent, CustomSwitchComponent, ColorPickerComponent],
   templateUrl: './editar-actividad-destino.component.html',
   styleUrl: './editar-actividad-destino.component.scss',
   animations: [modalScaleFade, backdropFade],
@@ -1832,6 +1856,15 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
           ],
           activa: [Boolean(imagen?.activa)],
           oscurecer_fondo: [Boolean(imagen?.oscurecer_fondo ?? false)],
+          texto_color: [this.normalizarColorHex(imagen?.texto_color, '#FFFFFF')],
+          titulo_font_size: [this.normalizarNumeroEnRango(imagen?.titulo_font_size, 24, 72, 48)],
+          descripcion_font_size: [this.normalizarNumeroEnRango(imagen?.descripcion_font_size, 14, 32, 18)],
+          overlay_color: [this.normalizarColorHex(imagen?.overlay_color, '#0F172A')],
+          overlay_opacidad: [this.normalizarNumeroEnRango(imagen?.overlay_opacidad, 0, 1, 0)],
+          blur_px: [this.normalizarNumeroEnRango(imagen?.blur_px, 0, 24, 0)],
+          efecto_destino: [this.normalizarDestinoEfecto(imagen?.efecto_destino)],
+          etiqueta_font_size: [this.normalizarNumeroEnRango(imagen?.etiqueta_font_size, 8, 32, 12)],
+          etiqueta_color: [this.normalizarColorHex(imagen?.etiqueta_color, '#F9B44B')],
           orden: [Number.isFinite(Number(imagen?.orden)) ? Number(imagen.orden) : index + 1],
           vigencia_desde: [this.parseDateValue(imagen?.vigencia_desde)],
           vigencia_hasta: [this.parseDateValue(imagen?.vigencia_hasta)],
@@ -1860,6 +1893,15 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
             ?? this.formatearTamanoArchivo(this.parseNumber(imagen?.size)),
           activa: Boolean(imagen?.activa),
           oscurecer_fondo: Boolean(imagen?.oscurecer_fondo ?? false),
+          texto_color: this.normalizarColorHex(imagen?.texto_color, '#FFFFFF'),
+          titulo_font_size: this.normalizarNumeroEnRango(imagen?.titulo_font_size, 24, 72, 48),
+          descripcion_font_size: this.normalizarNumeroEnRango(imagen?.descripcion_font_size, 14, 32, 18),
+          overlay_color: this.normalizarColorHex(imagen?.overlay_color, '#0F172A'),
+          overlay_opacidad: this.normalizarNumeroEnRango(imagen?.overlay_opacidad, 0, 1, 0),
+          blur_px: this.normalizarNumeroEnRango(imagen?.blur_px, 0, 24, 0),
+          efecto_destino: this.normalizarDestinoEfecto(imagen?.efecto_destino),
+          etiqueta_font_size: this.normalizarNumeroEnRango(imagen?.etiqueta_font_size, 8, 32, 12),
+          etiqueta_color: this.normalizarColorHex(imagen?.etiqueta_color, '#F9B44B'),
           orden: this.parseNumber(imagen?.orden) ?? index + 1,
           vigencia_desde: this.normalizarFechaYYYYMMDD(imagen?.vigencia_desde),
           vigencia_hasta: this.normalizarFechaYYYYMMDD(imagen?.vigencia_hasta),
@@ -2196,6 +2238,49 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     if (value === null || value === undefined || value === '') return null;
     const numberValue = Number(value);
     return Number.isFinite(numberValue) ? numberValue : null;
+  }
+
+  colorConOpacidad(color: string | null | undefined, opacidad: number | string | null | undefined): string {
+    const hex = this.normalizarColorHex(color, '#0F172A');
+    const alpha = this.normalizarNumeroEnRango(opacidad, 0, 1, 0);
+    const red = Number.parseInt(hex.slice(1, 3), 16);
+    const green = Number.parseInt(hex.slice(3, 5), 16);
+    const blue = Number.parseInt(hex.slice(5, 7), 16);
+    return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+  }
+
+  actualizarColorEtiqueta(color: string): void {
+    this.imagenEditandoControl
+      ?.get('etiqueta_color')
+      ?.setValue(this.normalizarColorHex(color, '#F9B44B'));
+  }
+
+  restablecerEstilosImagenEditando(): void {
+    this.imagenEditandoControl?.patchValue(VALORES_PREDETERMINADOS_ESTILO_IMAGEN);
+  }
+
+  restablecerEstiloImagen(campo: keyof typeof VALORES_PREDETERMINADOS_ESTILO_IMAGEN): void {
+    this.imagenEditandoControl?.get(campo)?.setValue(VALORES_PREDETERMINADOS_ESTILO_IMAGEN[campo]);
+  }
+
+  private normalizarColorHex(value: string | null | undefined, predeterminado: string): string {
+    const color = String(value ?? '').trim();
+    return /^#[0-9a-fA-F]{6}$/.test(color) ? color.toUpperCase() : predeterminado;
+  }
+
+  private normalizarNumeroEnRango(
+    value: number | string | null | undefined,
+    minimo: number,
+    maximo: number,
+    predeterminado: number
+  ): number {
+    const numero = this.parseNumber(value);
+    return numero === null ? predeterminado : Math.min(maximo, Math.max(minimo, numero));
+  }
+
+  private normalizarDestinoEfecto(value: string | null | undefined): 'fondo' | 'texto' | 'ambos' {
+    const destino = String(value ?? '').trim().toLowerCase();
+    return destino === 'texto' || destino === 'ambos' ? destino : 'fondo';
   }
 
   private ordenarIdiomas(idiomas: IIdiomaPreviewAdmin[]): IIdiomaPreviewAdmin[] {

@@ -44,6 +44,7 @@ import { NgxDaterangepickerMd } from 'ngx-daterangepicker-material';
 import { CustomScrollbarThumbDirective } from './directives/scroll.directive';
 import { ImporteMxnBlurDirective } from './directives/importe.directive';
 import { PorcentajeBlurDirective } from './directives/porcentajeBlur.directive';
+import { TpSelectDirective } from './directives/tp-select.directive';
 @NgModule({
   imports: [
     MatButtonModule,
@@ -108,7 +109,8 @@ import { PorcentajeBlurDirective } from './directives/porcentajeBlur.directive';
     NgxDaterangepickerMd.forRoot(),
     CustomScrollbarThumbDirective,
     ImporteMxnBlurDirective,
-    PorcentajeBlurDirective
+    PorcentajeBlurDirective,
+    TpSelectDirective
   ],
   exports: [
     MatButtonModule,
@@ -172,7 +174,8 @@ import { PorcentajeBlurDirective } from './directives/porcentajeBlur.directive';
     NgxDaterangepickerMd,
     CustomScrollbarThumbDirective,
     ImporteMxnBlurDirective,
-    PorcentajeBlurDirective
+    PorcentajeBlurDirective,
+    TpSelectDirective
   ]
 })
 export class MaterialModule {}

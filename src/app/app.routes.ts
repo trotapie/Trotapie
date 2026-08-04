@@ -62,8 +62,8 @@ export const appRoutes: Route[] = [
             layout: 'empty'
         },
         children: [
-            { path: 'home', loadChildren: () => import('app/modules/landing/home/home.routes') },
-            { path: 'preview/firma', loadComponent: () => import('app/shared/banner/banner-preview.component').then(m => m.BannerPreviewComponent) },
+            { path: 'home', canActivate: [ClearSessionGuard], loadChildren: () => import('app/modules/landing/home/home.routes') },
+            { path: 'preview/firma', canActivate: [ClearSessionGuard], loadComponent: () => import('app/shared/banner/banner-preview.component').then(m => m.BannerPreviewComponent) },
         ]
     },
 
@@ -100,11 +100,13 @@ export const appRoutes: Route[] = [
             },
             {
                 path: 'comparativa/:id',
+                canActivate: [ClearSessionGuard],
                 data: { layout: 'empty' },
                 loadComponent: () => import('app/components/comparativa-publica/comparativa-publica.component').then(m => m.ComparativaPublicaComponent)
             },
             {
                 path: 'share/comparativa/:id',
+                canActivate: [ClearSessionGuard],
                 data: { layout: 'empty' },
                 loadComponent: () => import('app/components/comparativa-publica/comparativa-publica.component').then(m => m.ComparativaPublicaComponent)
             },

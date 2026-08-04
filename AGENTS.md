@@ -20,6 +20,14 @@ Cuando se pidan mejoras de UI/UX, debes mantener la logica existente y aplicar u
 - Prioriza espaciado, jerarquia tipografica y consistencia de colores.
 - Si hay estilos SCSS existentes, respeta el sistema previo antes de introducir nuevas utilidades.
 
+### Selects
+- Los nuevos selects deben seguir el patron visual aprobado: etiqueta superior clara, campo de borde redondeado, indicador de despliegue a la derecha y menu con opciones legibles, espacio generoso y estado hover/seleccion distinguible.
+- No reemplaces selects existentes solo para aplicar este patron, salvo que se solicite expresamente.
+
+### Switches
+- Los nuevos switches deben seguir el patron aprobado del control `Oscurecer fondo` en el modal de editar imagen: contenedor con titulo y descripcion breve a la izquierda, switch alineado a la derecha y accion auxiliar compacta junto al switch cuando aplique.
+- No reemplaces switches existentes solo para aplicar este patron, salvo que se solicite expresamente.
+
 ### Diseno UI/UX
 - Busca claridad, jerarquia visual y accion principal evidente.
 - Evita interfaces genericas o sobradas de elementos.

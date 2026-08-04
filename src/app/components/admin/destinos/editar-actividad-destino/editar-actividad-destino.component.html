@@ -43,10 +43,10 @@
               <mat-option [value]="null">Sin clasificar</mat-option>
               @for (tipo of catalogoAtracciones; track tipo.id) {
                 <mat-option [value]="tipo.id">{{ tipo.nombre }}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
-        </section>
+               }
+             </mat-select>
+           </mat-form-field>
+         </section>
 
         <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
           <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
@@ -185,11 +185,12 @@
         @if (editorImagenAbierto && imagenEditandoControl) {
           <div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center px-4 py-4">
             <div class="absolute inset-0 bg-black/50" @backdropFade></div>
-            <div class="image-edit-modal relative z-10 w-full max-w-2xl rounded-3xl bg-white shadow-2xl" @modalScaleFade>
-              <div class="flex items-start justify-between gap-4 border-b border-gray-100 px-6 py-5">
+            <div class="image-edit-modal relative z-10 w-full max-w-6xl rounded-3xl bg-white shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="editar-imagen-title" aria-describedby="editar-imagen-description" @modalScaleFade>
+              <div class="image-edit-modal__header flex items-start justify-between gap-4 border-b border-gray-100 px-6 py-5">
                 <div>
-                  <h3 class="text-2xl font-semibold text-gray-900">Editar imagen</h3>
-                  <p class="mt-1 text-sm text-gray-500">Actualiza la carpeta o la vigencia de la imagen.</p>
+                  <p class="mb-1 text-[0.68rem] font-bold uppercase tracking-[0.2em] text-primary">Editor visual</p>
+                  <h3 id="editar-imagen-title" class="text-2xl font-semibold text-gray-900">Editar imagen</h3>
+                  <p id="editar-imagen-description" class="mt-1 text-sm text-gray-500">Configura la imagen y sus efectos para el carrusel.</p>
                 </div>
 
                 <button mat-icon-button type="button" aria-label="Cerrar editor de imagen" (click)="cerrarEditorImagen()">
@@ -197,63 +198,177 @@
                 </button>
               </div>
 
-              <div class="image-edit-modal__content space-y-5 px-6 py-5">
-                <div class="overflow-hidden rounded-2xl border border-gray-200 bg-gray-50">
-                  <img
-                    class="h-72 w-full object-cover"
-                    [src]="imagenEditandoControl.get('imagen_url')?.value"
-                    [alt]="imagenEditandoTitulo"
-                  />
+              <div class="image-edit-modal__workspace">
+              <div class="image-edit-modal__preview relative overflow-hidden border-b border-gray-100 bg-gray-50">
+                <img
+                  class="h-full w-full object-cover"
+                  [src]="imagenEditandoControl.get('imagen_url')?.value"
+                  [alt]="imagenEditandoTitulo"
+                  [style.filter]="imagenEditandoControl.get('efecto_destino')?.value !== 'texto' ? 'blur(' + imagenEditandoControl.get('blur_px')?.value + 'px)' : null"
+                  [style.transform]="imagenEditandoControl.get('efecto_destino')?.value !== 'texto' && imagenEditandoControl.get('blur_px')?.value ? 'scale(1.05)' : null"
+                />
+                @if (imagenEditandoControl.get('efecto_destino')?.value !== 'texto') {
+                  <div
+                    class="absolute inset-0"
+                    [style.background-color]="colorConOpacidad(imagenEditandoControl.get('overlay_color')?.value, imagenEditandoControl.get('overlay_opacidad')?.value)"
+                  ></div>
+                }
+                <div class="absolute inset-x-0 bottom-0 p-5">
+                  <div
+                    [class]="'relative max-w-3xl overflow-hidden' +
+                      (imagenEditandoControl.get('oscurecer_fondo')?.value || imagenEditandoControl.get('efecto_destino')?.value !== 'fondo' ? ' rounded-2xl p-5' : '') +
+                      (imagenEditandoControl.get('oscurecer_fondo')?.value ? ' border border-white/20 shadow-lg' : '')"
+                  >
+                    @if (imagenEditandoControl.get('efecto_destino')?.value !== 'fondo') {
+                      <div
+                        class="image-edit-modal__text-effect absolute inset-0"
+                        [style.background-color]="colorConOpacidad(imagenEditandoControl.get('overlay_color')?.value, imagenEditandoControl.get('overlay_opacidad')?.value)"
+                        [style.--effect-blur]="imagenEditandoControl.get('blur_px')?.value + 'px'"
+                      ></div>
+                    } @else if (imagenEditandoControl.get('oscurecer_fondo')?.value) {
+                      <div class="absolute inset-0 bg-white/12 backdrop-blur-xl backdrop-saturate-150"></div>
+                    }
+                    <div class="relative" [style.color]="imagenEditandoControl.get('texto_color')?.value">
+                      <span
+                        class="inline-block rounded-full px-4 py-1 font-bold uppercase tracking-widest text-white"
+                        [style.font-size.px]="imagenEditandoControl.get('etiqueta_font_size')?.value"
+                        [style.background-color]="imagenEditandoControl.get('etiqueta_color')?.value"
+                      >{{ destinoNombre }}</span>
+                      <p class="mt-2 font-black leading-tight" [style.font-size.px]="imagenEditandoControl.get('titulo_font_size')?.value">{{ actividadNombre }}</p>
+                      <p class="mt-2 font-medium opacity-90" [style.font-size.px]="imagenEditandoControl.get('descripcion_font_size')?.value">Descripción de la actividad</p>
+                    </div>
+                  </div>
                 </div>
+              </div>
 
-                <div class="rounded-2xl border border-gray-100 bg-white p-4">
-                  <p class="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">Editar informacion</p>
+              <div class="image-edit-modal__content space-y-5 px-6 py-5">
+                <section class="image-edit-modal__section rounded-2xl border border-gray-100 bg-white p-4" aria-labelledby="imagen-section-title">
+                  <div class="mb-4 flex items-start gap-3">
+                    <span class="image-edit-modal__section-index">01</span>
+                    <div>
+                      <h4 id="imagen-section-title" class="text-sm font-bold uppercase tracking-[0.16em] text-gray-800">Imagen</h4>
+                      <p class="mt-1 text-xs text-gray-500">Datos básicos y organización del archivo.</p>
+                    </div>
+                  </div>
 
-                  <div class="mt-4 grid gap-4">
+                  <div class="grid gap-4">
                     <mat-form-field class="w-full">
                       <mat-label>URL de imagen</mat-label>
                       <input matInput [formControl]="imagenEditandoControl.get('imagen_url')" />
                     </mat-form-field>
 
-                    <mat-form-field class="w-full">
-                      <mat-label>Carpeta</mat-label>
+                    <div>
+                      <label id="carpeta-imagen-label" class="mb-1 block text-sm font-medium text-gray-700">Carpeta</label>
+                      <mat-form-field appearance="outline" class="w-full">
                       <mat-select
+                        tpSelect
+                        aria-labelledby="carpeta-imagen-label"
                         [value]="carpetaEditandoSeleccionadaId"
                         (selectionChange)="onCarpetaImagenChange($event.value)"
                       >
                         @for (carpeta of carpetasParaSelector; track carpeta.id) {
                           <mat-option [value]="carpeta.id">{{ carpeta.nombre }}</mat-option>
                         }
-                      </mat-select>
-                    </mat-form-field>
+                       </mat-select>
+                       </mat-form-field>
+                     </div>
+                   </div>
+                </section>
 
-                    <div class="grid gap-4 sm:grid-cols-2">
-                      <mat-form-field class="w-full">
-                        <mat-label>Desde</mat-label>
-                        <input matInput type="date" [formControl]="imagenEditandoControl.get('vigencia_desde')" />
-                      </mat-form-field>
-
-                      <mat-form-field class="w-full">
-                        <mat-label>Hasta</mat-label>
-                        <input matInput type="date" [formControl]="imagenEditandoControl.get('vigencia_hasta')" />
-                      </mat-form-field>
+                    <section class="image-edit-modal__section rounded-2xl border border-gray-100 bg-white p-4" aria-labelledby="presentacion-section-title">
+                    <div class="mb-4 flex items-start justify-between gap-3">
+                      <div class="flex items-start gap-3">
+                        <span class="image-edit-modal__section-index">02</span>
+                        <div>
+                          <h4 id="presentacion-section-title" class="text-sm font-bold uppercase tracking-[0.16em] text-gray-800">Presentación</h4>
+                          <p class="mt-1 text-xs text-gray-500">Define cómo se verá la imagen detrás del contenido.</p>
+                        </div>
+                      </div>
+                      <button mat-stroked-button class="image-edit-modal__reset-all" type="button" (click)="restablecerEstilosImagenEditando()">
+                        <mat-icon svgIcon="heroicons_outline:arrow-path"></mat-icon>
+                        Restablecer
+                      </button>
                     </div>
 
                     <div class="flex items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3">
-                      <div>
-                        <p class="text-sm font-semibold text-gray-900">Oscurecer fondo</p>
-                        <p class="text-xs text-gray-500">Aplica blur + velo oscuro en el carrusel publico.</p>
-                      </div>
-                      <mat-slide-toggle
-                        [checked]="imagenEditandoControl.get('oscurecer_fondo')?.value"
-                        (change)="imagenEditandoControl.get('oscurecer_fondo')?.setValue($event.checked)"
-                      ></mat-slide-toggle>
+                       <div>
+                         <p class="text-sm font-semibold text-gray-900">Oscurecer fondo</p>
+                         <p class="text-xs text-gray-500">Mantiene el panel translúcido detrás del contenido en el carrusel público.</p>
+                        </div>
+                        <div class="flex items-center gap-1">
+                          <app-custom-switch
+                            [formControl]="imagenEditandoControl.get('oscurecer_fondo')"
+                          ></app-custom-switch>
+                        </div>
                     </div>
+
+                        <div class="mt-4">
+                         <label id="efecto-destino-label" class="mb-1 block text-sm font-medium text-gray-700">Aplicar velo y difuminado a</label>
+                         <div class="flex items-center gap-2">
+                           <mat-form-field appearance="outline" class="min-w-0 flex-1">
+                            <mat-select tpSelect aria-labelledby="efecto-destino-label" [formControl]="imagenEditandoControl.get('efecto_destino')">
+                              <mat-option value="fondo">Fondo de la imagen</mat-option>
+                              <mat-option value="texto">Panel detrás del texto</mat-option>
+                              <mat-option value="ambos">Fondo y panel de texto</mat-option>
+                            </mat-select>
+                           </mat-form-field>
+                           <button mat-icon-button class="image-style-reset" type="button" aria-label="Restablecer destino del efecto" matTooltip="Restablecer" (click)="restablecerEstiloImagen('efecto_destino')"><mat-icon svgIcon="heroicons_outline:arrow-path"></mat-icon></button>
+                         </div>
+                       </div>
+
+                       <div class="grid gap-4 sm:grid-cols-2">
+                         <label class="block text-sm font-medium text-gray-700">
+                            Color del velo
+                             <span class="mt-2 flex items-center gap-2"><app-color-picker class="min-w-0 flex-1" label="Color del velo" [formControl]="imagenEditandoControl.get('overlay_color')"></app-color-picker><button mat-icon-button class="image-style-reset" type="button" aria-label="Restablecer color del velo" matTooltip="Restablecer" (click)="restablecerEstiloImagen('overlay_color')"><mat-icon svgIcon="heroicons_outline:arrow-path"></mat-icon></button></span>
+                         </label>
+                       </div>
+
+                       <div class="mt-5 grid gap-5 sm:grid-cols-2">
+                         <label class="block text-sm font-medium text-gray-700">
+                            Oscurecimiento: {{ (imagenEditandoControl.get('overlay_opacidad')?.value * 100) | number:'1.0-0' }}%
+                            <span class="mt-2 flex items-center gap-2"><input class="min-w-0 flex-1 accent-primary" type="range" min="0" max="1" step="0.05" [formControl]="imagenEditandoControl.get('overlay_opacidad')" /><button mat-icon-button class="image-style-reset" type="button" aria-label="Restablecer oscurecimiento" matTooltip="Restablecer" (click)="restablecerEstiloImagen('overlay_opacidad')"><mat-icon svgIcon="heroicons_outline:arrow-path"></mat-icon></button></span>
+                        </label>
+                        <label class="block text-sm font-medium text-gray-700">
+                           Difuminado: {{ imagenEditandoControl.get('blur_px')?.value }} px
+                            <span class="mt-2 flex items-center gap-2"><input class="min-w-0 flex-1 accent-primary" type="range" min="0" max="24" step="1" [formControl]="imagenEditandoControl.get('blur_px')" /><button mat-icon-button class="image-style-reset" type="button" aria-label="Restablecer difuminado" matTooltip="Restablecer" (click)="restablecerEstiloImagen('blur_px')"><mat-icon svgIcon="heroicons_outline:arrow-path"></mat-icon></button></span>
+                        </label>
+                      </div>
+                    </section>
+
+                    <section class="image-edit-modal__section rounded-2xl border border-gray-100 bg-white p-4" aria-labelledby="tipografia-section-title">
+                      <div class="mb-4 flex items-start gap-3">
+                        <span class="image-edit-modal__section-index">03</span>
+                        <div>
+                          <h4 id="tipografia-section-title" class="text-sm font-bold uppercase tracking-[0.16em] text-gray-800">Tipografía</h4>
+                          <p class="mt-1 text-xs text-gray-500">Ajusta color y escala del texto del carrusel.</p>
+                        </div>
+                      </div>
+                      <div class="grid gap-4 sm:grid-cols-2">
+                        <label class="block text-sm font-medium text-gray-700">Color del texto
+                           <span class="mt-2 flex items-center gap-2"><app-color-picker class="min-w-0 flex-1" label="Color del texto" [formControl]="imagenEditandoControl.get('texto_color')"></app-color-picker><button mat-icon-button class="image-style-reset" type="button" aria-label="Restablecer color del texto" matTooltip="Restablecer" (click)="restablecerEstiloImagen('texto_color')"><mat-icon svgIcon="heroicons_outline:arrow-path"></mat-icon></button></span>
+                        </label>
+                        <label class="block text-sm font-medium text-gray-700">Color de etiqueta
+                           <span class="mt-2 flex items-center gap-2"><app-color-picker class="min-w-0 flex-1" label="Color de etiqueta" [formControl]="imagenEditandoControl.get('etiqueta_color')"></app-color-picker><button mat-icon-button class="image-style-reset" type="button" aria-label="Restablecer color de etiqueta" matTooltip="Restablecer" (click)="restablecerEstiloImagen('etiqueta_color')"><mat-icon svgIcon="heroicons_outline:arrow-path"></mat-icon></button></span>
+                        </label>
+                      </div>
+                      <div class="mt-5 grid gap-5 sm:grid-cols-2">
+                        <label class="block text-sm font-medium text-gray-700">Tamaño del título: {{ imagenEditandoControl.get('titulo_font_size')?.value }} px
+                          <span class="mt-2 flex items-center gap-2"><input class="min-w-0 flex-1 accent-primary" type="range" min="24" max="72" step="1" [formControl]="imagenEditandoControl.get('titulo_font_size')" /><button mat-icon-button class="image-style-reset" type="button" aria-label="Restablecer tamaño del título" matTooltip="Restablecer" (click)="restablecerEstiloImagen('titulo_font_size')"><mat-icon svgIcon="heroicons_outline:arrow-path"></mat-icon></button></span>
+                        </label>
+                        <label class="block text-sm font-medium text-gray-700">Tamaño de descripción: {{ imagenEditandoControl.get('descripcion_font_size')?.value }} px
+                          <span class="mt-2 flex items-center gap-2"><input class="min-w-0 flex-1 accent-primary" type="range" min="14" max="32" step="1" [formControl]="imagenEditandoControl.get('descripcion_font_size')" /><button mat-icon-button class="image-style-reset" type="button" aria-label="Restablecer tamaño de descripción" matTooltip="Restablecer" (click)="restablecerEstiloImagen('descripcion_font_size')"><mat-icon svgIcon="heroicons_outline:arrow-path"></mat-icon></button></span>
+                        </label>
+                        <label class="block text-sm font-medium text-gray-700">Tamaño de etiqueta: {{ imagenEditandoControl.get('etiqueta_font_size')?.value }} px
+                          <span class="mt-2 flex items-center gap-2"><input class="min-w-0 flex-1 accent-primary" type="range" min="8" max="32" step="1" [formControl]="imagenEditandoControl.get('etiqueta_font_size')" /><button mat-icon-button class="image-style-reset" type="button" aria-label="Restablecer tamaño de etiqueta" matTooltip="Restablecer" (click)="restablecerEstiloImagen('etiqueta_font_size')"><mat-icon svgIcon="heroicons_outline:arrow-path"></mat-icon></button></span>
+                        </label>
+                      </div>
+                    </section>
                   </div>
                 </div>
-              </div>
 
-              <div class="flex flex-col gap-3 border-t border-gray-100 px-6 py-5 sm:flex-row sm:justify-end">
+              <div class="image-edit-modal__footer flex flex-col gap-3 border-t border-gray-100 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+                <button mat-button type="button" (click)="cerrarEditorImagen()">Cancelar</button>
+                <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">
                 <button
                   mat-stroked-button
                   color="warn"
@@ -272,6 +387,7 @@
                 >
                   {{ guardandoImagenes ? 'Guardando...' : 'Guardar' }}
                 </button>
+                </div>
               </div>
             </div>
           </div>

@@ -1,4 +1,3 @@
-export const FOLIO_COTIZACION_DIGITOS = 15;
 export const PREFIJO_FOLIO_COTIZACION = 'CTRO-';
 
 export function formatearFolioCotizacion(
@@ -10,9 +9,7 @@ export function formatearFolioCotizacion(
     return '';
   }
 
-  return `${PREFIJO_FOLIO_COTIZACION}${Math.trunc(numero)
-    .toString()
-    .padStart(FOLIO_COTIZACION_DIGITOS, '0')}`;
+  return `${PREFIJO_FOLIO_COTIZACION}${Math.trunc(numero)}`;
 }
 
 export function obtenerIdCotizacionNumerico(

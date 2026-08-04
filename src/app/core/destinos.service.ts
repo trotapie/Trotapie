@@ -378,6 +378,15 @@ export class DestinosService {
               carpeta,
               activa,
               oscurecer_fondo,
+              texto_color,
+              titulo_font_size,
+              descripcion_font_size,
+              overlay_color,
+              overlay_opacidad,
+              blur_px,
+              efecto_destino,
+              etiqueta_font_size,
+              etiqueta_color,
               orden,
               vigencia_desde,
               vigencia_hasta,
@@ -532,8 +541,17 @@ export class DestinosService {
               mime_type: imagen.mime_type ?? null,
               size: this.parseBigint(imagen.size),
               size_formatted: imagen.size_formatted ?? null,
-              activa: Boolean(imagen.activa),
-              oscurecer_fondo: Boolean(imagen.oscurecer_fondo),
+               activa: Boolean(imagen.activa),
+               oscurecer_fondo: Boolean(imagen.oscurecer_fondo),
+               texto_color: imagen.texto_color ?? '#FFFFFF',
+               titulo_font_size: Number(imagen.titulo_font_size ?? 48),
+               descripcion_font_size: Number(imagen.descripcion_font_size ?? 18),
+               overlay_color: imagen.overlay_color ?? '#0F172A',
+               overlay_opacidad: Number(imagen.overlay_opacidad ?? 0),
+               blur_px: Number(imagen.blur_px ?? 0),
+               efecto_destino: imagen.efecto_destino ?? 'fondo',
+               etiqueta_font_size: Number(imagen.etiqueta_font_size ?? 12),
+               etiqueta_color: imagen.etiqueta_color ?? '#F9B44B',
               orden: imagen.orden ?? null,
               vigencia_desde: imagen.vigencia_desde ?? null,
               vigencia_hasta: imagen.vigencia_hasta ?? null,
@@ -576,6 +594,15 @@ export class DestinosService {
             size_formatted: imagen.size_formatted ?? null,
             activa: Boolean(imagen.activa),
             oscurecer_fondo: Boolean(imagen.oscurecer_fondo),
+            texto_color: imagen.texto_color ?? '#FFFFFF',
+            titulo_font_size: Number(imagen.titulo_font_size ?? 48),
+            descripcion_font_size: Number(imagen.descripcion_font_size ?? 18),
+            overlay_color: imagen.overlay_color ?? '#0F172A',
+            overlay_opacidad: Number(imagen.overlay_opacidad ?? 0),
+            blur_px: Number(imagen.blur_px ?? 0),
+            efecto_destino: imagen.efecto_destino ?? 'fondo',
+            etiqueta_font_size: Number(imagen.etiqueta_font_size ?? 12),
+            etiqueta_color: imagen.etiqueta_color ?? '#F9B44B',
             orden: imagen.orden ?? null,
             vigencia_desde: imagen.vigencia_desde ?? null,
             vigencia_hasta: imagen.vigencia_hasta ?? null,
@@ -913,7 +940,19 @@ export class DestinosService {
     try {
       const previewDestino = await this.obtenerPreviewDestinoAdmin(destinoId);
       const imagenesPorId = new Map<number, string>();
-      const imagenesActivasPorId = new Map<number, Array<{ imagen_url: string; oscurecer_fondo: boolean }>>();
+      const imagenesActivasPorId = new Map<number, Array<{
+        imagen_url: string;
+        oscurecer_fondo: boolean;
+        texto_color: string;
+        titulo_font_size: number;
+        descripcion_font_size: number;
+        overlay_color: string;
+        overlay_opacidad: number;
+        blur_px: number;
+        efecto_destino: 'fondo' | 'texto' | 'ambos';
+        etiqueta_font_size: number;
+        etiqueta_color: string;
+      }>>();
 
       (previewDestino.actividades ?? []).forEach((actividad) => {
         const actividadId = Number(actividad.id);
@@ -930,6 +969,17 @@ export class DestinosService {
               .map((imagen) => ({
                 imagen_url: imagen.imagen_url,
                 oscurecer_fondo: Boolean(imagen.oscurecer_fondo),
+                texto_color: imagen.texto_color ?? '#FFFFFF',
+                titulo_font_size: Number(imagen.titulo_font_size ?? 48),
+                descripcion_font_size: Number(imagen.descripcion_font_size ?? 18),
+                overlay_color: imagen.overlay_color ?? '#0F172A',
+                overlay_opacidad: Number(imagen.overlay_opacidad ?? 0),
+                blur_px: Number(imagen.blur_px ?? 0),
+                efecto_destino: imagen.efecto_destino === 'texto' || imagen.efecto_destino === 'ambos'
+                  ? imagen.efecto_destino
+                  : 'fondo',
+                etiqueta_font_size: Number(imagen.etiqueta_font_size ?? 12),
+                etiqueta_color: imagen.etiqueta_color ?? '#F9B44B',
               }))
           );
         }
@@ -946,6 +996,17 @@ export class DestinosService {
               .map((imagen) => ({
                 imagen_url: imagen.imagen_url,
                 oscurecer_fondo: Boolean(imagen.oscurecer_fondo),
+                texto_color: imagen.texto_color ?? '#FFFFFF',
+                titulo_font_size: Number(imagen.titulo_font_size ?? 48),
+                descripcion_font_size: Number(imagen.descripcion_font_size ?? 18),
+                overlay_color: imagen.overlay_color ?? '#0F172A',
+                overlay_opacidad: Number(imagen.overlay_opacidad ?? 0),
+                blur_px: Number(imagen.blur_px ?? 0),
+                efecto_destino: imagen.efecto_destino === 'texto' || imagen.efecto_destino === 'ambos'
+                  ? imagen.efecto_destino
+                  : 'fondo',
+                etiqueta_font_size: Number(imagen.etiqueta_font_size ?? 12),
+                etiqueta_color: imagen.etiqueta_color ?? '#F9B44B',
               }));
           const imagenPreview =
             imagenesActivas[0]?.imagen_url ??
