@@ -366,8 +366,7 @@
                   </div>
                 </div>
 
-              <div class="image-edit-modal__footer flex flex-col gap-3 border-t border-gray-100 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-                <button mat-button type="button" (click)="cerrarEditorImagen()">Cancelar</button>
+              <div class="image-edit-modal__footer flex flex-col gap-3 border-t border-gray-100 px-6 py-5 sm:flex-row sm:items-center sm:justify-end">
                 <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">
                 <button
                   mat-stroked-button
@@ -376,7 +375,12 @@
                   (click)="eliminarImagenEditando()"
                   [disabled]="guardandoImagenes || !puedeEliminarImagenEditando"
                 >
+                  <mat-icon class="mr-2 icon-size-5" svgIcon="heroicons_outline:trash"></mat-icon>
                   Eliminar
+                </button>
+                <button mat-stroked-button type="button" (click)="cerrarEditorImagen()">
+                  <mat-icon class="mr-2 icon-size-5" svgIcon="heroicons_outline:x-mark"></mat-icon>
+                  Cancelar
                 </button>
                 <button
                   mat-flat-button
@@ -385,6 +389,7 @@
                   (click)="guardarImagenEditando()"
                   [disabled]="guardandoImagenes"
                 >
+                  <mat-icon class="mr-2 icon-size-5" svgIcon="heroicons_outline:check"></mat-icon>
                   {{ guardandoImagenes ? 'Guardando...' : 'Guardar' }}
                 </button>
                 </div>

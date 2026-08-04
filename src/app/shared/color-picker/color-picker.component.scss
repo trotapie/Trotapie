@@ -4,6 +4,7 @@
 }
 
 .color-picker {
+  position: relative;
   display: flex;
   min-height: 2.75rem;
   align-items: center;
@@ -95,6 +96,8 @@
 
 .color-picker__native {
   position: absolute;
+  top: 0.35rem;
+  left: 0.35rem;
   width: 1px;
   height: 1px;
   overflow: hidden;
