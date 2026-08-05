@@ -28,7 +28,7 @@
 }
 
 .catalogo-kicker { margin: 0 0 .65rem; color: #e4c370; font-size: .75rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
-.catalogo-hero h1 { margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 500; letter-spacing: -.05em; line-height: .95; }
+.catalogo-hero__title-row { display: flex; align-items: center; gap: .5rem; }.catalogo-hero h1 { margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 500; letter-spacing: -.05em; line-height: .95; }.catalogo-hero__info { flex: 0 0 auto; color: #f9f5e9; border: 1px solid rgba(249, 245, 233, .28); background: rgba(7, 34, 27, .2); }.catalogo-hero__info:hover { color: #fff8e4; background: rgba(7, 34, 27, .42); }.catalogo-hero__info:focus-visible { outline: 3px solid #e4c370; outline-offset: 2px; }
 .catalogo-hero p:not(.catalogo-kicker) { max-width: 34rem; margin: 1rem 0 0; color: rgba(249, 245, 233, .76); font-size: 1rem; line-height: 1.55; }
 .catalogo-hero__stat { flex: 0 0 auto; min-width: 145px; padding: 1rem 1.15rem; border: 1px solid rgba(249, 245, 233, .24); border-radius: 1rem; background: rgba(7, 34, 27, .25); backdrop-filter: blur(8px); }
 .catalogo-hero__stat strong { display: block; font-family: Georgia, 'Times New Roman', serif; font-size: 2rem; line-height: 1; }

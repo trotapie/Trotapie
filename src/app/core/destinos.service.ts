@@ -76,6 +76,24 @@ export interface FiltrosDestinoCatalogo {
   soloConfigurados?: boolean;
 }
 
+export interface ResumenCatalogoDestinos {
+  destinos: {
+    total: number;
+    activos: number;
+    inactivos: number;
+    nacionales: { total: number; activos: number; inactivos: number };
+    internacionales: { total: number; activos: number; inactivos: number };
+    configurados: number;
+    publicables: number;
+  };
+  geografia: {
+    regionesInternacionales: number;
+    paises: number;
+    divisionesArea: number;
+  };
+  hotelesVinculados: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class DestinosService {
   private readonly supabase = inject(SupabaseService);
@@ -1291,6 +1309,67 @@ export class DestinosService {
     if (internacionales.error) throw internacionales.error;
 
     return (nacionales.count ?? 0) + (internacionales.count ?? 0);
+  }
+
+  async obtenerResumenCatalogoDestinosAdmin(): Promise<ResumenCatalogoDestinos> {
+    const [
+      nacionales,
+      nacionalesActivos,
+      internacionales,
+      internacionalesActivos,
+      regionesInternacionales,
+      paises,
+      divisionesArea,
+      configurados,
+      publicables,
+      hotelesVinculados
+    ] = await Promise.all([
+      this.client.from('v_catalogo_nacionales_destinos_admin').select('destino_id', { count: 'exact', head: true }),
+      this.client.from('v_catalogo_nacionales_destinos_admin').select('destino_id', { count: 'exact', head: true }).eq('activo', true),
+      this.client.from('v_catalogo_internacional_destinos_admin').select('destino_id', { count: 'exact', head: true }),
+      this.client.from('v_catalogo_internacional_destinos_admin').select('destino_id', { count: 'exact', head: true }).eq('activo', true),
+      this.client.from('v_catalogo_internacional_regiones').select('region_id', { count: 'exact', head: true }),
+      this.client.from('paises').select('id', { count: 'exact', head: true }),
+      this.client.from('divisiones_area').select('id', { count: 'exact', head: true }),
+      this.client.from('v_catalogo_destinos_configurados').select('destino_id', { count: 'exact', head: true }),
+      this.client.from('v_catalogo_destinos_publicables').select('catalogo_destino_id', { count: 'exact', head: true }),
+      this.client.from('v_hoteles_catalogo_admin').select('id', { count: 'exact', head: true }).not('catalogo_destino_id_resuelto', 'is', null)
+    ]);
+
+    const error = [nacionales, nacionalesActivos, internacionales, internacionalesActivos, regionesInternacionales, paises, divisionesArea, configurados, publicables, hotelesVinculados]
+      .find((resultado) => resultado.error)?.error;
+    if (error) throw error;
+
+    const nacionalTotal = nacionales.count ?? 0;
+    const nacionalActivos = nacionalesActivos.count ?? 0;
+    const internacionalTotal = internacionales.count ?? 0;
+    const internacionalActivos = internacionalesActivos.count ?? 0;
+
+    return {
+      destinos: {
+        total: nacionalTotal + internacionalTotal,
+        activos: nacionalActivos + internacionalActivos,
+        inactivos: (nacionalTotal - nacionalActivos) + (internacionalTotal - internacionalActivos),
+        nacionales: {
+          total: nacionalTotal,
+          activos: nacionalActivos,
+          inactivos: nacionalTotal - nacionalActivos
+        },
+        internacionales: {
+          total: internacionalTotal,
+          activos: internacionalActivos,
+          inactivos: internacionalTotal - internacionalActivos
+        },
+        configurados: configurados.count ?? 0,
+        publicables: publicables.count ?? 0
+      },
+      geografia: {
+        regionesInternacionales: regionesInternacionales.count ?? 0,
+        paises: paises.count ?? 0,
+        divisionesArea: divisionesArea.count ?? 0
+      },
+      hotelesVinculados: hotelesVinculados.count ?? 0
+    };
   }
 
   async buscarDestinosCatalogo(filtros: FiltrosDestinoCatalogo): Promise<PaginaDestinoCatalogo> {

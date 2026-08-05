@@ -1,144 +1,181 @@
-<div class="flex h-[calc(100vh-4rem)] min-w-0 flex-auto flex-col overflow-hidden">
-    <div class="sticky top-0 z-[100] mx-6 mt-2 rounded-xl border border-transparent bg-transparent px-2 py-2 backdrop-blur-md transition-all duration-300 md:px-4">
-        <div class="w-full md:flex md:items-center md:justify-between">
-            <div class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">
-                Hoteles
-            </div>
+<main class="hoteles-page">
+    <section class="hoteles-hero">
+        <div class="hoteles-hero__copy">
+            <p class="hoteles-hero__eyebrow">Inventario de alojamiento</p>
+            <h1>Catálogo de hoteles</h1>
+            <p>Consulta, ordena y administra los hoteles disponibles en cada destino.</p>
+        </div>
 
-            <div class="my-2 flex items-center gap-3 md:my-0">
-                <button mat-raised-button color="accent" class="text-white" [disabled]="!hayCambiosOrden || actualizandoOrden"
-                    (click)="actualizarOrden()">
+        <div class="hoteles-hero__stat" aria-live="polite">
+            <strong>{{ hoteles.length | number }}</strong>
+            <span>hoteles en la consulta</span>
+        </div>
+    </section>
+
+    <section class="hoteles-switcher" aria-label="Tipo de catálogo">
+        <button type="button" class="hoteles-switcher__item" [class.hoteles-switcher__item--active]="tipoBusqueda === 'NACIONAL'" (click)="cambiarTipoBusqueda('NACIONAL')">
+            <mat-icon [svgIcon]="'heroicons_outline:map-pin'"></mat-icon>
+            <span>Nacionales</span>
+            <small>Por destino</small>
+        </button>
+        <button type="button" class="hoteles-switcher__item" [class.hoteles-switcher__item--active]="tipoBusqueda === 'INTERNACIONAL'" (click)="cambiarTipoBusqueda('INTERNACIONAL')">
+            <mat-icon [svgIcon]="'heroicons_outline:globe-alt'"></mat-icon>
+            <span>Internacionales</span>
+            <small>Por región y país</small>
+        </button>
+        <div class="hoteles-switcher__context">
+            <div class="hoteles-switcher__actions">
+                @if (hayCambiosOrden) {
+                <button mat-raised-button color="accent" class="text-white" [disabled]="actualizandoOrden" (click)="actualizarOrden()">
                     <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:arrow-path'"></mat-icon>
-                    @if (actualizandoOrden) {
-                    Actualizando...
-                    } @else {
-                    Actualizar orden
-                    }
+                    {{ actualizandoOrden ? 'Actualizando...' : 'Guardar orden' }}
                 </button>
+                }
                 <button mat-raised-button color="primary" class="text-white" (click)="irACreacion()">
                     <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:plus'"></mat-icon>
                     Crear hotel
                 </button>
-
             </div>
         </div>
-    </div>
+    </section>
 
-    <div class="mx-6 mt-2 rounded-2xl bg-card p-4">
-        <div class="mb-3 flex items-center gap-2">
-            <button mat-stroked-button [color]="tipoBusqueda === 'NACIONAL' ? 'primary' : undefined"
-                (click)="cambiarTipoBusqueda('NACIONAL')">
-                Nacional
-            </button>
-            <button mat-stroked-button [color]="tipoBusqueda === 'INTERNACIONAL' ? 'primary' : undefined"
-                (click)="cambiarTipoBusqueda('INTERNACIONAL')">
-                Internacional
-            </button>
+    <section class="hoteles-filtros" aria-label="Filtros de hoteles">
+        <div class="hoteles-filtros__heading">
+            <mat-icon [svgIcon]="'heroicons_outline:funnel'"></mat-icon>
+            <div><strong>Ubicación</strong><span>Define dónde buscar hoteles</span></div>
         </div>
-
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-            @if (tipoBusqueda === 'NACIONAL') {
-            <mat-form-field class="w-full md:col-span-2">
-                <mat-label>Destino nacional</mat-label>
-                <mat-select [value]="destinoSeleccionadoId" (valueChange)="seleccionarDestino($event)">
-                    <mat-option [value]="null">Selecciona un destino</mat-option>
-                    @for (destino of destinosNacionales; track destino.id) {
-                    <mat-option [value]="destino.id">
-                        {{ destino.nombre }}
-                    </mat-option>
-                    }
-                </mat-select>
-            </mat-form-field>
+        <div class="hoteles-filtros__fields">
+            @if (cargando) {
+            <div class="hoteles-skeleton-field" aria-hidden="true">
+                <span></span><i></i>
+            </div>
+            <div class="hoteles-skeleton-field hoteles-skeleton-field--optional" aria-hidden="true">
+                <span></span><i></i>
+            </div>
+            <div class="hoteles-skeleton-field hoteles-skeleton-field--optional" aria-hidden="true">
+                <span></span><i></i>
+            </div>
+            } @else if (tipoBusqueda === 'NACIONAL') {
+            <app-tp-select-search
+                label="Destino nacional"
+                placeholder="Selecciona un destino"
+                searchPlaceholder="Buscar destino"
+                [options]="destinosNacionalesOpciones"
+                [ngModel]="destinoSeleccionadoId"
+                (ngModelChange)="seleccionarDestino($event)">
+            </app-tp-select-search>
             } @else {
-            <mat-form-field class="w-full">
-                <mat-label>Continente</mat-label>
-                <mat-select [value]="continenteSeleccionadoId" (valueChange)="seleccionarContinente($event)">
-                    <mat-option [value]="null">Selecciona continente</mat-option>
-                    @for (continente of continentes; track continente.id) {
-                    <mat-option [value]="continente.id">{{ continente.nombre }}</mat-option>
-                    }
-                </mat-select>
-            </mat-form-field>
+            <app-tp-select-search
+                label="Continente"
+                placeholder="Selecciona un continente"
+                searchPlaceholder="Buscar continente"
+                [options]="continentesOpciones"
+                [ngModel]="continenteSeleccionadoId"
+                (ngModelChange)="seleccionarContinente($event)">
+            </app-tp-select-search>
 
-            <mat-form-field class="w-full">
-                <mat-label>Pais</mat-label>
-                <mat-select [value]="paisSeleccionadoId" (valueChange)="seleccionarPais($event)"
-                    [disabled]="!continenteSeleccionadoId">
-                    <mat-option [value]="null">Selecciona pais</mat-option>
-                    @for (pais of paisesInternacionales; track pais.id) {
-                    <mat-option [value]="pais.id">{{ pais.nombre }}</mat-option>
-                    }
-                </mat-select>
-            </mat-form-field>
+            <app-tp-select-search
+                label="País"
+                placeholder="Selecciona un país"
+                searchPlaceholder="Buscar país"
+                [options]="paisesInternacionalesOpciones"
+                [disabled]="!continenteSeleccionadoId"
+                [ngModel]="paisSeleccionadoId"
+                (ngModelChange)="seleccionarPais($event)">
+            </app-tp-select-search>
 
-            <mat-form-field class="w-full">
-                <mat-label>Destino</mat-label>
-                <mat-select [value]="destinoInternacionalId" (valueChange)="seleccionarDestinoInternacional($event)"
-                    [disabled]="!paisSeleccionadoId">
-                    <mat-option [value]="null">Todos los destinos del pais</mat-option>
-                    @for (destino of destinosInternacionalesPorPais; track destino.id) {
-                    <mat-option [value]="destino.id">{{ destino.nombre }}</mat-option>
-                    }
-                </mat-select>
-            </mat-form-field>
+            <app-tp-select-search
+                label="Destino"
+                placeholder="Todos los destinos del país"
+                searchPlaceholder="Buscar destino"
+                [options]="destinosInternacionalesOpciones"
+                [disabled]="!paisSeleccionadoId"
+                [ngModel]="destinoInternacionalId"
+                (ngModelChange)="seleccionarDestinoInternacional($event)">
+            </app-tp-select-search>
             }
         </div>
-    </div>
+        @if (puedeLimpiarFiltros) {
+        <button mat-icon-button type="button" class="hoteles-filtros__limpiar" aria-label="Limpiar filtros de ubicación" matTooltip="Limpiar filtros" (click)="limpiarFiltros()">
+            <mat-icon [svgIcon]="'heroicons_outline:arrow-path'"></mat-icon>
+        </button>
+        }
+    </section>
 
     @if (error) {
-    <div class="mx-6 mt-3 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
-        {{ error }}
-    </div>
+    <section class="hoteles-mensaje hoteles-mensaje--error" role="alert">
+        <mat-icon [svgIcon]="'heroicons_outline:exclamation-triangle'"></mat-icon><span>{{ error }}</span>
+    </section>
     }
 
-    <div class="m-3 flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl bg-card">
+    <section class="hoteles-resultados" aria-label="Resultados de hoteles">
+        <div class="hoteles-resultados__header">
+            <div><h2>Hoteles</h2><p>@if (hayCambiosOrden) { Arrastra las filas y guarda el nuevo orden. } @else { El orden mostrado es el publicado para esta ubicación. }</p></div>
+            @if (hayCambiosOrden) { <span class="hoteles-resultados__pending">Cambios de orden pendientes</span> }
+        </div>
         @if (cargando || cargandoHoteles) {
-        <div class="flex h-40 items-center justify-center">
-            <mat-progress-spinner diameter="36" mode="indeterminate"></mat-progress-spinner>
+        <div class="hoteles-skeleton-results" aria-live="polite" aria-label="Cargando hoteles">
+            @for (row of [1, 2, 3, 4, 5]; track row) {
+            <div class="hoteles-skeleton-row" aria-hidden="true">
+                <i class="hoteles-skeleton-row__avatar"></i>
+                <i class="hoteles-skeleton-row__name"></i>
+                <i class="hoteles-skeleton-row__regimen"></i>
+                <i class="hoteles-skeleton-row__order"></i>
+                <i class="hoteles-skeleton-row__actions"></i>
+            </div>
+            }
+            <span class="cdk-visually-hidden">Consultando hoteles...</span>
         </div>
         } @else if (!destinoSeleccionadoId) {
-        <div class="p-8 text-center text-sm text-gray-500">
+        <div class="hoteles-vacio">
+            <mat-icon [svgIcon]="'heroicons_outline:building-office-2'"></mat-icon>
+            <h3>Selecciona una ubicación</h3>
+            <p>
             @if (tipoBusqueda === 'NACIONAL') {
-            Selecciona un destino nacional para ver su concentrado de hoteles.
+            Elige un destino nacional para consultar y administrar sus hoteles.
             } @else {
-            Selecciona continente y pais para ver su concentrado de hoteles.
+            Elige continente y país para consultar y administrar sus hoteles.
             }
+            </p>
         </div>
         } @else if (!hoteles.length) {
-        <div class="p-8 text-center text-sm text-gray-500">
-            Este destino no tiene hoteles registrados.
+        <div class="hoteles-vacio">
+            <mat-icon [svgIcon]="'heroicons_outline:building-office-2'"></mat-icon>
+            <h3>Aún no hay hoteles</h3>
+            <p>Esta ubicación no tiene hoteles registrados. Crea el primero para empezar a construir el catálogo.</p>
+            <button mat-flat-button color="primary" type="button" (click)="irACreacion()">Crear hotel</button>
         </div>
         } @else {
-        <div class="min-h-0 flex-1 overflow-auto">
-        <table mat-table [dataSource]="hotelesPaginados" cdkDropList [cdkDropListData]="hotelesPaginados" (cdkDropListDropped)="drop($event)">
+        <div class="hoteles-tabla-wrap">
+        <table mat-table [dataSource]="hotelesPaginados" class="hoteles-tabla" cdkDropList [cdkDropListData]="hotelesPaginados" (cdkDropListDropped)="drop($event)">
             <ng-container matColumnDef="nombre_hotel">
-                <th mat-header-cell *matHeaderCellDef>Nombre hotel</th>
-                <td mat-cell *matCellDef="let item">{{ item.nombre_hotel }}</td>
+                <th mat-header-cell *matHeaderCellDef>Hotel</th>
+                <td mat-cell *matCellDef="let item"><div class="hoteles-nombre"><span>{{ item.nombre_hotel.slice(0, 1) }}</span><strong>{{ item.nombre_hotel }}</strong></div></td>
             </ng-container>
 
             <ng-container matColumnDef="regimen">
                 <th mat-header-cell *matHeaderCellDef>Regimen</th>
-                <td mat-cell *matCellDef="let item">{{ item.regimen || '-' }}</td>
+                <td mat-cell *matCellDef="let item"><span class="hoteles-regimen">{{ item.regimen || 'Sin régimen' }}</span></td>
             </ng-container>
 
             <ng-container matColumnDef="orden">
                 <th mat-header-cell *matHeaderCellDef>Orden</th>
-                <td mat-cell *matCellDef="let item; let i = index">{{ pageIndex * pageSize + i + 1 }}</td>
+                <td mat-cell *matCellDef="let item; let i = index"><span class="hoteles-orden">{{ pageIndex * pageSize + i + 1 }}</span></td>
             </ng-container>
 
             <ng-container matColumnDef="acciones">
                 <th mat-header-cell *matHeaderCellDef>Acciones</th>
                 <td mat-cell *matCellDef="let item">
-                    <div class="flex items-center justify-center gap-2">
-                        <button mat-icon-button [matTooltip]="'Editar hotel'" (click)="irAEdicion(item)">
+                    <div class="hoteles-acciones">
+                        <button mat-icon-button type="button" [attr.aria-label]="'Editar hotel ' + item.nombre_hotel" [matTooltip]="'Editar hotel'" (click)="irAEdicion(item)">
                             <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
                         </button>
 
-                        <button mat-icon-button [matTooltip]="'Eliminar hotel'" (click)="abrirModalConfirmarEliminarHotel(item)">
+                        <button mat-icon-button type="button" [attr.aria-label]="'Eliminar hotel ' + item.nombre_hotel" [matTooltip]="'Eliminar hotel'" (click)="abrirModalConfirmarEliminarHotel(item)">
                             <mat-icon class="icon-size-5 text-red-600">delete_outline</mat-icon>
                         </button>
 
-                        <button mat-icon-button [matTooltip]="'Reordenar'" cdkDragHandle>
+                        <button mat-icon-button type="button" aria-label="Reordenar hotel" [matTooltip]="'Arrastrar para reordenar'" cdkDragHandle>
                             <mat-icon class="cursor-move">drag_indicator</mat-icon>
                         </button>
                     </div>
@@ -149,8 +186,7 @@
             <tr mat-row cdkDrag *matRowDef="let row; columns: displayedColumns"></tr>
         </table>
         </div>
-        <mat-paginator
-            class="border-t border-gray-200 bg-white"
+        <mat-paginator class="hoteles-paginador"
             [length]="hoteles.length"
             [pageIndex]="pageIndex"
             [pageSize]="pageSize"
@@ -159,8 +195,8 @@
             (page)="cambiarPagina($event)">
         </mat-paginator>
         }
-    </div>
-</div>
+    </section>
+</main>
 
 @if (mostrarModalOrdenExito) {
 <div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">

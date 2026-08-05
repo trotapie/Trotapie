@@ -2,7 +2,12 @@
   <section class="catalogo-hero">
     <div class="catalogo-hero__copy">
       <!-- <p class="catalogo-kicker">Explorador geográfico</p> -->
-      <h1>Catálogo de destinos</h1>
+      <div class="catalogo-hero__title-row">
+        <h1>Catálogo de destinos</h1>
+        <button mat-icon-button type="button" class="catalogo-hero__info" aria-label="Ver resumen del catálogo de destinos" matTooltip="Ver resumen del catálogo" (click)="abrirResumen()">
+          <mat-icon [svgIcon]="'heroicons_outline:information-circle'"></mat-icon>
+        </button>
+      </div>
       <p>Consulta la fuente única de destinos para contenido editorial, hoteles y circuitos.</p>
     </div>
 

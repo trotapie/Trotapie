@@ -1,0 +1,94 @@
+<section class="resumen-dialog">
+  <header class="resumen-dialog__header">
+    <div class="resumen-dialog__heading">
+      <span class="resumen-dialog__seal" aria-hidden="true">
+        <mat-icon svgIcon="heroicons_outline:globe-alt"></mat-icon>
+      </span>
+      <div>
+        <p class="resumen-dialog__eyebrow">Panorama operativo</p>
+        <h2 mat-dialog-title>Resumen del catálogo</h2>
+        <p>Consulta la cobertura geográfica, la preparación editorial y los hoteles vinculados.</p>
+      </div>
+    </div>
+    <button mat-icon-button type="button" aria-label="Cerrar resumen" matTooltip="Cerrar" (click)="cerrar()">
+      <mat-icon svgIcon="heroicons_outline:x-mark"></mat-icon>
+    </button>
+  </header>
+
+  <div mat-dialog-content class="resumen-dialog__content">
+    @if (cargando) {
+      <div class="resumen-dialog__loading" aria-live="polite">
+        <mat-spinner diameter="36"></mat-spinner>
+        <div><strong>Actualizando panorama</strong><span>Estamos reuniendo los datos del catálogo.</span></div>
+      </div>
+    } @else if (error) {
+      <div class="resumen-dialog__error" role="alert">
+        <mat-icon svgIcon="heroicons_outline:exclamation-triangle"></mat-icon>
+        <div><strong>No fue posible obtener el resumen</strong><span>{{ error }}</span></div>
+        <button mat-stroked-button type="button" (click)="cargarResumen()">Reintentar</button>
+      </div>
+    } @else if (resumen) {
+      <section class="resumen-dialog__lead-grid" aria-label="Indicadores principales">
+        <article class="resumen-metric resumen-metric--primary">
+          <span>Destinos en catálogo</span>
+          <strong>{{ resumen.destinos.total | number }}</strong>
+          <small>{{ resumen.destinos.activos | number }} activos · {{ resumen.destinos.inactivos | number }} inactivos</small>
+        </article>
+        <article class="resumen-metric">
+          <span>Listos para publicar</span>
+          <strong>{{ resumen.destinos.publicables | number }}</strong>
+          <small>{{ resumen.destinos.configurados | number }} con contenido configurado</small>
+        </article>
+        <article class="resumen-metric">
+          <span>Hoteles vinculados</span>
+          <strong>{{ resumen.hotelesVinculados | number }}</strong>
+          <small>Asociados a un destino de catálogo</small>
+        </article>
+      </section>
+
+      <section class="resumen-section" aria-labelledby="cobertura-geografica">
+        <div class="resumen-section__title">
+          <div>
+            <p class="resumen-dialog__eyebrow">Estructura base</p>
+            <h3 id="cobertura-geografica">Cobertura geográfica</h3>
+          </div>
+          <mat-icon svgIcon="heroicons_outline:map"></mat-icon>
+        </div>
+        <div class="resumen-geografia">
+          <div><strong>{{ resumen.geografia.regionesInternacionales | number }}</strong><span>Continentes</span></div>
+          <div><strong>{{ resumen.geografia.paises | number }}</strong><span>Países</span></div>
+          <div><strong>{{ resumen.geografia.divisionesArea | number }}</strong><span>Divisiones de área</span></div>
+        </div>
+      </section>
+
+      <section class="resumen-section" aria-labelledby="distribucion-destinos">
+        <div class="resumen-section__title">
+          <div>
+            <p class="resumen-dialog__eyebrow">Distribución</p>
+            <h3 id="distribucion-destinos">Destinos por cobertura</h3>
+          </div>
+        </div>
+        <div class="resumen-coverage">
+          <article class="resumen-coverage__item">
+            <div class="resumen-coverage__icon resumen-coverage__icon--nacional"><mat-icon svgIcon="heroicons_outline:map-pin"></mat-icon></div>
+            <div class="resumen-coverage__copy"><strong>Nacional</strong><span>México por división de área</span></div>
+            <div class="resumen-coverage__numbers"><strong>{{ resumen.destinos.nacionales.total | number }}</strong><span>{{ resumen.destinos.nacionales.activos | number }} activos</span></div>
+          </article>
+          <article class="resumen-coverage__item">
+            <div class="resumen-coverage__icon resumen-coverage__icon--internacional"><mat-icon svgIcon="heroicons_outline:globe-americas"></mat-icon></div>
+            <div class="resumen-coverage__copy"><strong>Internacional</strong><span>Mundo por región y país</span></div>
+            <div class="resumen-coverage__numbers"><strong>{{ resumen.destinos.internacionales.total | number }}</strong><span>{{ resumen.destinos.internacionales.activos | number }} activos</span></div>
+          </article>
+        </div>
+      </section>
+    }
+  </div>
+
+  <footer mat-dialog-actions align="end" class="resumen-dialog__actions">
+    <button mat-stroked-button type="button" [disabled]="cargando" (click)="cargarResumen()">
+      <mat-icon svgIcon="heroicons_outline:arrow-path"></mat-icon>
+      Actualizar
+    </button>
+    <button mat-flat-button color="primary" type="button" (click)="cerrar()">Cerrar</button>
+  </footer>
+</section>

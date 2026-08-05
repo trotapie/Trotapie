@@ -411,6 +411,14 @@ body.modal-locked .modal-blocker * {
     }
 }
 
+// The destination summary is a full-bleed panel, so its editorial header can
+// align with the dialog edges instead of inheriting the global dialog padding.
+.resumen-catalogo-dialog {
+    .mat-mdc-dialog-container .mdc-dialog__surface {
+        padding: 0;
+    }
+}
+
 .mat-mdc-form-field .mat-mdc-text-field-wrapper {
     transition:
         transform var(--tp-motion-duration-fast) var(--tp-motion-ease-out),

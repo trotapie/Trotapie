@@ -1,10 +1,12 @@
 import { Component, inject, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { PageEvent } from '@angular/material/paginator';
 import { SupabaseService } from 'app/core/supabase.service';
 import { DestinoCatalogoNavegable, DestinosService, PaisCatalogo } from 'app/core/destinos.service';
 import { MaterialModule } from 'app/shared/material.module';
+import { TpSelectSearchComponent, TpSelectSearchOption } from 'app/shared/tp-select-search/tp-select-search.component';
 
 interface IDestinoFiltro {
   id: number;
@@ -42,7 +44,7 @@ interface IHotelAdmin {
 @Component({
   selector: 'app-admin-hoteles',
   standalone: true,
-  imports: [MaterialModule, DragDropModule],
+  imports: [FormsModule, MaterialModule, DragDropModule, TpSelectSearchComponent],
   templateUrl: './admin-hoteles.component.html',
   styleUrl: './admin-hoteles.component.scss'
 })
@@ -115,9 +117,32 @@ export class AdminHotelesComponent implements OnInit {
     );
   }
 
+  get destinosNacionalesOpciones(): TpSelectSearchOption[] {
+    return this.destinosNacionales.map((destino) => ({ value: destino.id, label: destino.nombre }));
+  }
+
+  get continentesOpciones(): TpSelectSearchOption[] {
+    return this.continentes.map((continente) => ({ value: continente.id, label: continente.nombre }));
+  }
+
+  get paisesInternacionalesOpciones(): TpSelectSearchOption[] {
+    return this.paisesInternacionales.map((pais) => ({ value: pais.id, label: pais.nombre }));
+  }
+
+  get destinosInternacionalesOpciones(): TpSelectSearchOption[] {
+    return this.destinosInternacionalesPorPais.map((destino) => ({ value: destino.id, label: destino.nombre }));
+  }
+
   get hotelesPaginados(): IHotelAdmin[] {
     const inicio = this.pageIndex * this.pageSize;
     return this.hoteles.slice(inicio, inicio + this.pageSize);
+  }
+
+  get puedeLimpiarFiltros(): boolean {
+    return this.destinoSeleccionadoId !== null ||
+      this.continenteSeleccionadoId !== null ||
+      this.paisSeleccionadoId !== null ||
+      this.destinoInternacionalId !== null;
   }
 
   cambiarTipoBusqueda(tipo: 'NACIONAL' | 'INTERNACIONAL') {
@@ -128,6 +153,16 @@ export class AdminHotelesComponent implements OnInit {
     this.paisesCatalogo = [];
     this.destinos = [];
     this.seleccionarDestino(null);
+  }
+
+  async limpiarFiltros(): Promise<void> {
+    this.continenteSeleccionadoId = null;
+    this.paisSeleccionadoId = null;
+    this.destinoInternacionalId = null;
+    this.destinoSeleccionadoId = null;
+    this.paisesCatalogo = [];
+    this.destinos = [];
+    await this.seleccionarDestino(null);
   }
 
   async seleccionarDestino(destinoId: number | null) {

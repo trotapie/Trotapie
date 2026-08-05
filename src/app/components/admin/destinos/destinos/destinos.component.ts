@@ -1,17 +1,20 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { PageEvent } from '@angular/material/paginator';
+import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DestinoCatalogoNavegable, DestinosService, DivisionAreaCatalogo, PaisCatalogo, RegionCatalogo } from 'app/core/destinos.service';
 import { MaterialModule } from 'app/shared/material.module';
 import { TpMultiselectComponent, TpMultiselectOption } from 'app/shared/tp-multiselect/tp-multiselect.component';
 import { TpSearchInputComponent } from 'app/shared/tp-search-input/tp-search-input.component';
+import { ResumenCatalogoDestinosComponent } from '../resumen-catalogo-destinos/resumen-catalogo-destinos.component';
 
 @Component({ selector: 'app-destinos', standalone: true, imports: [MaterialModule, FormsModule, TpMultiselectComponent, TpSearchInputComponent], templateUrl: './destinos.component.html', styleUrl: './destinos.component.scss' })
 export class DestinosComponent implements OnInit {
   private readonly destinosService = inject(DestinosService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly dialog = inject(MatDialog);
   readonly displayedColumns = ['destino', 'ubicacion', 'estado', 'acciones'];
   tipoVisible: 'NACIONAL' | 'INTERNACIONAL' = 'NACIONAL';
   regiones: RegionCatalogo[] = []; paises: PaisCatalogo[] = []; divisiones: DivisionAreaCatalogo[] = [];
@@ -38,6 +41,16 @@ export class DestinosComponent implements OnInit {
   editarDestino(destino: DestinoCatalogoNavegable) { return this.router.navigate(['/admin/destinos/configurar-destinos/editar', destino.destinoId], { queryParams: this.obtenerQueryParamsFiltros() }); }
   editarPreview(destino: DestinoCatalogoNavegable) { return this.router.navigate(['/admin/destinos/configurar-destinos/preview', destino.destinoId], { queryParams: this.obtenerQueryParamsFiltros() }); }
   verHoteles(destino: DestinoCatalogoNavegable) { return this.router.navigate(['/admin/hoteles'], { queryParams: { catalogoDestinoId: destino.destinoId, divisionAreaId: destino.divisionAreaId, tipo: destino.tipo } }); }
+  abrirResumen(): void {
+    this.dialog.open(ResumenCatalogoDestinosComponent, {
+      width: '780px',
+      maxWidth: 'calc(100vw - 24px)',
+      maxHeight: 'calc(100dvh - 24px)',
+      autoFocus: 'dialog',
+      restoreFocus: true,
+      panelClass: ['tp-motion-dialog-pane', 'resumen-catalogo-dialog']
+    });
+  }
 
   get tieneFiltrosActivos() { return Boolean(this.regionIds.length || this.paisIds.length || this.divisionAreaIds.length || this.busqueda.trim()); }
   get textoUbicacion() { return this.tipoVisible === 'NACIONAL' ? 'México por división de área' : 'Mundo por región y país'; }
