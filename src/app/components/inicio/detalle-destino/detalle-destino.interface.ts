@@ -1,5 +1,5 @@
 export interface IDetallesDestino {
-    destino_id:              number;
+    catalogo_destino_id:     number;
     nombre:                  string;
     detalle_id:              number;
     ubicacion:               string;

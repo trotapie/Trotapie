@@ -1,0 +1,21 @@
+<div class="tp-search-input">
+  <label class="tp-search-input__label" [for]="'tp-search-' + label">{{ label }}</label>
+
+  <div class="tp-search-input__field" [class.tp-search-input__field--disabled]="disabled">
+    <mat-icon [svgIcon]="'heroicons_outline:magnifying-glass'"></mat-icon>
+    <input
+      [id]="'tp-search-' + label"
+      type="text"
+      [value]="valor"
+      [placeholder]="placeholder"
+      [disabled]="disabled"
+      [attr.aria-label]="label"
+      (input)="actualizarValor($any($event.target).value)"
+      (keydown.enter)="ejecutarBusqueda()"
+      (blur)="marcarTouched()" />
+
+    <button type="button" mat-icon-button [disabled]="disabled" [attr.aria-label]="searchAriaLabel" (click)="ejecutarBusqueda()">
+      <mat-icon [svgIcon]="'heroicons_outline:arrow-right'"></mat-icon>
+    </button>
+  </div>
+</div>

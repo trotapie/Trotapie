@@ -71,12 +71,12 @@ export class ConfigurarAtraccionesComponent implements OnInit {
 
     try {
       const [destinos, catalogoAtracciones, idiomas] = await Promise.all([
-        this.destinosService.obtenerDestinosAdmin(),
+        this.destinosService.buscarDestinosCatalogo({ tipo: 'NACIONAL', pageSize: 100 }),
         this.destinosService.obtenerCatalogoAtraccionesActivas(),
         this.destinosService.obtenerIdiomasPreviewAdmin()
       ]);
       this.idiomas = idiomas.map((idioma) => ({ id: idioma.id, codigo: idioma.codigo }));
-      const destinosPorId = new Map(destinos.map((destino: any) => [Number(destino.id), destino]));
+      const destinosPorId = new Map(destinos.items.map((destino: any) => [Number(destino.destinoId), { id: destino.destinoId, nombre: destino.destinoNombre }]));
       const atraccionesPorId = new Map(catalogoAtracciones.map((atraccion) => [atraccion.id, atraccion]));
 
       this.destinos = destinosIds
@@ -207,7 +207,7 @@ export class ConfigurarAtraccionesComponent implements OnInit {
         for (const atraccion of this.atraccionesPorDestino[destino.id] ?? []) {
           await this.traducirAtraccion(destino.id, atraccion);
           const guardada = await this.actividadesService.guardarActividadDestinoAdmin({
-            destino_id: destino.id,
+            catalogo_destino_id: destino.id,
             actividad_id: atraccion.actividadId,
             catalogo_atraccion_id: atraccion.id,
             imagen_fondo: null,

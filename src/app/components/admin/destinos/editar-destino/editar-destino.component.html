@@ -43,14 +43,15 @@
                     }
                 </mat-form-field>
 
-                <!-- <mat-form-field class="w-full">
+                <mat-form-field class="w-full">
                     <mat-label>Orden del destino</mat-label>
-                    <input matInput type="number" min="0" formControlName="orden" />
+                    <input matInput type="number" min="0" step="1" formControlName="orden" />
                     @if (form.get('orden')?.invalid && form.get('orden')?.touched) {
-                    <mat-error>El orden debe ser un numero mayor o igual a 0.</mat-error>
+                    <mat-error>El orden debe ser un número mayor o igual a 0.</mat-error>
                     }
-                </mat-form-field> -->
+                </mat-form-field>
 
+                @if (!esCatalogo) {
                 <mat-form-field class="w-full">
                     <mat-label>Tipo de destino</mat-label>
                     <mat-select formControlName="tipo_desino_id">
@@ -90,6 +91,7 @@
                     </mat-select>
                 </mat-form-field>
                 }
+                }
 
                 <div class="flex items-center gap-3 lg:col-span-2">
                     <app-custom-switch formControlName="activo" label="Destino activo"></app-custom-switch>
@@ -111,6 +113,7 @@
                     }
                 </div>
 
+                @if (!esCatalogo) {
                 <div class="space-y-2">
                     <mat-form-field class="w-full">
                         <mat-label>Imagen de cotizacion (URL)</mat-label>
@@ -123,6 +126,7 @@
                     </div>
                     }
                 </div>
+                }
             </div>
 
             @if (error) {

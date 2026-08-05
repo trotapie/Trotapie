@@ -14,6 +14,7 @@ import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { FooterComponent } from 'app/footer/footer.component';
 import { getDefaultLang } from 'app/lang.utils';
 import { FuseMediaWatcherService } from '@fuse/services/media-watcher/public-api';
+import { DestinosService } from 'app/core/destinos.service';
 
 @Component({
     selector: 'hoteles',
@@ -29,6 +30,7 @@ export class HotelesComponent {
     private router = inject(Router);
     private datosService = inject(DatosService);
     private supabase = inject(SupabaseService);
+    private destinosService = inject(DestinosService);
     private sanitizer = inject(DomSanitizer)
     private _translocoService = inject(TranslocoService);
     private _unsubscribeAll: Subject<any> = new Subject<any>();
@@ -44,6 +46,7 @@ export class HotelesComponent {
     hotelesPorCiudad: Hotel[] = [];
     ciudadSeleccionada: boolean;
     cargando = false;
+    private cargasPendientes = 0;
     hotel: Hotel;
     rating: Number;
     descuentoEstilos = ['descuento-rect', 'descuento-estrella', 'descuento-circulo'];
@@ -115,26 +118,31 @@ export class HotelesComponent {
             }
             // TODO: no hacer de nuevo la petición al cambiar idioma sino solo remplar los textos
             this._translocoService.langChanges$.subscribe(async (activeLang) => {
+                this.iniciarCarga();
                 const hotelId = +this.hotelesForm.get('hotelSeleccionado')?.value
-                this.destinoSelected = this.destinos.find(item => item.id === +hotelId);
-                const busqueda = this.tipoDestino === 1 ? this.supabase.listHotelesAll(hotelId, activeLang) : this.supabase.listHotelesAllPorDestinoPadre(hotelId, activeLang);
-                const data = await busqueda;
-                const info = (data ?? []).map((hotel: any) => ({
-                    ...hotel,
-                    conceptoIconoSeguro: hotel.concepto?.icono
-                        ? this.sanitizer.bypassSecurityTrustHtml(hotel.concepto.icono)
-                        : null,
-                    descuentoSeguro: hotel.descuento?.icono
-                        ? this.sanitizer.bypassSecurityTrustHtml(hotel.descuento.icono)
-                        : null
-                }));
+                try {
+                    this.destinoSelected = this.destinos.find(item => item.id === +hotelId);
+                    const busqueda = this.tipoDestino === 1 ? this.supabase.listHotelesAll(hotelId, activeLang) : this.supabase.listHotelesAllPorDestinoPadre(hotelId, activeLang);
+                    const data = await busqueda;
+                    const info = (data ?? []).map((hotel: any) => ({
+                        ...hotel,
+                        conceptoIconoSeguro: hotel.concepto?.icono
+                            ? this.sanitizer.bypassSecurityTrustHtml(hotel.concepto.icono)
+                            : null,
+                        descuentoSeguro: hotel.descuento?.icono
+                            ? this.sanitizer.bypassSecurityTrustHtml(hotel.descuento.icono)
+                            : null
+                    }));
 
-                if (this.tipoDestino === 2) {
-                    this.gruposDestinos = this.agruparHotelesPorDestino(info)
+                    if (this.tipoDestino === 2) {
+                        this.gruposDestinos = this.agruparHotelesPorDestino(info)
+                    }
+
+                    this.destinoSeleccionado(info);
+                    this.listaHoteles = info;
+                } finally {
+                    this.finalizarCarga();
                 }
-
-                this.destinoSeleccionado(info);
-                this.listaHoteles = info;
             });
         }
         this._fuseMediaWatcherService.onMediaChange$
@@ -188,12 +196,22 @@ export class HotelesComponent {
     }
 
     async obtenerDestinos() {
+        this.iniciarCarga();
         this.tipoDestino = sessionStorage.getItem('tipoDestino') !== null ? +sessionStorage.getItem('tipoDestino') : this.tipoDestino
 
-        const { data, error } = await this.supabase.obtenerDestinos(this.tipoDestino);
-        if (error) { this.error = error.message; return; }
-
-        this.destinos = data;
+        try {
+            if (this.tipoDestino === 1) {
+                this.destinos = await this.destinosService.obtenerDestinosCatalogoPublicables('NACIONAL') as Destinos[];
+            } else {
+                const { data, error } = await this.supabase.obtenerDestinos(this.tipoDestino);
+                if (error) throw error;
+                this.destinos = data;
+            }
+        } catch (error: any) {
+            this.error = error?.message ?? 'No se pudieron cargar los destinos.';
+            this.finalizarCarga();
+            return;
+        }
 
         const ciudad = sessionStorage.getItem('ciudad') !== null ? sessionStorage.getItem('ciudad') : +this.destinoId;
 
@@ -210,10 +228,12 @@ export class HotelesComponent {
 
         });
 
-        this.consulaHoteles();
+        await this.consulaHoteles().finally(() => this.finalizarCarga());
     }
 
     async consulaHoteles() {
+        this.iniciarCarga();
+        try {
         if (this.tipoDestino === 2) {
             const mapa = new Map<string, any[]>();
             this.destinos.forEach(dest => {
@@ -266,14 +286,22 @@ export class HotelesComponent {
         this.mostrarInfo = true;
         this.destinoSeleccionado(info);
         this.listaHoteles = info;
+        } finally {
+            this.finalizarCarga();
+        }
+    }
 
+    private iniciarCarga(): void {
+        this.cargasPendientes++;
+        this.cargando = true;
+    }
+
+    private finalizarCarga(): void {
+        this.cargasPendientes = Math.max(0, this.cargasPendientes - 1);
+        this.cargando = this.cargasPendientes > 0;
     }
 
     destinoSeleccionado(event) {
-        if (event.length > 0) {
-            sessionStorage.setItem('tipoDestino', event[0].destinos.tipo_desino_id)
-        }
-
         this.ciudadSeleccionada = true;
         if (event !== undefined) {
             this.hotelesPorCiudad = event === undefined ? [] : event;

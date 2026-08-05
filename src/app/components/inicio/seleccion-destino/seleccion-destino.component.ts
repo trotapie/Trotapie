@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { FuseCardComponent } from '@fuse/components/card';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { SupabaseService } from 'app/core/supabase.service';
+import { DestinosService } from 'app/core/destinos.service';
 import { MaterialModule } from 'app/shared/material.module';
 import { startWith } from 'rxjs';
 import { MatSelect, MatSelectChange } from '@angular/material/select';
@@ -26,6 +27,7 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
   private router = inject(Router);
   private datosService = inject(DatosService);
   private supabase = inject(SupabaseService);
+  private destinosService = inject(DestinosService);
   private sanitizer = inject(DomSanitizer)
   private _translocoService = inject(TranslocoService);
 
@@ -178,32 +180,24 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
   }
 
   async obtenerSoloDestinos() {
-    const { data, error } = await this.supabase.obtenerDestinos(this.tipoDestino);
-    if (error) { this.error = error.message; return; }
+    try {
+      const tipo = this.tipoDestino === 1 ? 'NACIONAL' : 'INTERNACIONAL';
+      const publicables = await this.destinosService.obtenerDestinosCatalogoPublicables(tipo);
 
-    this.destinos = data;
+      // Durante la vinculación manual conservamos el selector vigente como fallback.
+      this.destinos = (publicables as any[])
+        .filter((destino) => destino.activo === true)
+        .sort((a, b) => (a.orden - b.orden) || a.nombre.localeCompare(b.nombre)) as Destinos[];
 
-    if (this.tipoDestino === 2) {
-      const mapa = new Map<string, any[]>();
-      this.destinos.forEach(dest => {
-        const padre = dest.continente.nombre;
-        if (!mapa.has(padre)) mapa.set(padre, []);
-        mapa.get(padre)!.push(dest);
-      });
-
-      this.agrupadosDestinos = Array.from(mapa, ([nombrePadre, destinos]) => ({
-        nombrePadre,
-        destinos
-      }));
+      this.agrupadosDestinos = [];
+      this.destinosFiltrados = this.destinos;
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudieron cargar los destinos.';
     }
-
-    this.destinosFiltrados = this.tipoDestino === 1
-      ? this.destinos
-      : this.agrupadosDestinos;
   }
 
   cargaInfo(item) {
-    this.destinoId = this.tipoDestino === 1 ? +item.id : +item.destinos[0].id
+    this.destinoId = +item.id;
     sessionStorage.setItem('ciudad', this.destinoId.toString())
     sessionStorage.setItem('tipoDestino', this.tipoDestino.toString())
     this.router.navigate(['/detalle-destino/' + this.destinoId]);
@@ -393,7 +387,7 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
   // Tu filtro final
   // ===================
   filtrarDestinos(value?: string) {
-    const lista = this.tipoDestino === 1 ? this.destinos : this.agrupadosDestinos;
+    const lista = this.destinos;
 
     const raw = value ?? '';
     const term = this.normalize(raw);

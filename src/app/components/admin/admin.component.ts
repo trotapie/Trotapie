@@ -1,5 +1,5 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
-import { ApexOptions } from 'apexcharts';
+import { AfterViewInit, Component, OnDestroy, OnInit, inject } from '@angular/core';
+import ApexCharts, { ApexOptions } from 'apexcharts';
 import { Router } from '@angular/router';
 import { FuseConfigService, Scheme } from '@fuse/services/config';
 import { AuthService } from 'app/core/auth/auth.service';
@@ -21,7 +21,7 @@ type SerieUltimosDias = { labels: string[]; series: number[]; fechas: string[] }
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.scss'
 })
-export class AdminComponent implements OnInit, OnDestroy {
+export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
   private _supabase = inject(SupabaseService);
   private _cotizacionesService = inject(CotizacionesService);
   private _destinosService = inject(DestinosService);
@@ -32,6 +32,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   private _fuseConfigService = inject(FuseConfigService);
   private _unsubscribeAll = new Subject<void>();
   private _solicitudesActuales: ISolicitudCotizacionListado[] = [];
+  private _tooltipObserver: MutationObserver | null = null;
 
   isLoading = false;
   errorMessage = '';
@@ -108,8 +109,28 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this._tooltipObserver?.disconnect();
     this._unsubscribeAll.next();
     this._unsubscribeAll.complete();
+  }
+
+  ngAfterViewInit(): void {
+    this._tooltipObserver = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type !== 'attributes' || !(mutation.target instanceof Element)) return;
+
+        if (mutation.target.closest('.apexcharts-toolbar')) {
+          mutation.target.removeAttribute('title');
+        }
+      });
+    });
+
+    this._tooltipObserver.observe(document.body, {
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['title'],
+    });
+    this._removerTooltipsNativosTendencia();
   }
 
   async recargarDashboard(): Promise<void> {
@@ -131,7 +152,7 @@ export class AdminComponent implements OnInit, OnDestroy {
 
       if (this._authService.isAdmin) {
         const [
-          destinos,
+          totalDestinosCatalogo,
           tiposDestino,
           empleados,
           continentes,
@@ -140,7 +161,7 @@ export class AdminComponent implements OnInit, OnDestroy {
           tiposHabitacion,
           hotelesCount
         ] = await Promise.all([
-          this._safeCall('destinos', () => this._destinosService.obtenerDestinosAdmin(), [] as any[]),
+          this._safeCall('destinos', () => this._destinosService.contarDestinosCatalogoAdmin(), 0),
           this._safeCall('tipos de destino', () => this._destinosService.obtenerTiposDestinoAdmin(), [] as any[]),
           this._safeCall('empleados', async () => {
             const { data, error } = await this._empleadosService.empleados({ incluirInhabilitados: true });
@@ -174,7 +195,7 @@ export class AdminComponent implements OnInit, OnDestroy {
           }, 0),
         ]);
 
-        this.totalDestinos = destinos.length;
+        this.totalDestinos = totalDestinosCatalogo;
         this.totalHoteles = hotelesCount || this._contarUnicosPorCampo(listaSolicitudes, 'hotel_nombre');
         this.totalEmpleados = empleados.length;
         this.totalContinentes = continentes.length;
@@ -300,6 +321,7 @@ export class AdminComponent implements OnInit, OnDestroy {
 
     this.chartResumen = {
       chart: {
+        id: 'tendencia-solicitudes',
         fontFamily: 'inherit',
         foreColor: 'inherit',
         type: 'bar',
@@ -388,8 +410,19 @@ export class AdminComponent implements OnInit, OnDestroy {
         foreColor: 'inherit',
         type: 'line',
         height: 340,
-        toolbar: { show: false },
-        zoom: { enabled: false },
+        toolbar: {
+          show: true,
+          tools: {
+            download: false,
+            selection: true,
+            zoom: true,
+            zoomin: true,
+            zoomout: true,
+            pan: true,
+            reset: true,
+          },
+        },
+        zoom: { enabled: true, type: 'x', autoScaleYaxis: true },
         events: {
           click: (_event: unknown, _chartContext: unknown, config: any) => {
             this._navegarASolicitudesPorIndiceTendencia(config);
@@ -431,6 +464,15 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.chartTopHoteles = this._crearGraficaTop('Hoteles', this.topHotelesCotizados, '#10B981');
     this.chartTopDestinos = this._crearGraficaTop('Destinos', this.topDestinosCotizados, '#3B82F6');
     this.chartTopEmpleados = this._crearGraficaTop('Empleados', this.topEmpleadosCotizados, '#8B5CF6');
+    this._removerTooltipsNativosTendencia();
+  }
+
+  private _removerTooltipsNativosTendencia(): void {
+    window.setTimeout(() => {
+      document
+        .querySelectorAll('.apexcharts-toolbar[title], .apexcharts-toolbar [title]')
+        .forEach((element) => element.removeAttribute('title'));
+    }, 150);
   }
 
   private _crearGraficaTop(nombreSerie: string, items: RankingItem[], color: string): ApexOptions {
@@ -685,6 +727,54 @@ export class AdminComponent implements OnInit, OnDestroy {
       this.warnings.push(`No se pudo cargar ${label}`);
       return fallback;
     }
+  }
+
+  abrirSolicitudes(): void {
+    void this._router.navigate(['/admin/cotizaciones/solicitudes']);
+  }
+
+  abrirSolicitudesPorEstatus(estatus: string): void {
+    void this._navegarASolicitudesPorEstatus(estatus);
+  }
+
+  abrirRuta(ruta: string): void {
+    void this._router.navigateByUrl(ruta);
+  }
+
+  async descargarTendencia(formato: 'png' | 'svg' | 'csv'): Promise<void> {
+    const nombreArchivo = `tendencia-solicitudes-${this._keyDate(new Date())}`;
+
+    if (formato === 'csv') {
+      const filas = this.fechasTendencia30Dias.map((fecha, indice) =>
+        `${fecha},${this.chartSolicitudes30Dias.series?.[0]?.['data']?.[indice] ?? 0}`
+      );
+      this._descargarArchivo(`Fecha,Solicitudes\n${filas.join('\n')}`, `${nombreArchivo}.csv`, 'text/csv;charset=utf-8');
+      return;
+    }
+
+    if (formato === 'svg') {
+      const svg = document.querySelector('.trend-chart .apexcharts-svg')?.outerHTML;
+      if (svg) {
+        this._descargarArchivo(svg, `${nombreArchivo}.svg`, 'image/svg+xml;charset=utf-8');
+      }
+      return;
+    }
+
+    const resultado = await ApexCharts.exec('tendencia-solicitudes', 'dataURI');
+    if (resultado?.imgURI) {
+      const enlace = document.createElement('a');
+      enlace.href = resultado.imgURI;
+      enlace.download = `${nombreArchivo}.png`;
+      enlace.click();
+    }
+  }
+
+  private _descargarArchivo(contenido: string, nombreArchivo: string, tipo: string): void {
+    const enlace = document.createElement('a');
+    enlace.href = URL.createObjectURL(new Blob([contenido], { type: tipo }));
+    enlace.download = nombreArchivo;
+    enlace.click();
+    URL.revokeObjectURL(enlace.href);
   }
 
   private async _navegarASolicitudesPorEstatus(estatus: string): Promise<void> {

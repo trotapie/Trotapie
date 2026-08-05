@@ -257,7 +257,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
       }));
 
       await this.destinosService.guardarPreviewDestinoAdmin({
-        destino_id: this.destinoId,
+        catalogo_destino_id: this.destinoId,
         ubicacion: this.limpiarTexto(raw.ubicacion),
         traducciones: (raw.traducciones ?? []).map((item: any) => ({
           idioma_id: Number(item.idioma_id),
@@ -299,7 +299,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
   }
 
   regresar() {
-    this.router.navigate(['/admin/destinos/configurar-destinos']);
+    this.router.navigate(['/admin/destinos/configurar-destinos'], { queryParams: this.route.snapshot.queryParams });
   }
 
   desplazarASeccion(id: string): void {
@@ -570,7 +570,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
       );
 
       const guardada = await this.actividadesService.guardarActividadDestinoAdmin({
-        destino_id: this.destinoId,
+        catalogo_destino_id: this.destinoId,
         actividad_id: actividadId,
         catalogo_atraccion_id: this.parseNumber(raw.catalogo_atraccion_id),
         imagen_fondo: imagenPrincipal,

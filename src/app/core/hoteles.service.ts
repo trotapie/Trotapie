@@ -68,7 +68,7 @@ export class HotelesService {
       )
     ),
 
-    destinos:destino_id!inner ( id, nombre, tipo_desino_id ),
+    catalogoDestino:catalogo_destino_id!inner ( id, nombre ),
     concepto:concepto_id ( id, descripcion, icono ),
 
     regimen:regimen_id (
@@ -79,7 +79,7 @@ export class HotelesService {
       )
     )
   `)
-      .eq('destinos.id', destinoId)
+      .eq('catalogoDestino.id', destinoId)
       .order('orden', { ascending: true });
 
 

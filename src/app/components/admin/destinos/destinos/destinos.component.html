@@ -1,509 +1,147 @@
-<div class="flex h-[calc(100vh-4rem)] min-w-0 flex-auto flex-col overflow-hidden">
-
-    <!-- Header -->
-    <div class="sticky top-0 z-[100] mx-6 mt-2 rounded-xl border border-transparent bg-transparent px-2 py-2 backdrop-blur-md transition-all duration-300 md:px-4">
-        <div class="w-full md:flex md:items-center md:justify-between">
-            <div class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">
-                Destinos
-            </div>
-
-            <div class="my-2 flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3 md:my-0">
-                <button mat-raised-button color="primary" class="w-full text-white sm:w-auto"
-                    [disabled]="!hayCambiosOrden || actualizandoOrden"
-                    (click)="actualizarOrden()">
-                    <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:arrow-path'"></mat-icon>
-                    @if (actualizandoOrden) {
-                    Actualizando...
-                    } @else {
-                    Actualizar orden
-                    }
-                </button>
-
-                <button mat-raised-button color="primary" class="w-full text-white sm:w-auto"
-                    [routerLink]="['/admin/destinos/configurar-destinos/nuevo']">
-                    <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:plus'">
-                    </mat-icon>
-                    Nuevo destino
-                </button>
-
-                <!-- <button mat-stroked-button type="button" class="w-full sm:w-auto" (click)="abrirModalAgregarAtracciones()">
-                    <mat-icon class="mr-2 icon-size-5" [svgIcon]="'heroicons_outline:map-pin'"></mat-icon>
-                    Agregar atracciones
-                </button> -->
-            </div>
-        </div>
+<main class="catalogo-page">
+  <section class="catalogo-hero">
+    <div class="catalogo-hero__copy">
+      <!-- <p class="catalogo-kicker">Explorador geográfico</p> -->
+      <h1>Catálogo de destinos</h1>
+      <p>Consulta la fuente única de destinos para contenido editorial, hoteles y circuitos.</p>
     </div>
 
-    @if (mostrarModalAgregarAtracciones) {
-    <div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm sm:p-6">
-        <button type="button" class="absolute inset-0 cursor-default" aria-label="Cerrar modal" (click)="cerrarModalAgregarAtracciones()"></button>
-        <section role="dialog" aria-modal="true" aria-labelledby="titulo-agregar-atracciones" class="relative z-10 flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-[2.5rem] border border-outline-variant bg-surface-container-lowest shadow-2xl dark:border-gray-800 dark:bg-gray-900">
-            <header class="flex items-center justify-between border-b border-outline-variant px-7 py-7 dark:border-gray-800 sm:px-9">
-                <div>
-                    <h2 id="titulo-agregar-atracciones" class="text-2xl font-semibold text-on-surface dark:text-white">Agregar atracciones</h2>
-                </div>
-                <button mat-icon-button type="button" aria-label="Cerrar" matTooltip="Cerrar" class="!rounded-full" (click)="cerrarModalAgregarAtracciones()">
-                    <mat-icon [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
-                </button>
-            </header>
-
-            <div class="space-y-8 overflow-y-auto px-7 py-9 sm:px-9">
-                @if (errorAgregarAtracciones) {
-                <p class="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300" role="alert">{{ errorAgregarAtracciones }}</p>
-                }
-
-                <div class="space-y-3">
-                    <label class="block text-base font-semibold text-on-surface dark:text-white">Tipo de atracción</label>
-                    <mat-form-field appearance="outline" class="modal-selector w-full" subscriptSizing="dynamic">
-                        <mat-label>Seleccionar tipos...</mat-label>
-                        <mat-select multiple [value]="tiposAtraccionSeleccionados" (selectionChange)="tiposAtraccionSeleccionados = $event.value" [disabled]="cargandoCatalogoAtracciones">
-                            <mat-select-trigger>
-                                <span class="flex flex-wrap items-center gap-2 py-1">
-                                    @for (tipoId of tiposAtraccionSeleccionados; track tipoId) {
-                                    @if (obtenerTipoAtraccionSeleccionado(tipoId); as tipo) {
-                                    <button type="button" class="modal-selector__chip" (click)="$event.stopPropagation(); quitarTipoAtraccion(tipoId)">{{ tipo.nombre }} <mat-icon class="icon-size-4">close</mat-icon></button>
-                                    }
-                                    }
-                                </span>
-                            </mat-select-trigger>
-                            @for (tipo of catalogoAtracciones; track tipo.id) {
-                            <mat-option [value]="tipo.id">{{ tipo.nombre }}</mat-option>
-                            }
-                        </mat-select>
-                    </mat-form-field>
-                </div>
-
-                <div class="space-y-3">
-                    <label class="block text-base font-semibold text-on-surface dark:text-white">Destino</label>
-                    <mat-form-field appearance="outline" class="modal-selector w-full" subscriptSizing="dynamic">
-                        <mat-label>Seleccionar destinos...</mat-label>
-                        <mat-select multiple [value]="destinosSeleccionados" (selectionChange)="destinosSeleccionados = $event.value">
-                            <mat-select-trigger>
-                                <span class="flex flex-wrap items-center gap-2 py-1">
-                                    @for (destinoId of destinosSeleccionados; track destinoId) {
-                                    @if (obtenerDestinoSeleccionado(destinoId); as destino) {
-                                    <button type="button" class="modal-selector__chip" (click)="$event.stopPropagation(); quitarDestinoSeleccionado(destinoId)">{{ destino.destino }} <mat-icon class="icon-size-4">close</mat-icon></button>
-                                    }
-                                    }
-                                </span>
-                            </mat-select-trigger>
-                            @for (destino of destinosParaSeleccion; track destino.id) {
-                            <mat-option [value]="destino.id">{{ destino.destino }}@if (destino.destino_padre) {, {{ destino.destino_padre }}}</mat-option>
-                            }
-                        </mat-select>
-                    </mat-form-field>
-                </div>
-            </div>
-
-            <footer class="flex flex-col-reverse gap-3 border-t border-outline-variant px-7 py-5 dark:border-gray-800 sm:flex-row sm:justify-end sm:px-9">
-                <button mat-stroked-button type="button" class="!min-w-34 !rounded-full !px-7" (click)="cerrarModalAgregarAtracciones()">Cancelar</button>
-                <button mat-flat-button color="primary" type="button" class="!min-w-34 !rounded-full !px-7" [disabled]="!tiposAtraccionSeleccionados.length || !destinosSeleccionados.length || cargandoCatalogoAtracciones" (click)="continuarConfiguracionAtracciones()">
-                    Continuar
-                    <mat-icon class="ml-2 icon-size-5">arrow_forward</mat-icon>
-                </button>
-            </footer>
-        </section>
+    <div class="catalogo-hero__stat" aria-live="polite">
+      <strong>{{ total | number }}</strong>
+      <span>destinos encontrados</span>
     </div>
+  </section>
+
+  <section class="catalogo-switcher" aria-label="Tipo de catálogo">
+    <button type="button" class="catalogo-switcher__item" [class.catalogo-switcher__item--active]="tipoVisible === 'NACIONAL'" (click)="seleccionarTipo('NACIONAL')">
+      <mat-icon [svgIcon]="'heroicons_outline:map-pin'"></mat-icon>
+      <span>Nacionales</span>
+      <small>Por división</small>
+    </button>
+    <button type="button" class="catalogo-switcher__item" [class.catalogo-switcher__item--active]="tipoVisible === 'INTERNACIONAL'" (click)="seleccionarTipo('INTERNACIONAL')">
+      <mat-icon [svgIcon]="'heroicons_outline:globe-alt'"></mat-icon>
+      <span>Internacionales</span>
+      <small>Por región y país</small>
+    </button>
+    <div class="catalogo-switcher__context">{{ textoUbicacion }}</div>
+  </section>
+
+  <section class="catalogo-filtros" aria-label="Filtros del catálogo">
+    @if (tipoVisible === 'NACIONAL') {
+      <app-tp-multiselect
+        label="División de área"
+        placeholder="Todas las divisiones"
+        searchPlaceholder="Buscar división"
+        [options]="divisionesOpciones"
+        [ngModel]="divisionAreaIds"
+        (ngModelChange)="seleccionarDivision($event)">
+      </app-tp-multiselect>
+    } @else {
+      <app-tp-multiselect
+        label="Región"
+        placeholder="Todas las regiones"
+        searchPlaceholder="Buscar región"
+        [options]="regionesOpciones"
+        [ngModel]="regionIds"
+        (ngModelChange)="seleccionarRegion($event)">
+      </app-tp-multiselect>
+      <app-tp-multiselect
+        label="País"
+        placeholder="Todos los países"
+        searchPlaceholder="Buscar país"
+        [options]="paisesOpciones"
+        [ngModel]="paisIds"
+        (ngModelChange)="seleccionarPais($event)">
+      </app-tp-multiselect>
     }
 
-    <div class="mx-6 mb-2 mt-3 flex items-center gap-2">
-        <button mat-stroked-button [color]="tipoVisible === 'NACIONAL' ? 'primary' : undefined"
-            (click)="seleccionarTipo('NACIONAL')">
-            Nacionales
-        </button>
-        <button mat-stroked-button [color]="tipoVisible === 'INTERNACIONAL' ? 'primary' : undefined"
-            (click)="seleccionarTipo('INTERNACIONAL')">
-            Internacionales
-        </button>
-    </div>
-    @if (tipoVisible === 'INTERNACIONAL') {
-    <div class="mx-6 mb-2 grid grid-cols-1 gap-3 md:grid-cols-3">
-        <mat-form-field>
-            <mat-label>Continente</mat-label>
-            <mat-select [value]="filtroContinenteId" (valueChange)="seleccionarContinente($event)">
-                <mat-option [value]="null">Todos los continentes</mat-option>
-                @for (continente of continentes; track continente.id) {
-                <mat-option [value]="continente.id">{{ continente.nombre }}</mat-option>
-                }
-            </mat-select>
-        </mat-form-field>
+    <app-tp-search-input
+      class="catalogo-filtros__buscador"
+      label="Buscar destino"
+      placeholder="Ej. Acapulco de Juárez"
+      searchAriaLabel="Buscar destinos"
+      [(ngModel)]="busqueda"
+      (search)="buscar()">
+    </app-tp-search-input>
 
-        <mat-form-field class="md:col-span-2">
-            <mat-label>Pais</mat-label>
-            <mat-select [value]="filtroPais" (valueChange)="seleccionarPais($event)">
-                <mat-option [value]="null">Todos los paises</mat-option>
-                @for (pais of paisesDisponibles; track pais) {
-                <mat-option [value]="pais">{{ pais }}</mat-option>
-                }
-            </mat-select>
-        </mat-form-field>
-    </div>
+    @if (tieneFiltrosActivos) {
+      <button mat-icon-button type="button" class="catalogo-filtros__limpiar" aria-label="Limpiar filtros" matTooltip="Limpiar filtros" (click)="limpiarFiltros()">
+        <mat-icon [svgIcon]="'heroicons_outline:arrow-path'"></mat-icon>
+      </button>
     }
+  </section>
 
-    <div class="mx-6 mb-2">
-        <mat-form-field class="w-full sm:w-72" subscriptSizing="dynamic">
-            <mat-icon matPrefix class="icon-size-5" [svgIcon]="'heroicons_solid:magnifying-glass'"></mat-icon>
-            <input matInput placeholder="Buscar destino..." [ngModel]="filtroBusqueda" (ngModelChange)="onBusquedaChange($event)" />
-            @if (filtroBusqueda) {
-            <button matSibling mat-icon-button (click)="filtroBusqueda = ''">
-                <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
-            </button>
-            }
-        </mat-form-field>
-    </div>
+  @if (error) {
+    <section class="catalogo-mensaje catalogo-mensaje--error" role="alert">
+      <mat-icon [svgIcon]="'heroicons_outline:exclamation-triangle'"></mat-icon>
+      <span>{{ error }}</span>
+    </section>
+  }
 
-    @if (errorOrden) {
-    <div class="mx-6 mt-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
-        {{ errorOrden }}
-    </div>
+  <section class="catalogo-resultados" aria-label="Resultados del catálogo">
+    @if (cargando) {
+      <div class="catalogo-cargando" aria-live="polite">
+        <mat-spinner diameter="34"></mat-spinner>
+        <span>Consultando destinos…</span>
+      </div>
+    } @else if (!destinos.length) {
+      <div class="catalogo-vacio">
+        <mat-icon [svgIcon]="'heroicons_outline:map'"></mat-icon>
+        <h2>No hay destinos para estos filtros</h2>
+        <p>Prueba con otra búsqueda o vuelve a ver todo el catálogo.</p>
+        @if (tieneFiltrosActivos) {
+          <button mat-flat-button color="primary" type="button" (click)="limpiarFiltros()">Ver todo el catálogo</button>
+        }
+      </div>
+    } @else {
+      <div class="catalogo-tabla-wrap">
+        <table mat-table [dataSource]="destinos" class="catalogo-tabla">
+          <ng-container matColumnDef="destino">
+            <th mat-header-cell *matHeaderCellDef>Destino</th>
+            <td mat-cell *matCellDef="let item">
+              <div class="catalogo-destino">
+                <span class="catalogo-destino__marca">{{ item.destinoNombre.slice(0, 1) }}</span>
+                <div><strong>{{ item.destinoNombre }}</strong><small>#{{ item.destinoId }}</small></div>
+              </div>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="ubicacion">
+            <th mat-header-cell *matHeaderCellDef>Ubicación</th>
+            <td mat-cell *matCellDef="let item">
+              <span class="catalogo-ubicacion">{{ item.divisionAreaNombre }}</span>
+              <small>{{ item.paisNombre }} · {{ item.regionNombre }}</small>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="estado">
+            <th mat-header-cell *matHeaderCellDef>Estado</th>
+            <td mat-cell *matCellDef="let item">
+              <span class="catalogo-estado" [class.catalogo-estado--activo]="item.activo">
+                <i></i>{{ item.activo ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef><span class="sr-only">Acciones</span></th>
+            <td mat-cell *matCellDef="let item">
+              <div class="catalogo-acciones">
+                <button mat-icon-button type="button" aria-label="Editar destino {{ item.destinoNombre }}" matTooltip="Editar destino" (click)="editarDestino(item)">
+                  <mat-icon [svgIcon]="'heroicons_outline:pencil'" ></mat-icon>
+                </button>
+                <button mat-icon-button type="button" aria-label="Configurar preview de {{ item.destinoNombre }}" matTooltip="Configurar preview" (click)="editarPreview(item)">
+                  <mat-icon [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
+                </button>
+                <button mat-icon-button type="button" aria-label="Ver hoteles de {{ item.destinoNombre }}" matTooltip="Ver hoteles" (click)="verHoteles(item)">
+                  <mat-icon [svgIcon]="'heroicons_outline:building-office-2'"></mat-icon>
+                </button>
+              </div>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      </div>
+      <mat-paginator [length]="total" [pageIndex]="pageIndex" [pageSize]="pageSize" [pageSizeOptions]="pageSizeOptions" (page)="cambiarPagina($event)"></mat-paginator>
     }
-
-    <!-- Barra de acciones -->
-    <!-- <div 
-        class="flex shrink-0 flex-wrap items-center justify-between gap-4 border-b bg-card px-6 py-3 dark:border-gray-700">
-
-        <div class="flex rounded-lg border border-gray-200 bg-gray-100 p-1 dark:border-gray-700 dark:bg-gray-800">
-            <button type="button"
-                class="rounded-md bg-white px-4 py-1.5 text-xs font-semibold text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white">
-                Todos
-            </button>
-
-            <button type="button"
-                class="rounded-md px-4 py-1.5 text-xs font-semibold text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
-                Nacionales
-            </button>
-
-            <button type="button"
-                class="rounded-md px-4 py-1.5 text-xs font-semibold text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
-                Internacionales
-            </button>
-        </div>
-
-        <div class="flex items-center gap-3">
-
-            <mat-form-field class="fuse-mat-dense fuse-mat-rounded min-w-64" subscriptSizing="dynamic">
-                <mat-icon matPrefix class="icon-size-5" [svgIcon]="'heroicons_solid:magnifying-glass'">
-                </mat-icon>
-
-                <input matInput placeholder="Buscar destino..." />
-            </mat-form-field>
-
-            <button mat-stroked-button class="rounded-md">
-                <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:funnel'">
-                </mat-icon>
-            </button>
-        </div>
-    </div> -->
-
-    <!-- Tabla -->
-    <div class="m-3 flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl bg-card">
-
-        <!-- <table class="w-full min-w-[900px] border-separate border-spacing-0 text-left">
-
-            <thead class="sticky top-0 z-20 bg-gray-50 shadow dark:bg-gray-800">
-                <tr>
-                    <th class="w-24 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
-                        ID
-                    </th>
-
-                    <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
-                        Nombre
-                    </th>
-
-                    <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
-                        Categoría
-                    </th>
-
-                    <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
-                        Región
-                    </th>
-
-                    <th class="w-32 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
-                        Estatus
-                    </th>
-
-                    <th class="w-24 px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
-                        Hoteles
-                    </th>
-
-                    <th class="w-36 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
-                        Actualizado
-                    </th>
-
-                    <th class="w-16 px-4 py-3"></th>
-                </tr>
-            </thead>
-
-            <tbody class="divide-y divide-gray-200 bg-white text-sm dark:divide-gray-700 dark:bg-gray-900">
-
-                <tr class="group cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
-                    <td class="px-4 py-3 font-mono text-xs text-gray-500">
-                        DST-8421
-                    </td>
-
-                    <td class="px-4 py-3 font-semibold text-gray-900 dark:text-white">
-                        Kyoto
-                    </td>
-
-                    <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
-                        Internacionales
-                    </td>
-
-                    <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
-                        Japan, Asia
-                    </td>
-
-                    <td class="px-4 py-3">
-                        <span
-                            class="inline-flex items-center rounded-full border border-green-200 bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-700">
-                            Publicado
-                        </span>
-                    </td>
-
-                    <td class="px-4 py-3 text-right font-mono text-xs text-gray-700 dark:text-gray-300">
-                        142
-                    </td>
-
-                    <td class="px-4 py-3 text-xs text-gray-500">
-                        Hace 2 horas
-                    </td>
-
-                    <td class="px-4 py-3 text-right">
-                        <button
-                            mat-icon-button
-                            class="opacity-0 transition-opacity group-hover:opacity-100">
-                            <mat-icon
-                                class="icon-size-5"
-                                [svgIcon]="'heroicons_outline:pencil-square'">
-                            </mat-icon>
-                        </button>
-                    </td>
-                </tr>
-
-                <tr class="group cursor-pointer bg-gray-50/50 transition-colors hover:bg-gray-100 dark:bg-gray-800/30 dark:hover:bg-gray-800">
-                    <td class="px-4 py-3 font-mono text-xs text-gray-500">
-                        DST-8422
-                    </td>
-
-                    <td class="px-4 py-3 font-semibold text-gray-900 dark:text-white">
-                        Cancún
-                    </td>
-
-                    <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
-                        Nacionales
-                    </td>
-
-                    <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
-                        Quintana Roo, México
-                    </td>
-
-                    <td class="px-4 py-3">
-                        <span
-                            class="inline-flex items-center rounded-full border border-green-200 bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-700">
-                            Publicado
-                        </span>
-                    </td>
-
-                    <td class="px-4 py-3 text-right font-mono text-xs text-gray-700 dark:text-gray-300">
-                        328
-                    </td>
-
-                    <td class="px-4 py-3 text-xs text-gray-500">
-                        Ayer
-                    </td>
-
-                    <td class="px-4 py-3 text-right">
-                        <button
-                            mat-icon-button
-                            class="opacity-0 transition-opacity group-hover:opacity-100">
-                            <mat-icon
-                                class="icon-size-5"
-                                [svgIcon]="'heroicons_outline:pencil-square'">
-                            </mat-icon>
-                        </button>
-                    </td>
-                </tr>
-
-                <tr class="group cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
-                    <td class="px-4 py-3 font-mono text-xs text-gray-500">
-                        DST-8423
-                    </td>
-
-                    <td class="px-4 py-3 font-semibold text-gray-900 dark:text-white">
-                        Paris
-                    </td>
-
-                    <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
-                        Internacionales
-                    </td>
-
-                    <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
-                        Île-de-France, France
-                    </td>
-
-                    <td class="px-4 py-3">
-                        <span
-                            class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
-                            Borrador
-                        </span>
-                    </td>
-
-                    <td class="px-4 py-3 text-right font-mono text-xs text-gray-700 dark:text-gray-300">
-                        0
-                    </td>
-
-                    <td class="px-4 py-3 text-xs text-gray-500">
-                        25 Oct 2023
-                    </td>
-
-                    <td class="px-4 py-3 text-right">
-                        <button
-                            mat-icon-button
-                            class="opacity-0 transition-opacity group-hover:opacity-100">
-                            <mat-icon
-                                class="icon-size-5"
-                                [svgIcon]="'heroicons_outline:pencil-square'">
-                            </mat-icon>
-                        </button>
-                    </td>
-                </tr>
-
-            </tbody>
-        </table> -->
-        <div class="min-h-0 flex-1 overflow-auto">
-            <table mat-table [dataSource]="dataSourcePaginada" cdkDropList [cdkDropListData]="dataSourcePaginada"
-                [cdkDropListDisabled]="!draggableEnabled" (cdkDropListDropped)="drop($event)">
-
-                <ng-container matColumnDef="orden">
-                    <th mat-header-cell *matHeaderCellDef>Orden</th>
-                    <td mat-cell *matCellDef="let item; let i = index">
-                        {{ i + 1 }}
-                    </td>
-                </ng-container>
-
-                <ng-container matColumnDef="destino">
-                    <th mat-header-cell *matHeaderCellDef>Destino</th>
-                    <td mat-cell *matCellDef="let item">
-                        {{ item.destino }}@if(item.destino_padre){, {{ item.destino_padre}}}
-                    </td>
-                </ng-container>
-
-                <ng-container matColumnDef="tipoDestino">
-                    <th mat-header-cell *matHeaderCellDef>Tipo Destino</th>
-                    <td mat-cell *matCellDef="let item">
-                        {{ item.tipo_destino }}
-                    </td>
-                </ng-container>
-
-                <ng-container matColumnDef="activo">
-                    <th mat-header-cell *matHeaderCellDef>Estado</th>
-                    <td mat-cell *matCellDef="let item">
-                        <app-status-badge [status]="item.activo ? 'ACTIVO' : 'INACTIVO'"></app-status-badge>
-                    </td>
-                </ng-container>
-
-                <ng-container matColumnDef="acciones">
-                    <th mat-header-cell *matHeaderCellDef>Acciones</th>
-                    <td mat-cell *matCellDef="let item">
-                        <div class="flex items-center justify-center gap-2">
-                            <!-- <button mat-icon-button [routerLink]="['/detalle-destino', item.id]" [matTooltip]="'Ver detalle'">
-                                <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:eye'"></mat-icon>
-                            </button> -->
-
-                            <button mat-icon-button [matTooltip]="'Ver hoteles'" (click)="verHoteles(item)">
-                                <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:building-office-2'"></mat-icon>
-                            </button>
-
-                            <button mat-icon-button [routerLink]="['/admin/destinos/configurar-destinos/editar', item.id]"
-                                [matTooltip]="'Editar destino'">
-                                <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
-                            </button>
-
-                            <button mat-icon-button [routerLink]="['/admin/destinos/configurar-destinos/preview', item.id]"
-                                [matTooltip]="'Editar preview'">
-                                <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:eye'"></mat-icon>
-                            </button>
-
-                            <button mat-icon-button [matTooltip]="'Reordenar'" cdkDragHandle
-                                [disabled]="!draggableEnabled">
-                                <mat-icon class="cursor-move" [class.opacity-30]="!draggableEnabled">drag_indicator</mat-icon>
-                            </button>
-                        </div>
-                    </td>
-                </ng-container>
-
-                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-
-                <tr mat-row [cdkDrag]="draggableEnabled ? '' : null" *matRowDef="let row; columns: displayedColumns">
-                </tr>
-
-            </table>
-        </div>
-
-        <mat-paginator
-            class="border-t border-gray-200 bg-white"
-            [length]="dataSourceFiltrada.length"
-            [pageIndex]="pageIndex"
-            [pageSize]="pageSize"
-            [pageSizeOptions]="pageSizeOptions"
-            [showFirstLastButtons]="true"
-            (page)="cambiarPagina($event)">
-        </mat-paginator>
-    </div>
-
-    <!-- Paginación -->
-    <!-- <div class="flex h-14 shrink-0 items-center justify-between border-t bg-card px-6 dark:border-gray-700">
-
-        <div class="text-xs text-gray-500">
-            Mostrando
-            <span class="font-mono font-semibold text-gray-900 dark:text-white">1</span>
-            a
-            <span class="font-mono font-semibold text-gray-900 dark:text-white">3</span>
-            de
-            <span class="font-mono font-semibold text-gray-900 dark:text-white">2,481</span>
-            registros
-        </div>
-
-        <div class="flex items-center gap-2">
-            <button mat-icon-button>
-                <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:chevron-left'">
-                </mat-icon>
-            </button>
-
-            <div class="flex items-center gap-2 text-xs text-gray-500">
-                <span>Página</span>
-
-                <input
-                    class="h-8 w-12 rounded-md border border-gray-300 bg-white text-center font-mono text-xs outline-none focus:border-primary focus:ring-1 focus:ring-primary dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                    type="text" value="1" />
-
-                <span>
-                    de <span class="font-mono">414</span>
-                </span>
-            </div>
-
-            <button mat-icon-button>
-                <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:chevron-right'">
-                </mat-icon>
-            </button>
-        </div>
-    </div> -->
-
-</div>
-
-@if (mostrarModalOrdenExito) {
-<div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
-    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
-        <h3 class="text-xl font-semibold text-gray-900">Actualizacion completada</h3>
-        <p class="mt-2 text-sm text-gray-600">
-            Orden de destinos {{ tipoVisible === 'NACIONAL' ? 'nacionales' : 'internacionales' }} actualizado correctamente.
-        </p>
-
-        <div class="mt-6 flex justify-end">
-            <button mat-flat-button color="primary" (click)="cerrarModalOrdenExito()">
-                Aceptar
-            </button>
-        </div>
-    </div>
-</div>
-}
+  </section>
+</main>

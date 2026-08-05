@@ -104,6 +104,7 @@ export class CircuitosService {
 
         destinos:circuito_destinos (
           id,
+          catalogo_destino_id,
           destino_id,
           orden,
           dias,

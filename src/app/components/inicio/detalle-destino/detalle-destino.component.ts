@@ -59,9 +59,13 @@ export class DetalleDestinoComponent implements OnInit {
   slides: CarouselSlide[] = [];
 
   async ngOnInit() {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
+    const catalogoDestinoId = Number(this.route.snapshot.paramMap.get('id'));
+    if (!Number.isInteger(catalogoDestinoId) || catalogoDestinoId <= 0) {
+      this.cargarInfo();
+      return;
+    }
 
-    const informacionDestino = await this.supabase.obtenerDetalleDestino(id, getDefaultLang());
+    const informacionDestino = await this.supabase.obtenerDetalleDestino(catalogoDestinoId, getDefaultLang());
     if (!informacionDestino) {
       this.cargarInfo();
       return;
@@ -75,23 +79,25 @@ export class DetalleDestinoComponent implements OnInit {
       this.tempUnit = this.temperatureUnitsService.getUnit(this.paisCode);
     });
 
-    const coordenadas = this.extraerCoordenadasDesdeUrl(this.detallesDestino.ubicacion);
-    this.datosService.getWeather(coordenadas.lat, coordenadas.lng).subscribe(weather => {
-      this.datosClima = weather;
-    });
+    const coordenadas = this.extraerCoordenadasDesdeUrl(this.detallesDestino?.ubicacion);
+    if (coordenadas) {
+      this.datosService.getWeather(coordenadas?.lat, coordenadas?.lng).subscribe(weather => {
+        this.datosClima = weather;
+      });
+    }
 
     const datosHotel = {
-      ubicacion: this.detallesDestino.ubicacion,
-      nombre_hotel: this.detallesDestino.nombre,
+      ubicacion: this.detallesDestino?.ubicacion,
+      nombre_hotel: this.detallesDestino?.nombre,
       vistaLejana: true,
     }
 
     this._translocoService.langChanges$.subscribe(async (activeLang) => {
-      const informacionDestino = await this.supabase.obtenerDetalleDestino(id, activeLang);
+      const informacionDestino = await this.supabase.obtenerDetalleDestino(catalogoDestinoId, activeLang);
       this.detallesDestino = informacionDestino[0];
       this.construirSlidesCarrusel();
     });
-    
+
     sessionStorage.setItem('hotel', JSON.stringify(datosHotel))
   }
 
@@ -195,7 +201,7 @@ export class DetalleDestinoComponent implements OnInit {
 
   extraerCoordenadasDesdeUrl(url: string): { lat: number, lng: number } | null {
     const regex = /!3d([-0-9.]+)!4d([-0-9.]+)/;
-    const match = url.match(regex);
+    const match = url?.match(regex);
 
     if (match) {
       const lat = parseFloat(match[1]);

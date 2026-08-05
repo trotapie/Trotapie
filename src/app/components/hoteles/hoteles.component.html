@@ -139,31 +139,33 @@
                     <div *ngIf="tipoDestino === 1" class="flex min-w-0 flex-auto flex-col mt-2">
                         <div class="flex-auto p-3 sm:p-5">
 
-                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 p-6">
-                                <div *ngIf="hotelesPorCiudad.length === 0 && ciudadSeleccionada"
-                                    class="mt-12 flex flex-col items-center justify-center text-center animate-fadeIn">
+                            <div *ngIf="cargando" class="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 md:grid-cols-3" aria-live="polite" aria-label="Cargando hoteles">
+                                <div *ngFor="let item of [1, 2, 3]" class="h-48 animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-700"></div>
+                            </div>
+                            <div *ngIf="!cargando && hotelesPorCiudad.length === 0 && ciudadSeleccionada"
+                                class="mt-12 flex min-h-64 items-center justify-center text-center animate-fadeIn">
 
-                                    <div class="flex flex-col items-center justify-center bg-red-100/20 border border-red-400/40 
-                            rounded-2xl p-6 max-w-md shadow-lg backdrop-blur-sm">
+                                <div class="flex flex-col items-center justify-center rounded-2xl border border-red-400/40 bg-red-100/20 p-6 max-w-md shadow-lg backdrop-blur-sm">
 
-                                        <div
-                                            class="w-16 h-16 flex items-center justify-center rounded-full bg-red-500/20 mb-4">
-                                            <mat-icon class="text-red-500 text-4xl">hotel</mat-icon>
-                                        </div>
-
-                                        <h3 class="text-xl font-semibold text-red-500 mb-2">
-                                            {{ t('no-hoteles') }}
-
-                                        </h3>
-
-                                        <p class="text-base text-gray-400 dark:text-gray-300">
-                                            {{ t('hoteles-no-encontrados') }}
-                                            <br>
-                                            {{ t('seleccionar-nueva-ciudad') }}
-                                        </p>
-
+                                    <div
+                                        class="w-16 h-16 flex items-center justify-center rounded-full bg-red-500/20 mb-4">
+                                        <mat-icon class="text-red-500 text-4xl">hotel</mat-icon>
                                     </div>
+
+                                    <h3 class="text-xl font-semibold text-red-500 mb-2">
+                                        {{ t('no-hoteles') }}
+
+                                    </h3>
+
+                                    <p class="text-base text-gray-400 dark:text-gray-300">
+                                        {{ t('hoteles-no-encontrados') }}
+                                        <br>
+                                        {{ t('seleccionar-nueva-ciudad') }}
+                                    </p>
+
                                 </div>
+                            </div>
+                            <div *ngIf="!cargando && hotelesPorCiudad.length > 0" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 p-6">
                                 <div *ngFor="let hotel of hotelesPorCiudad">
 
                                     <fuse-card

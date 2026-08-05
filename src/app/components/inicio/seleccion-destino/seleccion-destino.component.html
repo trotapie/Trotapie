@@ -100,7 +100,7 @@
                  rounded-[1.5rem] transition-all duration-200
                  hover:bg-gray-100 dark:hover:bg-gray-700"
                                                     (click)="cargarDestinos(1); showOverlay(); closeDropdown();">
-                                                    <div class="w-12 h-12 flex items-center justify-center
+                                                     <div class="w-12 h-12 shrink-0 flex items-center justify-center
                    rounded-full overflow-hidden">
                                                         <img class="w-full h-full object-cover"
                                                             src="images/flags/MX.svg" alt="México" />
@@ -117,9 +117,9 @@
                                                     </div>
                                                 </button>
                                                 <button type="button" class="w-full group/item flex items-center gap-4 px-5 py-2
-                  rounded-[1.5rem] transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50
-                  hover:bg-gray-100 dark:hover:bg-gray-700" [disabled]="true">
-                                                    <div class="w-12 h-12 flex items-center justify-center
+                  rounded-[1.5rem] transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50" 
+                                                    (click)="cargarDestinos(2); showOverlay(); closeDropdown();" [disabled]="true">
+                                                     <div class="w-12 h-12 shrink-0 flex items-center justify-center
                    rounded-full overflow-hidden">
                                                         <img class="w-full h-full object-cover"
                                                             src="images/earth-icon.svg" alt="Internacional" />
@@ -131,6 +131,7 @@
                                                             {{ t('destinos-internacionales') }}
                                                         </span>
                                                         <span class="text-sm text-gray-500 dark:text-gray-400">
+                                                            <!-- {{ t('texto-internacionales') }} -->
                                                             {{ t('proximamente') }}
                                                         </span>
                                                     </div>
@@ -139,7 +140,7 @@
                  rounded-[1.5rem] transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50
                  hover:bg-gray-100 dark:hover:bg-gray-700" [disabled]="true"
                                                     (click)="cargarDestinos(2); showOverlay(); closeDropdown();">
-                                                    <div class="w-12 h-12 flex items-center justify-center
+                                                     <div class="w-12 h-12 shrink-0 flex items-center justify-center
                    rounded-full overflow-hidden">
                                                         <img class="w-full h-full object-cover"
                                                             src="images/cruceros.svg" alt="Internacional" />
@@ -242,7 +243,7 @@
                                         }
                                         <span
                                             class="font-bold group-hover:text-brand-green transition-colors text-xl text-[#1a1a1a]">
-                                            {{tipoDestino === 1 ? item.nombre : item.nombrePadre }}</span>
+                                            {{ item.nombre }}</span>
                                     </div>
                                     <div
                                         class="flex items-center gap-1 text-[#006400] text-sm font-medium shrink-0 leading-none mr-2">

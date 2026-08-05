@@ -36,6 +36,7 @@ export class EditarDestinoComponent implements OnInit {
 
   destinoId!: number;
   esCreacion = false;
+  esCatalogo = false;
   cargando = true;
   guardando = false;
   error = '';
@@ -64,9 +65,14 @@ export class EditarDestinoComponent implements OnInit {
     const idRaw = this.route.snapshot.paramMap.get('id');
     const id = Number(idRaw);
     this.esCreacion = !idRaw;
+    this.esCatalogo = !this.esCreacion;
 
     try {
-      await this.cargarCatalogos(this.esCreacion ? undefined : id);
+      if (this.esCatalogo) {
+        this.configurarFormularioCatalogo();
+      } else {
+        await this.cargarCatalogos();
+      }
 
       if (this.esCreacion) {
         this.form.patchValue({
@@ -79,7 +85,7 @@ export class EditarDestinoComponent implements OnInit {
         }
 
         this.destinoId = id;
-        await this.cargarDestino(id);
+        await this.cargarDestinoCatalogo(id);
       }
 
       this.form.get('tipo_desino_id')?.valueChanges.subscribe((tipoId) => {
@@ -104,6 +110,18 @@ export class EditarDestinoComponent implements OnInit {
 
     try {
       const raw = this.form.getRawValue();
+
+      if (this.esCatalogo) {
+        await this.supabase.actualizarCatalogoDestinoAdmin(this.destinoId, {
+          nombre: (raw.nombre ?? '').trim(),
+          orden: this.parseNumber(raw.orden) ?? 0,
+          imagen_destino: this.limpiarTexto(raw.imagen_destino),
+          activo: raw.activo ?? true
+        });
+        this.mostrarModalExito = true;
+        return;
+      }
+
       const tipoId = Number(raw.tipo_desino_id);
       const esTipoDos = tipoId === 2;
       const payload = {
@@ -133,11 +151,15 @@ export class EditarDestinoComponent implements OnInit {
 
   cerrarModalExito() {
     this.mostrarModalExito = false;
-    this.router.navigate(['/admin/destinos/configurar-destinos']);
+    this.regresarAlListado();
   }
 
   regresar() {
-    this.router.navigate(['/admin/destinos/configurar-destinos']);
+    this.regresarAlListado();
+  }
+
+  private regresarAlListado() {
+    this.router.navigate(['/admin/destinos/configurar-destinos'], { queryParams: this.route.snapshot.queryParams });
   }
 
   private async cargarCatalogos(destinoId?: number) {
@@ -154,6 +176,27 @@ export class EditarDestinoComponent implements OnInit {
     this.tiposDestino = tiposDestino ?? [];
     this.continentes = continentesResponse.data ?? [];
     this.destinosPadre = destinosPadre ?? [];
+  }
+
+  private async cargarDestinoCatalogo(id: number) {
+    const data = await this.supabase.obtenerCatalogoDestinoAdmin(id);
+
+    if (!data) {
+      throw new Error('No se encontro el destino solicitado.');
+    }
+
+    this.form.patchValue({
+      nombre: data.nombre ?? '',
+      orden: data.orden ?? 0,
+      imagen_destino: data.imagen_destino ?? '',
+      activo: data.activo ?? true
+    });
+  }
+
+  private configurarFormularioCatalogo() {
+    const tipoControl = this.form.get('tipo_desino_id');
+    tipoControl?.clearValidators();
+    tipoControl?.updateValueAndValidity({ emitEvent: false });
   }
 
   private async cargarDestino(id: number) {

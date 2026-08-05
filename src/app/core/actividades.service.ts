@@ -599,7 +599,7 @@ export class ActividadesService {
   }
 
   async guardarActividadDestinoAdmin(payload: {
-    destino_id: number;
+    catalogo_destino_id: number;
     actividad_id?: number | null;
     catalogo_atraccion_id?: number | null;
     imagen_fondo: string | null;
@@ -641,7 +641,7 @@ export class ActividadesService {
     const { data: detalleExistente, error: detalleExistenteError } = await this.client
       .from('detalles_destinos')
       .select('id')
-      .eq('destino_id', payload.destino_id)
+      .eq('catalogo_destino_id', payload.catalogo_destino_id)
       .maybeSingle();
 
     if (detalleExistenteError) throw detalleExistenteError;
@@ -651,7 +651,7 @@ export class ActividadesService {
       const { data: nuevoDetalle, error: crearDetalleError } = await this.client
         .from('detalles_destinos')
         .insert({
-          destino_id: payload.destino_id,
+          catalogo_destino_id: payload.catalogo_destino_id,
           ubicacion: ''
         })
         .select('id')

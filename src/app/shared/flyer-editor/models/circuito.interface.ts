@@ -24,7 +24,9 @@ export interface CircuitoTraduccion {
 
 export interface CircuitoDestino {
   id?: number;
-  destino_id: number;
+  catalogo_destino_id: number;
+  /** Compatibilidad temporal; los nuevos circuitos no lo establecen. */
+  destino_id?: number | null;
   destino_nombre?: string;
   orden: number;
   dias: number;

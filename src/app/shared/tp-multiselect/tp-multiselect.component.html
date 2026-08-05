@@ -1,0 +1,77 @@
+<div class="tp-multiselect" [class.tp-multiselect--disabled]="disabled" [class.tp-multiselect--open]="abierto">
+  @if (label) {
+    <label class="tp-multiselect__label" [class.tp-multiselect__label--required]="required">{{ label }}</label>
+  }
+
+  <button
+    type="button"
+    class="tp-multiselect__trigger"
+    [disabled]="disabled"
+    [attr.aria-expanded]="abierto"
+    [attr.aria-haspopup]="'listbox'"
+    [attr.aria-label]="label || placeholder"
+    (click)="abierto ? cerrar() : abrir()"
+    cdkOverlayOrigin
+    #trigger="cdkOverlayOrigin">
+    <span class="tp-multiselect__value" [class.tp-multiselect__value--placeholder]="!valoresSeleccionados.length">
+      {{ textoSeleccion }}
+    </span>
+    <mat-icon [svgIcon]="abierto ? 'heroicons_outline:chevron-up' : 'heroicons_outline:chevron-down'"></mat-icon>
+  </button>
+
+  <ng-template
+    cdkConnectedOverlay
+    [cdkConnectedOverlayOrigin]="trigger"
+    [cdkConnectedOverlayOpen]="abierto"
+    [cdkConnectedOverlayHasBackdrop]="true"
+    [cdkConnectedOverlayPositions]="posiciones"
+    [cdkConnectedOverlayPush]="true"
+    [cdkConnectedOverlayFlexibleDimensions]="true"
+    (backdropClick)="cerrar()"
+    (detach)="cerrar()">
+    <section class="tp-multiselect__panel" role="listbox" [attr.aria-label]="label || placeholder" aria-multiselectable="true">
+      <div class="tp-multiselect__search">
+        <mat-icon [svgIcon]="'heroicons_outline:magnifying-glass'"></mat-icon>
+        <input
+          #searchInput
+          matInput
+          type="search"
+          [placeholder]="searchPlaceholder"
+          [value]="busqueda"
+          (input)="busqueda = $any($event.target).value"
+          (keydown.escape)="cerrar()"
+          aria-label="Filtrar opciones" />
+        @if (busqueda) {
+          <button type="button" mat-icon-button aria-label="Limpiar búsqueda" (click)="busqueda = ''; searchInput.focus()">
+            <mat-icon [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
+          </button>
+        }
+      </div>
+
+      <div class="tp-multiselect__actions">
+        <button type="button" class="tp-multiselect__action" (click)="alternarTodas()">
+          {{ todasLasVisiblesSeleccionadas ? 'Quitar visibles' : 'Seleccionar visibles' }}
+        </button>
+        <button type="button" class="tp-multiselect__action" [disabled]="!valoresSeleccionados.length" (click)="limpiar()">
+          Limpiar
+        </button>
+      </div>
+
+      <div class="tp-multiselect__options">
+        @if (opcionesFiltradas.length) {
+          @for (option of opcionesFiltradas; track trackByValue($index, option)) {
+            <mat-checkbox
+              class="tp-multiselect__option"
+              [checked]="estaSeleccionada(option.value)"
+              [disabled]="option.disabled"
+              (change)="alternar(option)">
+              {{ option.label }}
+            </mat-checkbox>
+          }
+        } @else {
+          <p class="tp-multiselect__empty">{{ emptyMessage }}</p>
+        }
+      </div>
+    </section>
+  </ng-template>
+</div>

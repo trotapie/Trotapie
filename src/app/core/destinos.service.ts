@@ -37,15 +37,43 @@ export interface DestinoCatalogo {
   division_area_id: number;
   nombre: string;
   slug?: string;
+  orden: number;
+  imagen_destino?: string | null;
   activo: boolean;
 }
 
-export interface CatalogoDestinoLegacyMap {
-  legacy_destino_id: number;
-  catalogo_destino_id: number | null;
-  division_area_id: number | null;
-  pais_id: number;
-  tipo_origen: 'nacional' | 'internacional';
+export interface DestinoCatalogoNavegable {
+  destinoId: number;
+  divisionAreaId: number;
+  paisId: number;
+  regionId: number;
+  destinoNombre: string;
+  orden: number;
+  divisionAreaNombre: string;
+  paisNombre: string;
+  regionNombre: string;
+  slug: string;
+  imagenDestino: string | null;
+  activo: boolean;
+  tipo: 'NACIONAL' | 'INTERNACIONAL';
+}
+
+export interface PaginaDestinoCatalogo {
+  items: DestinoCatalogoNavegable[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface FiltrosDestinoCatalogo {
+  tipo: 'NACIONAL' | 'INTERNACIONAL';
+  page?: number;
+  pageSize?: number;
+  regionIds?: number[];
+  paisIds?: number[];
+  divisionAreaIds?: number[];
+  busqueda?: string;
+  soloConfigurados?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -153,6 +181,32 @@ export class DestinosService {
     return data;
   }
 
+  async obtenerCatalogoDestinoAdmin(id: number) {
+    const { data, error } = await this.client
+      .from('catalogo_destinos')
+      .select('id, division_area_id, nombre, slug, orden, imagen_destino, activo')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async actualizarCatalogoDestinoAdmin(
+    id: number,
+    payload: { nombre: string; orden: number; imagen_destino: string | null; activo: boolean }
+  ) {
+    const { data, error } = await this.client
+      .from('catalogo_destinos')
+      .update(payload)
+      .eq('id', id)
+      .select('id, nombre, orden, imagen_destino, activo')
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
   async crearDestinoAdmin(
     payload: {
       nombre: string;
@@ -222,20 +276,21 @@ export class DestinosService {
     }));
   }
 
-  async obtenerPreviewDestinoAdmin(destinoId: number): Promise<IPreviewDestinoAdmin> {
+  async obtenerPreviewDestinoAdmin(catalogoDestinoId: number): Promise<IPreviewDestinoAdmin> {
     const [idiomas, destino] = await Promise.all([
       this.obtenerIdiomasPreviewAdmin(),
-      this.obtenerDestinoPorId(destinoId)
+      this.client.from('catalogo_destinos').select('id, nombre').eq('id', catalogoDestinoId).maybeSingle()
     ]);
 
-    if (!destino) {
+    if (destino.error) throw destino.error;
+    if (!destino.data) {
       throw new Error('No se encontro el destino solicitado.');
     }
 
     const { data: detalle, error: detalleError } = await this.client
       .from('detalles_destinos')
-      .select('id, ubicacion, destino_id')
-      .eq('destino_id', destinoId)
+      .select('id, ubicacion, catalogo_destino_id')
+      .eq('catalogo_destino_id', catalogoDestinoId)
       .maybeSingle();
 
     if (detalleError) throw detalleError;
@@ -461,7 +516,7 @@ export class DestinosService {
 
     const datosPreview = idiomas.map((idioma) => {
       const traduccion = traduccionesPorIdioma.get(idioma.id);
-      const nombreFallback = idioma.codigo === 'es' ? destino.nombre ?? '' : '';
+      const nombreFallback = idioma.codigo === 'es' ? destino.data.nombre ?? '' : '';
       return {
         idioma_id: idioma.id,
         nombre: traduccion?.nombre ?? nombreFallback,
@@ -499,8 +554,8 @@ export class DestinosService {
 
     return {
       detalles_destinos_id: detalleId,
-      destino_id: destinoId,
-      destino_nombre: destino.nombre ?? '',
+      destino_id: catalogoDestinoId,
+      destino_nombre: destino.data.nombre ?? '',
       ubicacion: detalle?.ubicacion ?? '',
       idiomas,
       traducciones: datosPreview,
@@ -638,7 +693,7 @@ export class DestinosService {
   }
 
   async guardarPreviewDestinoAdmin(payload: {
-    destino_id: number;
+    catalogo_destino_id: number;
     ubicacion: string | null;
     traducciones: Array<{
       idioma_id: number;
@@ -688,7 +743,7 @@ export class DestinosService {
     const { data: detalleExistente, error: detalleExistenteError } = await this.client
       .from('detalles_destinos')
       .select('id')
-      .eq('destino_id', payload.destino_id)
+      .eq('catalogo_destino_id', payload.catalogo_destino_id)
       .maybeSingle();
 
     if (detalleExistenteError) throw detalleExistenteError;
@@ -706,7 +761,7 @@ export class DestinosService {
       const { data: nuevoDetalle, error: crearDetalleError } = await this.client
         .from('detalles_destinos')
         .insert({
-          destino_id: payload.destino_id,
+          catalogo_destino_id: payload.catalogo_destino_id,
           ubicacion: payload.ubicacion
         })
         .select('id')
@@ -894,13 +949,13 @@ export class DestinosService {
   }
 
   async actualizarOrdenDatosRapidosDestinoAdmin(
-    destinoId: number,
+    catalogoDestinoId: number,
     detallesRapidos: Array<{ tipo_dato_rapido_id: number; orden: number }>
   ) {
     const { data: detalle, error: detalleError } = await this.client
       .from('detalles_destinos')
       .select('id')
-      .eq('destino_id', destinoId)
+      .eq('catalogo_destino_id', catalogoDestinoId)
       .maybeSingle();
 
     if (detalleError) throw detalleError;
@@ -924,20 +979,64 @@ export class DestinosService {
     return { updated: detallesRapidos.length };
   }
 
-  async obtenerDetalleDestino(destinoId: number, lang?: string) {
-    const { data, error } = await this.client.rpc('get_detalle_destino', {
-      p_destino_id: destinoId,
-      p_codigo: lang,
-    });
+  async obtenerDetalleDestino(catalogoDestinoId: number, lang?: string) {
+    const preview = await this.obtenerPreviewDestinoAdmin(catalogoDestinoId);
 
-    if (error) throw error;
-
-    const respuesta: any = Array.isArray(data) ? [...data] : data ? [data] : [];
-    if (!respuesta.length) {
-      return data;
+    // Una ficha pública solo existe cuando hay configuración editorial. El
+    // catálogo puede contener destinos sin contenido, pero no páginas vacías.
+    if (!preview.detalles_destinos_id) {
+      return [];
     }
 
-    try {
+    const idioma = preview.idiomas.find((item) => item.codigo === (lang ?? getDefaultLang())) ??
+      preview.idiomas.find((item) => item.codigo === 'es') ??
+      preview.idiomas[0];
+    const traduccion = preview.traducciones.find((item) => item.idioma_id === idioma?.id) ?? preview.traducciones[0];
+
+    return [{
+      catalogo_destino_id: catalogoDestinoId,
+      nombre: traduccion?.nombre || preview.destino_nombre,
+      detalle_id: preview.detalles_destinos_id,
+      ubicacion: preview.ubicacion,
+      detalle: {
+        apodo: traduccion?.apodo ?? '',
+        idioma: idioma?.codigo ?? 'es',
+        nombre: traduccion?.nombre || preview.destino_nombre,
+        descripcion_corta: traduccion?.descripcion_corta ?? '',
+        descripcion_larga: traduccion?.descripcion_larga ?? '',
+        titulo_descripcion: traduccion?.titulo_descripcion ?? ''
+      },
+      datos_rapidos: preview.detalles_rapidos.map((item) => ({
+        clave: item.clave,
+        icono: item.icono ?? '',
+        label: item.nombre,
+        orden: item.orden ?? 0,
+        valor: idioma ? item.valores[idioma.id] ?? '' : '',
+        tipo_id: item.tipo_dato_rapido_id
+      })),
+      atracciones_principales: preview.actividades
+        .map((actividad) => {
+          const contenido = idioma ? actividad.traducciones[idioma.id] : undefined;
+          const imagenes = (actividad.imagenes ?? [])
+            .filter((imagen) => imagen.activa && !!imagen.imagen_url)
+            .map((imagen) => ({
+              imagen_url: imagen.imagen_url,
+              activa: imagen.activa,
+              oscurecer_fondo: Boolean(imagen.oscurecer_fondo)
+            }));
+
+          return {
+            id: Number(actividad.id),
+            nombre: contenido?.nombre ?? '',
+            descripcion: contenido?.descripcion ?? '',
+            imagen_fondo: imagenes[0]?.imagen_url ?? actividad.imagen_seleccionada ?? actividad.imagen_fondo,
+            imagenes
+          };
+        })
+        .filter((actividad) => actividad.id > 0)
+    }];
+
+    /*
       const previewDestino = await this.obtenerPreviewDestinoAdmin(destinoId);
       const imagenesPorId = new Map<number, string>();
       const imagenesActivasPorId = new Map<number, Array<{
@@ -1017,17 +1116,16 @@ export class DestinosService {
             '';
 
           return {
-            ...actividad,
-            imagen_fondo: imagenPreview,
-            imagenes: imagenesActivas
+            id: Number(actividad.id),
+            nombre: contenido?.nombre ?? '',
+            descripcion: contenido?.descripcion ?? '',
+            imagen_fondo: imagenes[0]?.imagen_url ?? actividad.imagen_seleccionada ?? actividad.imagen_fondo,
+            imagenes
           };
         })
-      };
-    } catch (previewError) {
-      console.warn('[obtenerDetalleDestino] No se pudo resolver la galeria del preview:', previewError);
-    }
-
-    return respuesta;
+        .filter((actividad) => actividad.id > 0)
+    }];
+    */
   }
 
   async obtenerDetalleDestinoTodosIdiomas(destinoId: number) {
@@ -1122,14 +1220,15 @@ export class DestinosService {
     }));
   }
 
-  async obtenerCatalogoInternacionalPaises(regionId?: number | null): Promise<PaisCatalogo[]> {
+  async obtenerCatalogoInternacionalPaises(regionIds?: number[]): Promise<PaisCatalogo[]> {
     let query = this.client
       .from('v_catalogo_internacional_paises')
       .select('region_id, pais_id, pais_nombre, pais_iso2, pais_slug, total_divisiones, total_destinos')
       .order('pais_nombre', { ascending: true });
 
-    if (Number.isFinite(Number(regionId)) && Number(regionId) > 0) {
-      query = query.eq('region_id', Number(regionId));
+    const ids = (regionIds ?? []).filter((id) => this.esIdValido(id));
+    if (ids.length) {
+      query = query.in('region_id', ids);
     }
 
     const { data, error } = await query;
@@ -1147,64 +1246,145 @@ export class DestinosService {
   }
 
   async obtenerCatalogoInternacionalDestinosPorPais(paisId: number): Promise<DestinoCatalogo[]> {
-    const destinos = await this.obtenerCatalogoInternacionalDestinos();
-    return destinos.filter((item) => item.pais_id === paisId);
-  }
+    const pagina = await this.buscarDestinosCatalogo({
+      tipo: 'INTERNACIONAL',
+      paisIds: [paisId],
+      pageSize: 1000
+    });
 
-  async obtenerCatalogoInternacionalDestinos(): Promise<DestinoCatalogo[]> {
-    const { data, error } = await this.client
-      .from('v_catalogo_internacional_destinos')
-      .select('pais_id, division_area_id, destino_id, destino_nombre, destino_slug, activo')
-      .order('destino_nombre', { ascending: true });
-
-    if (error) throw error;
-
-    return (data ?? []).map((item: any) => ({
-      id: Number(item.destino_id),
-      pais_id: Number(item.pais_id),
-      division_area_id: Number(item.division_area_id),
-      nombre: String(item.destino_nombre ?? ''),
-      slug: String(item.destino_slug ?? ''),
-      activo: Boolean(item.activo)
+    return pagina.items.map((item) => ({
+      id: item.destinoId,
+      pais_id: item.paisId,
+      division_area_id: item.divisionAreaId,
+      nombre: item.destinoNombre,
+      orden: item.orden,
+      slug: item.slug,
+      activo: item.activo
     }));
   }
 
-  async resolverLegacyDestinoParaDivisionArea(divisionAreaId: number): Promise<CatalogoDestinoLegacyMap | null> {
-    const { data, error } = await this.client
-      .from('catalogo_destinos_legacy_map')
-      .select('legacy_destino_id, catalogo_destino_id, division_area_id, pais_id, tipo_origen')
-      .eq('division_area_id', divisionAreaId)
-      .maybeSingle();
+  async obtenerCatalogoInternacionalDestinos(): Promise<DestinoCatalogo[]> {
+    // Compatibilidad: este método ya no debe usarse para poblar listas globales.
+    const pagina = await this.buscarDestinosCatalogo({ tipo: 'INTERNACIONAL', pageSize: 1000 });
+    return pagina.items.map((item) => ({
+      id: item.destinoId,
+      pais_id: item.paisId,
+      division_area_id: item.divisionAreaId,
+      nombre: item.destinoNombre,
+      orden: item.orden,
+      slug: item.slug,
+      activo: item.activo
+    }));
+  }
 
+  async contarDestinosCatalogoAdmin(): Promise<number> {
+    const [nacionales, internacionales] = await Promise.all([
+      this.client
+        .from('v_catalogo_nacionales_destinos_admin')
+        .select('destino_id', { count: 'exact', head: true }),
+      this.client
+        .from('v_catalogo_internacional_destinos_admin')
+        .select('destino_id', { count: 'exact', head: true })
+    ]);
+
+    if (nacionales.error) throw nacionales.error;
+    if (internacionales.error) throw internacionales.error;
+
+    return (nacionales.count ?? 0) + (internacionales.count ?? 0);
+  }
+
+  async buscarDestinosCatalogo(filtros: FiltrosDestinoCatalogo): Promise<PaginaDestinoCatalogo> {
+    const page = Math.max(0, Math.floor(filtros.page ?? 0));
+    const pageSize = Math.min(100, Math.max(1, Math.floor(filtros.pageSize ?? 25)));
+    // Administración: incluye activos e inactivos para poder auditar el
+    // catálogo completo. La publicación pública usa su propia vista filtrada.
+    const vista = filtros.tipo === 'NACIONAL'
+      ? 'v_catalogo_nacionales_destinos_admin'
+      : 'v_catalogo_internacional_destinos_admin';
+
+    let query = this.client
+      .from(vista)
+      .select(
+        'region_id, region_nombre, pais_id, pais_nombre, division_area_id, division_area_nombre, destino_id, destino_nombre, destino_slug, destino_orden, activo',
+        { count: 'exact' }
+      )
+      .order('destino_orden', { ascending: true })
+      .order('destino_nombre', { ascending: true })
+      .order('destino_id', { ascending: true });
+
+    const regionIds = (filtros.regionIds ?? []).filter((id) => this.esIdValido(id));
+    const paisIds = (filtros.paisIds ?? []).filter((id) => this.esIdValido(id));
+    const divisionAreaIds = (filtros.divisionAreaIds ?? []).filter((id) => this.esIdValido(id));
+    if (regionIds.length) query = query.in('region_id', regionIds);
+    if (paisIds.length) query = query.in('pais_id', paisIds);
+    if (divisionAreaIds.length) query = query.in('division_area_id', divisionAreaIds);
+
+    const busqueda = (filtros.busqueda ?? '').trim().replace(/[,%]/g, '');
+    if (busqueda) query = query.ilike('destino_nombre', `%${busqueda}%`);
+
+    const { data, error, count } = await query.range(page * pageSize, (page + 1) * pageSize - 1);
     if (error) throw error;
-    if (!data) return null;
 
+    let items = (data ?? []).map((item: any) => this.mapearDestinoCatalogo(item, filtros.tipo));
+    if (filtros.soloConfigurados && items.length) {
+      const ids = items.map((item) => item.destinoId);
+      const { data: configurados, error: configuradosError } = await this.client
+        .from('v_catalogo_destinos_configurados')
+        .select('destino_id')
+        .in('destino_id', ids);
+      if (configuradosError) throw configuradosError;
+      const permitidos = new Set((configurados ?? []).map((item: any) => Number(item.destino_id)));
+      items = items.filter((item) => permitidos.has(item.destinoId));
+    }
+
+    return { items, total: count ?? 0, page, pageSize };
+  }
+
+  async obtenerDestinosCatalogoPublicables(tipo: 'NACIONAL' | 'INTERNACIONAL') {
+    const vista = tipo === 'NACIONAL'
+      ? 'v_catalogo_nacionales_destinos_admin'
+      : 'v_catalogo_internacional_destinos_admin';
+
+    const { data, error } = await this.client
+      .from(vista)
+      .select('destino_id, region_nombre, pais_nombre, destino_nombre, destino_orden, imagen_destino, activo')
+      .eq('activo', true)
+      .order('destino_orden', { ascending: true })
+      .order('destino_nombre', { ascending: true });
+    if (error) throw error;
+    const datos = (data ?? []).map((item: any) => ({
+      id: Number(item.destino_id),
+      catalogo_destino_id: Number(item.destino_id),
+      nombre: String(item.destino_nombre ?? ''),
+      orden: Number(item.destino_orden ?? 0),
+      imagen_destino: item.imagen_destino ?? null,
+      activo: Boolean(item.activo),
+      continente: { nombre: String(item.region_nombre ?? '') },
+      pais_nombre: String(item.pais_nombre ?? '')
+    }));
+    return datos;
+  }
+
+  private mapearDestinoCatalogo(item: any, tipo: 'NACIONAL' | 'INTERNACIONAL'): DestinoCatalogoNavegable {
     return {
-      legacy_destino_id: Number(data.legacy_destino_id),
-      catalogo_destino_id: data.catalogo_destino_id ? Number(data.catalogo_destino_id) : null,
-      division_area_id: data.division_area_id ? Number(data.division_area_id) : null,
-      pais_id: Number(data.pais_id),
-      tipo_origen: data.tipo_origen
+      destinoId: Number(item.destino_id),
+      divisionAreaId: Number(item.division_area_id),
+      paisId: Number(item.pais_id),
+      regionId: Number(item.region_id),
+      destinoNombre: String(item.destino_nombre ?? ''),
+      orden: Number(item.destino_orden ?? 0),
+      divisionAreaNombre: String(item.division_area_nombre ?? ''),
+      paisNombre: String(item.pais_nombre ?? ''),
+      regionNombre: String(item.region_nombre ?? ''),
+      slug: String(item.destino_slug ?? ''),
+      imagenDestino: item.imagen_destino ?? null,
+      activo: Boolean(item.activo),
+      tipo
     };
   }
 
-  async resolverLegacyDestinoParaCatalogoDestino(catalogoDestinoId: number): Promise<CatalogoDestinoLegacyMap | null> {
-    const { data, error } = await this.client
-      .from('catalogo_destinos_legacy_map')
-      .select('legacy_destino_id, catalogo_destino_id, division_area_id, pais_id, tipo_origen')
-      .eq('catalogo_destino_id', catalogoDestinoId)
-      .maybeSingle();
-
-    if (error) throw error;
-    if (!data) return null;
-
-    return {
-      legacy_destino_id: Number(data.legacy_destino_id),
-      catalogo_destino_id: data.catalogo_destino_id ? Number(data.catalogo_destino_id) : null,
-      division_area_id: data.division_area_id ? Number(data.division_area_id) : null,
-      pais_id: Number(data.pais_id),
-      tipo_origen: data.tipo_origen
-    };
+  private esIdValido(value: number | null | undefined): value is number {
+    return Number.isFinite(Number(value)) && Number(value) > 0;
   }
 
   private obtenerFechaMexicoHoy(): string {
