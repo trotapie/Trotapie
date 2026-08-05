@@ -1,0 +1,9 @@
+<div class="tp-textarea" [class.tp-textarea--disabled]="disabled" [class.tp-textarea--error]="error">
+  @if (label) { <label class="tp-textarea__label" [class.tp-textarea__label--required]="required">{{ label }}</label> }
+  <textarea class="tp-textarea__field" [rows]="rows" [disabled]="disabled" [placeholder]="placeholder" [value]="value"
+    [attr.maxlength]="maxLength" (input)="actualizar($any($event.target).value)" (blur)="marcarTouched()"></textarea>
+  <div class="tp-textarea__footer">
+    <span class="tp-textarea__error" role="alert">{{ error }}</span>
+    @if (maxLength) { <span class="tp-textarea__count">{{ value.length }}/{{ maxLength }}</span> }
+  </div>
+</div>

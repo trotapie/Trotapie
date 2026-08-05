@@ -1,0 +1,39 @@
+<div class="tp-select-search" [class.tp-select-search--disabled]="disabled" [class.tp-select-search--open]="abierto">
+  @if (label) {
+    <label class="tp-select-search__label" [class.tp-select-search__label--required]="required">{{ label }}</label>
+  }
+  <button type="button" class="tp-select-search__trigger" [disabled]="disabled" [attr.aria-expanded]="abierto"
+    aria-haspopup="listbox" [attr.aria-label]="label || placeholder" (click)="abierto ? cerrar() : abrir()"
+    cdkOverlayOrigin #trigger="cdkOverlayOrigin">
+    <span class="tp-select-search__value" [class.tp-select-search__value--placeholder]="valorSeleccionado === null">{{ textoSeleccion }}</span>
+    <mat-icon [svgIcon]="abierto ? 'heroicons_outline:chevron-up' : 'heroicons_outline:chevron-down'"></mat-icon>
+  </button>
+  <ng-template cdkConnectedOverlay [cdkConnectedOverlayOrigin]="trigger" [cdkConnectedOverlayOpen]="abierto"
+    [cdkConnectedOverlayHasBackdrop]="true" [cdkConnectedOverlayPositions]="posiciones" [cdkConnectedOverlayPush]="true"
+    [cdkConnectedOverlayFlexibleDimensions]="true" (backdropClick)="cerrar()" (detach)="cerrar()">
+    <section class="tp-select-search__panel" role="listbox" [attr.aria-label]="label || placeholder">
+      <div class="tp-select-search__search">
+        <mat-icon [svgIcon]="'heroicons_outline:magnifying-glass'"></mat-icon>
+        <input #searchInput matInput type="search" [placeholder]="searchPlaceholder" [value]="busqueda"
+          (input)="busqueda = $any($event.target).value" (keydown.escape)="cerrar()" aria-label="Filtrar opciones" />
+        @if (busqueda) {
+          <button type="button" mat-icon-button aria-label="Limpiar búsqueda" (click)="busqueda = ''; searchInput.focus()"><mat-icon [svgIcon]="'heroicons_outline:x-mark'"></mat-icon></button>
+        }
+      </div>
+      <div class="tp-select-search__options">
+        @if (opcionesFiltradas.length) {
+          @for (option of opcionesFiltradas; track trackByValue($index, option)) {
+            <button type="button" class="tp-select-search__option" role="option" [disabled]="option.disabled"
+              [attr.aria-selected]="sameValue(option.value, valorSeleccionado)" (click)="seleccionar(option)">
+              <span>{{ option.label }}</span>
+              @if (sameValue(option.value, valorSeleccionado)) { <mat-icon [svgIcon]="'heroicons_outline:check'"></mat-icon> }
+            </button>
+          }
+        } @else { <p class="tp-select-search__empty">{{ emptyMessage }}</p> }
+      </div>
+      @if (valorSeleccionado !== null) {
+        <button type="button" class="tp-select-search__clear" (click)="limpiar()">Limpiar selección</button>
+      }
+    </section>
+  </ng-template>
+</div>

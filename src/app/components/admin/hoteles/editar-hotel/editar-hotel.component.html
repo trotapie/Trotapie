@@ -14,8 +14,8 @@
                     </div>
 
                     <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
-                    <button mat-stroked-button type="button" class="w-full sm:w-auto" (click)="solicitarRegresar()">
-                        <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
+                    <button mat-raised-button color="warn" type="button" class="w-full text-white sm:w-auto" (click)="solicitarRegresar()">
+                        <mat-icon class="icon-size-5 text-white" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
                         Regresar
                     </button>
                     @if (esCreacion) {
@@ -26,7 +26,7 @@
                     </button>
                     }
                     <button mat-raised-button color="primary" type="submit" form="form-editar-hotel" class="w-full text-white sm:w-auto"
-                        [disabled]="guardando || !tieneCambiosPendientes">
+                        [disabled]="!puedeGuardar">
                         <mat-icon class="mr-2 icon-size-5 text-white">save</mat-icon>
                         @if (guardando) {
                         <span class="text-white">{{ esCreacion ? 'Creando...' : 'Guardando...' }}</span>
@@ -62,54 +62,36 @@
                     </div>
                 </div>
                 <div class="grid grid-cols-1 gap-x-5 gap-y-2 md:grid-cols-2 lg:grid-cols-3">
+                <app-tp-input class="w-full" label="Nombre del hotel" formControlName="nombre_hotel" [required]="true" [maxLength]="160"
+                    [error]="form.get('nombre_hotel')?.invalid && form.get('nombre_hotel')?.touched ? 'El nombre del hotel es requerido.' : ''"
+                    (blur)="traducirHotelDesdeEspanol()"></app-tp-input>
+
+                <app-tp-input class="w-full" label="Orden" type="number" formControlName="orden" [min]="0"
+                    [error]="form.get('orden')?.invalid && form.get('orden')?.touched ? 'El orden debe ser un numero mayor o igual a 0.' : ''"></app-tp-input>
+
                 <mat-form-field class="w-full">
-                    <mat-label>Nombre del hotel</mat-label>
-                    <input matInput formControlName="nombre_hotel" maxlength="160" (blur)="traducirHotelDesdeEspanol()" />
-                    @if (form.get('nombre_hotel')?.invalid && form.get('nombre_hotel')?.touched) {
-                    <mat-error>El nombre del hotel es requerido.</mat-error>
+                    <mat-label>Tipo de destino</mat-label>
+                    <mat-select tpSelect formControlName="tipo_catalogo" (valueChange)="cambiarTipoCatalogo($event)">
+                        <mat-option [value]="null">Selecciona un tipo</mat-option>
+                        <mat-option value="NACIONAL">Nacional</mat-option>
+                        <mat-option value="INTERNACIONAL">Internacional</mat-option>
+                    </mat-select>
+                    @if (esCreacion && form.get('tipo_catalogo')?.invalid && form.get('tipo_catalogo')?.touched) {
+                    <mat-error>El tipo de destino es requerido.</mat-error>
                     }
                 </mat-form-field>
 
-                <mat-form-field class="w-full">
-                    <mat-label>Orden</mat-label>
-                    <input matInput type="number" min="0" formControlName="orden" />
-                    @if (form.get('orden')?.invalid && form.get('orden')?.touched) {
-                    <mat-error>El orden debe ser un numero mayor o igual a 0.</mat-error>
-                    }
-                </mat-form-field>
+                <app-tp-select-search class="w-full" label="Destino" [options]="destinosOpciones" [required]="esCreacion"
+                    [placeholder]="form.get('tipo_catalogo')?.value ? 'Selecciona un destino' : 'Selecciona primero un tipo'"
+                    formControlName="catalogo_destino_id"
+                    [error]="esCreacion && form.get('catalogo_destino_id')?.invalid && form.get('catalogo_destino_id')?.touched ? 'El destino es requerido.' : ''"></app-tp-select-search>
 
-                <mat-form-field class="w-full">
-                    <mat-label>Destino</mat-label>
-                    <mat-select formControlName="destino_id">
-                        @for (destino of destinos; track destino.id) {
-                        <mat-option [value]="destino.id">{{ destino.nombre }}</mat-option>
-                        }
-                    </mat-select>
-                    @if (form.get('destino_id')?.invalid && form.get('destino_id')?.touched) {
-                    <mat-error>El destino es requerido.</mat-error>
-                    }
-                </mat-form-field>
+                <app-tp-select-search class="w-full" label="Descuento" formControlName="descuento_id" [options]="descuentosOpciones"
+                    (selectionChange)="onDescuentoChange($event === 0 ? null : $event)"></app-tp-select-search>
 
-                <mat-form-field class="w-full">
-                    <mat-label>Descuento</mat-label>
-                    <mat-select formControlName="descuento_id" (valueChange)="onDescuentoChange($event)">
-                        <mat-option [value]="null">Sin descuento</mat-option>
-                        @for (descuento of descuentos; track descuento.id) {
-                        <mat-option [value]="descuento.id">{{ descuento.tipo_descuento }}</mat-option>
-                        }
-                    </mat-select>
-                </mat-form-field>
-
-                <mat-form-field class="w-full">
-                    <mat-label>Regimen principal</mat-label>
-                    <mat-select formControlName="regimen_principal_id"
-                        (valueChange)="onRegimenPrincipalChange($event)">
-                        <mat-option [value]="null">Sin regimen principal</mat-option>
-                        @for (regimen of regimenes; track regimen.id) {
-                        <mat-option [value]="regimen.id">{{ regimen.descripcion }}</mat-option>
-                        }
-                    </mat-select>
-                </mat-form-field>
+                <app-tp-select-search class="w-full" label="Regimen principal" formControlName="regimen_principal_id" [options]="regimenesOpciones"
+                    [required]="esCreacion" [error]="esCreacion && form.get('regimen_principal_id')?.invalid && form.get('regimen_principal_id')?.touched ? 'El regimen principal es requerido.' : ''"
+                    (selectionChange)="onRegimenPrincipalChange($event === 0 ? null : $event)"></app-tp-select-search>
 
                 <mat-form-field class="w-full">
                     <mat-label>Estrellas</mat-label>
@@ -119,10 +101,8 @@
                     }
                 </mat-form-field>
 
-                <mat-form-field class="w-full md:col-span-2 lg:col-span-3">
-                    <mat-label>Descripcion</mat-label>
-                    <textarea matInput rows="5" formControlName="descripcion" (blur)="traducirHotelDesdeEspanol()"></textarea>
-                </mat-form-field>
+                <app-tp-textarea class="w-full md:col-span-2 lg:col-span-3" label="Descripcion" formControlName="descripcion" [rows]="5"
+                    (blur)="traducirHotelDesdeEspanol()"></app-tp-textarea>
                 </div>
             </section>
 
@@ -136,10 +116,8 @@
                 </div>
             <div class="grid w-full grid-cols-1 gap-5 lg:grid-cols-2">
                 <div class="space-y-2">
-                    <mat-form-field class="w-full">
-                        <mat-label>Ubicacion</mat-label>
-                        <input matInput formControlName="ubicacion" />
-                    </mat-form-field>
+                    <app-tp-input class="w-full" label="Ubicacion" placeholder="Enlace de Google Maps" formControlName="ubicacion" [required]="esCreacion"
+                        [error]="esCreacion && form.get('ubicacion')?.invalid && form.get('ubicacion')?.touched ? 'La ubicacion es requerida.' : ''"></app-tp-input>
 
                     @if (form.get('ubicacion')?.value) {
                     <div class="preview-panel">
@@ -170,19 +148,14 @@
                 </div>
 
                 <div class="space-y-2">
-                    <mat-form-field class="w-full">
-                        <mat-label>Imagen de fondo (URL)</mat-label>
-                        <input matInput formControlName="fondo" />
-                        <button
-                            mat-icon-button
-                            matSuffix
-                            type="button"
-                            color="accent"
-                            [matTooltip]="'Agregar fondo desde drive'"
-                            (click)="abrirModalAgregarFondoDesdeDrive()">
+                    <div class="flex items-end gap-2">
+                        <app-tp-input class="min-w-0 flex-1" label="Imagen de fondo (URL)" placeholder="https://..." formControlName="fondo" [required]="esCreacion"
+                            [error]="esCreacion && form.get('fondo')?.invalid && form.get('fondo')?.touched ? 'La imagen de fondo es requerida.' : ''"></app-tp-input>
+                        <button mat-icon-button type="button" color="accent" [matTooltip]="'Agregar fondo desde drive'"
+                            (click)="abrirModalAgregarFondoDesdeDrive()" aria-label="Agregar fondo desde Drive">
                             <mat-icon class="icon-size-5">add_photo_alternate</mat-icon>
                         </button>
-                    </mat-form-field>
+                    </div>
 
                     <div class="preview-panel">
                         <div class="mb-2 flex min-h-10 items-center justify-between gap-3">
@@ -559,7 +532,7 @@
             <button mat-stroked-button type="button" (click)="cerrarModalCambiosPendientes()">Cancelar</button>
             <button mat-stroked-button type="button" (click)="descartarCambiosYRegresar()">Regresar sin guardar</button>
             <button mat-flat-button color="primary" class="text-white" type="button"
-                [disabled]="guardando || !tieneCambiosPendientes"
+                [disabled]="!puedeGuardar"
                 (click)="guardarCambiosPendientesYRegresar()">
                 Guardar cambios
             </button>

@@ -4,7 +4,12 @@ import { FormBuilder, Validators } from '@angular/forms';
 import * as L from 'leaflet';
 import { Subscription } from 'rxjs';
 import { MaterialModule } from 'app/shared/material.module';
+import { TpInputComponent } from 'app/shared/tp-input/tp-input.component';
+import { TpSelectSearchComponent, TpSelectSearchOption } from 'app/shared/tp-select-search/tp-select-search.component';
+import { TpTextareaComponent } from 'app/shared/tp-textarea/tp-textarea.component';
+import { TpSelectDirective } from 'app/shared/directives/tp-select.directive';
 import { SupabaseService } from 'app/core/supabase.service';
+import { DestinosService } from 'app/core/destinos.service';
 import {
   FolderImageManagerComponent,
   FolderImageManagerFolder,
@@ -18,6 +23,11 @@ interface IDestinoAdmin {
   tipo_desino_id: number;
   destino_padre_id: number | null;
   continente_id?: number | null;
+}
+
+interface IDestinoCatalogoAdmin {
+  id: number;
+  nombre: string;
 }
 
 interface IRegimenAdmin {
@@ -71,7 +81,7 @@ interface IImagenEditable {
 @Component({
   selector: 'app-editar-hotel',
   standalone: true,
-  imports: [MaterialModule, FolderImageManagerComponent],
+  imports: [MaterialModule, FolderImageManagerComponent, TpInputComponent, TpSelectDirective, TpSelectSearchComponent, TpTextareaComponent],
   templateUrl: './editar-hotel.component.html',
   styleUrl: './editar-hotel.component.scss'
 })
@@ -86,6 +96,7 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly supabase = inject(SupabaseService);
+  private readonly destinosService = inject(DestinosService);
   private readonly fb = inject(FormBuilder);
   @ViewChild('ubicacionMapPreview') private ubicacionMapElement?: ElementRef<HTMLDivElement>;
   private ubicacionSub?: Subscription;
@@ -106,6 +117,7 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
   mostrarModalAsignarTipoImagenes = false;
 
   destinos: IDestinoAdmin[] = [];
+  destinosCatalogo: IDestinoCatalogoAdmin[] = [];
   regimenes: IRegimenAdmin[] = [];
   actividades: IActividadAdmin[] = [];
   tiposHabitacion: ITipoHabitacionAdmin[] = [];
@@ -151,7 +163,9 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
     descripcion: [''],
     fondo: [''],
     descuento_id: [null as number | null],
-    destino_id: [null as number | null, [Validators.required]],
+    destino_id: [null as number | null],
+    catalogo_destino_id: [{ value: null as number | null, disabled: true }],
+    tipo_catalogo: [null as 'NACIONAL' | 'INTERNACIONAL' | null],
     estrellas: [null as number | null, [Validators.min(0), Validators.max(5)]],
     ubicacion: [''],
     regimen_principal_id: [null as number | null]
@@ -163,6 +177,18 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     return this.serializarEstadoActual() !== this.snapshotEstadoInicial;
+  }
+
+  get puedeGuardar(): boolean {
+    if (this.guardando || this.form.invalid) {
+      return false;
+    }
+
+    const destinoId = Number(this.form.get('destino_id')?.value);
+    const catalogoDestinoId = Number(this.form.get('catalogo_destino_id')?.value);
+    return this.esCreacion
+      ? Number.isFinite(catalogoDestinoId)
+      : Number.isFinite(destinoId) || Number.isFinite(catalogoDestinoId);
   }
 
   desplazarASeccion(id: string): void {
@@ -210,7 +236,7 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
       this.tiposHabitacion = (tiposHabitacion ?? []) as ITipoHabitacionAdmin[];
 
       if (this.esCreacion) {
-        this.prellenarDestinoDesdeContexto();
+        this.configurarValidacionesCreacion();
         this.actualizarPreviewUbicacion();
         this.marcarEstadoGuardado();
         return;
@@ -227,6 +253,11 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
         throw new Error('No se encontro el hotel solicitado.');
       }
 
+      const tipoCatalogo = (this.route.snapshot.queryParamMap.get('tipo') ?? '').toUpperCase();
+      if (tipoCatalogo === 'NACIONAL' || tipoCatalogo === 'INTERNACIONAL') {
+        await this.cambiarTipoCatalogo(tipoCatalogo);
+      }
+
       this.form.patchValue({
         nombre_hotel: detalleHotel.nombre_hotel ?? '',
         orden: detalleHotel.orden ?? null,
@@ -234,6 +265,7 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
         fondo: detalleHotel.fondo ?? '',
         descuento_id: this.parseNumber(detalleHotel.descuento_id),
         destino_id: detalleHotel.destino_id ?? null,
+        catalogo_destino_id: this.parseNumber(detalleHotel.catalogo_destino_id),
         estrellas: detalleHotel.estrellas ?? null,
         ubicacion: detalleHotel.ubicacion ?? '',
         regimen_principal_id: detalleHotel.regimen_id ?? null
@@ -418,7 +450,7 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
     this.tiposHabitacionSeleccionados.delete(id);
   }
 
-  onRegimenPrincipalChange(regimenId: number | null) {
+  onRegimenPrincipalChange(regimenId: number | string | null) {
     const id = this.parseNumber(regimenId);
     this.form.patchValue(
       {
@@ -652,6 +684,18 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
 
   get totalImagenesSeleccionadas(): number {
     return this.imagenesSeleccionadas.size;
+  }
+
+  get destinosOpciones(): TpSelectSearchOption[] {
+    return this.destinosCatalogo.map((destino) => ({ value: destino.id, label: destino.nombre }));
+  }
+
+  get descuentosOpciones(): TpSelectSearchOption[] {
+    return [{ value: 0, label: 'Sin descuento' }, ...this.descuentos.map((descuento) => ({ value: descuento.id, label: descuento.tipo_descuento }))];
+  }
+
+  get regimenesOpciones(): TpSelectSearchOption[] {
+    return [{ value: 0, label: 'Sin regimen principal' }, ...this.regimenes.map((regimen) => ({ value: regimen.id, label: regimen.descripcion }))];
   }
 
   get galeriaHotel(): FolderImageManagerFolder[] {
@@ -1001,7 +1045,12 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     const destinoId = Number(this.form.get('destino_id')?.value);
-    if (!Number.isFinite(destinoId)) {
+    const catalogoDestinoId = Number(this.form.get('catalogo_destino_id')?.value);
+    if (this.esCreacion && !Number.isFinite(catalogoDestinoId)) {
+      this.error = 'Selecciona un destino valido.';
+      return;
+    }
+    if (!this.esCreacion && !Number.isFinite(destinoId) && !Number.isFinite(catalogoDestinoId)) {
       this.error = 'Selecciona un destino valido.';
       return;
     }
@@ -1047,7 +1096,8 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
         estrellas: this.parseNumber(raw.estrellas),
         fondo: this.limpiarTexto(raw.fondo),
         ubicacion: this.limpiarTexto(raw.ubicacion),
-        destino_id: destinoId,
+        destino_id: this.esCreacion ? null : destinoId,
+        catalogo_destino_id: Number.isFinite(catalogoDestinoId) ? catalogoDestinoId : undefined,
         descuento_id: descuentoId,
         regimen_id: regimenPrincipalId,
         regimen_ids: Array.from(this.regimenesSeleccionados.values()),
@@ -1257,6 +1307,8 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
         fondo: (raw.fondo ?? '').trim(),
         descuento_id: this.parseNumber(raw.descuento_id),
         destino_id: this.parseNumber(raw.destino_id),
+        catalogo_destino_id: this.parseNumber(raw.catalogo_destino_id),
+        tipo_catalogo: raw.tipo_catalogo ?? null,
         estrellas: this.parseNumber(raw.estrellas),
         ubicacion: (raw.ubicacion ?? '').trim(),
         regimen_principal_id: this.parseNumber(raw.regimen_principal_id)
@@ -1271,15 +1323,34 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
     return JSON.stringify(estado);
   }
 
-  private prellenarDestinoDesdeContexto(): void {
-    const params = this.route.snapshot.queryParamMap;
-    const destinoId = Number(params.get('destinoId'));
-    const paisId = Number(params.get('paisId'));
-    const candidatos = [destinoId, paisId].filter((id) => Number.isFinite(id) && id > 0);
-    const destinoValido = candidatos.find((id) => this.destinos.some((destino) => destino.id === id));
-    if (destinoValido) {
-      this.form.patchValue({ destino_id: destinoValido });
+  async cambiarTipoCatalogo(tipo: 'NACIONAL' | 'INTERNACIONAL' | null): Promise<void> {
+    const controlDestino = this.form.get('catalogo_destino_id');
+    this.form.patchValue({ tipo_catalogo: tipo });
+    controlDestino?.reset(null, { emitEvent: false });
+    if (tipo) {
+      controlDestino?.enable({ emitEvent: false });
+    } else {
+      controlDestino?.disable({ emitEvent: false });
     }
+    this.destinosCatalogo = tipo
+      ? (await this.destinosService.obtenerDestinosCatalogoPublicables(tipo)) as IDestinoCatalogoAdmin[]
+      : [];
+  }
+
+  private configurarValidacionesCreacion(): void {
+    const camposObligatorios = [
+      'nombre_hotel',
+      'tipo_catalogo',
+      'catalogo_destino_id',
+      'regimen_principal_id',
+      'ubicacion',
+      'fondo'
+    ];
+
+    camposObligatorios.forEach((campo) => {
+      this.form.get(campo)?.addValidators(Validators.required);
+      this.form.get(campo)?.updateValueAndValidity({ emitEvent: false });
+    });
   }
 
   private actualizarPreviewUbicacion(): void {

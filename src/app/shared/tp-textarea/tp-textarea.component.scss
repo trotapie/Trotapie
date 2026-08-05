@@ -1,0 +1,13 @@
+:host { display: block; min-width: 0; }
+.tp-textarea { min-width: 0; }
+.tp-textarea__label { display: block; margin: 0 0 .45rem .2rem; color: var(--fuse-text-secondary); font-size: .72rem; font-weight: 700; letter-spacing: .02em; }
+.tp-textarea__label--required::after { margin-left: .2rem; color: #c2413d; content: '*'; }
+.tp-textarea__field { box-sizing: border-box; display: block; width: 100%; min-height: 8rem; resize: vertical; padding: .85rem .9rem; color: var(--fuse-text-default); border: 1px solid var(--fuse-border); border-radius: 1rem; outline: 0; background: var(--fuse-bg-card); font: inherit; font-size: .875rem; line-height: 1.5; transition: border-color .18s ease, box-shadow .18s ease; }
+.tp-textarea__field::placeholder { color: var(--fuse-text-secondary); }
+.tp-textarea__field:hover:not(:disabled), .tp-textarea__field:focus { border-color: var(--primary, #00a67c); box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary, #00a67c) 20%, transparent); }
+.tp-textarea__field:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary, #00a67c) 35%, transparent); outline-offset: 2px; }
+.tp-textarea--error .tp-textarea__field { border-color: #c2413d; }
+.tp-textarea--disabled { opacity: .58; }
+.tp-textarea__footer { display: flex; min-height: 1.25rem; justify-content: space-between; gap: .75rem; padding: .3rem .2rem 0; font-size: .72rem; }
+.tp-textarea__error { color: #c2413d; }
+.tp-textarea__count { margin-left: auto; color: var(--fuse-text-secondary); }

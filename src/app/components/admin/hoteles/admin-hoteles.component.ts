@@ -3,19 +3,26 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { PageEvent } from '@angular/material/paginator';
 import { SupabaseService } from 'app/core/supabase.service';
+import { DestinoCatalogoNavegable, DestinosService, PaisCatalogo } from 'app/core/destinos.service';
 import { MaterialModule } from 'app/shared/material.module';
 
 interface IDestinoFiltro {
   id: number;
   nombre: string;
-  tipo_desino_id: number;
-  destino_padre_id: number | null;
-  continente_id?: number | null;
+  continente_id: number;
+  continente_nombre: string;
+  pais_id: number;
+  pais_nombre: string;
 }
 
 interface IRegimen {
   id: number;
   descripcion: string;
+}
+
+interface IDestinoCatalogoFiltro {
+  id: number;
+  nombre: string;
 }
 
 interface IContinente {
@@ -41,13 +48,16 @@ interface IHotelAdmin {
 })
 export class AdminHotelesComponent implements OnInit {
   private supabase = inject(SupabaseService);
+  private destinosService = inject(DestinosService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
   displayedColumns = ['nombre_hotel', 'regimen', 'orden', 'acciones'];
 
   destinos: IDestinoFiltro[] = [];
+  destinosNacionalesCatalogo: IDestinoCatalogoFiltro[] = [];
   continentes: IContinente[] = [];
+  paisesCatalogo: PaisCatalogo[] = [];
   regimenes: IRegimen[] = [];
   hoteles: IHotelAdmin[] = [];
   hotelesOriginalIds: number[] = [];
@@ -73,15 +83,15 @@ export class AdminHotelesComponent implements OnInit {
   async ngOnInit() {
     try {
       this.cargando = true;
-      const [destinos, regimenes] = await Promise.all([
-        this.supabase.obtenerDestinosAdmin(),
+      const [destinosNacionalesCatalogo, regiones, regimenes] = await Promise.all([
+        this.destinosService.obtenerDestinosCatalogoPublicables('NACIONAL'),
+        this.destinosService.obtenerCatalogoInternacionalRegiones(),
         this.supabase.obtenerRegimenesAdmin()
       ]);
 
-      this.destinos = (destinos ?? []) as IDestinoFiltro[];
+      this.destinosNacionalesCatalogo = (destinosNacionalesCatalogo ?? []) as IDestinoCatalogoFiltro[];
       this.regimenes = (regimenes ?? []) as IRegimen[];
-      const continentesResponse = await this.supabase.continentes();
-      this.continentes = (continentesResponse.data ?? []) as IContinente[];
+      this.continentes = (regiones ?? []).map((region) => ({ id: region.id, nombre: region.nombre }));
       await this.aplicarPreseleccionDesdeQueryParams();
     } catch (error: any) {
       this.error = error?.message ?? 'No se pudo cargar la informacion inicial.';
@@ -90,23 +100,18 @@ export class AdminHotelesComponent implements OnInit {
     }
   }
 
-  get destinosNacionales(): IDestinoFiltro[] {
-    return this.destinos.filter((d) => d.tipo_desino_id === 1);
+  get destinosNacionales(): IDestinoCatalogoFiltro[] {
+    return this.destinosNacionalesCatalogo;
   }
 
-  get paisesInternacionales(): IDestinoFiltro[] {
-    return this.destinos.filter(
-      (d) =>
-        d.tipo_desino_id === 2 &&
-        d.destino_padre_id === null &&
-        (this.continenteSeleccionadoId ? d.continente_id === this.continenteSeleccionadoId : true)
-    );
+  get paisesInternacionales(): IContinente[] {
+    return this.paisesCatalogo.map((pais) => ({ id: pais.id, nombre: pais.nombre }));
   }
 
   get destinosInternacionalesPorPais(): IDestinoFiltro[] {
     if (!this.paisSeleccionadoId) return [];
     return this.destinos.filter(
-      (d) => d.tipo_desino_id === 2 && d.destino_padre_id === this.paisSeleccionadoId
+      (d) => d.pais_id === this.paisSeleccionadoId
     );
   }
 
@@ -120,6 +125,8 @@ export class AdminHotelesComponent implements OnInit {
     this.continenteSeleccionadoId = null;
     this.paisSeleccionadoId = null;
     this.destinoInternacionalId = null;
+    this.paisesCatalogo = [];
+    this.destinos = [];
     this.seleccionarDestino(null);
   }
 
@@ -136,10 +143,10 @@ export class AdminHotelesComponent implements OnInit {
     try {
       this.cargandoHoteles = true;
       const hoteles = this.tipoBusqueda === 'NACIONAL'
-        ? await this.supabase.obtenerHotelesAdminPorDestino(destinoId)
+        ? await this.supabase.obtenerHotelesAdminPorCatalogoDestino(destinoId)
         : this.destinoInternacionalId
-          ? await this.supabase.obtenerHotelesAdminPorDestino(destinoId)
-          : await this.supabase.obtenerHotelesAdminPorDestinoPadre(destinoId);
+          ? await this.supabase.obtenerHotelesAdminPorCatalogoDestino(destinoId)
+          : await this.supabase.obtenerHotelesAdminPorPaisCatalogo(destinoId);
       this.hoteles = (hoteles ?? []) as IHotelAdmin[];
       this.hotelesOriginalIds = this.hoteles.map((item) => item.id);
       this.pageIndex = 0;
@@ -154,12 +161,17 @@ export class AdminHotelesComponent implements OnInit {
     this.continenteSeleccionadoId = continenteId;
     this.paisSeleccionadoId = null;
     this.destinoInternacionalId = null;
+    this.destinos = [];
+    this.paisesCatalogo = continenteId
+      ? await this.destinosService.obtenerCatalogoInternacionalPaises([continenteId])
+      : [];
     await this.seleccionarDestino(null);
   }
 
   async seleccionarPais(paisId: number | null) {
     this.paisSeleccionadoId = paisId;
     this.destinoInternacionalId = null;
+    this.destinos = paisId ? await this.obtenerDestinosInternacionalesCatalogo(paisId) : [];
     await this.seleccionarDestino(paisId);
   }
 
@@ -196,7 +208,7 @@ export class AdminHotelesComponent implements OnInit {
     const destinoId = Number(params.get('destinoId'));
 
     if (Number.isFinite(continenteId)) {
-      this.continenteSeleccionadoId = continenteId;
+      await this.seleccionarContinente(continenteId);
     }
 
     if (Number.isFinite(paisId)) {
@@ -223,6 +235,33 @@ export class AdminHotelesComponent implements OnInit {
     this.hoteles = [...this.hoteles];
     this.hayCambiosOrden = !this.tieneMismoOrden();
     this.error = '';
+  }
+
+  private async obtenerDestinosInternacionalesCatalogo(paisId: number): Promise<IDestinoFiltro[]> {
+    const destinos: IDestinoFiltro[] = [];
+    let page = 0;
+    let total = 0;
+
+    do {
+      const respuesta = await this.destinosService.buscarDestinosCatalogo({
+        tipo: 'INTERNACIONAL',
+        page,
+        pageSize: 100,
+        paisIds: [paisId]
+      });
+      total = respuesta.total;
+      destinos.push(...respuesta.items.map((destino: DestinoCatalogoNavegable) => ({
+        id: destino.destinoId,
+        nombre: destino.destinoNombre,
+        continente_id: destino.regionId,
+        continente_nombre: destino.regionNombre,
+        pais_id: destino.paisId,
+        pais_nombre: destino.paisNombre
+      })));
+      page++;
+    } while (destinos.length < total);
+
+    return destinos;
   }
 
   cambiarPagina(event: PageEvent) {

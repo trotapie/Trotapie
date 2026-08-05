@@ -933,6 +933,7 @@ export class SupabaseService {
     estrellas,
     orden,
     destino_id,
+    catalogo_destino_id,
     descuento_id,
     concepto_id,
     regimen_id,
@@ -1981,7 +1982,8 @@ export class SupabaseService {
   }
 
   async guardarPreviewDestinoAdmin(payload: {
-    destino_id: number;
+    destino_id: number | null;
+    catalogo_destino_id?: number | null;
     ubicacion: string | null;
     traducciones: Array<{
       idioma_id: number;
@@ -2268,7 +2270,8 @@ export class SupabaseService {
   }
 
   async guardarActividadDestinoAdmin(payload: {
-    destino_id: number;
+    destino_id: number | null;
+    catalogo_destino_id?: number | null;
     actividad_id?: number | null;
     catalogo_atraccion_id?: number | null;
     imagen_fondo: string | null;
@@ -3077,7 +3080,8 @@ export class SupabaseService {
       hotel_id: number;
       regimen_id: number | null;
       hotel_nombre: string;
-      destino_id: number;
+      destino_id: number | null;
+      catalogo_destino_id?: number | null;
       destino_nombre: string;
       orden: number;
       es_principal: boolean;
@@ -4001,6 +4005,88 @@ export class SupabaseService {
     });
   }
 
+  async obtenerHotelesAdminPorCatalogoDestino(catalogoDestinoId: number) {
+    const { data, error } = await this.client
+      .from('hoteles')
+      .select(`
+        id,
+        orden,
+        regimen_id,
+        destino_id,
+        catalogoDestino:catalogo_destino_id!inner ( id ),
+        traducciones:hotel_traducciones (
+          idioma_id,
+          nombre_hotel
+        ),
+        regimen:regimen_id (
+          id,
+          traducciones:regimen_traducciones (
+            idioma_id,
+            descripcion
+          )
+        )
+      `)
+      .eq('catalogoDestino.id', catalogoDestinoId)
+      .order('orden', { ascending: true });
+
+    if (error) throw error;
+
+    return (data ?? []).map((item: any) => {
+      const traduccionEs = item?.traducciones?.find((x: any) => x.idioma_id === ES_ID);
+      const regimenEs = item?.regimen?.traducciones?.find((x: any) => x.idioma_id === ES_ID);
+
+      return {
+        id: item.id,
+        orden: item.orden ?? null,
+        regimen_id: item.regimen_id ?? null,
+        destino_id: item.destino_id,
+        nombre_hotel: traduccionEs?.nombre_hotel ?? '',
+        regimen: regimenEs?.descripcion ?? ''
+      };
+    });
+  }
+
+  async obtenerHotelesAdminPorPaisCatalogo(paisId: number) {
+    const { data, error } = await this.client
+      .from('hoteles')
+      .select(`
+        id,
+        orden,
+        regimen_id,
+        destino_id,
+        catalogoDestino:catalogo_destino_id!inner ( id, pais_id ),
+        traducciones:hotel_traducciones (
+          idioma_id,
+          nombre_hotel
+        ),
+        regimen:regimen_id (
+          id,
+          traducciones:regimen_traducciones (
+            idioma_id,
+            descripcion
+          )
+        )
+      `)
+      .eq('catalogoDestino.pais_id', paisId)
+      .order('orden', { ascending: true });
+
+    if (error) throw error;
+
+    return (data ?? []).map((item: any) => {
+      const traduccionEs = item?.traducciones?.find((x: any) => x.idioma_id === ES_ID);
+      const regimenEs = item?.regimen?.traducciones?.find((x: any) => x.idioma_id === ES_ID);
+
+      return {
+        id: item.id,
+        orden: item.orden ?? null,
+        regimen_id: item.regimen_id ?? null,
+        destino_id: item.destino_id,
+        nombre_hotel: traduccionEs?.nombre_hotel ?? '',
+        regimen: regimenEs?.descripcion ?? ''
+      };
+    });
+  }
+
   async obtenerHotelesAdminPorDestinoPadre(destinoPadreId: number) {
     const { data, error } = await this.client
       .from('hoteles')
@@ -4280,7 +4366,8 @@ export class SupabaseService {
     estrellas: number | null;
     fondo: string | null;
     ubicacion: string | null;
-    destino_id: number;
+    destino_id: number | null;
+    catalogo_destino_id?: number | null;
     descuento_id: number | null;
     regimen_id: number | null;
     regimen_ids: number[];
@@ -4309,7 +4396,8 @@ export class SupabaseService {
     estrellas: number | null;
     fondo: string | null;
     ubicacion: string | null;
-    destino_id: number;
+    destino_id: number | null;
+    catalogo_destino_id?: number | null;
     descuento_id: number | null;
     regimen_id: number | null;
     regimen_ids: number[];
@@ -4343,7 +4431,8 @@ export class SupabaseService {
       estrellas: number | null;
       fondo: string | null;
       ubicacion: string | null;
-      destino_id: number;
+      destino_id: number | null;
+      catalogo_destino_id?: number | null;
       descuento_id: number | null;
       regimen_id: number | null;
       regimen_ids: number[];
@@ -4446,6 +4535,15 @@ export class SupabaseService {
     const hotelIdGuardado = Number(data.hotel_id);
     if (!Number.isFinite(hotelIdGuardado)) {
       throw new Error('No se pudo guardar el hotel.');
+    }
+
+    if (payload.catalogo_destino_id !== undefined) {
+      const { error: errorCatalogoDestino } = await this.client
+        .from('hoteles')
+        .update({ catalogo_destino_id: payload.catalogo_destino_id })
+        .eq('id', hotelIdGuardado);
+
+      if (errorCatalogoDestino) throw errorCatalogoDestino;
     }
 
     await this.sincronizarTiposHabitacionHotel(hotelIdGuardado, roomTypeIds);
