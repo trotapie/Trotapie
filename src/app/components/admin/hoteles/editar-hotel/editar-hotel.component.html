@@ -81,8 +81,21 @@
                     }
                 </mat-form-field>
 
+                @if (form.get('tipo_catalogo')?.value === 'INTERNACIONAL') {
+                    <app-tp-select-search class="w-full" label="Continente" [options]="regionesInternacionalesOpciones" [required]="esCreacion"
+                        placeholder="Selecciona un continente" formControlName="continente_id"
+                        (selectionChange)="seleccionarContinenteInternacional($event)"
+                        [error]="esCreacion && form.get('continente_id')?.invalid && form.get('continente_id')?.touched ? 'El continente es requerido.' : ''"></app-tp-select-search>
+
+                    <app-tp-select-search class="w-full" label="País" [options]="paisesInternacionalesOpciones" [required]="esCreacion"
+                        [disabled]="!form.get('continente_id')?.value" placeholder="Selecciona un país" formControlName="pais_id"
+                        (selectionChange)="seleccionarPaisInternacional($event)"
+                        [error]="esCreacion && form.get('pais_id')?.invalid && form.get('pais_id')?.touched ? 'El país es requerido.' : ''"></app-tp-select-search>
+                }
+
                 <app-tp-select-search class="w-full" label="Destino" [options]="destinosOpciones" [required]="esCreacion"
-                    [placeholder]="form.get('tipo_catalogo')?.value ? 'Selecciona un destino' : 'Selecciona primero un tipo'"
+                    [disabled]="cargandoDestinos || (form.get('tipo_catalogo')?.value === 'INTERNACIONAL' && !form.get('pais_id')?.value)"
+                    [placeholder]="cargandoDestinos ? 'Cargando destinos...' : (form.get('tipo_catalogo')?.value ? 'Selecciona un destino' : 'Selecciona primero un tipo')"
                     formControlName="catalogo_destino_id"
                     [error]="esCreacion && form.get('catalogo_destino_id')?.invalid && form.get('catalogo_destino_id')?.touched ? 'El destino es requerido.' : ''"></app-tp-select-search>
 

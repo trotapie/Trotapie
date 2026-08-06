@@ -86,7 +86,7 @@
 
             <app-tp-select-search
                 label="Destino"
-                placeholder="Todos los destinos del país"
+                placeholder="Destinos con hoteles"
                 searchPlaceholder="Buscar destino"
                 [options]="destinosInternacionalesOpciones"
                 [disabled]="!paisSeleccionadoId"
@@ -113,7 +113,7 @@
             <div><h2>Hoteles</h2><p>@if (hayCambiosOrden) { Arrastra las filas y guarda el nuevo orden. } @else { El orden mostrado es el publicado para esta ubicación. }</p></div>
             @if (hayCambiosOrden) { <span class="hoteles-resultados__pending">Cambios de orden pendientes</span> }
         </div>
-        @if (cargando || cargandoHoteles) {
+        @if (cargandoHoteles) {
         <div class="hoteles-skeleton-results" aria-live="polite" aria-label="Cargando hoteles">
             @for (row of [1, 2, 3, 4, 5]; track row) {
             <div class="hoteles-skeleton-row" aria-hidden="true">

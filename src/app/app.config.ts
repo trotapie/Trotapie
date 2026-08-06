@@ -17,8 +17,8 @@ import { appRoutes } from 'app/app.routes';
 import { provideAuth } from 'app/core/auth/auth.provider';
 import { provideIcons } from 'app/core/icons/icons.provider';
 import { MockApiService } from 'app/mock-api';
-import { catchError, filter, firstValueFrom, of, take, timeout } from 'rxjs';
-import { provideServiceWorker, SwUpdate, VersionReadyEvent } from '@angular/service-worker';
+import { catchError, firstValueFrom, of, timeout } from 'rxjs';
+import { provideServiceWorker } from '@angular/service-worker';
 import { TranslocoHttpLoader } from './core/transloco/transloco.http-loader';
 import { mockApiInterceptor } from '@fuse/lib/mock-api';
 import { getDefaultLang } from './lang.utils';
@@ -178,42 +178,6 @@ export const appConfig: ApplicationConfig = {
         provideServiceWorker('ngsw-worker.js', {
             enabled: !isDevMode(),
             registrationStrategy: 'registerWhenStable:5000',
-        }),
-        provideAppInitializer(() => {
-            const swUpdate = inject(SwUpdate);
-
-            if (!swUpdate.isEnabled) {
-                return;
-            }
-
-            swUpdate.versionUpdates.pipe(
-                filter((event): event is VersionReadyEvent => event.type === 'VERSION_READY'),
-                take(1)
-            ).subscribe(async (event) => {
-                try {
-                    const updated = await swUpdate.activateUpdate();
-                    if (!updated || typeof window === 'undefined') {
-                        return;
-                    }
-
-                    const redirectKey = 'trotapie-last-service-worker-version';
-                    const versionHash = event.latestVersion.hash;
-
-                    try {
-                        if (sessionStorage.getItem(redirectKey) === versionHash) {
-                            return;
-                        }
-
-                        sessionStorage.setItem(redirectKey, versionHash);
-                    } catch {
-                        // Continue even when browser storage is unavailable.
-                    }
-
-                    window.location.replace('/inicio');
-                } catch (error) {
-                    console.error('No se pudo activar la nueva version.', error);
-                }
-            });
         }),
     ],
 };

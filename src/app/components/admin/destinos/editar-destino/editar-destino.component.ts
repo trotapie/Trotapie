@@ -1,10 +1,12 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { DestinosService } from 'app/core/destinos.service';
+import { DestinosService, DivisionAreaCatalogo } from 'app/core/destinos.service';
 import { BlockingLoaderComponent } from 'app/shared/blocking-loader/blocking-loader.component';
 import { MaterialModule } from 'app/shared/material.module';
 import { CustomSwitchComponent } from 'app/shared/custom-switch/custom-switch.component';
+import { TpInputComponent } from 'app/shared/tp-input/tp-input.component';
+import { TpSelectSearchComponent, TpSelectSearchOption } from 'app/shared/tp-select-search/tp-select-search.component';
 
 interface ITipoDestino {
   id: number;
@@ -24,7 +26,7 @@ interface IDestinoPadre {
 @Component({
   selector: 'app-editar-destino',
   standalone: true,
-  imports: [MaterialModule, BlockingLoaderComponent, CustomSwitchComponent],
+  imports: [MaterialModule, BlockingLoaderComponent, CustomSwitchComponent, TpInputComponent, TpSelectSearchComponent],
   templateUrl: './editar-destino.component.html',
   styleUrl: './editar-destino.component.scss'
 })
@@ -45,6 +47,7 @@ export class EditarDestinoComponent implements OnInit {
   tiposDestino: ITipoDestino[] = [];
   continentes: IContinente[] = [];
   destinosPadre: IDestinoPadre[] = [];
+  divisionesArea: DivisionAreaCatalogo[] = [];
 
   form = this.fb.group({
     nombre: ['', [Validators.required]],
@@ -52,6 +55,7 @@ export class EditarDestinoComponent implements OnInit {
     tipo_desino_id: [null as number | null, [Validators.required]],
     destino_padre_id: [{ value: null as number | null, disabled: true }],
     continente_id: [{ value: null as number | null, disabled: true }],
+    division_area_id: [null as number | null],
     imagen_destino: [''],
     imagen_cotizacion: [''],
     activo: [true]
@@ -69,6 +73,7 @@ export class EditarDestinoComponent implements OnInit {
 
     try {
       if (this.esCatalogo) {
+        this.divisionesArea = await this.supabase.obtenerCatalogoNacionalesDivisionAreas();
         this.configurarFormularioCatalogo();
       } else {
         await this.cargarCatalogos();
@@ -115,6 +120,7 @@ export class EditarDestinoComponent implements OnInit {
         await this.supabase.actualizarCatalogoDestinoAdmin(this.destinoId, {
           nombre: (raw.nombre ?? '').trim(),
           orden: this.parseNumber(raw.orden) ?? 0,
+          division_area_id: raw.division_area_id ?? null,
           imagen_destino: this.limpiarTexto(raw.imagen_destino),
           activo: raw.activo ?? true
         });
@@ -158,6 +164,14 @@ export class EditarDestinoComponent implements OnInit {
     this.regresarAlListado();
   }
 
+  get divisionesAreaOpciones(): TpSelectSearchOption[] {
+    return this.divisionesArea.map((division) => ({ value: division.id, label: division.nombre }));
+  }
+
+  desplazarASeccion(id: string): void {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   private regresarAlListado() {
     this.router.navigate(['/admin/destinos/configurar-destinos'], { queryParams: this.route.snapshot.queryParams });
   }
@@ -188,6 +202,7 @@ export class EditarDestinoComponent implements OnInit {
     this.form.patchValue({
       nombre: data.nombre ?? '',
       orden: data.orden ?? 0,
+      division_area_id: data.division_area_id ?? null,
       imagen_destino: data.imagen_destino ?? '',
       activo: data.activo ?? true
     });

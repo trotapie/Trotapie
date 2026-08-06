@@ -17,6 +17,7 @@ export class TpInputComponent implements ControlValueAccessor {
   @Input() max: number | null = null;
   @Input() maxLength: number | null = null;
   @Input() error = '';
+  @Input() bookingStyle = false;
   @Output() blur = new EventEmitter<void>();
   value = '';
   disabled = false;

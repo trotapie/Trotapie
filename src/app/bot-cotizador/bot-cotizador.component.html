@@ -252,23 +252,33 @@
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-green-700 mb-1">Nombre completo</label>
-                                <input formControlName="nombre_completo" class="booking-field" />
+                            <app-tp-input label="Nombre completo" [bookingStyle]="true" formControlName="nombre_completo"></app-tp-input>
                             </div>
                         </div>
 
-                        <app-phone-input
-                            formControlName="telefono"
-                            [label]="t('telefono')"
-                            [bookingStyle]="true"
-                            [dialCode]="reservacionForm.get('lada')?.value ?? '52'"
-                            [invalid]="reservacionForm.get('telefono')?.invalid && (reservacionForm.get('telefono')?.touched || reservacionForm.get('telefono')?.dirty)"
-                            (dialCodeChange)="reservacionForm.get('lada')?.setValue($event)">
-                        </app-phone-input>
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-[40fr_60fr] sm:items-end">
+                            <app-tp-select-search
+                                label="Código de país"
+                                placeholder="México (+52)"
+                                searchPlaceholder="Buscar país"
+                                [options]="codigosPaisOpciones"
+                                [bookingStyle]="true"
+                                formControlName="lada">
+                            </app-tp-select-search>
+
+                            <app-tp-input
+                                label="{{ t('telefono') }}"
+                                type="tel"
+                                placeholder="Número de teléfono"
+                                [bookingStyle]="true"
+                                formControlName="telefono"
+                                [maxLength]="15"
+                                [error]="reservacionForm.get('telefono')?.invalid && (reservacionForm.get('telefono')?.touched || reservacionForm.get('telefono')?.dirty) ? 'Ingresa un número de teléfono válido.' : ''">
+                            </app-tp-input>
+                        </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-green-700 mb-1">{{t('correo')}}</label>
-                            <input formControlName="correo" class="booking-field" />
+                            <app-tp-input label="{{ t('correo') }}" type="email" [bookingStyle]="true" formControlName="correo"></app-tp-input>
                         </div>
 
                         <div class="pt-1">

@@ -1,6 +1,7 @@
 :host { display: block; min-width: 0; }
 .tp-input { min-width: 0; }
 .tp-input__label { display: block; margin: 0 0 .45rem .2rem; color: var(--fuse-text-secondary); font-size: .72rem; font-weight: 700; letter-spacing: .02em; }
+.tp-input--booking .tp-input__label { color: var(--primary, #15803d); font-weight: 500; line-height: 1rem; }
 .tp-input__label--required::after { margin-left: .2rem; color: #c2413d; content: '*'; }
 .tp-input__field { box-sizing: border-box; width: 100%; min-height: 3.5rem; padding: .75rem .9rem; color: var(--fuse-text-default); border: 1px solid var(--fuse-border); border-radius: 1rem; outline: 0; background: var(--fuse-bg-card); font: inherit; font-size: .875rem; transition: border-color .18s ease, box-shadow .18s ease; }
 .tp-input__field::placeholder { color: var(--fuse-text-secondary); }

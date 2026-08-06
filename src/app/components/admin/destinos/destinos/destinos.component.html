@@ -129,6 +129,23 @@
             <th mat-header-cell *matHeaderCellDef><span class="sr-only">Acciones</span></th>
             <td mat-cell *matCellDef="let item">
               <div class="catalogo-acciones">
+                @if (!item.activo) {
+                  <button mat-icon-button type="button" class="catalogo-acciones__activar" aria-label="Activar destino {{ item.destinoNombre }}" matTooltip="Activar destino" [disabled]="activandoDestinoId !== null" (click)="activarDestino(item)">
+                    @if (activandoDestinoId === item.destinoId) {
+                      <mat-spinner diameter="18"></mat-spinner>
+                    } @else {
+                      <mat-icon [svgIcon]="'heroicons_outline:check-circle'"></mat-icon>
+                    }
+                  </button>
+                } @else {
+                  <button mat-icon-button type="button" class="catalogo-acciones__desactivar" aria-label="Desactivar destino {{ item.destinoNombre }}" matTooltip="Desactivar destino" [disabled]="activandoDestinoId !== null" (click)="desactivarDestino(item)">
+                    @if (activandoDestinoId === item.destinoId) {
+                      <mat-spinner diameter="18"></mat-spinner>
+                    } @else {
+                      <mat-icon [svgIcon]="'heroicons_outline:no-symbol'"></mat-icon>
+                    }
+                  </button>
+                }
                 <button mat-icon-button type="button" aria-label="Editar destino {{ item.destinoNombre }}" matTooltip="Editar destino" (click)="editarDestino(item)">
                   <mat-icon [svgIcon]="'heroicons_outline:pencil'" ></mat-icon>
                 </button>

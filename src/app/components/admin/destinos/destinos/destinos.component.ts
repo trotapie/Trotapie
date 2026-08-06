@@ -8,6 +8,7 @@ import { MaterialModule } from 'app/shared/material.module';
 import { TpMultiselectComponent, TpMultiselectOption } from 'app/shared/tp-multiselect/tp-multiselect.component';
 import { TpSearchInputComponent } from 'app/shared/tp-search-input/tp-search-input.component';
 import { ResumenCatalogoDestinosComponent } from '../resumen-catalogo-destinos/resumen-catalogo-destinos.component';
+import { TpToastService } from 'app/shared/tp-toast/tp-toast.service';
 
 @Component({ selector: 'app-destinos', standalone: true, imports: [MaterialModule, FormsModule, TpMultiselectComponent, TpSearchInputComponent], templateUrl: './destinos.component.html', styleUrl: './destinos.component.scss' })
 export class DestinosComponent implements OnInit {
@@ -15,12 +16,13 @@ export class DestinosComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
+  private readonly toast = inject(TpToastService);
   readonly displayedColumns = ['destino', 'ubicacion', 'estado', 'acciones'];
   tipoVisible: 'NACIONAL' | 'INTERNACIONAL' = 'NACIONAL';
   regiones: RegionCatalogo[] = []; paises: PaisCatalogo[] = []; divisiones: DivisionAreaCatalogo[] = [];
   regionIds: number[] = []; paisIds: number[] = []; divisionAreaIds: number[] = [];
   busqueda = ''; destinos: DestinoCatalogoNavegable[] = []; total = 0;
-  pageIndex = 0; pageSize = 25; pageSizeOptions = [10, 25, 50, 100]; cargando = true; error = '';
+  pageIndex = 0; pageSize = 25; pageSizeOptions = [10, 25, 50, 100]; cargando = true; error = ''; activandoDestinoId: number | null = null;
 
   async ngOnInit() {
     this.restaurarEstadoDesdeUrl();
@@ -41,6 +43,36 @@ export class DestinosComponent implements OnInit {
   editarDestino(destino: DestinoCatalogoNavegable) { return this.router.navigate(['/admin/destinos/configurar-destinos/editar', destino.destinoId], { queryParams: this.obtenerQueryParamsFiltros() }); }
   editarPreview(destino: DestinoCatalogoNavegable) { return this.router.navigate(['/admin/destinos/configurar-destinos/preview', destino.destinoId], { queryParams: this.obtenerQueryParamsFiltros() }); }
   verHoteles(destino: DestinoCatalogoNavegable) { return this.router.navigate(['/admin/hoteles'], { queryParams: { catalogoDestinoId: destino.destinoId, divisionAreaId: destino.divisionAreaId, tipo: destino.tipo } }); }
+  async activarDestino(destino: DestinoCatalogoNavegable) {
+    if (destino.activo || this.activandoDestinoId !== null) return;
+    this.activandoDestinoId = destino.destinoId;
+    this.error = '';
+    try {
+      await this.destinosService.activarCatalogoDestinoAdmin(destino.destinoId);
+      destino.activo = true;
+      this.mostrarEstadoDestino('Destino activado', `${destino.destinoNombre} ya está disponible en el catálogo.`, 'success');
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudo activar el destino.';
+      this.toast.show({ title: 'No se pudo activar', message: this.error, variant: 'error' });
+    } finally {
+      this.activandoDestinoId = null;
+    }
+  }
+  async desactivarDestino(destino: DestinoCatalogoNavegable) {
+    if (!destino.activo || this.activandoDestinoId !== null) return;
+    this.activandoDestinoId = destino.destinoId;
+    this.error = '';
+    try {
+      await this.destinosService.desactivarCatalogoDestinoAdmin(destino.destinoId);
+      destino.activo = false;
+      this.mostrarEstadoDestino('Destino desactivado', `${destino.destinoNombre} ya no estará disponible públicamente.`, 'warning');
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudo desactivar el destino.';
+      this.toast.show({ title: 'No se pudo desactivar', message: this.error, variant: 'error' });
+    } finally {
+      this.activandoDestinoId = null;
+    }
+  }
   abrirResumen(): void {
     this.dialog.open(ResumenCatalogoDestinosComponent, {
       width: '780px',
@@ -92,5 +124,9 @@ export class DestinosComponent implements OnInit {
       queryParams: this.obtenerQueryParamsFiltros(),
       replaceUrl: true
     });
+  }
+
+  private mostrarEstadoDestino(title: string, message: string, variant: 'success' | 'warning'): void {
+    this.toast.show({ title, message, variant });
   }
 }

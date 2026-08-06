@@ -4048,43 +4048,64 @@ export class SupabaseService {
 
   async obtenerHotelesAdminPorPaisCatalogo(paisId: number) {
     const { data, error } = await this.client
-      .from('hoteles')
+      .from('v_hoteles_catalogo_admin')
       .select(`
         id,
         orden,
         regimen_id,
-        destino_id,
-        catalogoDestino:catalogo_destino_id!inner ( id, pais_id ),
-        traducciones:hotel_traducciones (
-          idioma_id,
-          nombre_hotel
-        ),
-        regimen:regimen_id (
-          id,
-          traducciones:regimen_traducciones (
-            idioma_id,
-            descripcion
-          )
-        )
+        legacy_destino_id,
+        pais_id_resuelto,
+        nombre_hotel,
+        regimen
       `)
-      .eq('catalogoDestino.pais_id', paisId)
+      .eq('pais_id_resuelto', paisId)
       .order('orden', { ascending: true });
 
     if (error) throw error;
 
-    return (data ?? []).map((item: any) => {
-      const traduccionEs = item?.traducciones?.find((x: any) => x.idioma_id === ES_ID);
-      const regimenEs = item?.regimen?.traducciones?.find((x: any) => x.idioma_id === ES_ID);
+    return (data ?? []).map((item: any) => ({
+      id: item.id,
+      orden: item.orden ?? null,
+      regimen_id: item.regimen_id ?? null,
+      destino_id: item.legacy_destino_id,
+      nombre_hotel: item.nombre_hotel ?? '',
+      regimen: item.regimen ?? ''
+    }));
+  }
 
-      return {
-        id: item.id,
-        orden: item.orden ?? null,
-        regimen_id: item.regimen_id ?? null,
-        destino_id: item.destino_id,
-        nombre_hotel: traduccionEs?.nombre_hotel ?? '',
-        regimen: regimenEs?.descripcion ?? ''
-      };
-    });
+  async obtenerDestinosCatalogoInternacionalesConHoteles(paisId: number): Promise<number[]> {
+    const { data, error } = await this.client
+      .from('v_hoteles_catalogo_admin')
+      .select('catalogo_destino_id_resuelto')
+      .eq('pais_id_resuelto', paisId)
+      .not('catalogo_destino_id_resuelto', 'is', null);
+
+    if (error) throw error;
+
+    return [...new Set((data ?? [])
+      .map((item: any) => Number(item.catalogo_destino_id_resuelto))
+      .filter((id) => Number.isFinite(id) && id > 0))];
+  }
+
+  async obtenerUbicacionesCatalogoConHoteles(tipo?: 'NACIONAL' | 'INTERNACIONAL') {
+    let query = this.client
+      .from('v_hoteles_catalogo_admin')
+      .select('catalogo_destino_id_resuelto, catalogo_destino_nombre_resuelto, pais_id_resuelto, pais_nombre_resuelto, region_id_resuelto, tipo_catalogo')
+      .not('catalogo_destino_id_resuelto', 'is', null);
+
+    if (tipo) query = query.eq('tipo_catalogo', tipo);
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    return (data ?? []).map((item: any) => ({
+      catalogoDestinoId: Number(item.catalogo_destino_id_resuelto),
+      catalogoDestinoNombre: String(item.catalogo_destino_nombre_resuelto ?? ''),
+      paisId: Number(item.pais_id_resuelto),
+      paisNombre: String(item.pais_nombre_resuelto ?? ''),
+      regionId: Number(item.region_id_resuelto),
+      tipo: item.tipo_catalogo as 'NACIONAL' | 'INTERNACIONAL' | null
+    })).filter((item) => Number.isFinite(item.catalogoDestinoId) && item.catalogoDestinoId > 0);
   }
 
   async obtenerHotelesAdminPorDestinoPadre(destinoPadreId: number) {

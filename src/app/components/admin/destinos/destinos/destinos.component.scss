@@ -76,6 +76,11 @@
 .catalogo-estado--activo { color: #207052; }.catalogo-estado--activo i { background: #2d9b70; box-shadow: 0 0 0 3px rgba(45, 155, 112, .12); }
 .catalogo-acciones { display: flex; justify-content: flex-end; gap: .2rem; }
 .catalogo-acciones button:hover { color: #1b694f; background: var(--catalogo-sand); }
+.catalogo-acciones__activar { color: #207052; }
+.catalogo-acciones__activar:disabled { color: #207052; }
+.catalogo-acciones__desactivar { color: #b04040; }
+.catalogo-acciones__desactivar:hover { color: #9e2929 !important; background: #fff0ef !important; }
+.catalogo-acciones__desactivar:disabled { color: #b04040; }
 
 .catalogo-cargando, .catalogo-vacio { display: grid; min-height: 300px; place-content: center; justify-items: center; padding: 2rem; text-align: center; color: var(--fuse-text-secondary); }
 .catalogo-cargando { gap: .9rem; font-size: .85rem; font-weight: 700; }.catalogo-vacio mat-icon { width: 3rem; height: 3rem; margin-bottom: 1rem; color: #9a8750; font-size: 3rem; }.catalogo-vacio h2 { margin: 0; color: var(--fuse-text-default); font-family: Georgia, 'Times New Roman', serif; font-size: 1.5rem; font-weight: 500; }.catalogo-vacio p { max-width: 24rem; margin: .5rem 0 1.25rem; line-height: 1.5; }

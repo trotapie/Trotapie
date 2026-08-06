@@ -4,7 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { PageEvent } from '@angular/material/paginator';
 import { SupabaseService } from 'app/core/supabase.service';
-import { DestinoCatalogoNavegable, DestinosService, PaisCatalogo } from 'app/core/destinos.service';
+import { DestinosService, PaisCatalogo } from 'app/core/destinos.service';
 import { MaterialModule } from 'app/shared/material.module';
 import { TpSelectSearchComponent, TpSelectSearchOption } from 'app/shared/tp-select-search/tp-select-search.component';
 
@@ -25,6 +25,7 @@ interface IRegimen {
 interface IDestinoCatalogoFiltro {
   id: number;
   nombre: string;
+  division_area_nombre?: string;
 }
 
 interface IContinente {
@@ -59,6 +60,9 @@ export class AdminHotelesComponent implements OnInit {
   destinos: IDestinoFiltro[] = [];
   destinosNacionalesCatalogo: IDestinoCatalogoFiltro[] = [];
   continentes: IContinente[] = [];
+  private destinosConHotelesIds = new Set<number>();
+  private paisesConHotelesIds = new Set<number>();
+  private regionesConHotelesIds = new Set<number>();
   paisesCatalogo: PaisCatalogo[] = [];
   regimenes: IRegimen[] = [];
   hoteles: IHotelAdmin[] = [];
@@ -85,15 +89,8 @@ export class AdminHotelesComponent implements OnInit {
   async ngOnInit() {
     try {
       this.cargando = true;
-      const [destinosNacionalesCatalogo, regiones, regimenes] = await Promise.all([
-        this.destinosService.obtenerDestinosCatalogoPublicables('NACIONAL'),
-        this.destinosService.obtenerCatalogoInternacionalRegiones(),
-        this.supabase.obtenerRegimenesAdmin()
-      ]);
-
-      this.destinosNacionalesCatalogo = (destinosNacionalesCatalogo ?? []) as IDestinoCatalogoFiltro[];
+      const [regimenes] = await Promise.all([this.supabase.obtenerRegimenesAdmin(), this.cargarCatalogosDisponibles()]);
       this.regimenes = (regimenes ?? []) as IRegimen[];
-      this.continentes = (regiones ?? []).map((region) => ({ id: region.id, nombre: region.nombre }));
       await this.aplicarPreseleccionDesdeQueryParams();
     } catch (error: any) {
       this.error = error?.message ?? 'No se pudo cargar la informacion inicial.';
@@ -118,7 +115,11 @@ export class AdminHotelesComponent implements OnInit {
   }
 
   get destinosNacionalesOpciones(): TpSelectSearchOption[] {
-    return this.destinosNacionales.map((destino) => ({ value: destino.id, label: destino.nombre }));
+    return this.destinosNacionales.map((destino) => ({
+      value: destino.id,
+      label: destino.nombre,
+      group: destino.division_area_nombre
+    }));
   }
 
   get continentesOpciones(): TpSelectSearchOption[] {
@@ -193,21 +194,36 @@ export class AdminHotelesComponent implements OnInit {
   }
 
   async seleccionarContinente(continenteId: number | null) {
+    this.cargandoHoteles = true;
     this.continenteSeleccionadoId = continenteId;
     this.paisSeleccionadoId = null;
     this.destinoInternacionalId = null;
     this.destinos = [];
-    this.paisesCatalogo = continenteId
-      ? await this.destinosService.obtenerCatalogoInternacionalPaises([continenteId])
-      : [];
-    await this.seleccionarDestino(null);
+    try {
+      this.paisesCatalogo = continenteId
+        ? (await this.destinosService.obtenerCatalogoInternacionalPaises([continenteId]))
+          .filter((pais) => this.paisesConHotelesIds.has(pais.id))
+        : [];
+      await this.seleccionarDestino(null);
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudieron cargar los países.';
+    } finally {
+      this.cargandoHoteles = false;
+    }
   }
 
   async seleccionarPais(paisId: number | null) {
+    this.cargandoHoteles = true;
     this.paisSeleccionadoId = paisId;
     this.destinoInternacionalId = null;
-    this.destinos = paisId ? await this.obtenerDestinosInternacionalesCatalogo(paisId) : [];
-    await this.seleccionarDestino(paisId);
+    try {
+      this.destinos = paisId ? await this.obtenerDestinosInternacionalesCatalogo(paisId) : [];
+      await this.seleccionarDestino(paisId);
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudieron cargar los destinos.';
+    } finally {
+      this.cargandoHoteles = false;
+    }
   }
 
   async seleccionarDestinoInternacional(destinoId: number | null) {
@@ -273,30 +289,23 @@ export class AdminHotelesComponent implements OnInit {
   }
 
   private async obtenerDestinosInternacionalesCatalogo(paisId: number): Promise<IDestinoFiltro[]> {
-    const destinos: IDestinoFiltro[] = [];
-    let page = 0;
-    let total = 0;
+    const ubicacionesConHoteles = await this.supabase.obtenerUbicacionesCatalogoConHoteles('INTERNACIONAL');
+    const destinos = new Map<number, IDestinoFiltro>();
 
-    do {
-      const respuesta = await this.destinosService.buscarDestinosCatalogo({
-        tipo: 'INTERNACIONAL',
-        page,
-        pageSize: 100,
-        paisIds: [paisId]
+    for (const ubicacion of ubicacionesConHoteles) {
+      if (ubicacion.paisId !== paisId || destinos.has(ubicacion.catalogoDestinoId)) continue;
+
+      destinos.set(ubicacion.catalogoDestinoId, {
+        id: ubicacion.catalogoDestinoId,
+        nombre: ubicacion.catalogoDestinoNombre,
+        continente_id: ubicacion.regionId,
+        continente_nombre: '',
+        pais_id: ubicacion.paisId,
+        pais_nombre: ubicacion.paisNombre
       });
-      total = respuesta.total;
-      destinos.push(...respuesta.items.map((destino: DestinoCatalogoNavegable) => ({
-        id: destino.destinoId,
-        nombre: destino.destinoNombre,
-        continente_id: destino.regionId,
-        continente_nombre: destino.regionNombre,
-        pais_id: destino.paisId,
-        pais_nombre: destino.paisNombre
-      })));
-      page++;
-    } while (destinos.length < total);
+    }
 
-    return destinos;
+    return [...destinos.values()].sort((a, b) => a.nombre.localeCompare(b.nombre));
   }
 
   cambiarPagina(event: PageEvent) {
@@ -367,6 +376,8 @@ export class AdminHotelesComponent implements OnInit {
       this.hoteles = this.hoteles.filter((item) => item.id !== hotelId);
       this.hotelesOriginalIds = this.hoteles.map((item) => item.id);
       this.hayCambiosOrden = false;
+      await this.cargarCatalogosDisponibles();
+      await this.reconciliarFiltrosTrasRecarga();
       this.cerrarModalConfirmarEliminarHotel();
     } catch (error: any) {
       this.error = error?.message ?? 'No se pudo eliminar el hotel.';
@@ -378,6 +389,52 @@ export class AdminHotelesComponent implements OnInit {
   private tieneMismoOrden(): boolean {
     if (this.hoteles.length !== this.hotelesOriginalIds.length) return false;
     return this.hoteles.every((item, index) => item.id === this.hotelesOriginalIds[index]);
+  }
+
+  private async cargarCatalogosDisponibles(): Promise<void> {
+    const [destinosNacionalesCatalogo, regiones, ubicacionesConHoteles] = await Promise.all([
+      this.destinosService.obtenerDestinosCatalogoPublicables('NACIONAL'),
+      this.destinosService.obtenerCatalogoInternacionalRegiones(),
+      this.supabase.obtenerUbicacionesCatalogoConHoteles()
+    ]);
+    const ubicacionesInternacionales = ubicacionesConHoteles.filter((item) => item.tipo === 'INTERNACIONAL');
+    this.destinosConHotelesIds = new Set(ubicacionesConHoteles.map((item) => item.catalogoDestinoId));
+    this.paisesConHotelesIds = new Set(ubicacionesInternacionales.map((item) => item.paisId).filter((id) => id > 0));
+    this.regionesConHotelesIds = new Set(ubicacionesInternacionales.map((item) => item.regionId).filter((id) => id > 0));
+    this.destinosNacionalesCatalogo = (destinosNacionalesCatalogo ?? [])
+      .filter((destino: any) => this.destinosConHotelesIds.has(Number(destino.id))) as IDestinoCatalogoFiltro[];
+    this.continentes = (regiones ?? [])
+      .filter((region) => this.regionesConHotelesIds.has(region.id))
+      .map((region) => ({ id: region.id, nombre: region.nombre }));
+  }
+
+  private async reconciliarFiltrosTrasRecarga(): Promise<void> {
+    if (this.tipoBusqueda === 'NACIONAL') {
+      if (this.destinoSeleccionadoId && !this.destinosConHotelesIds.has(this.destinoSeleccionadoId)) {
+        await this.seleccionarDestino(null);
+      } else if (this.destinoSeleccionadoId) {
+        await this.seleccionarDestino(this.destinoSeleccionadoId);
+      }
+      return;
+    }
+
+    const continenteId = this.continenteSeleccionadoId;
+    const paisId = this.paisSeleccionadoId;
+    const destinoId = this.destinoInternacionalId;
+    if (!continenteId || !this.regionesConHotelesIds.has(continenteId)) {
+      await this.limpiarFiltros();
+      return;
+    }
+
+    await this.seleccionarContinente(continenteId);
+    if (!paisId || !this.paisesConHotelesIds.has(paisId)) {
+      return;
+    }
+
+    await this.seleccionarPais(paisId);
+    if (destinoId && this.destinos.some((destino) => destino.id === destinoId)) {
+      await this.seleccionarDestinoInternacional(destinoId);
+    }
   }
 
   private obtenerQueryParamsContexto() {

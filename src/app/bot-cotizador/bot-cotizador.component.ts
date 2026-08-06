@@ -7,7 +7,8 @@ import { SupabaseService } from 'app/core/supabase.service';
 import { DateRangeFilterComponent } from 'app/shared/date-range-filter/date-range-filter.component';
 import { DateRangeFilterValue, EMPTY_DATE_RANGE } from 'app/shared/date-range-filter/date-range-filter.model';
 import { MaterialModule } from 'app/shared/material.module';
-import { PhoneInputComponent } from 'app/shared/phone-input/phone-input.component';
+import { TpInputComponent } from 'app/shared/tp-input/tp-input.component';
+import { TpSelectSearchComponent, TpSelectSearchOption } from 'app/shared/tp-select-search/tp-select-search.component';
 import { firstValueFrom } from 'rxjs';
 type Room = { adults: number; children: number; childAges: (number | null)[] };
 
@@ -22,7 +23,7 @@ type BotPrefillCliente = {
 
 @Component({
   selector: 'bot-cotizador',
-  imports: [MaterialModule, TranslocoModule, DateRangeFilterComponent, PhoneInputComponent],
+  imports: [MaterialModule, TranslocoModule, DateRangeFilterComponent, TpInputComponent, TpSelectSearchComponent],
   templateUrl: './bot-cotizador.component.html',
   styleUrl: './bot-cotizador.component.scss'
 })
@@ -43,6 +44,47 @@ export class BotCotizadorComponent implements OnInit {
   otroId: number;
   asesores: IAsesores[] = [];
   tratamientos: TratamientoCliente[] = [];
+
+  readonly codigosPaisOpciones: TpSelectSearchOption[] = [
+    { value: '54', label: 'Argentina (+54)' },
+    { value: '61', label: 'Australia (+61)' },
+    { value: '43', label: 'Austria (+43)' },
+    { value: '32', label: 'Belgium (+32)' },
+    { value: '591', label: 'Bolivia (+591)' },
+    { value: '55', label: 'Brazil (+55)' },
+    { value: '359', label: 'Bulgaria (+359)' },
+    { value: '1', label: 'Canada (+1)' },
+    { value: '56', label: 'Chile (+56)' },
+    { value: '86', label: 'China (+86)' },
+    { value: '57', label: 'Colombia (+57)' },
+    { value: '506', label: 'Costa Rica (+506)' },
+    { value: '53', label: 'Cuba (+53)' },
+    { value: '593', label: 'Ecuador (+593)' },
+    { value: '503', label: 'El Salvador (+503)' },
+    { value: '33', label: 'France (+33)' },
+    { value: '49', label: 'Germany (+49)' },
+    { value: '502', label: 'Guatemala (+502)' },
+    { value: '504', label: 'Honduras (+504)' },
+    { value: '91', label: 'India (+91)' },
+    { value: '39', label: 'Italy (+39)' },
+    { value: '81', label: 'Japan (+81)' },
+    { value: '52', label: 'México (+52)' },
+    { value: '31', label: 'Netherlands (+31)' },
+    { value: '505', label: 'Nicaragua (+505)' },
+    { value: '507', label: 'Panama (+507)' },
+    { value: '595', label: 'Paraguay (+595)' },
+    { value: '51', label: 'Perú (+51)' },
+    { value: '351', label: 'Portugal (+351)' },
+    { value: '82', label: 'South Korea (+82)' },
+    { value: '34', label: 'Spain (+34)' },
+    { value: '41', label: 'Switzerland (+41)' },
+    { value: '66', label: 'Thailand (+66)' },
+    { value: '90', label: 'Turkey (+90)' },
+    { value: '971', label: 'United Arab Emirates (+971)' },
+    { value: '44', label: 'United Kingdom (+44)' },
+    { value: '598', label: 'Uruguay (+598)' },
+    { value: '58', label: 'Venezuela (+58)' }
+  ];
 
   readonly MAX_ROOMS = 5;
   readonly MAX_PER_ROOM = 6;

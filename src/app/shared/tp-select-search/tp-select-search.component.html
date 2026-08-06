@@ -1,4 +1,4 @@
-<div class="tp-select-search" [class.tp-select-search--disabled]="disabled" [class.tp-select-search--open]="abierto">
+  <div class="tp-select-search" [class.tp-select-search--booking]="bookingStyle" [class.tp-select-search--disabled]="disabled" [class.tp-select-search--open]="abierto">
   @if (label) {
     <label class="tp-select-search__label" [class.tp-select-search__label--required]="required">{{ label }}</label>
   }
@@ -23,6 +23,9 @@
       <div class="tp-select-search__options">
         @if (opcionesFiltradas.length) {
           @for (option of opcionesFiltradas; track trackByValue($index, option)) {
+            @if (option.group && ($first || option.group !== opcionesFiltradas[$index - 1]?.group)) {
+              <div class="tp-select-search__group" role="presentation">{{ option.group }}</div>
+            }
             <button type="button" class="tp-select-search__option" role="option" [disabled]="option.disabled"
               [attr.aria-selected]="sameValue(option.value, valorSeleccionado)" (click)="seleccionar(option)">
               <span>{{ option.label }}</span>

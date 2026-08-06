@@ -212,17 +212,35 @@ export class DestinosService {
 
   async actualizarCatalogoDestinoAdmin(
     id: number,
-    payload: { nombre: string; orden: number; imagen_destino: string | null; activo: boolean }
+    payload: { nombre: string; orden: number; division_area_id: number | null; imagen_destino: string | null; activo: boolean }
   ) {
     const { data, error } = await this.client
       .from('catalogo_destinos')
       .update(payload)
       .eq('id', id)
-      .select('id, nombre, orden, imagen_destino, activo')
+      .select('id, division_area_id, nombre, orden, imagen_destino, activo')
       .single();
 
     if (error) throw error;
     return data;
+  }
+
+  async activarCatalogoDestinoAdmin(id: number) {
+    const { error } = await this.client
+      .from('catalogo_destinos')
+      .update({ activo: true })
+      .eq('id', id);
+
+    if (error) throw error;
+  }
+
+  async desactivarCatalogoDestinoAdmin(id: number) {
+    const { error } = await this.client
+      .from('catalogo_destinos')
+      .update({ activo: false })
+      .eq('id', id);
+
+    if (error) throw error;
   }
 
   async crearDestinoAdmin(
@@ -1264,13 +1282,50 @@ export class DestinosService {
   }
 
   async obtenerCatalogoInternacionalDestinosPorPais(paisId: number): Promise<DestinoCatalogo[]> {
-    const pagina = await this.buscarDestinosCatalogo({
-      tipo: 'INTERNACIONAL',
-      paisIds: [paisId],
-      pageSize: 1000
-    });
+    const items: DestinoCatalogoNavegable[] = [];
+    let page = 0;
+    let total = 0;
 
-    return pagina.items.map((item) => ({
+    do {
+      const pagina = await this.buscarDestinosCatalogo({
+        tipo: 'INTERNACIONAL',
+        paisIds: [paisId],
+        page,
+        pageSize: 1000
+      });
+      items.push(...pagina.items);
+      total = pagina.total;
+      page++;
+    } while (items.length < total);
+
+    return items.map((item) => ({
+      id: item.destinoId,
+      pais_id: item.paisId,
+      division_area_id: item.divisionAreaId,
+      nombre: item.destinoNombre,
+      orden: item.orden,
+      slug: item.slug,
+      activo: item.activo
+    }));
+  }
+
+  async obtenerCatalogoNacionalDestinos(): Promise<DestinoCatalogo[]> {
+    const items: DestinoCatalogoNavegable[] = [];
+    let page = 0;
+    let total = 0;
+
+    do {
+      const pagina = await this.buscarDestinosCatalogo({
+        tipo: 'NACIONAL',
+        page,
+        pageSize: 1000
+      });
+      items.push(...pagina.items);
+      total = pagina.total;
+      page++;
+    } while (items.length < total);
+
+    return items.map((item) => ({
       id: item.destinoId,
       pais_id: item.paisId,
       division_area_id: item.divisionAreaId,
@@ -1283,8 +1338,18 @@ export class DestinosService {
 
   async obtenerCatalogoInternacionalDestinos(): Promise<DestinoCatalogo[]> {
     // Compatibilidad: este método ya no debe usarse para poblar listas globales.
-    const pagina = await this.buscarDestinosCatalogo({ tipo: 'INTERNACIONAL', pageSize: 1000 });
-    return pagina.items.map((item) => ({
+    const items: DestinoCatalogoNavegable[] = [];
+    let page = 0;
+    let total = 0;
+
+    do {
+      const pagina = await this.buscarDestinosCatalogo({ tipo: 'INTERNACIONAL', page, pageSize: 1000 });
+      items.push(...pagina.items);
+      total = pagina.total;
+      page++;
+    } while (items.length < total);
+
+    return items.map((item) => ({
       id: item.destinoId,
       pais_id: item.paisId,
       division_area_id: item.divisionAreaId,
@@ -1424,17 +1489,26 @@ export class DestinosService {
       ? 'v_catalogo_nacionales_destinos_admin'
       : 'v_catalogo_internacional_destinos_admin';
 
-    const { data, error } = await this.client
+    let query = this.client
       .from(vista)
-      .select('destino_id, region_nombre, pais_nombre, destino_nombre, destino_orden, imagen_destino, activo')
-      .eq('activo', true)
-      .order('destino_orden', { ascending: true })
-      .order('destino_nombre', { ascending: true });
+      .select('destino_id, region_nombre, pais_nombre, division_area_nombre, destino_nombre, destino_orden, imagen_destino, activo')
+      .eq('activo', true);
+    if (tipo === 'NACIONAL') {
+      query = query
+        .order('division_area_nombre', { ascending: true })
+        .order('destino_nombre', { ascending: true });
+    } else {
+      query = query
+        .order('destino_orden', { ascending: true })
+        .order('destino_nombre', { ascending: true });
+    }
+    const { data, error } = await query;
     if (error) throw error;
     const datos = (data ?? []).map((item: any) => ({
       id: Number(item.destino_id),
       catalogo_destino_id: Number(item.destino_id),
       nombre: String(item.destino_nombre ?? ''),
+      division_area_nombre: String(item.division_area_nombre ?? ''),
       orden: Number(item.destino_orden ?? 0),
       imagen_destino: item.imagen_destino ?? null,
       activo: Boolean(item.activo),

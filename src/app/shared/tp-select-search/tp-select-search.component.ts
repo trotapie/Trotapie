@@ -9,6 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 export interface TpSelectSearchOption {
   value: string | number;
   label: string;
+  group?: string;
   disabled?: boolean;
 }
 
@@ -28,6 +29,7 @@ export class TpSelectSearchComponent implements ControlValueAccessor {
   @Input() options: TpSelectSearchOption[] = [];
   @Input() required = false;
   @Input() disabled = false;
+  @Input() bookingStyle = false;
   @Output() selectionChange = new EventEmitter<string | number | null>();
   @ViewChild('searchInput') private searchInput?: ElementRef<HTMLInputElement>;
 

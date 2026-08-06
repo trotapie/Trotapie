@@ -1,159 +1,212 @@
-<div class="flex min-w-0 flex-auto flex-col bg-gray-50">
-    <div class="mx-auto flex w-full max-w-screen-xl flex-col px-6 py-6 sm:px-8">
+<div class="flex min-w-0 flex-auto flex-col bg-slate-50 dark:bg-slate-950">
+    <div class="mx-auto flex w-full max-w-screen-xl flex-col px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
         <app-blocking-loader
             [open]="cargando || guardando"
             [title]="cargando ? 'Cargando destino' : 'Guardando destino'"
             [message]="cargando ? 'Estamos preparando la informacion para editarla.' : 'No cierres la pantalla mientras terminamos de guardar.'"
         />
 
-        <div class="sticky top-0 z-[100] mb-4 w-full rounded-xl border border-transparent bg-transparent px-2 py-2 backdrop-blur-md transition-all duration-300 md:px-4">
-            <div class="w-full md:flex md:items-center md:justify-between">
-                <div>
-                    <h1 class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">
-                        {{ esCreacion ? 'Nuevo destino' : 'Editar destino' }}
-                    </h1>
+        <header class="sticky top-0 z-[100] -mx-2 mb-5 bg-slate-50/95 px-2 pb-3 pt-2 backdrop-blur-md dark:bg-slate-950/95 sm:mx-0 sm:px-0">
+            <div class="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:px-6">
+                <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                    <div class="min-w-0">
+                        <p class="text-xs font-semibold uppercase tracking-[0.16em] text-primary-600">Administración de destinos</p>
+                        <h1 class="mt-1 truncate text-2xl font-semibold leading-tight text-slate-950 dark:text-white sm:text-3xl">
+                            {{ esCreacion ? 'Nuevo destino' : 'Editar destino' }}
+                        </h1>
+                        <p class="mt-1 max-w-2xl text-sm text-slate-500 dark:text-slate-400">
+                            {{ esCreacion ? 'Completa los datos esenciales para incorporar un destino.' : 'Actualiza la información y los recursos visibles del destino.' }}
+                        </p>
+                    </div>
+
+                    <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
+                        <button mat-raised-button color="warn" type="button" class="w-full text-white sm:w-auto" (click)="regresar()">
+                            <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
+                            Regresar
+                        </button>
+                        <button mat-flat-button color="primary" class="w-full text-white sm:w-auto" type="submit" form="form-editar-destino" [disabled]="guardando">
+                            <mat-icon class="mr-2 icon-size-5 text-white">save</mat-icon>
+                            @if (guardando) {
+                                Guardando...
+                            } @else {
+                                {{ esCreacion ? 'Crear destino' : 'Guardar cambios' }}
+                            }
+                        </button>
+                    </div>
                 </div>
 
-                <div class="my-2 flex items-center gap-3 md:my-0">
-                    <button mat-raised-button color="warn" class="text-white" (click)="regresar()">
-                        <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
-                        Regresar
-                    </button>
-                    <button mat-raised-button color="primary" class="text-white" type="submit" form="form-editar-destino" [disabled]="guardando">
-                        <mat-icon class="mr-3 icon-size-5 text-white">save_outline</mat-icon>
-                        @if (guardando) {
-                        Guardando...
-                        } @else {
-                        Guardar cambios
-                        }
-                    </button>
-                </div>
+                <nav aria-label="Secciones del editor" class="editor-section-nav mt-4 border-t border-slate-100 pt-3 dark:border-slate-800">
+                    <button type="button" (click)="desplazarASeccion('datos-generales')">Datos generales</button>
+                    <button type="button" (click)="desplazarASeccion('recursos-visuales')">Imágenes y recursos</button>
+                </nav>
             </div>
-        </div>
+        </header>
 
         @if (!cargando) {
-        <form id="form-editar-destino" [formGroup]="form" (ngSubmit)="guardar()"
-            class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
-            <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
-                <mat-form-field class="w-full">
-                    <mat-label>Nombre del destino</mat-label>
-                    <input matInput formControlName="nombre" maxlength="120" />
-                    @if (form.get('nombre')?.invalid && form.get('nombre')?.touched) {
-                    <mat-error>El nombre del destino es requerido.</mat-error>
-                    }
-                </mat-form-field>
-
-                <mat-form-field class="w-full">
-                    <mat-label>Orden del destino</mat-label>
-                    <input matInput type="number" min="0" step="1" formControlName="orden" />
-                    @if (form.get('orden')?.invalid && form.get('orden')?.touched) {
-                    <mat-error>El orden debe ser un número mayor o igual a 0.</mat-error>
-                    }
-                </mat-form-field>
-
-                @if (!esCatalogo) {
-                <mat-form-field class="w-full">
-                    <mat-label>Tipo de destino</mat-label>
-                    <mat-select formControlName="tipo_desino_id">
-                        @for (tipo of tiposDestino; track tipo.id) {
-                        <mat-option [value]="tipo.id">
-                            {{ tipo.nombre }}
-                        </mat-option>
-                        }
-                    </mat-select>
-                    @if (form.get('tipo_desino_id')?.invalid && form.get('tipo_desino_id')?.touched) {
-                    <mat-error>El tipo de destino es requerido.</mat-error>
-                    }
-                </mat-form-field>
-
-                @if (esTipoDos) {
-                <mat-form-field class="w-full">
-                    <mat-label>Destino padre</mat-label>
-                    <mat-select formControlName="destino_padre_id">
-                        <mat-option [value]="null">Sin destino padre</mat-option>
-                        @for (destino of destinosPadre; track destino.id) {
-                        <mat-option [value]="destino.id">
-                            {{ destino.nombre }}
-                        </mat-option>
-                        }
-                    </mat-select>
-                </mat-form-field>
-
-                <mat-form-field class="w-full">
-                    <mat-label>Continente</mat-label>
-                    <mat-select formControlName="continente_id">
-                        <mat-option [value]="null">Sin continente</mat-option>
-                        @for (continente of continentes; track continente.id) {
-                        <mat-option [value]="continente.id">
-                            {{ continente.nombre }}
-                        </mat-option>
-                        }
-                    </mat-select>
-                </mat-form-field>
-                }
-                }
-
-                <div class="flex items-center gap-3 lg:col-span-2">
-                    <app-custom-switch formControlName="activo" label="Destino activo"></app-custom-switch>
-                    <span class="text-sm text-gray-500">
-                        {{ form.get('activo')?.value ? 'Visible en el sitio publico' : 'Oculto del sitio publico' }}
-                    </span>
-                </div>
-
-                <div class="space-y-2">
-                    <mat-form-field class="w-full">
-                        <mat-label>Imagen del destino (URL)</mat-label>
-                        <input matInput formControlName="imagen_destino" />
-                    </mat-form-field>
-
-                    @if (form.get('imagen_destino')?.value) {
-                    <div class="aspect-square w-full overflow-hidden rounded-lg border border-gray-200 bg-gray-50 p-2">
-                        <img [src]="form.get('imagen_destino')?.value" alt="Imagen destino" class="h-full w-full object-contain" />
+            <form id="form-editar-destino" [formGroup]="form" (ngSubmit)="guardar()" class="space-y-5">
+                <section id="datos-generales" class="editor-section scroll-mt-52">
+                    <div class="editor-section__header">
+                        <div class="editor-section__icon bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-300">
+                            <mat-icon>place</mat-icon>
+                        </div>
+                        <div>
+                            <h2>Datos generales</h2>
+                            <p>Identificación, clasificación y visibilidad del destino.</p>
+                        </div>
                     </div>
-                    }
-                </div>
 
-                @if (!esCatalogo) {
-                <div class="space-y-2">
-                    <mat-form-field class="w-full">
-                        <mat-label>Imagen de cotizacion (URL)</mat-label>
-                        <input matInput formControlName="imagen_cotizacion" />
-                    </mat-form-field>
+                    <div class="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-2">
+                        <app-tp-input
+                            class="w-full"
+                            label="Nombre del destino"
+                            formControlName="nombre"
+                            [required]="true"
+                            [maxLength]="120"
+                            [error]="form.get('nombre')?.invalid && form.get('nombre')?.touched ? 'El nombre del destino es requerido.' : ''"
+                        ></app-tp-input>
 
-                    @if (form.get('imagen_cotizacion')?.value) {
-                    <div class="aspect-square w-full overflow-hidden rounded-lg border border-gray-200 bg-gray-50 p-2">
-                        <img [src]="form.get('imagen_cotizacion')?.value" alt="Imagen cotizacion" class="h-full w-full object-contain" />
+                        <app-tp-input
+                            class="w-full"
+                            label="Orden del destino"
+                            type="number"
+                            formControlName="orden"
+                            [min]="0"
+                            [error]="form.get('orden')?.invalid && form.get('orden')?.touched ? 'El orden debe ser un numero mayor o igual a 0.' : ''"
+                        ></app-tp-input>
+
+                        @if (esCatalogo) {
+                            <app-tp-select-search
+                                class="w-full"
+                                label="División de área"
+                                placeholder="Selecciona una división"
+                                searchPlaceholder="Buscar división"
+                                [options]="divisionesAreaOpciones"
+                                formControlName="division_area_id"
+                            ></app-tp-select-search>
+                        }
+
+                        @if (!esCatalogo) {
+                            <mat-form-field class="w-full">
+                                <mat-label>Tipo de destino</mat-label>
+                                <mat-select formControlName="tipo_desino_id">
+                                    @for (tipo of tiposDestino; track tipo.id) {
+                                        <mat-option [value]="tipo.id">{{ tipo.nombre }}</mat-option>
+                                    }
+                                </mat-select>
+                                @if (form.get('tipo_desino_id')?.invalid && form.get('tipo_desino_id')?.touched) {
+                                    <mat-error>El tipo de destino es requerido.</mat-error>
+                                }
+                            </mat-form-field>
+
+                            @if (esTipoDos) {
+                                <mat-form-field class="w-full">
+                                    <mat-label>Destino padre</mat-label>
+                                    <mat-select formControlName="destino_padre_id">
+                                        <mat-option [value]="null">Sin destino padre</mat-option>
+                                        @for (destino of destinosPadre; track destino.id) {
+                                            <mat-option [value]="destino.id">{{ destino.nombre }}</mat-option>
+                                        }
+                                    </mat-select>
+                                </mat-form-field>
+
+                                <mat-form-field class="w-full">
+                                    <mat-label>Continente</mat-label>
+                                    <mat-select formControlName="continente_id">
+                                        <mat-option [value]="null">Sin continente</mat-option>
+                                        @for (continente of continentes; track continente.id) {
+                                            <mat-option [value]="continente.id">{{ continente.nombre }}</mat-option>
+                                        }
+                                    </mat-select>
+                                </mat-form-field>
+                            }
+                        }
+
+                        <div class="status-control md:col-span-2">
+                            <app-custom-switch formControlName="activo" label="Visibilidad del destino"></app-custom-switch>
+                            <span class="font-medium" [class.text-emerald-600]="form.get('activo')?.value" [class.dark:text-emerald-400]="form.get('activo')?.value">
+                                {{ form.get('activo')?.value ? 'Activo y visible en el sitio publico' : 'Inactivo y oculto del sitio publico' }}
+                            </span>
+                        </div>
                     </div>
-                    }
-                </div>
+                </section>
+
+                <section id="recursos-visuales" class="editor-section scroll-mt-52">
+                    <div class="editor-section__header">
+                        <div class="editor-section__icon bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-300">
+                            <mat-icon>image</mat-icon>
+                        </div>
+                        <div>
+                            <h2>Imágenes y recursos</h2>
+                            <p>Agrega las URLs de las imágenes que acompañan al destino.</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                        <div class="resource-field">
+                            <app-tp-input
+                                class="w-full"
+                                label="Imagen del destino (URL)"
+                                placeholder="https://..."
+                                formControlName="imagen_destino"
+                            ></app-tp-input>
+
+                            @if (form.get('imagen_destino')?.value) {
+                                <div class="preview-panel">
+                                    <p class="preview-panel__title">Vista previa</p>
+                                    <div class="aspect-[4/3] overflow-hidden rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
+                                        <img [src]="form.get('imagen_destino')?.value" alt="Vista previa del destino" class="h-full w-full object-contain" />
+                                    </div>
+                                </div>
+                            } @else {
+                                <div class="empty-preview">Sin imagen del destino</div>
+                            }
+                        </div>
+
+                        @if (!esCatalogo) {
+                            <div class="resource-field">
+                                <app-tp-input
+                                    class="w-full"
+                                    label="Imagen de cotización (URL)"
+                                    placeholder="https://..."
+                                    formControlName="imagen_cotizacion"
+                                ></app-tp-input>
+
+                                @if (form.get('imagen_cotizacion')?.value) {
+                                    <div class="preview-panel">
+                                        <p class="preview-panel__title">Vista previa</p>
+                                        <div class="aspect-[4/3] overflow-hidden rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
+                                            <img [src]="form.get('imagen_cotizacion')?.value" alt="Vista previa de la imagen de cotización" class="h-full w-full object-contain" />
+                                        </div>
+                                    </div>
+                                } @else {
+                                    <div class="empty-preview">Sin imagen de cotización</div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </section>
+
+                @if (error) {
+                    <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300" role="alert">
+                        {{ error }}
+                    </div>
                 }
-            </div>
-
-            @if (error) {
-            <div class="mt-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                {{ error }}
-            </div>
-            }
-
-        </form>
+            </form>
         }
     </div>
 </div>
 
 @if (mostrarModalExito) {
-<div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
-    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
-        <h3 class="text-xl font-semibold text-gray-900">Actualizacion completada</h3>
-        <p class="mt-2 text-sm text-gray-600">
-            {{ esCreacion ? 'Destino creado correctamente.' : 'Destino actualizado correctamente.' }}
-        </p>
+    <div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
+        <div role="dialog" aria-modal="true" aria-labelledby="titulo-modal-exito" class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900">
+            <h3 id="titulo-modal-exito" class="text-xl font-semibold text-slate-900 dark:text-white">Actualizacion completada</h3>
+            <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                {{ esCreacion ? 'Destino creado correctamente.' : 'Destino actualizado correctamente.' }}
+            </p>
 
-        <div class="mt-6 flex justify-end">
-            <button mat-flat-button color="primary" (click)="cerrarModalExito()">
-                Aceptar
-            </button>
+            <div class="mt-6 flex justify-end">
+                <button mat-flat-button color="primary" (click)="cerrarModalExito()">Aceptar</button>
+            </div>
         </div>
     </div>
-</div>
 }
-
