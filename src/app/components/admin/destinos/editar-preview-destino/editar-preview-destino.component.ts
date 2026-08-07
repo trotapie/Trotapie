@@ -51,13 +51,13 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
   destinoNombre = '';
   cargando = true;
   guardando = false;
+  guardandoUbicacion = false;
   actualizandoOrden = false;
   error = '';
   mostrarModalExito = false;
   mensajeModalExito = 'Preview del destino actualizado correctamente.';
   mostrarModalEditarDatoRapido = false;
   mostrarModalNuevoDatoRapido = false;
-  mostrarModalEditarTextoPreview = false;
   mostrarModalEditarActividad = false;
   mostrarModalNuevaActividad = false;
   mostrarModalConfirmarEliminarActividad = false;
@@ -65,16 +65,18 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
   guardandoActividad = false;
   agregandoDatoRapido = false;
   traduciendoActividad = false;
+  traduciendoTextoPreview = false;
   eliminandoActividadIndex: number | null = null;
   cambiandoActivoDatoRapidoId: number | null = null;
   eliminandoDatoRapidoId: number | null = null;
   indiceActividadAEliminar: number | null = null;
   indiceDatoRapidoEditando: number | null = null;
   indiceDatoRapidoAEliminar: number | null = null;
-  indiceTraduccionEditando: number | null = null;
   indiceActividadEditando: number | null = null;
   concentradoTraduccionesActividad: Record<string, { nombre: string; descripcion: string }> = {};
   private ultimaLlaveTraduccionActividad = '';
+  private ultimaLlaveTraduccionTextoPreview = '';
+  private guardadoUbicacionPendiente: Promise<boolean> | null = null;
   private modalAbiertoPrevio = false;
   private bodyOverflowOriginal = '';
   private bodyPaddingRightOriginal = '';
@@ -105,14 +107,6 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     valores: this.fb.group({})
   });
 
-  formEditarTextoPreview = this.fb.group({
-    idioma: [{ value: '', disabled: true }],
-    nombre: ['', [Validators.required]],
-    titulo_descripcion: ['', [Validators.required]],
-    descripcion_corta: ['', [Validators.required]],
-    descripcion_larga: ['', [Validators.required]]
-  });
-
   formActividad = this.fb.group({
     catalogo_atraccion_id: [null as number | null, [Validators.required]],
     imagen_fondo: [''],
@@ -122,6 +116,10 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
 
   get traduccionesArray(): UntypedFormArray {
     return this.form.get('traducciones') as UntypedFormArray;
+  }
+
+  get indiceEspanol(): number {
+    return this.traduccionesArray.controls.findIndex((traduccion) => traduccion.get('codigo')?.value === 'es');
   }
 
   get detallesRapidosArray(): UntypedFormArray {
@@ -164,10 +162,6 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
           (!busqueda || this.normalizarTextoFiltro(nombre).includes(busqueda))
         );
       });
-  }
-
-  actualizarBusquedaActividades(event: Event): void {
-    this.busquedaActividades = (event.target as HTMLInputElement).value;
   }
 
   seleccionarTipoActividad(tipoId: number | null): void {
@@ -248,8 +242,14 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
 
 
   async guardar(mostrarExito = true): Promise<boolean> {
+    const ubicacionGuardada = await this.guardarUbicacion();
+    if (!ubicacionGuardada) {
+      return false;
+    }
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.error = 'La ubicación se guardó, pero faltan campos obligatorios en el contenido en español.';
       return false;
     }
 
@@ -257,6 +257,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     this.error = '';
 
     try {
+      await this.traducirTextosPreviewDesdeCamposEspanol();
       const raw = this.form.getRawValue();
       const detallesRapidos = (raw.detallesRapidos ?? []).map((item: any, index: number) => ({
         tipo_dato_rapido_id: Number(item.tipo_dato_rapido_id),
@@ -411,48 +412,34 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
   }
 
 
-  abrirModalEditarTextoPreview(index: number) {
-    const traduccion = this.traduccionesArray.at(index);
-    if (!traduccion) {
+  async traducirTextosPreviewDesdeCamposEspanol(): Promise<void> {
+    const traduccionEspanol = this.traduccionesArray.at(this.indiceEspanol);
+    if (!traduccionEspanol || traduccionEspanol.invalid || this.traduciendoTextoPreview) {
       return;
     }
 
-    this.indiceTraduccionEditando = index;
-    this.formEditarTextoPreview.patchValue({
-      idioma: this.getNombreIdioma(String(traduccion.get('codigo')?.value ?? '')),
-      nombre: traduccion.get('nombre')?.value ?? '',
-      titulo_descripcion: traduccion.get('titulo_descripcion')?.value ?? '',
-      descripcion_corta: traduccion.get('descripcion_corta')?.value ?? '',
-      descripcion_larga: traduccion.get('descripcion_larga')?.value ?? ''
-    });
-    this.mostrarModalEditarTextoPreview = true;
-  }
-
-  cerrarModalEditarTextoPreview() {
-    this.mostrarModalEditarTextoPreview = false;
-    this.indiceTraduccionEditando = null;
-  }
-
-  guardarEdicionTextoPreview() {
-    if (this.formEditarTextoPreview.invalid || this.indiceTraduccionEditando === null) {
-      this.formEditarTextoPreview.markAllAsTouched();
+    const textos = {
+      nombre: this.limpiarTexto(traduccionEspanol.get('nombre')?.value) ?? '',
+      titulo_descripcion: this.limpiarTexto(traduccionEspanol.get('titulo_descripcion')?.value) ?? '',
+      descripcion_corta: this.limpiarTexto(traduccionEspanol.get('descripcion_corta')?.value) ?? '',
+      descripcion_larga: this.limpiarTexto(traduccionEspanol.get('descripcion_larga')?.value) ?? ''
+    };
+    const llave = JSON.stringify(textos);
+    if (llave === this.ultimaLlaveTraduccionTextoPreview) {
       return;
     }
 
-    const traduccion = this.traduccionesArray.at(this.indiceTraduccionEditando);
-    if (!traduccion) {
-      return;
+    this.traduciendoTextoPreview = true;
+    this.error = '';
+
+    try {
+      await this.traducirTextoPreviewDesdeEspanol(textos);
+      this.ultimaLlaveTraduccionTextoPreview = llave;
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudieron traducir los textos del preview.';
+    } finally {
+      this.traduciendoTextoPreview = false;
     }
-
-    const raw = this.formEditarTextoPreview.getRawValue();
-    traduccion.patchValue({
-      nombre: raw.nombre ?? '',
-      titulo_descripcion: raw.titulo_descripcion ?? '',
-      descripcion_corta: raw.descripcion_corta ?? '',
-      descripcion_larga: raw.descripcion_larga ?? ''
-    });
-
-    this.cerrarModalEditarTextoPreview();
   }
 
   abrirModalNuevaActividad() {
@@ -793,6 +780,39 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     return this.catalogoTiposDatoRapido.filter((item) => !usados.has(Number(item.id)));
   }
 
+  guardarUbicacion(): Promise<boolean> {
+    if (this.guardadoUbicacionPendiente) {
+      return this.guardadoUbicacionPendiente;
+    }
+
+    this.guardadoUbicacionPendiente = this.persistirUbicacion();
+    return this.guardadoUbicacionPendiente;
+  }
+
+  private async persistirUbicacion(): Promise<boolean> {
+    if (!this.destinoId) {
+      return false;
+    }
+
+    this.guardandoUbicacion = true;
+    this.error = '';
+
+    try {
+      await this.destinosService.actualizarUbicacionDestinoAdmin(
+        this.destinoId,
+        this.limpiarTexto(this.form.get('ubicacion')?.value)
+      );
+      return true;
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudo actualizar la ubicación.';
+      this.toast.show({ title: 'No se pudo actualizar la ubicación', message: this.error, variant: 'error' });
+      return false;
+    } finally {
+      this.guardandoUbicacion = false;
+      this.guardadoUbicacionPendiente = null;
+    }
+  }
+
   get opcionesCatalogoDatoRapido(): TpSelectSearchOption[] {
     return this.catalogoDisponibleParaNuevo.map((tipo) => ({
       value: tipo.id,
@@ -1011,10 +1031,8 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     });
 
     const valoresForm = this.buildValoresGroup(
-      this.idiomas.reduce((acc, idioma) => {
-        acc[idioma.codigo] = detalle.get('valores')?.get(idioma.codigo)?.value ?? '';
-        return acc;
-      }, {} as Record<string, string>)
+      { es: detalle.get('valores')?.get('es')?.value ?? '' },
+      true
     );
     this.formEditarDatoRapido.setControl('valores', valoresForm);
     this.mostrarModalEditarDatoRapido = true;
@@ -1025,8 +1043,13 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     this.indiceDatoRapidoEditando = null;
   }
 
-  guardarEdicionDatoRapido() {
+  async guardarEdicionDatoRapido(): Promise<void> {
     if (this.indiceDatoRapidoEditando === null) {
+      return;
+    }
+
+    if (this.formEditarDatoRapido.invalid) {
+      this.formEditarDatoRapido.markAllAsTouched();
       return;
     }
 
@@ -1035,13 +1058,16 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    const raw = this.formEditarDatoRapido.getRawValue();
-    const valores = raw.valores ?? {};
-    this.idiomas.forEach((idioma) => {
-      detalle.get('valores')?.get(idioma.codigo)?.setValue(valores[idioma.codigo] ?? '');
-    });
-
-    this.cerrarModalEditarDatoRapido();
+    try {
+      const raw = this.formEditarDatoRapido.getRawValue();
+      const valores = await this.traducirValorRapidoDesdeEspanol(raw?.valores?.es);
+      this.idiomas.forEach((idioma) => {
+        detalle.get('valores')?.get(idioma.codigo)?.setValue(valores[idioma.codigo] ?? '');
+      });
+      this.cerrarModalEditarDatoRapido();
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudo traducir el dato rápido.';
+    }
   }
 
   private inicializarFormulario(data: IPreviewDestinoAdmin) {
@@ -1069,10 +1095,10 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
       return this.fb.group({
         idioma_id: [idioma.id],
         codigo: [idioma.codigo],
-        nombre: [traduccion?.nombre ?? '', [Validators.required]],
-        descripcion_corta: [traduccion?.descripcion_corta ?? '', [Validators.required]],
-        descripcion_larga: [traduccion?.descripcion_larga ?? '', [Validators.required]],
-        titulo_descripcion: [traduccion?.titulo_descripcion ?? '', [Validators.required]]
+        nombre: [traduccion?.nombre ?? '', idioma.codigo === 'es' ? [Validators.required] : []],
+        descripcion_corta: [traduccion?.descripcion_corta ?? '', idioma.codigo === 'es' ? [Validators.required] : []],
+        descripcion_larga: [traduccion?.descripcion_larga ?? '', idioma.codigo === 'es' ? [Validators.required] : []],
+        titulo_descripcion: [traduccion?.titulo_descripcion ?? '', idioma.codigo === 'es' ? [Validators.required] : []]
       });
     });
 
@@ -1085,6 +1111,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     this.form.patchValue({
       ubicacion: data.ubicacion ?? ''
     });
+    this.ultimaLlaveTraduccionTextoPreview = JSON.stringify(this.obtenerTextosPreviewEspanol());
   }
 
   private buildDetalleRapidoGroup(item: any, index: number) {
@@ -1329,6 +1356,51 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     }, {} as Record<string, string>);
   }
 
+  private async traducirTextoPreviewDesdeEspanol(textos: {
+    nombre: string;
+    titulo_descripcion: string;
+    descripcion_corta: string;
+    descripcion_larga: string;
+  }): Promise<void> {
+    const [nombreTraducido, encabezadoTraducido, descripcionLargaTraducida] = await Promise.all([
+      this.traduccionesService.traducirDesdeEspanol({ title: textos.nombre, description: '' }),
+      this.traduccionesService.traducirDesdeEspanol({
+        title: textos.titulo_descripcion,
+        description: textos.descripcion_corta
+      }),
+      this.traduccionesService.traducirDesdeEspanol({ title: '', description: textos.descripcion_larga })
+    ]);
+
+    this.idiomas.forEach((idioma, index) => {
+      const traduccion = this.traduccionesArray.at(index);
+      if (!traduccion) {
+        return;
+      }
+
+      if (idioma.codigo === 'es') {
+        traduccion.patchValue(textos);
+        return;
+      }
+
+      traduccion.patchValue({
+        nombre: this.limpiarTexto(nombreTraducido?.[idioma.codigo]?.title) ?? '',
+        titulo_descripcion: this.limpiarTexto(encabezadoTraducido?.[idioma.codigo]?.title) ?? '',
+        descripcion_corta: this.limpiarTexto(encabezadoTraducido?.[idioma.codigo]?.description) ?? '',
+        descripcion_larga: this.limpiarTexto(descripcionLargaTraducida?.[idioma.codigo]?.description) ?? ''
+      });
+    });
+  }
+
+  private obtenerTextosPreviewEspanol() {
+    const traduccionEspanol = this.traduccionesArray.at(this.indiceEspanol);
+    return {
+      nombre: this.limpiarTexto(traduccionEspanol?.get('nombre')?.value) ?? '',
+      titulo_descripcion: this.limpiarTexto(traduccionEspanol?.get('titulo_descripcion')?.value) ?? '',
+      descripcion_corta: this.limpiarTexto(traduccionEspanol?.get('descripcion_corta')?.value) ?? '',
+      descripcion_larga: this.limpiarTexto(traduccionEspanol?.get('descripcion_larga')?.value) ?? ''
+    };
+  }
+
   private buildValoresGroup(initial?: Record<string, string>, requerirEspanol = false) {
     const valores = this.idiomas.reduce((acc, idioma) => {
       acc[idioma.codigo] = [initial?.[idioma.codigo] ?? '', ...(requerirEspanol && idioma.codigo === 'es' ? [Validators.required] : [])];
@@ -1372,7 +1444,6 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
       this.mostrarModalExito ||
       this.mostrarModalEditarDatoRapido ||
       this.mostrarModalNuevoDatoRapido ||
-      this.mostrarModalEditarTextoPreview ||
       this.mostrarModalEditarActividad ||
       this.mostrarModalNuevaActividad ||
       this.mostrarModalConfirmarEliminarActividad ||

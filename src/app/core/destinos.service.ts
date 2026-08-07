@@ -782,12 +782,17 @@ export class DestinosService {
     let detallesDestinosId = detalleExistente?.id;
 
     if (detallesDestinosId) {
-      const { error: actualizarDetalleError } = await this.client
+      const { data: detalleActualizado, error: actualizarDetalleError } = await this.client
         .from('detalles_destinos')
         .update({ ubicacion: payload.ubicacion })
-        .eq('id', detallesDestinosId);
+        .eq('id', detallesDestinosId)
+        .select('id, ubicacion')
+        .limit(1);
 
       if (actualizarDetalleError) throw actualizarDetalleError;
+      if (!detalleActualizado?.length) {
+        throw new Error('No tienes permiso para actualizar la ubicación de este destino.');
+      }
     } else {
       const { data: nuevoDetalle, error: crearDetalleError } = await this.client
         .from('detalles_destinos')
@@ -1012,6 +1017,38 @@ export class DestinosService {
     if (error) throw error;
 
     return { updated: detallesRapidos.length };
+  }
+
+  async actualizarUbicacionDestinoAdmin(catalogoDestinoId: number, ubicacion: string | null): Promise<void> {
+    const { data: detallesExistentes, error: detalleExistenteError } = await this.client
+      .from('detalles_destinos')
+      .select('id')
+      .eq('catalogo_destino_id', catalogoDestinoId)
+      .limit(1);
+
+    if (detalleExistenteError) throw detalleExistenteError;
+
+    const detalleExistente = detallesExistentes?.[0] ?? null;
+    if (detalleExistente) {
+      const { data, error } = await this.client
+        .from('detalles_destinos')
+        .update({ ubicacion })
+        .eq('id', detalleExistente.id)
+        .select('id, ubicacion')
+        .limit(1);
+
+      if (error) throw error;
+      if (!data?.length) {
+        throw new Error('No tienes permiso para actualizar la ubicación de este destino.');
+      }
+      return;
+    }
+
+    const { error } = await this.client
+      .from('detalles_destinos')
+      .insert({ catalogo_destino_id: catalogoDestinoId, ubicacion });
+
+    if (error) throw error;
   }
 
   async actualizarActivoDatoRapidoDestinoAdmin(detalleRapidoId: number, activo: boolean): Promise<boolean> {

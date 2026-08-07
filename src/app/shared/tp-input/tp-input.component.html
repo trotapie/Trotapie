@@ -1,6 +1,11 @@
 <div class="tp-input" [class.tp-input--booking]="bookingStyle" [class.tp-input--error]="error" [class.tp-input--disabled]="disabled">
   @if (label) { <label class="tp-input__label" [class.tp-input__label--required]="required">{{ label }}</label> }
-  <input class="tp-input__field" [type]="type" [disabled]="disabled" [placeholder]="placeholder" [value]="value" [attr.min]="min" [attr.max]="max" [attr.maxlength]="maxLength"
-    (input)="actualizar($any($event.target).value)" (blur)="marcarTouched()" />
+  @if (multiline) {
+    <textarea class="tp-input__field" [disabled]="disabled" [placeholder]="placeholder" [value]="value" [rows]="rows" [attr.maxlength]="maxLength"
+      (input)="actualizar($any($event.target).value)" (blur)="marcarTouched()"></textarea>
+  } @else {
+    <input class="tp-input__field" [type]="type" [disabled]="disabled" [placeholder]="placeholder" [value]="value" [attr.min]="min" [attr.max]="max" [attr.maxlength]="maxLength"
+      (input)="actualizar($any($event.target).value)" (blur)="marcarTouched()" />
+  }
   @if (error) { <span class="tp-input__error" role="alert">{{ error }}</span> }
 </div>

@@ -18,8 +18,11 @@ export class TpInputComponent implements ControlValueAccessor {
   @Input() maxLength: number | null = null;
   @Input() error = '';
   @Input() bookingStyle = false;
+  @Input() multiline = false;
+  @Input() rows = 3;
   @Output() blur = new EventEmitter<void>();
-  value = '';
+  @Output() valueChange = new EventEmitter<string>();
+  @Input() value = '';
   disabled = false;
   private onChange: (value: string | number | null) => void = () => undefined;
   private onTouched: () => void = () => undefined;
@@ -27,6 +30,10 @@ export class TpInputComponent implements ControlValueAccessor {
   registerOnChange(fn: (value: string | number | null) => void): void { this.onChange = fn; }
   registerOnTouched(fn: () => void): void { this.onTouched = fn; }
   setDisabledState(isDisabled: boolean): void { this.disabled = isDisabled; }
-  actualizar(value: string): void { this.value = value; this.onChange(this.type === 'number' ? (value === '' ? null : Number(value)) : value); }
+  actualizar(value: string): void {
+    this.value = value;
+    this.onChange(this.type === 'number' ? (value === '' ? null : Number(value)) : value);
+    this.valueChange.emit(value);
+  }
   marcarTouched(): void { this.onTouched(); this.blur.emit(); }
 }
