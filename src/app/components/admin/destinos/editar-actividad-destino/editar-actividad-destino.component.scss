@@ -1,6 +1,101 @@
 /* Layout reverted to rely on folder-image-manager design */
 
 :host {
+  .activity-editor-drawer-container {
+    height: calc(100vh - 4rem);
+    min-height: 0;
+    background: transparent;
+    overflow: hidden;
+  }
+
+  .activity-editor-drawer-container .mat-drawer-content {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .activity-editor-main {
+    height: 100%;
+    min-height: 0;
+  }
+
+  .activity-editor-header {
+    flex: 0 0 auto;
+  }
+
+  .activity-editor-main > form {
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    padding: 0 0.25rem 2rem 0;
+  }
+
+  .activity-editor-drawer {
+    position: fixed !important;
+    top: 4rem;
+    left: 7rem;
+    z-index: 40;
+    width: 18rem;
+    height: calc(100vh - 4rem);
+    border-right: 1px solid var(--fuse-border);
+    box-shadow: 0.75rem 0 1.5rem rgb(15 23 42 / 4%);
+  }
+
+  .activity-editor-drawer__content {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .activity-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 4.5rem;
+    padding: 0.625rem;
+    border: 1px solid transparent;
+    border-radius: 0.875rem;
+    color: var(--fuse-text-default);
+    transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+  }
+
+  .activity-nav-item:hover {
+    border-color: color-mix(in srgb, var(--primary, #00a67c) 18%, var(--fuse-border));
+    background: color-mix(in srgb, var(--primary, #00a67c) 6%, transparent);
+  }
+
+  .activity-nav-item:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--primary, #00a67c) 35%, transparent);
+    outline-offset: 2px;
+  }
+
+  .activity-nav-item--active {
+    border-color: color-mix(in srgb, var(--primary, #00a67c) 26%, var(--fuse-border));
+    background: color-mix(in srgb, var(--primary, #00a67c) 11%, transparent);
+  }
+
+  .activity-nav-item__image {
+    width: 3rem;
+    height: 3rem;
+    flex: 0 0 3rem;
+    border-radius: 0.7rem;
+    object-fit: cover;
+    background: var(--fuse-bg-default);
+  }
+
+  .activity-nav-item__image--empty {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--fuse-text-secondary);
+    border: 1px solid var(--fuse-border);
+  }
+
+  .activity-nav-item__check {
+    flex: 0 0 auto;
+    color: var(--primary, #00a67c);
+  }
+
   .modal-blocker {
     // The compact admin header occupies 4rem above the routed content.
     top: -4rem;
@@ -109,6 +204,10 @@
 
 @media (max-width: 767px) {
   :host {
+    .activity-editor-drawer {
+      width: min(19rem, calc(100vw - 3rem));
+    }
+
     .drive-import-modal {
       align-items: flex-start;
     }

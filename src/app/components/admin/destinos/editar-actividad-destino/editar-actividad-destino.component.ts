@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, inject } from '@angular/core';
 import { UntypedFormArray, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
@@ -25,6 +25,14 @@ import { ColorPickerComponent } from 'app/shared/color-picker/color-picker.compo
 interface ILangConfig {
   code: string;
   label: string;
+}
+
+interface IActividadNavegacion {
+  id: number;
+  nombre: string;
+  tipo: string;
+  imagenUrl: string | null;
+  totalImagenes: number;
 }
 
 type DriveActividadFolderDraft = {
@@ -111,6 +119,10 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   actividadId = 0;
   destinoNombre = '';
   actividadNombre = '';
+  actividadesNavegacion: IActividadNavegacion[] = [];
+  drawerModo: 'side' | 'over' = 'side';
+  mostrarConfirmacionCambioActividad = false;
+  actividadDestinoPendiente: IActividadNavegacion | null = null;
   carpetaActiva = 'Todas';
   editorImagenAbierto = false;
   imagenEditandoIndex: number | null = null;
@@ -145,6 +157,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   } | null = null;
   concentradoTraduccionesActividad: Record<string, { nombre: string; descripcion: string }> = {};
   ultimaLlaveTraduccionActividad = '';
+  private contenidoActividadGuardado = '';
   private pendientesImagenesCarpeta = new Map<string, { carpeta_id: number | null; carpeta_nombre: string; carpeta: string }>();
   private imagenesClaveSecuencia = 0;
   private carpetasTemporalesSecuencia = -1;
@@ -448,6 +461,12 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       return;
     }
 
+    await this.cargarActividad(destinoId, actividadId);
+  }
+
+  private async cargarActividad(destinoId: number, actividadId: number): Promise<void> {
+    this.cargando = true;
+    this.error = '';
     this.destinoId = destinoId;
     this.actividadId = actividadId;
 
@@ -471,6 +490,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
           nombre: actividad.tipo_actividad ?? 'Tipo desactivado'
         });
       }
+      this.actividadesNavegacion = this.construirActividadesNavegacion(preview);
       this.carpetasActividad = actividad.carpetas ?? [];
 
       const traducciones = this.idiomas.map((idioma) =>
@@ -489,6 +509,8 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       this.normalizarOrdenImagenes();
       this.concentradoTraduccionesActividad = this.construirConcentradoTraduccionesDesdeActividad(actividad);
       this.ultimaLlaveTraduccionActividad = this.obtenerLlaveTraduccionEspanol();
+      this.contenidoActividadGuardado = this.obtenerLlaveContenidoActividad();
+      this.actualizarModoDrawer();
     } catch (error: any) {
       this.error = error?.message ?? 'No se pudo cargar la actividad.';
     } finally {
@@ -500,8 +522,44 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     this.setModalLocked(false);
   }
 
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    this.actualizarModoDrawer();
+  }
+
   regresar() {
     this.router.navigate(['/admin/destinos/configurar-destinos/preview/' + this.destinoId]);
+  }
+
+  get tieneCambiosSinGuardar(): boolean {
+    return !!this.contenidoActividadGuardado && this.obtenerLlaveContenidoActividad() !== this.contenidoActividadGuardado;
+  }
+
+  seleccionarActividadNavegacion(actividad: IActividadNavegacion): void {
+    if (actividad.id === this.actividadId) {
+      return;
+    }
+
+    if (this.tieneCambiosSinGuardar) {
+      this.actividadDestinoPendiente = actividad;
+      this.mostrarConfirmacionCambioActividad = true;
+      return;
+    }
+
+    this.navegarAActividad(actividad.id);
+  }
+
+  cancelarCambioActividad(): void {
+    this.mostrarConfirmacionCambioActividad = false;
+    this.actividadDestinoPendiente = null;
+  }
+
+  descartarYCambiarActividad(): void {
+    const actividad = this.actividadDestinoPendiente;
+    this.cancelarCambioActividad();
+    if (actividad) {
+      this.navegarAActividad(actividad.id);
+    }
   }
 
   seleccionarCarpeta(nombre: string) {
@@ -1699,19 +1757,19 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     await this.eliminarImagen(this.imagenEditandoIndex);
   }
 
-  async guardar(): Promise<void> {
+  async guardar(): Promise<boolean> {
     return this.guardarTraducciones();
   }
 
-  async guardarTraducciones(): Promise<void> {
+  async guardarTraducciones(): Promise<boolean> {
     if (this.guardandoTraducciones || this.guardandoImagenes || this.traduciendoActividad) {
-      return;
+      return false;
     }
 
     const traduccionesControl = this.traduccionesArray;
     if (traduccionesControl.invalid) {
       traduccionesControl.markAllAsTouched();
-      return;
+      return false;
     }
 
     await this.traducirActividadDesdeEspanol();
@@ -1747,8 +1805,11 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
         return acc;
       }, {} as Record<string, { nombre: string; descripcion: string }>);
       this.ultimaLlaveTraduccionActividad = this.obtenerLlaveTraduccionEspanol();
+      this.contenidoActividadGuardado = this.obtenerLlaveContenidoActividad();
+      return true;
     } catch (error: any) {
       this.error = error?.message ?? 'No se pudieron guardar las traducciones.';
+      return false;
     } finally {
       this.guardandoTraducciones = false;
     }
@@ -2229,6 +2290,53 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     return `${esNombre ?? ''}|${esDescripcion ?? ''}`;
   }
 
+  private navegarAActividad(actividadId: number): void {
+    this.router.navigate([
+      '/admin/destinos/configurar-destinos/preview',
+      this.destinoId,
+      'actividad',
+      actividadId
+    ]);
+    void this.cargarActividad(this.destinoId, actividadId);
+  }
+
+  private actualizarModoDrawer(): void {
+    if (typeof window !== 'undefined') {
+      this.drawerModo = window.innerWidth < 1024 ? 'over' : 'side';
+    }
+  }
+
+  private construirActividadesNavegacion(preview: IPreviewDestinoAdmin): IActividadNavegacion[] {
+    return (preview.actividades ?? []).map((actividad) => {
+      const catalogoAtraccionId = this.parseNumber(actividad.catalogo_atraccion_id);
+      const imagenes = actividad.imagenes ?? [];
+      const imagenPrincipal = imagenes.find((imagen) => imagen.activa) ?? imagenes[0] ?? null;
+
+      return {
+        id: Number(actividad.id),
+        nombre: this.obtenerNombreActividad(actividad, preview),
+        tipo:
+          this.catalogoAtracciones.find((tipo) => tipo.id === catalogoAtraccionId)?.nombre ??
+          actividad.tipo_actividad ??
+          'Sin clasificar',
+        imagenUrl: imagenPrincipal?.imagen_url ?? null,
+        totalImagenes: imagenes.length
+      };
+    });
+  }
+
+  private obtenerLlaveContenidoActividad(): string {
+    const raw = this.form.getRawValue();
+    return JSON.stringify({
+      catalogo_atraccion_id: this.parseNumber(raw.catalogo_atraccion_id),
+      traducciones: (raw.traducciones ?? []).map((traduccion: any) => ({
+        idioma_id: Number(traduccion.idioma_id),
+        nombre: this.limpiarTexto(traduccion.nombre),
+        descripcion: this.limpiarTexto(traduccion.descripcion)
+      }))
+    });
+  }
+
   private limpiarTexto(value: string | null | undefined): string | null {
     const limpio = (value ?? '').trim();
     return limpio ? limpio : null;
@@ -2299,7 +2407,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       }
     }
 
-    const fallback = preview.actividades?.find((item) => Number(item.id) === this.actividadId);
+    const fallback = preview.actividades?.find((item) => Number(item.id) === Number(actividad?.id));
     return fallback?.traducciones?.[es?.id ?? 1]?.nombre ?? 'Actividad';
   }
 

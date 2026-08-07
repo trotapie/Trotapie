@@ -1,12 +1,66 @@
 <div class="flex min-w-0 flex-auto flex-col bg-gray-50">
-  <div class="mx-auto flex w-full max-w-screen-xl flex-col px-6 py-6 sm:px-8">
+  <mat-drawer-container class="activity-editor-drawer-container" [autosize]="true">
+    <mat-drawer
+      class="activity-editor-drawer"
+      [mode]="drawerModo"
+      [opened]="true"
+      [disableClose]="true"
+    >
+      <aside class="activity-editor-drawer__content flex flex-col bg-white dark:bg-gray-900" aria-label="Atracciones del destino">
+        <div class="border-b border-gray-100 px-4 py-4 dark:border-gray-800">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Navegación rápida</p>
+              <h2 class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">Atracciones</h2>
+              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ actividadesNavegacion.length }} registradas en {{ destinoNombre }}</p>
+            </div>
+          </div>
+        </div>
+
+        <nav class="min-h-0 flex-1 space-y-1 overflow-y-auto p-3" aria-label="Cambiar de atracción">
+          @for (actividad of actividadesNavegacion; track actividad.id) {
+            <button
+              type="button"
+              class="activity-nav-item w-full text-left"
+              [class.activity-nav-item--active]="actividad.id === actividadId"
+              [attr.aria-current]="actividad.id === actividadId ? 'page' : null"
+              (click)="seleccionarActividadNavegacion(actividad)"
+            >
+              @if (actividad.imagenUrl) {
+                <img [src]="actividad.imagenUrl" [alt]="''" class="activity-nav-item__image" />
+              } @else {
+                <span class="activity-nav-item__image activity-nav-item__image--empty" aria-hidden="true">
+                  <mat-icon class="icon-size-5">image</mat-icon>
+                </span>
+              }
+              <span class="min-w-0 flex-1">
+                <span class="block truncate text-base font-semibold leading-tight">{{ actividad.nombre }}</span>
+                <span class="mt-1 flex items-center gap-1.5 text-sm leading-tight text-gray-500 dark:text-gray-400">
+                  <span class="truncate">{{ actividad.tipo }}</span>
+                  <span aria-hidden="true">·</span>
+                  <span>{{ actividad.totalImagenes }} img.</span>
+                </span>
+              </span>
+              @if (actividad.id === actividadId) {
+                <mat-icon class="activity-nav-item__check icon-size-4" [svgIcon]="'heroicons_solid:check-circle'"></mat-icon>
+              }
+            </button>
+          } @empty {
+            <p class="px-3 py-6 text-center text-sm text-gray-500 dark:text-gray-400">No hay más atracciones para navegar.</p>
+          }
+        </nav>
+      </aside>
+    </mat-drawer>
+
+    <mat-drawer-content class="min-w-0">
+      <div class="activity-editor-main mx-auto flex w-full max-w-screen-xl flex-col px-6 py-6 sm:px-8">
     <app-blocking-loader
       [open]="cargando || guardandoImagenes || guardandoTraducciones || traduciendoActividad"
       [title]="cargando ? 'Cargando actividad' : guardandoImagenes ? 'Guardando imágenes' : guardandoTraducciones ? 'Guardando actividad' : 'Traduciendo actividad'"
       [message]="cargando ? 'Estamos cargando los datos para que puedas editarlos.' : guardandoImagenes ? 'No cierres la pantalla mientras guardamos las imágenes.' : guardandoTraducciones ? 'No cierres la pantalla mientras guardamos los cambios.' : 'Estamos generando las traducciones automaticamente.'"
     />
 
-    <div class="sticky top-0 z-[100] mb-4 w-full rounded-xl border border-transparent bg-transparent px-2 py-2 backdrop-blur-md transition-all duration-300 md:px-4">
+    <div class="activity-editor-header sticky top-0 z-[100] mb-4 w-full rounded-xl border border-transparent bg-transparent px-2 py-2 backdrop-blur-md transition-all duration-300 md:px-4">
       <div class="w-full md:flex md:items-center md:justify-between">
         <div>
           <h1 class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">Editar actividad</h1>
@@ -709,5 +763,22 @@
         }
       </form>
     }
+      </div>
+    </mat-drawer-content>
+  </mat-drawer-container>
   </div>
-</div>
+
+@if (mostrarConfirmacionCambioActividad && actividadDestinoPendiente) {
+  <div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center px-4">
+    <div class="absolute inset-0 bg-black/50" @backdropFade></div>
+    <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900" @modalScaleFade role="dialog" aria-modal="true" aria-labelledby="cambiar-actividad-title">
+      <p class="text-xs font-semibold uppercase tracking-[0.14em] text-amber-600">Cambios sin guardar</p>
+      <h3 id="cambiar-actividad-title" class="mt-1 text-xl font-semibold text-gray-900 dark:text-white">¿Cambiar de atracción?</h3>
+      <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Los cambios de contenido y tipo de esta atracción se descartarán. Irás a {{ actividadDestinoPendiente.nombre }}.</p>
+      <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <button mat-stroked-button type="button" (click)="cancelarCambioActividad()">Seguir editando</button>
+        <button mat-flat-button color="warn" type="button" (click)="descartarYCambiarActividad()">Descartar y cambiar</button>
+      </div>
+    </div>
+  </div>
+}
