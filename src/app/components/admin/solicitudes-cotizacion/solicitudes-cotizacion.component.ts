@@ -12,6 +12,7 @@ import { EstatusComponent } from 'app/shared/estatus/estatus.component';
 import { MaterialModule } from 'app/shared/material.module';
 import { DateRangeFilterComponent } from 'app/shared/date-range-filter/date-range-filter.component';
 import { DateRangeFilterValue, EMPTY_DATE_RANGE } from 'app/shared/date-range-filter/date-range-filter.model';
+import { TpActionMenuItem, TpActionsMenuComponent } from 'app/shared/tp-actions-menu/tp-actions-menu.component';
 import * as XLSX from 'xlsx';
 
 type ColumnFilterKey =
@@ -26,7 +27,7 @@ type ColumnFilterKey =
 
 @Component({
   selector: 'app-solicitudes-cotizacion',
-  imports: [MaterialModule, RouterLink, EstatusComponent, DateRangeFilterComponent],
+  imports: [MaterialModule, RouterLink, EstatusComponent, DateRangeFilterComponent, TpActionsMenuComponent],
   templateUrl: './solicitudes-cotizacion.component.html',
   styleUrl: './solicitudes-cotizacion.component.scss'
 })
@@ -70,6 +71,10 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
   };
   empleadosSeleccionados: string[] = [];
   estatusSeleccionados: string[] = [];
+
+  readonly accionesCotizacion: TpActionMenuItem[] = [
+    { id: 'editar', label: 'Editar cotización', icon: 'heroicons_outline:pencil-square' }
+  ];
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -211,6 +216,12 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
     };
 
     this.aplicarFiltroInicialDesdeRuta();
+  }
+
+  ejecutarAccionCotizacion(actionId: string, solicitud: ISolicitudCotizacionListado): void {
+    if (actionId === 'editar') {
+      void this.router.navigate(['/admin/edicion-cotizacion', solicitud.public_id]);
+    }
   }
 
   applyColumnFilter(column: ColumnFilterKey, event: Event): void {

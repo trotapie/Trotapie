@@ -331,25 +331,6 @@
     text-align: center;
 }
 
-.row-actions-trigger {
-    color: var(--fuse-text-secondary);
-    transition: color 160ms ease, background-color 160ms ease;
-}
-
-.row-actions-trigger:hover,
-.row-actions-trigger:focus-visible {
-    color: var(--fuse-text-default);
-    background: var(--table-row-hover-bg);
-}
-
-:host ::ng-deep .row-actions-menu .mat-mdc-menu-item {
-    min-height: 44px;
-}
-
-:host ::ng-deep .row-actions-menu .mat-icon {
-    color: var(--fuse-text-secondary);
-}
-
 .danger-item {
     color: #c62828;
 }

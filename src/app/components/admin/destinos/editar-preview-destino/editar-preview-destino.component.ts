@@ -9,8 +9,11 @@ import {
 } from 'app/core/supabase.service';
 import { DestinosService } from 'app/core/destinos.service';
 import { ActividadesService } from 'app/core/actividades.service';
+import { TraduccionesService } from 'app/core/traducciones.service';
 import { BlockingLoaderComponent } from 'app/shared/blocking-loader/blocking-loader.component';
 import { MaterialModule } from 'app/shared/material.module';
+import { TpInputComponent } from 'app/shared/tp-input/tp-input.component';
+import { TpSelectSearchComponent, TpSelectSearchOption } from 'app/shared/tp-select-search/tp-select-search.component';
 
 interface ILangConfig {
   code: string;
@@ -20,7 +23,7 @@ interface ILangConfig {
 @Component({
   selector: 'app-editar-preview-destino',
   standalone: true,
-  imports: [MaterialModule, DragDropModule, BlockingLoaderComponent],
+  imports: [MaterialModule, DragDropModule, BlockingLoaderComponent, TpInputComponent, TpSelectSearchComponent],
   templateUrl: './editar-preview-destino.component.html',
   styleUrl: './editar-preview-destino.component.scss'
 })
@@ -30,6 +33,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
   private readonly router = inject(Router);
   private readonly destinosService = inject(DestinosService);
   private readonly actividadesService = inject(ActividadesService);
+  private readonly traduccionesService = inject(TraduccionesService);
   private readonly fb = inject(UntypedFormBuilder);
   @ViewChild('ubicacionMapPreview') private ubicacionMapElement?: ElementRef<HTMLDivElement>;
 
@@ -56,6 +60,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
   mostrarModalNuevaActividad = false;
   mostrarModalConfirmarEliminarActividad = false;
   guardandoActividad = false;
+  agregandoDatoRapido = false;
   traduciendoActividad = false;
   eliminandoActividadIndex: number | null = null;
   indiceActividadAEliminar: number | null = null;
@@ -236,10 +241,10 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
 
 
 
-  async guardar() {
+  async guardar(mostrarExito = true): Promise<boolean> {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      return;
+      return false;
     }
 
     this.guardando = true;
@@ -289,10 +294,14 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
         })
       });
 
-      this.mensajeModalExito = 'Preview del destino actualizado correctamente.';
-      this.mostrarModalExito = true;
+      if (mostrarExito) {
+        this.mensajeModalExito = 'Preview del destino actualizado correctamente.';
+        this.mostrarModalExito = true;
+      }
+      return true;
     } catch (error: any) {
       this.error = error?.message ?? 'No se pudo guardar el preview del destino.';
+      return false;
     } finally {
       this.guardando = false;
     }
@@ -770,6 +779,13 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     return this.catalogoTiposDatoRapido.filter((item) => !usados.has(Number(item.id)));
   }
 
+  get opcionesCatalogoDatoRapido(): TpSelectSearchOption[] {
+    return this.catalogoDisponibleParaNuevo.map((tipo) => ({
+      value: tipo.id,
+      label: tipo.nombre
+    }));
+  }
+
   dropDetalleRapido(event: CdkDragDrop<any[]>) {
     if (event.previousIndex === event.currentIndex) {
       return;
@@ -822,7 +838,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     this.formNuevoDatoRapido.reset({
       tipo_dato_rapido_id: this.catalogoDisponibleParaNuevo[0]?.id ?? null
     });
-    this.formNuevoDatoRapido.setControl('valores', this.buildValoresGroup());
+    this.formNuevoDatoRapido.setControl('valores', this.buildValoresGroup(undefined, true));
     this.mostrarModalNuevoDatoRapido = true;
   }
 
@@ -830,42 +846,59 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     this.mostrarModalNuevoDatoRapido = false;
   }
 
-  crearNuevoDatoRapido() {
+  async crearNuevoDatoRapido() {
     if (this.formNuevoDatoRapido.invalid) {
       this.formNuevoDatoRapido.markAllAsTouched();
       return;
     }
 
-    const raw = this.formNuevoDatoRapido.getRawValue();
-    const tipoId = Number(raw.tipo_dato_rapido_id);
-    const seleccionado = this.catalogoTiposDatoRapido.find((item) => Number(item.id) === tipoId);
-
-    if (!seleccionado) {
-      this.error = 'Selecciona un tipo de dato rapido valido.';
+    if (this.agregandoDatoRapido) {
       return;
     }
 
-    const usados = new Set(
-      this.detallesRapidosArray.controls.map((detalle) => Number(detalle.get('tipo_dato_rapido_id')?.value))
-    );
-    if (usados.has(tipoId)) {
-      this.error = 'Ese tipo de dato rapido ya fue agregado.';
-      return;
-    }
+    this.agregandoDatoRapido = true;
+    this.error = '';
 
-    const nuevo = this.buildDetalleRapidoGroup(
-      {
-        tipo_dato_rapido_id: seleccionado.id,
-        nombre: seleccionado.nombre,
-        clave: seleccionado.clave,
-        orden: this.detallesRapidosArray.length + 1,
-        valores: raw.valores ?? {}
-      },
-      this.detallesRapidosArray.length
-    );
-    this.detallesRapidosArray.push(nuevo);
-    this.normalizarOrdenDetallesRapidos();
-    this.mostrarModalNuevoDatoRapido = false;
+    try {
+      const raw = this.formNuevoDatoRapido.getRawValue();
+      const tipoId = Number(raw.tipo_dato_rapido_id);
+      const seleccionado = this.catalogoTiposDatoRapido.find((item) => Number(item.id) === tipoId);
+
+      if (!seleccionado) {
+        this.error = 'Selecciona un tipo de dato rapido valido.';
+        return;
+      }
+
+      const usados = new Set(
+        this.detallesRapidosArray.controls.map((detalle) => Number(detalle.get('tipo_dato_rapido_id')?.value))
+      );
+      if (usados.has(tipoId)) {
+        this.error = 'Ese tipo de dato rapido ya fue agregado.';
+        return;
+      }
+
+      const valores = await this.traducirValorRapidoDesdeEspanol(raw?.valores?.es);
+      const nuevo = this.buildDetalleRapidoGroup(
+        {
+          tipo_dato_rapido_id: seleccionado.id,
+          nombre: seleccionado.nombre,
+          clave: seleccionado.clave,
+          orden: this.detallesRapidosArray.length + 1,
+          valores
+        },
+        this.detallesRapidosArray.length
+      );
+      this.detallesRapidosArray.push(nuevo);
+      this.normalizarOrdenDetallesRapidos();
+
+      if (await this.guardar(false)) {
+        this.mostrarModalNuevoDatoRapido = false;
+      }
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudo traducir y guardar el dato rapido.';
+    } finally {
+      this.agregandoDatoRapido = false;
+    }
   }
 
   abrirModalEditarDatoRapido(index: number) {
@@ -1177,9 +1210,28 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     }
   }
 
-  private buildValoresGroup(initial?: Record<string, string>) {
+  private async traducirValorRapidoDesdeEspanol(valor: string | null | undefined): Promise<Record<string, string>> {
+    const valorEspanol = this.limpiarTexto(valor);
+    if (!valorEspanol) {
+      throw new Error('Ingresa el valor en espanol para continuar.');
+    }
+
+    const traducciones = await this.traduccionesService.traducirDesdeEspanol({
+      title: '',
+      description: valorEspanol
+    });
+
+    return this.idiomas.reduce((valores, idioma) => {
+      valores[idioma.codigo] = idioma.codigo === 'es'
+        ? valorEspanol
+        : this.limpiarTexto(traducciones?.[idioma.codigo]?.description) ?? '';
+      return valores;
+    }, {} as Record<string, string>);
+  }
+
+  private buildValoresGroup(initial?: Record<string, string>, requerirEspanol = false) {
     const valores = this.idiomas.reduce((acc, idioma) => {
-      acc[idioma.codigo] = [initial?.[idioma.codigo] ?? ''];
+      acc[idioma.codigo] = [initial?.[idioma.codigo] ?? '', ...(requerirEspanol && idioma.codigo === 'es' ? [Validators.required] : [])];
       return acc;
     }, {} as Record<string, any>);
 

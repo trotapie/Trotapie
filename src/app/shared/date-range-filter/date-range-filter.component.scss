@@ -99,18 +99,6 @@
   border-radius: 999px;
   background: transparent;
   color: var(--fuse-text-secondary);
-  cursor: pointer;
-}
-
-.date-range-filter__calendar-button:hover,
-.date-range-filter__calendar-button:focus-visible {
-  background: color-mix(in srgb, var(--primary, #00a67c) 12%, transparent);
-  outline: none;
-}
-
-.date-range-filter__calendar-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
 }
 
 .date-range-filter__icon {

@@ -21,7 +21,7 @@ export class DestinosComponent implements OnInit {
   tipoVisible: 'NACIONAL' | 'INTERNACIONAL' = 'NACIONAL';
   regiones: RegionCatalogo[] = []; paises: PaisCatalogo[] = []; divisiones: DivisionAreaCatalogo[] = [];
   regionIds: number[] = []; paisIds: number[] = []; divisionAreaIds: number[] = [];
-  busqueda = ''; destinos: DestinoCatalogoNavegable[] = []; total = 0;
+  busqueda = ''; soloActivos = false; destinos: DestinoCatalogoNavegable[] = []; total = 0;
   pageIndex = 0; pageSize = 25; pageSizeOptions = [10, 25, 50, 100]; cargando = true; error = ''; activandoDestinoId: number | null = null;
 
   async ngOnInit() {
@@ -37,8 +37,9 @@ export class DestinosComponent implements OnInit {
   async seleccionarRegion(ids: Array<string | number>) { this.regionIds = this.normalizarIds(ids); this.paisIds = []; this.pageIndex = 0; await this.cargarPaises(); await this.cargarDestinos(); this.actualizarUrlFiltros(); }
   async seleccionarPais(ids: Array<string | number>) { this.paisIds = this.normalizarIds(ids); this.pageIndex = 0; await this.cargarDestinos(); this.actualizarUrlFiltros(); }
   async seleccionarDivision(ids: Array<string | number>) { this.divisionAreaIds = this.normalizarIds(ids); this.pageIndex = 0; await this.cargarDestinos(); this.actualizarUrlFiltros(); }
+  async alternarSoloActivos() { this.soloActivos = !this.soloActivos; this.pageIndex = 0; await this.cargarDestinos(); this.actualizarUrlFiltros(); }
   async buscar() { this.pageIndex = 0; await this.cargarDestinos(); this.actualizarUrlFiltros(); }
-  async limpiarFiltros() { this.regionIds = []; this.paisIds = []; this.divisionAreaIds = []; this.busqueda = ''; this.pageIndex = 0; await this.cargarFiltros(); await this.cargarDestinos(); this.actualizarUrlFiltros(); }
+  async limpiarFiltros() { this.regionIds = []; this.paisIds = []; this.divisionAreaIds = []; this.busqueda = ''; this.soloActivos = false; this.pageIndex = 0; await this.cargarFiltros(); await this.cargarDestinos(); this.actualizarUrlFiltros(); }
   async cambiarPagina(event: PageEvent) { this.pageIndex = event.pageIndex; this.pageSize = event.pageSize; await this.cargarDestinos(); this.actualizarUrlFiltros(); }
   editarDestino(destino: DestinoCatalogoNavegable) { return this.router.navigate(['/admin/destinos/configurar-destinos/editar', destino.destinoId], { queryParams: this.obtenerQueryParamsFiltros() }); }
   editarPreview(destino: DestinoCatalogoNavegable) { return this.router.navigate(['/admin/destinos/configurar-destinos/preview', destino.destinoId], { queryParams: this.obtenerQueryParamsFiltros() }); }
@@ -84,12 +85,12 @@ export class DestinosComponent implements OnInit {
     });
   }
 
-  get tieneFiltrosActivos() { return Boolean(this.regionIds.length || this.paisIds.length || this.divisionAreaIds.length || this.busqueda.trim()); }
+  get tieneFiltrosActivos() { return Boolean(this.regionIds.length || this.paisIds.length || this.divisionAreaIds.length || this.busqueda.trim() || this.soloActivos); }
   get textoUbicacion() { return this.tipoVisible === 'NACIONAL' ? 'México por división de área' : 'Mundo por región y país'; }
 
   private async cargarFiltros() { if (this.tipoVisible === 'NACIONAL') { this.divisiones = await this.destinosService.obtenerCatalogoNacionalesDivisionAreas(); this.regiones = []; this.paises = []; return; } this.regiones = await this.destinosService.obtenerCatalogoInternacionalRegiones(); await this.cargarPaises(); this.divisiones = []; }
   private async cargarPaises() { this.paises = this.tipoVisible === 'INTERNACIONAL' ? await this.destinosService.obtenerCatalogoInternacionalPaises(this.regionIds) : []; }
-  private async cargarDestinos() { this.cargando = true; this.error = ''; try { const pagina = await this.destinosService.buscarDestinosCatalogo({ tipo: this.tipoVisible, page: this.pageIndex, pageSize: this.pageSize, regionIds: this.regionIds, paisIds: this.paisIds, divisionAreaIds: this.divisionAreaIds, busqueda: this.busqueda }); this.destinos = pagina.items; this.total = pagina.total; } catch (error: any) { this.error = error?.message ?? 'No se pudieron cargar los destinos del catálogo.'; this.destinos = []; this.total = 0; } finally { this.cargando = false; } }
+  private async cargarDestinos() { this.cargando = true; this.error = ''; try { const pagina = await this.destinosService.buscarDestinosCatalogo({ tipo: this.tipoVisible, page: this.pageIndex, pageSize: this.pageSize, regionIds: this.regionIds, paisIds: this.paisIds, divisionAreaIds: this.divisionAreaIds, busqueda: this.busqueda, soloActivos: this.soloActivos }); this.destinos = pagina.items; this.total = pagina.total; } catch (error: any) { this.error = error?.message ?? 'No se pudieron cargar los destinos del catálogo.'; this.destinos = []; this.total = 0; } finally { this.cargando = false; } }
   private normalizarIds(ids: Array<string | number>): number[] { return ids.map((id) => Number(id)).filter((id) => Number.isFinite(id) && id > 0); }
   private restaurarEstadoDesdeUrl(): void {
     const params = this.route.snapshot.queryParamMap;
@@ -98,6 +99,7 @@ export class DestinosComponent implements OnInit {
     this.paisIds = this.parsearIds(params.get('paisIds'));
     this.divisionAreaIds = this.parsearIds(params.get('divisionAreaIds'));
     this.busqueda = params.get('busqueda') ?? '';
+    this.soloActivos = params.get('soloActivos') === 'true';
     this.pageIndex = this.parsearNumero(params.get('page'), 0);
     const pageSize = this.parsearNumero(params.get('pageSize'), 25);
     this.pageSize = this.pageSizeOptions.includes(pageSize) ? pageSize : 25;
@@ -113,6 +115,7 @@ export class DestinosComponent implements OnInit {
       paisIds: this.paisIds.length ? this.paisIds.join(',') : null,
       divisionAreaIds: this.divisionAreaIds.length ? this.divisionAreaIds.join(',') : null,
       busqueda: this.busqueda.trim() || null,
+      soloActivos: this.soloActivos || null,
       page: this.pageIndex || null,
       pageSize: this.pageSize === 25 ? null : this.pageSize
     };

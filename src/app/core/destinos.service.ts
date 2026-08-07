@@ -73,6 +73,7 @@ export interface FiltrosDestinoCatalogo {
   paisIds?: number[];
   divisionAreaIds?: number[];
   busqueda?: string;
+  soloActivos?: boolean;
   soloConfigurados?: boolean;
 }
 
@@ -1462,6 +1463,7 @@ export class DestinosService {
     if (regionIds.length) query = query.in('region_id', regionIds);
     if (paisIds.length) query = query.in('pais_id', paisIds);
     if (divisionAreaIds.length) query = query.in('division_area_id', divisionAreaIds);
+    if (filtros.soloActivos) query = query.eq('activo', true);
 
     const busqueda = (filtros.busqueda ?? '').trim().replace(/[,%]/g, '');
     if (busqueda) query = query.ilike('destino_nombre', `%${busqueda}%`);

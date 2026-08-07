@@ -27,15 +27,9 @@
       <span class="date-range-filter__field-label">Fin</span>
       <span [class.date-range-filter__placeholder]="!value.end">{{ value.end ? formatDate(value.end) : 'Seleccionar' }}</span>
     </button>
-    <button
-      type="button"
-      class="date-range-filter__calendar-button"
-      [matMenuTriggerFor]="rangeMenu"
-      [disabled]="disabled"
-      aria-label="Abrir calendario"
-      (menuOpened)="open('start')">
+    <span class="date-range-filter__calendar-button" aria-hidden="true">
       <mat-icon class="date-range-filter__icon" aria-hidden="true">calendar_month</mat-icon>
-    </button>
+    </span>
   </div>
   <mat-menu #rangeMenu="matMenu" class="date-range-filter-menu" xPosition="after" yPosition="below" [hasBackdrop]="false">
     <div class="date-range-filter-menu__content" (click)="$event.stopPropagation()">

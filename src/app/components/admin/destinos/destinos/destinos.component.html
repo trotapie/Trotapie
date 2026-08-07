@@ -74,6 +74,17 @@
         <mat-icon [svgIcon]="'heroicons_outline:arrow-path'"></mat-icon>
       </button>
     }
+
+    <button
+      mat-stroked-button
+      type="button"
+      class="catalogo-filtros__activos"
+      [class.catalogo-filtros__activos--seleccionado]="soloActivos"
+      [attr.aria-pressed]="soloActivos"
+      (click)="alternarSoloActivos()">
+      <mat-icon [svgIcon]="soloActivos ? 'heroicons_solid:check-circle' : 'heroicons_outline:check-circle'"></mat-icon>
+      Solo activos
+    </button>
   </section>
 
   @if (error) {

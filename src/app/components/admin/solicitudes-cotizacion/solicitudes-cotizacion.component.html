@@ -242,21 +242,11 @@
                                 <span class="sr-only">Acciones</span>
                             </th>
                             <td mat-cell *matCellDef="let row" class="actions-col">
-                                <button
-                                    mat-icon-button
-                                    class="row-actions-trigger"
-                                    aria-label="Abrir acciones de la cotización"
-                                    matTooltip="Acciones"
-                                    [matMenuTriggerFor]="rowMenu">
-                                    <mat-icon aria-hidden="true">more_vert</mat-icon>
-                                </button>
-
-                                <mat-menu #rowMenu="matMenu" class="row-actions-menu">
-                                    <button mat-menu-item [routerLink]="'/admin/edicion-cotizacion/' + row.public_id">
-                                        <mat-icon [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
-                                        <span>Editar cotización</span>
-                                    </button>
-                                </mat-menu>
+                                <app-tp-actions-menu
+                                    [actions]="accionesCotizacion"
+                                    ariaLabel="Abrir acciones de la cotización"
+                                    (actionSelected)="ejecutarAccionCotizacion($event, row)">
+                                </app-tp-actions-menu>
                             </td>
                         </ng-container>
 

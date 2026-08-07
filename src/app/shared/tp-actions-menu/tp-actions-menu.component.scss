@@ -1,0 +1,107 @@
+:host {
+  display: inline-flex;
+  align-items: center;
+}
+
+.tp-actions-menu__trigger {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--fuse-text-secondary);
+  border: 1px solid var(--fuse-border);
+  border-radius: .8rem;
+  background: var(--fuse-bg-card);
+  transition: border-color .18s ease, color .18s ease, background-color .18s ease, box-shadow .18s ease;
+}
+
+.tp-actions-menu__trigger:hover,
+.tp-actions-menu__trigger:focus-visible {
+  color: var(--fuse-text-default);
+  border-color: var(--primary, #00a67c);
+  background: color-mix(in srgb, var(--fuse-bg-card) 88%, var(--primary, #00a67c));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary, #00a67c) 20%, transparent);
+}
+
+.tp-actions-menu__trigger:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary, #00a67c) 35%, transparent);
+  outline-offset: 2px;
+}
+
+.tp-actions-menu__panel {
+  box-sizing: border-box;
+  min-width: 14rem;
+  margin-top: .5rem;
+  padding: .5rem;
+  overflow: hidden;
+  border: 1px solid var(--fuse-border);
+  border-radius: 1rem;
+  background: var(--fuse-bg-card, #fff);
+  box-shadow: 0 .75rem 1.5rem rgb(15 23 42 / 18%);
+}
+
+.tp-actions-menu__item {
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  min-height: 2.85rem;
+  align-items: center;
+  margin: .1rem 0;
+  padding: .55rem .7rem;
+  border: 0;
+  border-radius: .7rem;
+  background: transparent;
+  text-align: left;
+  color: var(--fuse-text-default);
+  font-size: .875rem;
+  line-height: 1.25rem;
+  animation: tp-actions-menu-option-in .18s cubic-bezier(.22, 1, .36, 1) both;
+  transition: background-color .16s ease, color .16s ease;
+}
+
+.tp-actions-menu__item:nth-child(2) { animation-delay: .025s; }
+.tp-actions-menu__item:nth-child(3) { animation-delay: .05s; }
+.tp-actions-menu__item:nth-child(4) { animation-delay: .075s; }
+
+.tp-actions-menu__item:hover:not(:disabled),
+.tp-actions-menu__item:focus-visible {
+  background: color-mix(in srgb, var(--primary, #00a67c) 9%, transparent);
+}
+
+.tp-actions-menu__item:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--primary, #00a67c) 45%, transparent);
+  outline-offset: -2px;
+}
+
+.tp-actions-menu__item:disabled {
+  cursor: default;
+  opacity: .5;
+}
+
+.tp-actions-menu__item .mat-icon {
+  width: 1rem;
+  height: 1rem;
+  margin-right: .75rem;
+  color: var(--fuse-text-secondary);
+}
+
+.tp-actions-menu__item--danger,
+.tp-actions-menu__item--danger .mat-icon {
+  color: #c62828;
+}
+
+@keyframes tp-actions-menu-option-in {
+  from {
+    opacity: 0;
+    transform: translateY(-.25rem) scale(.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tp-actions-menu__item {
+    animation: none;
+  }
+}

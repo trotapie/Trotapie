@@ -150,10 +150,22 @@
         </section>
 
         <section id="datos-rapidos" class="scroll-mt-56 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-7" formArrayName="detallesRapidos">
-          <div class="mb-5">
-            <p class="text-xs font-semibold uppercase tracking-[0.16em] text-primary">03 · Esenciales</p>
-            <h2 class="mt-1 text-xl font-semibold text-gray-900 dark:text-white">Datos rápidos</h2>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Información práctica que acompaña al viajero.</p>
+          <div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-[0.16em] text-primary">03 · Esenciales</p>
+              <h2 class="mt-1 text-xl font-semibold text-gray-900 dark:text-white">Datos rápidos</h2>
+              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Información práctica que acompaña al viajero.</p>
+            </div>
+            <button
+              mat-flat-button
+              color="primary"
+              type="button"
+              [disabled]="!catalogoDisponibleParaNuevo.length"
+              (click)="abrirModalNuevoDatoRapido()"
+            >
+              <mat-icon class="mr-2 icon-size-5">add</mat-icon>
+              Agregar dato rápido
+            </button>
           </div>
 
           <div class="hidden overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 md:block">
@@ -468,31 +480,42 @@
       <h3 class="text-xl font-semibold text-gray-900">Crear nuevo dato rapido</h3>
 
       <form [formGroup]="formNuevoDatoRapido" class="mt-4 space-y-4">
-        <mat-form-field class="w-full">
-          <mat-label>Tipo de dato rapido</mat-label>
-          <mat-select formControlName="tipo_dato_rapido_id">
-            @for (tipo of catalogoDisponibleParaNuevo; track tipo.id) {
-              <mat-option [value]="tipo.id">{{ tipo.nombre }}</mat-option>
-            }
-          </mat-select>
-          @if (formNuevoDatoRapido.get('tipo_dato_rapido_id')?.invalid && formNuevoDatoRapido.get('tipo_dato_rapido_id')?.touched) {
-            <mat-error>Selecciona un tipo de dato rapido.</mat-error>
-          }
-        </mat-form-field>
+        <app-tp-select-search
+          class="w-full"
+          label="Tipo de dato rápido"
+          placeholder="Selecciona un tipo"
+          searchPlaceholder="Buscar tipo de dato"
+          [options]="opcionesCatalogoDatoRapido"
+          [required]="true"
+          [disabled]="agregandoDatoRapido"
+          formControlName="tipo_dato_rapido_id"
+        ></app-tp-select-search>
+        @if (formNuevoDatoRapido.get('tipo_dato_rapido_id')?.invalid && formNuevoDatoRapido.get('tipo_dato_rapido_id')?.touched) {
+          <p class="-mt-2 text-sm text-red-600">Selecciona un tipo de dato rápido.</p>
+        }
 
-        <div formGroupName="valores" class="grid grid-cols-1 gap-3 md:grid-cols-2">
-          @for (idioma of idiomas; track idioma.id) {
-            <mat-form-field class="w-full">
-              <mat-label>{{ getNombreIdioma(idioma.codigo) }}</mat-label>
-              <input matInput [formControlName]="idioma.codigo" />
-            </mat-form-field>
-          }
+        <div formGroupName="valores">
+          <app-tp-input
+            class="w-full"
+            label="Valor en español"
+            placeholder="Ingresa el valor que verá el viajero"
+            [required]="true"
+            [disabled]="agregandoDatoRapido"
+            [error]="formNuevoDatoRapido.get(['valores', 'es'])?.invalid && formNuevoDatoRapido.get(['valores', 'es'])?.touched ? 'El valor en español es requerido.' : ''"
+            formControlName="es"
+          ></app-tp-input>
         </div>
       </form>
 
       <div class="mt-6 flex justify-end gap-2">
-        <button mat-stroked-button type="button" (click)="cerrarModalNuevoDatoRapido()">Cancelar</button>
-        <button mat-flat-button color="primary" type="button" (click)="crearNuevoDatoRapido()">Agregar</button>
+        <button mat-stroked-button type="button" [disabled]="agregandoDatoRapido" (click)="cerrarModalNuevoDatoRapido()">Cancelar</button>
+        <button mat-flat-button color="primary" type="button" [disabled]="agregandoDatoRapido" (click)="crearNuevoDatoRapido()">
+          @if (agregandoDatoRapido) {
+            Traduciendo y guardando...
+          } @else {
+            Agregar y guardar
+          }
+        </button>
       </div>
     </div>
   </div>

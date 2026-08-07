@@ -1,0 +1,42 @@
+<button
+  mat-icon-button
+  type="button"
+  class="tp-actions-menu__trigger"
+  [disabled]="disabled"
+  [attr.aria-label]="ariaLabel"
+  [attr.aria-expanded]="abierto"
+  aria-haspopup="menu"
+  [matTooltip]="tooltip"
+  (click)="alternar()"
+  cdkOverlayOrigin
+  #trigger="cdkOverlayOrigin">
+  <mat-icon aria-hidden="true" [svgIcon]="'heroicons_outline:ellipsis-vertical'"></mat-icon>
+</button>
+
+<ng-template
+  cdkConnectedOverlay
+  [cdkConnectedOverlayOrigin]="trigger"
+  [cdkConnectedOverlayOpen]="abierto"
+  [cdkConnectedOverlayHasBackdrop]="true"
+  [cdkConnectedOverlayBackdropClass]="'cdk-overlay-transparent-backdrop'"
+  [cdkConnectedOverlayPositions]="posiciones"
+  [cdkConnectedOverlayPush]="true"
+  (backdropClick)="cerrar()"
+  (detach)="cerrar()">
+  <section class="tp-actions-menu__panel" role="menu" [attr.aria-label]="ariaLabel" (keydown.escape)="cerrar()">
+    @for (action of actions; track action.id) {
+      <button
+        type="button"
+        class="tp-actions-menu__item"
+        role="menuitem"
+        [disabled]="action.disabled"
+        [class.tp-actions-menu__item--danger]="action.danger"
+        (click)="seleccionar(action)">
+        @if (action.icon) {
+          <mat-icon [svgIcon]="action.icon" aria-hidden="true"></mat-icon>
+        }
+        <span>{{ action.label }}</span>
+      </button>
+    }
+  </section>
+</ng-template>
