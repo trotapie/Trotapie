@@ -42,6 +42,7 @@ export interface ITraduccionPreviewAdmin {
 
 export interface IDetalleRapidoPreviewAdmin {
   id: number;
+  activo: boolean;
   tipo_dato_rapido_id: number;
   clave: string;
   nombre: string;

@@ -14,6 +14,7 @@ import { BlockingLoaderComponent } from 'app/shared/blocking-loader/blocking-loa
 import { MaterialModule } from 'app/shared/material.module';
 import { TpInputComponent } from 'app/shared/tp-input/tp-input.component';
 import { TpSelectSearchComponent, TpSelectSearchOption } from 'app/shared/tp-select-search/tp-select-search.component';
+import { TpToastService } from 'app/shared/tp-toast/tp-toast.service';
 
 interface ILangConfig {
   code: string;
@@ -34,6 +35,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
   private readonly destinosService = inject(DestinosService);
   private readonly actividadesService = inject(ActividadesService);
   private readonly traduccionesService = inject(TraduccionesService);
+  private readonly toast = inject(TpToastService);
   private readonly fb = inject(UntypedFormBuilder);
   @ViewChild('ubicacionMapPreview') private ubicacionMapElement?: ElementRef<HTMLDivElement>;
 
@@ -59,12 +61,16 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
   mostrarModalEditarActividad = false;
   mostrarModalNuevaActividad = false;
   mostrarModalConfirmarEliminarActividad = false;
+  mostrarModalConfirmarEliminarDatoRapido = false;
   guardandoActividad = false;
   agregandoDatoRapido = false;
   traduciendoActividad = false;
   eliminandoActividadIndex: number | null = null;
+  cambiandoActivoDatoRapidoId: number | null = null;
+  eliminandoDatoRapidoId: number | null = null;
   indiceActividadAEliminar: number | null = null;
   indiceDatoRapidoEditando: number | null = null;
+  indiceDatoRapidoAEliminar: number | null = null;
   indiceTraduccionEditando: number | null = null;
   indiceActividadEditando: number | null = null;
   concentradoTraduccionesActividad: Record<string, { nombre: string; descripcion: string }> = {};
@@ -261,7 +267,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
         }))
       }));
 
-      await this.destinosService.guardarPreviewDestinoAdmin({
+      const resultado = await this.destinosService.guardarPreviewDestinoAdmin({
         catalogo_destino_id: this.destinoId,
         ubicacion: this.limpiarTexto(raw.ubicacion),
         traducciones: (raw.traducciones ?? []).map((item: any) => ({
@@ -292,6 +298,14 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
             }))
           };
         })
+      });
+
+      this.detallesRapidosArray.controls.forEach((detalle) => {
+        const tipoId = Number(detalle.get('tipo_dato_rapido_id')?.value);
+        const detalleRapidoId = resultado.detallesRapidosIds[tipoId];
+        if (detalleRapidoId) {
+          detalle.get('id')?.setValue(detalleRapidoId, { emitEvent: false });
+        }
       });
 
       if (mostrarExito) {
@@ -901,6 +915,90 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     }
   }
 
+  async alternarActivoDatoRapido(index: number): Promise<void> {
+    const detalle = this.detallesRapidosArray.at(index);
+    const detalleRapidoId = this.parseNumber(detalle?.get('id')?.value);
+    if (!detalle || !detalleRapidoId || this.cambiandoActivoDatoRapidoId !== null) {
+      return;
+    }
+
+    this.cambiandoActivoDatoRapidoId = detalleRapidoId;
+    this.error = '';
+    const activoActual = Boolean(detalle.get('activo')?.value);
+    const nombre = detalle.get('nombre')?.value ?? 'Dato rápido';
+
+    try {
+      const activo = await this.destinosService.actualizarActivoDatoRapidoDestinoAdmin(
+        detalleRapidoId,
+        !activoActual
+      );
+      detalle.get('activo')?.setValue(activo);
+      this.toast.show({
+        title: activo ? 'Dato rápido activado' : 'Dato rápido desactivado',
+        message: activo
+          ? `${nombre} ya es visible para los viajeros.`
+          : `${nombre} dejó de mostrarse en la vista pública.`,
+        variant: activo ? 'success' : 'warning'
+      });
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudo actualizar el estado del dato rápido.';
+      this.toast.show({ title: 'No se pudo actualizar', message: this.error, variant: 'error' });
+    } finally {
+      this.cambiandoActivoDatoRapidoId = null;
+    }
+  }
+
+  abrirModalConfirmarEliminarDatoRapido(index: number): void {
+    this.indiceDatoRapidoAEliminar = index;
+    this.mostrarModalConfirmarEliminarDatoRapido = true;
+  }
+
+  cerrarModalConfirmarEliminarDatoRapido(): void {
+    this.mostrarModalConfirmarEliminarDatoRapido = false;
+    this.indiceDatoRapidoAEliminar = null;
+  }
+
+  async confirmarEliminarDatoRapido(): Promise<void> {
+    if (this.indiceDatoRapidoAEliminar === null) {
+      return;
+    }
+
+    const eliminado = await this.eliminarDatoRapido(this.indiceDatoRapidoAEliminar);
+    if (eliminado) {
+      this.cerrarModalConfirmarEliminarDatoRapido();
+    }
+  }
+
+  private async eliminarDatoRapido(index: number): Promise<boolean> {
+    const detalle = this.detallesRapidosArray.at(index);
+    const detalleRapidoId = this.parseNumber(detalle?.get('id')?.value);
+    if (!detalle || !detalleRapidoId || this.eliminandoDatoRapidoId !== null) {
+      return false;
+    }
+
+    this.eliminandoDatoRapidoId = detalleRapidoId;
+    this.error = '';
+
+    try {
+      const nombre = detalle.get('nombre')?.value ?? 'Dato rápido';
+      await this.destinosService.eliminarDatoRapidoDestinoAdmin(this.destinoId, detalleRapidoId);
+      this.detallesRapidosArray.removeAt(index);
+      this.normalizarOrdenDetallesRapidos();
+      this.toast.show({
+        title: 'Dato rápido eliminado',
+        message: `${nombre} fue eliminado del preview.`,
+        variant: 'success'
+      });
+      return true;
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudo eliminar el dato rápido.';
+      this.toast.show({ title: 'No se pudo eliminar', message: this.error, variant: 'error' });
+      return false;
+    } finally {
+      this.eliminandoDatoRapidoId = null;
+    }
+  }
+
   abrirModalEditarDatoRapido(index: number) {
     const detalle = this.detallesRapidosArray.at(index);
     if (!detalle) {
@@ -991,6 +1089,8 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
 
   private buildDetalleRapidoGroup(item: any, index: number) {
     return this.fb.group({
+      id: [this.parseNumber(item.id)],
+      activo: [item.activo !== false],
       tipo_dato_rapido_id: [Number(item.tipo_dato_rapido_id)],
       nombre: [item.nombre || item.clave],
       clave: [item.clave],
@@ -1275,7 +1375,8 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
       this.mostrarModalEditarTextoPreview ||
       this.mostrarModalEditarActividad ||
       this.mostrarModalNuevaActividad ||
-      this.mostrarModalConfirmarEliminarActividad
+      this.mostrarModalConfirmarEliminarActividad ||
+      this.mostrarModalConfirmarEliminarDatoRapido
     );
   }
 

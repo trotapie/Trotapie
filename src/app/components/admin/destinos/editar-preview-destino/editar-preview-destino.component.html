@@ -175,25 +175,37 @@
                   <th class="w-20 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">#</th>
                   <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">Dato rápido</th>
                   <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">Vista en español</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">Estado</th>
                   <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 @for (detalle of detallesRapidosArray.controls; track $index; let i = $index) {
-                  <tr class="border-t border-gray-100 bg-white transition-colors hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-gray-800/60" [formGroupName]="i">
+                  <tr class="border-t border-gray-100 bg-white transition-colors hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-gray-800/60" [class.opacity-60]="!detalle.get('activo')?.value" [formGroupName]="i">
                     <td class="px-4 py-3 text-sm font-semibold text-primary">{{ i + 1 }}</td>
                     <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">{{ detalle.get('nombre')?.value }}</td>
                     <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ getControlDetalleRapido(i, 'es')?.value || 'Sin valor' }}</td>
                     <td class="px-4 py-3">
-                      <div class="flex justify-end">
-                        <button mat-icon-button type="button" aria-label="Editar dato rápido" [matTooltip]="'Editar dato rápido'" (click)="abrirModalEditarDatoRapido(i)">
+                      <span [class]="detalle.get('activo')?.value ? 'rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' : 'rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-300'">
+                        {{ detalle.get('activo')?.value ? 'Activo' : 'Inactivo' }}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3">
+                      <div class="flex justify-end gap-1">
+                        <button mat-icon-button type="button" aria-label="Editar dato rápido" [matTooltip]="'Editar dato rápido'" [disabled]="eliminandoDatoRapidoId === detalle.get('id')?.value" (click)="abrirModalEditarDatoRapido(i)">
                           <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
+                        </button>
+                        <button mat-icon-button type="button" [attr.aria-label]="detalle.get('activo')?.value ? 'Desactivar dato rápido' : 'Activar dato rápido'" [matTooltip]="detalle.get('activo')?.value ? 'Desactivar dato rápido' : 'Activar dato rápido'" [disabled]="cambiandoActivoDatoRapidoId !== null || eliminandoDatoRapidoId !== null" (click)="alternarActivoDatoRapido(i)">
+                          <mat-icon class="icon-size-5" [svgIcon]="detalle.get('activo')?.value ? 'heroicons_outline:eye-slash' : 'heroicons_outline:eye'"></mat-icon>
+                        </button>
+                        <button mat-icon-button color="warn" type="button" aria-label="Eliminar dato rápido" [matTooltip]="'Eliminar dato rápido'" [disabled]="cambiandoActivoDatoRapidoId !== null || eliminandoDatoRapidoId !== null" (click)="abrirModalConfirmarEliminarDatoRapido(i)">
+                          <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
                         </button>
                       </div>
                     </td>
                   </tr>
                 } @empty {
-                  <tr><td colspan="4" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">No hay datos rápidos configurados.</td></tr>
+                  <tr><td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">No hay datos rápidos configurados.</td></tr>
                 }
               </tbody>
             </table>
@@ -201,14 +213,21 @@
 
           <div class="space-y-3 md:hidden">
             @for (detalle of detallesRapidosArray.controls; track $index; let i = $index) {
-              <article class="flex items-center gap-3 rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+              <article class="flex items-center gap-3 rounded-xl border border-gray-200 p-4 dark:border-gray-700" [class.opacity-60]="!detalle.get('activo')?.value">
                 <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-50 text-sm font-bold text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">{{ i + 1 }}</span>
                 <div class="min-w-0 flex-1">
                   <p class="font-medium text-gray-800 dark:text-gray-100">{{ detalle.get('nombre')?.value }}</p>
                   <p class="mt-0.5 truncate text-sm text-gray-500 dark:text-gray-400">{{ getControlDetalleRapido(i, 'es')?.value || 'Sin valor en español' }}</p>
+                  <p class="mt-1 text-xs font-semibold" [class.text-emerald-600]="detalle.get('activo')?.value" [class.text-gray-500]="!detalle.get('activo')?.value">{{ detalle.get('activo')?.value ? 'Activo' : 'Inactivo' }}</p>
                 </div>
-                <button mat-icon-button type="button" aria-label="Editar dato rápido" (click)="abrirModalEditarDatoRapido(i)">
+                <button mat-icon-button type="button" aria-label="Editar dato rápido" [disabled]="cambiandoActivoDatoRapidoId !== null || eliminandoDatoRapidoId !== null" (click)="abrirModalEditarDatoRapido(i)">
                   <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
+                </button>
+                <button mat-icon-button type="button" [attr.aria-label]="detalle.get('activo')?.value ? 'Desactivar dato rápido' : 'Activar dato rápido'" [disabled]="cambiandoActivoDatoRapidoId !== null || eliminandoDatoRapidoId !== null" (click)="alternarActivoDatoRapido(i)">
+                  <mat-icon class="icon-size-5" [svgIcon]="detalle.get('activo')?.value ? 'heroicons_outline:eye-slash' : 'heroicons_outline:eye'"></mat-icon>
+                </button>
+                <button mat-icon-button color="warn" type="button" aria-label="Eliminar dato rápido" [disabled]="cambiandoActivoDatoRapidoId !== null || eliminandoDatoRapidoId !== null" (click)="abrirModalConfirmarEliminarDatoRapido(i)">
+                  <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
                 </button>
               </article>
             } @empty {
@@ -435,6 +454,26 @@
         <button mat-stroked-button type="button" (click)="cerrarModalConfirmarEliminarActividad()">Cancelar</button>
         <button mat-flat-button color="warn" type="button" (click)="confirmarEliminarActividad()" [disabled]="eliminandoActividadIndex !== null">
           @if (eliminandoActividadIndex !== null) {
+            Eliminando...
+          } @else {
+            Eliminar
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (mostrarModalConfirmarEliminarDatoRapido) {
+  <div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
+    <div role="dialog" aria-modal="true" aria-labelledby="titulo-modal-eliminar-dato-rapido" class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900">
+      <h3 id="titulo-modal-eliminar-dato-rapido" class="text-xl font-semibold text-gray-900 dark:text-white">Eliminar dato rápido</h3>
+      <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Se eliminarán sus valores traducidos y dejará de aparecer en este preview.</p>
+
+      <div class="mt-6 flex justify-end gap-2">
+        <button mat-stroked-button type="button" [disabled]="eliminandoDatoRapidoId !== null" (click)="cerrarModalConfirmarEliminarDatoRapido()">Cancelar</button>
+        <button mat-flat-button color="warn" type="button" [disabled]="eliminandoDatoRapidoId !== null" (click)="confirmarEliminarDatoRapido()">
+          @if (eliminandoDatoRapidoId !== null) {
             Eliminando...
           } @else {
             Eliminar

@@ -324,13 +324,14 @@ export class DestinosService {
       throw new Error('No se encontro el destino solicitado.');
     }
 
-    const { data: detalle, error: detalleError } = await this.client
+    const { data: detalles, error: detalleError } = await this.client
       .from('detalles_destinos')
       .select('id, ubicacion, catalogo_destino_id')
       .eq('catalogo_destino_id', catalogoDestinoId)
-      .maybeSingle();
+      .limit(1);
 
     if (detalleError) throw detalleError;
+    const detalle = detalles?.[0] ?? null;
 
     const idiomaIds = idiomas.map((x) => x.id);
     const detalleId = detalle?.id ?? null;
@@ -407,6 +408,7 @@ export class DestinosService {
           .from('detalles_destinos_datos_rapidos')
           .select(`
             id,
+            activo,
             orden,
             tipo_dato_rapido_id,
             tipo:tipo_dato_rapido_id (
@@ -536,16 +538,6 @@ export class DestinosService {
 
         carpetasActividadPorId.get(atraccionId)?.push(item);
       });
-    } else {
-      detallesRapidos = catalogoTipos.map((tipo: any, index: number) => ({
-        id: -(index + 1),
-        orden: index + 1,
-        tipo_dato_rapido_id: tipo.id,
-        tipo: {
-          ...tipo,
-          traducciones: [{ idioma_id: ES_ID, nombre: tipo.nombre }]
-        }
-      }));
     }
 
     const traduccionesPorIdioma = new Map<number, any>();
@@ -713,6 +705,7 @@ export class DestinosService {
 
         return {
           id: item.id,
+          activo: item.activo !== false,
           tipo_dato_rapido_id: item.tipo_dato_rapido_id,
           clave: item.tipo?.clave ?? '',
           nombre:
@@ -777,13 +770,14 @@ export class DestinosService {
       }>;
     }>;
   }) {
-    const { data: detalleExistente, error: detalleExistenteError } = await this.client
+    const { data: detallesExistentes, error: detalleExistenteError } = await this.client
       .from('detalles_destinos')
       .select('id')
       .eq('catalogo_destino_id', payload.catalogo_destino_id)
-      .maybeSingle();
+      .limit(1);
 
     if (detalleExistenteError) throw detalleExistenteError;
+    const detalleExistente = detallesExistentes?.[0] ?? null;
 
     let detallesDestinosId = detalleExistente?.id;
 
@@ -854,7 +848,7 @@ export class DestinosService {
       (insertados ?? []).forEach((item: any) => mapaDetalleRapidoPorTipo.set(item.tipo_dato_rapido_id, item.id));
     }
 
-    await Promise.all(
+    const actualizacionesOrden = await Promise.all(
       payload.detalles_rapidos.map((item, index) =>
         this.client
           .from('detalles_destinos_datos_rapidos')
@@ -863,6 +857,8 @@ export class DestinosService {
           .eq('tipo_dato_rapido_id', item.tipo_dato_rapido_id)
       )
     );
+    const errorOrden = actualizacionesOrden.find((resultado) => resultado.error)?.error;
+    if (errorOrden) throw errorOrden;
 
     const valoresPayload = payload.detalles_rapidos.flatMap((detalleRapido) => {
       const detalleRapidoId = mapaDetalleRapidoPorTipo.get(detalleRapido.tipo_dato_rapido_id);
@@ -884,6 +880,8 @@ export class DestinosService {
 
       if (valoresError) throw valoresError;
     }
+
+    const detallesRapidosIds = Object.fromEntries(mapaDetalleRapidoPorTipo.entries());
 
     const { data: actividadesExistentes, error: actividadesExistentesError } = await this.client
       .from('atracciones_principales')
@@ -982,7 +980,7 @@ export class DestinosService {
       if (borrarTraduccionesVaciasError) throw borrarTraduccionesVaciasError;
     }
 
-    return { id: detallesDestinosId };
+    return { id: detallesDestinosId, detallesRapidosIds };
   }
 
   async actualizarOrdenDatosRapidosDestinoAdmin(
@@ -1016,6 +1014,78 @@ export class DestinosService {
     return { updated: detallesRapidos.length };
   }
 
+  async actualizarActivoDatoRapidoDestinoAdmin(detalleRapidoId: number, activo: boolean): Promise<boolean> {
+    const { error } = await this.client
+      .from('detalles_destinos_datos_rapidos')
+      .update({ activo })
+      .eq('id', detalleRapidoId);
+
+    if (error) throw error;
+
+    return activo;
+  }
+
+  async eliminarDatoRapidoDestinoAdmin(catalogoDestinoId: number, detalleRapidoId: number): Promise<void> {
+    const detallesDestinosId = await this.obtenerDetalleDestinoIdAdmin(catalogoDestinoId);
+    const { data: detallesRapidos, error: detalleRapidoError } = await this.client
+      .from('detalles_destinos_datos_rapidos')
+      .select('id')
+      .eq('id', detalleRapidoId)
+      .eq('detalles_destinos_id', detallesDestinosId)
+      .limit(1);
+
+    if (detalleRapidoError) throw detalleRapidoError;
+    const detalleRapido = detallesRapidos?.[0] ?? null;
+    if (!detalleRapido) throw new Error('No se encontró el dato rápido solicitado.');
+
+    const { error: traduccionesError } = await this.client
+      .from('detalles_destinos_datos_rapidos_traducciones')
+      .delete()
+      .eq('detalles_destinos_dato_rapido_id', detalleRapido.id);
+    if (traduccionesError) throw traduccionesError;
+
+    const { error: eliminarError } = await this.client
+      .from('detalles_destinos_datos_rapidos')
+      .delete()
+      .eq('id', detalleRapido.id)
+      .eq('detalles_destinos_id', detallesDestinosId);
+    if (eliminarError) throw eliminarError;
+
+    const { data: restantes, error: restantesError } = await this.client
+      .from('detalles_destinos_datos_rapidos')
+      .select('id')
+      .eq('detalles_destinos_id', detallesDestinosId)
+      .order('orden', { ascending: true })
+      .order('id', { ascending: true });
+    if (restantesError) throw restantesError;
+
+    const resultados = await Promise.all(
+      (restantes ?? []).map((item: any, index: number) =>
+        this.client
+          .from('detalles_destinos_datos_rapidos')
+          .update({ orden: index + 1 })
+          .eq('id', item.id)
+          .eq('detalles_destinos_id', detallesDestinosId)
+      )
+    );
+    const errorOrden = resultados.find((resultado) => resultado.error)?.error;
+    if (errorOrden) throw errorOrden;
+  }
+
+  private async obtenerDetalleDestinoIdAdmin(catalogoDestinoId: number): Promise<number> {
+    const { data, error } = await this.client
+      .from('detalles_destinos')
+      .select('id')
+      .eq('catalogo_destino_id', catalogoDestinoId)
+      .limit(1);
+
+    if (error) throw error;
+    const detalle = data?.[0];
+    if (!detalle?.id) throw new Error('Primero guarda el preview para configurar sus datos rápidos.');
+
+    return Number(detalle.id);
+  }
+
   async obtenerDetalleDestino(catalogoDestinoId: number, lang?: string) {
     const preview = await this.obtenerPreviewDestinoAdmin(catalogoDestinoId);
 
@@ -1043,7 +1113,7 @@ export class DestinosService {
         descripcion_larga: traduccion?.descripcion_larga ?? '',
         titulo_descripcion: traduccion?.titulo_descripcion ?? ''
       },
-      datos_rapidos: preview.detalles_rapidos.map((item) => ({
+      datos_rapidos: preview.detalles_rapidos.filter((item) => item.activo).map((item) => ({
         clave: item.clave,
         icono: item.icono ?? '',
         label: item.nombre,
@@ -1504,6 +1574,7 @@ export class DestinosService {
         .order('destino_orden', { ascending: true })
         .order('destino_nombre', { ascending: true });
     }
+
     const { data, error } = await query;
     if (error) throw error;
     const datos = (data ?? []).map((item: any) => ({
