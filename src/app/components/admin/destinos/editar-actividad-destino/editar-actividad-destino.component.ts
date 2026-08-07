@@ -21,6 +21,9 @@ import { MaterialModule } from 'app/shared/material.module';
 import { backdropFade, modalScaleFade } from 'app/shared/animations';
 import { CustomSwitchComponent } from 'app/shared/custom-switch/custom-switch.component';
 import { ColorPickerComponent } from 'app/shared/color-picker/color-picker.component';
+import { TpInputComponent } from 'app/shared/tp-input/tp-input.component';
+import { TpTextareaComponent } from 'app/shared/tp-textarea/tp-textarea.component';
+import { TpSelectSearchComponent, TpSelectSearchOption } from 'app/shared/tp-select-search/tp-select-search.component';
 
 interface ILangConfig {
   code: string;
@@ -90,7 +93,7 @@ const VALORES_PREDETERMINADOS_ESTILO_IMAGEN = {
 @Component({
   selector: 'app-editar-actividad-destino',
   standalone: true,
-  imports: [CommonModule, MaterialModule, ReactiveFormsModule, FolderImageManagerComponent, BlockingLoaderComponent, CustomSwitchComponent, ColorPickerComponent],
+  imports: [CommonModule, MaterialModule, ReactiveFormsModule, FolderImageManagerComponent, BlockingLoaderComponent, CustomSwitchComponent, ColorPickerComponent, TpInputComponent, TpTextareaComponent, TpSelectSearchComponent],
   templateUrl: './editar-actividad-destino.component.html',
   styleUrl: './editar-actividad-destino.component.scss',
   animations: [modalScaleFade, backdropFade],
@@ -171,6 +174,10 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
 
   idiomas: IIdiomaPreviewAdmin[] = [];
   catalogoAtracciones: Array<{ id: number; clave: string; nombre: string }> = [];
+
+  get catalogoAtraccionesOpciones(): TpSelectSearchOption[] {
+    return this.catalogoAtracciones.map((tipo) => ({ value: tipo.id, label: tipo.nombre }));
+  }
 
   form = this.fb.group({
     catalogo_atraccion_id: [null as number | null],
