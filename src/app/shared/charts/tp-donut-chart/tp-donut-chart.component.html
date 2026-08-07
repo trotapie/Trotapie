@@ -1,0 +1,62 @@
+<div class="tp-donut-container" [class.no-segments]="segments.length === 0" [style.height.px]="height">
+  <!-- Left/Top Donut Circle -->
+  <div class="donut-visual-wrap">
+    <svg viewBox="0 0 200 200" class="tp-svg-donut">
+      <!-- Background Ring Track -->
+      <circle
+        cx="100"
+        cy="100"
+        r="80"
+        fill="transparent"
+        class="donut-track"
+        stroke-width="22"
+      />
+
+      <!-- Animated Donut Slices -->
+      <circle
+        *ngFor="let seg of segments; index as idx"
+        cx="100"
+        cy="100"
+        r="80"
+        fill="transparent"
+        [attr.stroke]="seg.color"
+        [attr.stroke-width]="activeSegmentIndex === idx ? 26 : 22"
+        [attr.stroke-dasharray]="seg.dashArray"
+        [attr.stroke-dashoffset]="seg.dashOffset"
+        class="donut-segment"
+        (click)="onSegmentClick(seg)"
+        (mouseenter)="hoverSegment(idx)"
+        (mouseleave)="hoverSegment(null)"
+      />
+    </svg>
+
+    <!-- Center Counter -->
+    <div class="donut-center-label">
+      <span class="center-title">{{ activeSegment ? activeSegment.label : title }}</span>
+      <strong class="center-value">{{ (activeSegment ? activeSegment.value : total) | number:'1.0-0':'en-US' }}</strong>
+      <span *ngIf="activeSegment" class="center-sub">{{ activeSegment.percentage }}%</span>
+      <span *ngIf="!activeSegment && total === 0" class="center-empty">Sin datos</span>
+    </div>
+  </div>
+
+  <!-- Legend List -->
+  <div *ngIf="segments.length > 0" class="donut-legend-wrap">
+    <div
+      *ngFor="let seg of segments; index as idx"
+      class="legend-item"
+      [class.active]="activeSegmentIndex === idx"
+      (mouseenter)="hoverSegment(idx)"
+      (mouseleave)="hoverSegment(null)"
+      (click)="onSegmentClick(seg)"
+      role="button"
+      tabindex="0"
+    >
+      <span class="legend-dot" [style.background]="seg.color"></span>
+      <span class="legend-name">{{ seg.label }}</span>
+      <div class="legend-stats">
+        <strong class="legend-val">{{ seg.value | number:'1.0-0':'en-US' }}</strong>
+        <span class="legend-pct">({{ seg.percentage }}%)</span>
+      </div>
+    </div>
+  </div>
+</div>

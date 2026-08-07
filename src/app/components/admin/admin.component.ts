@@ -10,6 +10,10 @@ import { DestinosService } from 'app/core/destinos.service';
 import { EmpleadosService } from 'app/core/empleados.service';
 import { ISolicitudCotizacionListado } from 'app/interface/solicitudes-cotizacion.interface';
 import { MaterialModule } from 'app/shared/material.module';
+import { TpAreaChartComponent, TpChartPoint } from 'app/shared/charts/tp-area-chart/tp-area-chart.component';
+import { TpDonutChartComponent, TpDonutSegment } from 'app/shared/charts/tp-donut-chart/tp-donut-chart.component';
+import { TpBarChartComponent, TpBarItem } from 'app/shared/charts/tp-bar-chart/tp-bar-chart.component';
+import { TpActionMenuItem, TpActionsMenuComponent } from 'app/shared/tp-actions-menu/tp-actions-menu.component';
 import { Subject, takeUntil } from 'rxjs';
 
 type RankingItem = { nombre: string; total: number };
@@ -17,7 +21,7 @@ type SerieUltimosDias = { labels: string[]; series: number[]; fechas: string[] }
 
 @Component({
   selector: 'app-admin',
-  imports: [MaterialModule],
+  imports: [MaterialModule, TpDonutChartComponent, TpBarChartComponent, TpActionsMenuComponent],
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.scss'
 })
@@ -33,8 +37,10 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
   private _unsubscribeAll = new Subject<void>();
   private _solicitudesActuales: ISolicitudCotizacionListado[] = [];
   private _tooltipObserver: MutationObserver | null = null;
+  private _refreshInterval: ReturnType<typeof setInterval> | null = null;
 
   isLoading = false;
+  isInitialLoading = true;
   errorMessage = '';
   updatedAt: Date | null = null;
   warnings: string[] = [];
@@ -70,6 +76,11 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
   topDestinosCotizados: RankingItem[] = [];
   topEmpleadosCotizados: RankingItem[] = [];
 
+  tendenciaChartData: TpChartPoint[] = [];
+  estatusChartData: TpDonutSegment[] = [];
+  tipoDestinoChartData: TpDonutSegment[] = [];
+  resumenChartData: TpBarItem[] = [];
+
   chartResumen: ApexOptions = {};
   chartDistribucion: ApexOptions = {};
   chartSolicitudes30Dias: ApexOptions = {};
@@ -79,6 +90,12 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
   chartTopEmpleados: ApexOptions = {};
   private fechasTendencia30Dias: string[] = [];
   private scheme: 'light' | 'dark' = 'light';
+
+  readonly accionesDescargaTendencia: TpActionMenuItem[] = [
+    { id: 'png', label: 'Descargar PNG', icon: 'heroicons_outline:photo' },
+    { id: 'svg', label: 'Descargar SVG', icon: 'heroicons_outline:document-chart-bar' },
+    { id: 'csv', label: 'Descargar CSV', icon: 'heroicons_outline:table-cells' },
+  ];
 
   get tituloDashboard(): string {
     return this._authService.isAdmin ? 'Dashboard General del Sitio' : 'Mi Dashboard';
@@ -95,6 +112,19 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    (window as any)['Apex'] = {
+      chart: {
+        events: {
+          mounted: (chart: any): void => {
+            if (chart?.el) this._fixSvgFill(chart.el);
+          },
+          updated: (chart: any): void => {
+            if (chart?.el) this._fixSvgFill(chart.el);
+          },
+        },
+      },
+    };
+
     this._fuseConfigService.config$
       .pipe(takeUntil(this._unsubscribeAll))
       .subscribe((config) => {
@@ -103,12 +133,19 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
         if (this._solicitudesActuales.length > 0) {
           this._prepararGraficas(this._solicitudesActuales);
         }
-      });
+    });
 
     void this.recargarDashboard();
+    this._refreshInterval = setInterval(() => {
+      if (!this.isLoading) void this.recargarDashboard();
+    }, 30 * 1000);
   }
 
   ngOnDestroy(): void {
+    if (this._refreshInterval) {
+      clearInterval(this._refreshInterval);
+      this._refreshInterval = null;
+    }
     this._tooltipObserver?.disconnect();
     this._unsubscribeAll.next();
     this._unsubscribeAll.complete();
@@ -134,6 +171,7 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async recargarDashboard(): Promise<void> {
+    this.isInitialLoading = !this.updatedAt;
     this.isLoading = true;
     this.errorMessage = '';
     this.warnings = [];
@@ -253,6 +291,7 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
         : 'No se pudo cargar tu dashboard. Intenta recargar.';
     } finally {
       this.isLoading = false;
+      this.isInitialLoading = false;
     }
   }
 
@@ -316,30 +355,77 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
     const tendencia30 = this._serieUltimosDias(solicitudes, 30);
     this.fechasTendencia30Dias = tendencia30.fechas;
 
+    // Populate Standalone Custom Charts Data
+    this.tendenciaChartData = tendencia30.labels.map((label, idx) => ({
+      label,
+      value: tendencia30.series[idx] ?? 0,
+      date: tendencia30.fechas[idx],
+    }));
+
+    const statusColors: Record<string, string> = {
+      'cotiz': '#057a55',  // Emerald Green
+      'confirm': '#057a55',
+      'pendien': '#f59e0b', // Warm Amber
+      'cancel': '#ef4444',  // Vivid Red
+      'cerrad': '#6366f1',  // Royal Indigo/Purple
+      'nuev': '#0ea5e9',    // Sky Blue
+    };
+
+    const fallbackPalette = ['#057a55', '#f59e0b', '#ef4444', '#6366f1', '#0ea5e9', '#ec4899'];
+
+    this.estatusChartData = conteoEstatus.labels.map((label, idx) => {
+      const key = this._normalizarTexto(label);
+      const matched = Object.keys(statusColors).find(k => key.includes(k));
+      return {
+        label,
+        value: conteoEstatus.series[idx] ?? 0,
+        color: matched ? statusColors[matched] : fallbackPalette[idx % fallbackPalette.length],
+      };
+    });
+
+    this.tipoDestinoChartData = conteoTipoDestino.labels.map((label, idx) => ({
+      label,
+      value: conteoTipoDestino.series[idx] ?? 0,
+    }));
+
+    this.resumenChartData = [
+      { label: 'Totales', value: this.totalSolicitudes, color: '#0ea5e9' },
+      { label: 'Cotizadas', value: this.totalCotizadas, color: '#057a55' },
+      { label: 'Pendientes', value: this.totalPendientes, color: '#f59e0b' },
+      { label: 'Canceladas', value: this.totalCanceladas, color: '#ef4444' },
+      { label: 'Últimos 30 días', value: this.totalUltimos30Dias, color: '#6366f1' },
+    ];
+
     const tooltipTheme = this.scheme === 'dark' ? 'dark' : 'light';
-    const gridBorderColor = this.scheme === 'dark' ? 'rgba(241, 245, 249, 0.12)' : '#E2E8F0';
+    const gridBorderColor = this.scheme === 'dark' ? 'rgba(241, 245, 249, 0.1)' : 'rgba(226, 232, 240, 0.7)';
 
     this.chartResumen = {
       chart: {
-        id: 'tendencia-solicitudes',
+        id: 'resumen-solicitudes-bar',
         fontFamily: 'inherit',
         foreColor: 'inherit',
         type: 'bar',
         height: 340,
         toolbar: { show: false },
       },
-      colors: ['#0EA5E9', '#10B981', '#F59E0B', '#EF4444', '#6366F1'],
+      colors: ['#0EA5E9', '#057A55', '#F59E0B', '#EF4444', '#6366F1'],
       dataLabels: {
         enabled: true,
         formatter: (value: number): string => `${value}`,
+        style: {
+          fontWeight: '700',
+          colors: ['#ffffff'],
+        },
       },
-      grid: { borderColor: gridBorderColor },
+      grid: { borderColor: gridBorderColor, strokeDashArray: 4 },
       plotOptions: {
         bar: {
           borderRadius: 8,
-          columnWidth: '45%',
+          columnWidth: '40%',
+          distributed: true,
         },
       },
+      legend: { show: false },
       series: [
         {
           name: 'Solicitudes',
@@ -354,7 +440,10 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
       ],
       stroke: { show: false },
       xaxis: {
-        categories: ['Totales', 'Cotizadas', 'Pendientes', 'Canceladas', 'Ultimos 30 dias'],
+        categories: ['Totales', 'Cotizadas', 'Pendientes', 'Canceladas', 'Últimos 30 días'],
+        labels: {
+          style: { fontWeight: '600' },
+        },
       },
       yaxis: { min: 0, forceNiceScale: true },
       tooltip: { theme: tooltipTheme },
@@ -375,13 +464,37 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
           },
         },
       },
-      colors: ['#10B981', '#F59E0B', '#EF4444', '#3B82F6', '#A855F7', '#14B8A6'],
+      colors: ['#057A55', '#F59E0B', '#EF4444', '#0EA5E9', '#6366F1', '#14B8A6'],
       labels: conteoEstatus.labels,
       series: conteoEstatus.series,
-      legend: { position: 'bottom' },
-      plotOptions: {
-        pie: { donut: { size: '64%' } },
+      legend: {
+        position: 'bottom',
+        fontFamily: 'inherit',
+        fontSize: '13px',
+        itemMargin: { horizontal: 8, vertical: 4 },
       },
+      plotOptions: {
+        pie: {
+          donut: {
+            size: '72%',
+            labels: {
+              show: true,
+              total: {
+                show: true,
+                label: 'Total',
+                fontSize: '14px',
+                fontWeight: '600',
+                color: this.scheme === 'dark' ? '#94a3b8' : '#64748b',
+                formatter: (w) => {
+                  const total = w.globals.seriesTotals.reduce((a: number, b: number) => a + b, 0);
+                  return `${total}`;
+                },
+              },
+            },
+          },
+        },
+      },
+      dataLabels: { enabled: false },
       noData: { text: 'Sin datos disponibles' },
       tooltip: { theme: tooltipTheme },
     };
@@ -393,36 +506,50 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
         type: 'donut',
         height: 340,
       },
-      colors: ['#2563EB', '#0891B2', '#7C3AED', '#F97316', '#16A34A'],
+      colors: ['#057A55', '#0EA5E9', '#6366F1', '#F59E0B', '#EC4899'],
       labels: conteoTipoDestino.labels,
       series: conteoTipoDestino.series,
-      legend: { position: 'bottom' },
-      plotOptions: {
-        pie: { donut: { size: '64%' } },
+      legend: {
+        position: 'bottom',
+        fontFamily: 'inherit',
+        fontSize: '13px',
+        itemMargin: { horizontal: 8, vertical: 4 },
       },
+      plotOptions: {
+        pie: {
+          donut: {
+            size: '72%',
+            labels: {
+              show: true,
+              total: {
+                show: true,
+                label: 'Categorías',
+                fontSize: '14px',
+                fontWeight: '600',
+                color: this.scheme === 'dark' ? '#94a3b8' : '#64748b',
+                formatter: (w) => {
+                  const total = w.globals.seriesTotals.reduce((a: number, b: number) => a + b, 0);
+                  return `${total}`;
+                },
+              },
+            },
+          },
+        },
+      },
+      dataLabels: { enabled: false },
       noData: { text: 'Sin datos disponibles' },
       tooltip: { theme: tooltipTheme },
     };
 
     this.chartSolicitudes30Dias = {
       chart: {
+        id: 'tendencia-solicitudes',
         fontFamily: 'inherit',
         foreColor: 'inherit',
-        type: 'line',
+        type: 'area',
         height: 340,
-        toolbar: {
-          show: true,
-          tools: {
-            download: false,
-            selection: true,
-            zoom: true,
-            zoomin: true,
-            zoomout: true,
-            pan: true,
-            reset: true,
-          },
-        },
-        zoom: { enabled: true, type: 'x', autoScaleYaxis: true },
+        toolbar: { show: false },
+        zoom: { enabled: false },
         events: {
           click: (_event: unknown, _chartContext: unknown, config: any) => {
             this._navegarASolicitudesPorIndiceTendencia(config);
@@ -435,15 +562,25 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
           },
         },
       },
-      colors: ['#0EA5E9'],
+      colors: ['#057A55'],
+      fill: {
+        type: 'gradient',
+        gradient: {
+          shadeIntensity: 1,
+          opacityFrom: 0.38,
+          opacityTo: 0.03,
+          stops: [0, 90, 100],
+        },
+      },
       dataLabels: { enabled: false },
       stroke: { curve: 'smooth', width: 3 },
       markers: {
-        size: 5,
+        size: 4,
+        strokeColors: '#ffffff',
         strokeWidth: 2,
         hover: { size: 7, sizeOffset: 2 },
       },
-      grid: { borderColor: gridBorderColor },
+      grid: { borderColor: gridBorderColor, strokeDashArray: 4 },
       series: [
         {
           name: 'Solicitudes',
@@ -461,9 +598,9 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
       },
     };
 
-    this.chartTopHoteles = this._crearGraficaTop('Hoteles', this.topHotelesCotizados, '#10B981');
-    this.chartTopDestinos = this._crearGraficaTop('Destinos', this.topDestinosCotizados, '#3B82F6');
-    this.chartTopEmpleados = this._crearGraficaTop('Empleados', this.topEmpleadosCotizados, '#8B5CF6');
+    this.chartTopHoteles = this._crearGraficaTop('Hoteles', this.topHotelesCotizados, '#057A55');
+    this.chartTopDestinos = this._crearGraficaTop('Destinos', this.topDestinosCotizados, '#0EA5E9');
+    this.chartTopEmpleados = this._crearGraficaTop('Empleados', this.topEmpleadosCotizados, '#6366F1');
     this._removerTooltipsNativosTendencia();
   }
 
@@ -473,6 +610,16 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
         .querySelectorAll('.apexcharts-toolbar[title], .apexcharts-toolbar [title]')
         .forEach((element) => element.removeAttribute('title'));
     }, 150);
+  }
+
+  private _fixSvgFill(element: Element): void {
+    const currentURL = this._router.url;
+    Array.from(element.querySelectorAll('*[fill]'))
+      .filter((el) => el.getAttribute('fill')?.indexOf('url(') !== -1)
+      .forEach((el) => {
+        const attrVal = el.getAttribute('fill') ?? '';
+        el.setAttribute('fill', `url(${currentURL}${attrVal.slice(attrVal.indexOf('#'))}`);
+      });
   }
 
   private _crearGraficaTop(nombreSerie: string, items: RankingItem[], color: string): ApexOptions {
@@ -737,6 +884,29 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
     void this._navegarASolicitudesPorEstatus(estatus);
   }
 
+  onTendenciaPointClick(event: { label: string; value: number; index: number }): void {
+    const fecha = this.fechasTendencia30Dias[event.index];
+    if (fecha) {
+      void this._navegarASolicitudesPorFecha(fecha);
+    }
+  }
+
+  onEstatusClick(event: { label: string; value: number; index: number }): void {
+    void this._navegarASolicitudesPorEstatus(event.label);
+  }
+
+  onResumenBarClick(event: { label: string; value: number; index: number }): void {
+    if (event.label.includes('Cotizada')) {
+      void this.abrirSolicitudesPorEstatus('Cotizada');
+    } else if (event.label.includes('Pendiente')) {
+      void this.abrirSolicitudesPorEstatus('Pendiente');
+    } else if (event.label.includes('Cancelada')) {
+      void this.abrirSolicitudesPorEstatus('Cancelada');
+    } else {
+      void this.abrirSolicitudes();
+    }
+  }
+
   abrirRuta(ruta: string): void {
     void this._router.navigateByUrl(ruta);
   }
@@ -766,6 +936,12 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
       enlace.href = resultado.imgURI;
       enlace.download = `${nombreArchivo}.png`;
       enlace.click();
+    }
+  }
+
+  onDescargaTendenciaSeleccionada(formato: string): void {
+    if (formato === 'png' || formato === 'svg' || formato === 'csv') {
+      void this.descargarTendencia(formato);
     }
   }
 

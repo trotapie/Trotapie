@@ -1,0 +1,73 @@
+<div class="tp-chart-container" [style.height.px]="height">
+  <!-- SVG Vector Grid & Bars Layer -->
+  <svg [attr.viewBox]="viewBox" class="tp-svg-chart" preserveAspectRatio="none">
+    <!-- Grid Lines -->
+    <g class="grid-group">
+      <line
+        *ngFor="let grid of gridLines"
+        [attr.x1]="paddingLeft"
+        [attr.y1]="grid.y"
+        [attr.x2]="width - paddingRight"
+        [attr.y2]="grid.y"
+        class="grid-line"
+      />
+    </g>
+
+    <!-- Bars -->
+    <g *ngFor="let bar of bars; index as idx" class="bar-node" (click)="onBarClick(bar)" (mouseenter)="hoverBar(idx)" (mouseleave)="hoverBar(null)">
+      <!-- Hover Background Glow -->
+      <rect
+        *ngIf="activeBarIndex === idx"
+        [attr.x]="bar.x - 6"
+        [attr.y]="paddingTop - 10"
+        [attr.width]="bar.barWidth + 12"
+        [attr.height]="height - paddingTop - paddingBottom + 10"
+        rx="8"
+        fill="rgba(5, 122, 85, 0.06)"
+        class="bar-hover-bg"
+      />
+
+      <!-- Bar Rect -->
+      <rect
+        [attr.x]="bar.x"
+        [attr.y]="bar.y"
+        [attr.width]="bar.barWidth"
+        [attr.height]="bar.barHeight"
+        rx="6"
+        ry="6"
+        [attr.fill]="bar.color"
+        class="bar-rect"
+        [class.active]="activeBarIndex === idx"
+      />
+    </g>
+  </svg>
+
+  <!-- HTML Top Value Badges Overlay (Crisp Browser Font) -->
+  <div class="bar-values-overlay" [style.left.px]="paddingLeft" [style.right.px]="paddingRight">
+    <div
+      *ngFor="let bar of bars; index as idx"
+      class="bar-val-item"
+      [style.left.%]="bar.xPercent"
+      [style.width.%]="bar.widthPercent"
+      [style.top.px]="bar.topPx - 22"
+    >
+      <strong>{{ bar.value | number:'1.0-0':'en-US' }}</strong>
+    </div>
+  </div>
+
+  <!-- HTML Bottom Category Labels Overlay (Crisp Browser Font) -->
+  <div class="bar-labels-overlay" [style.left.px]="paddingLeft" [style.right.px]="paddingRight">
+    <div
+      *ngFor="let bar of bars; index as idx"
+      class="bar-label-item"
+      [style.left.%]="bar.xPercent"
+      [style.width.%]="bar.widthPercent"
+    >
+      <span>{{ bar.label }}</span>
+    </div>
+  </div>
+
+  <div *ngIf="bars.length === 0" class="empty-chart-overlay">
+    <span>Sin datos para mostrar</span>
+  </div>
+</div>

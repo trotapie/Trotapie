@@ -318,9 +318,11 @@
 .pill-ok {
     background: rgb(181, 229, 213);
 }
+
 .pill-warn {
     background: rgb(246, 210, 101);
 }
+
 .pill-danger {
     background: rgb(254, 122, 122);
 }
@@ -365,8 +367,8 @@
 }
 
 mat-form-field.search {
-  --mat-form-field-container-shape: 60px;
-  --mdc-outlined-text-field-container-shape: 30px;
+    --mat-form-field-container-shape: 60px;
+    --mdc-outlined-text-field-container-shape: 30px;
 }
 
 @media (max-width: 767px) {
@@ -417,7 +419,7 @@ mat-form-field.search {
         font-size: 0.75rem;
     }
 
-    :host ::ng-deep .status-cell app-status-badge > div > span {
+    :host ::ng-deep .status-cell app-status-badge>div>span {
         gap: 0.35rem;
         padding: 0.3rem 0.5rem;
     }
@@ -437,7 +439,7 @@ mat-form-field.search {
         font-size: 0.68rem;
     }
 
-    :host ::ng-deep .status-cell app-status-badge > div > span {
+    :host ::ng-deep .status-cell app-status-badge>div>span {
         gap: 0.25rem;
         padding: 0.25rem 0.4rem;
     }

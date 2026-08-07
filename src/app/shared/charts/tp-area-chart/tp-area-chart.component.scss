@@ -1,0 +1,172 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.tp-chart-container {
+  position: relative;
+  width: 100%;
+}
+
+.tp-svg-chart {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  cursor: crosshair;
+}
+
+/* Crisp HTML Y-Axis Labels Overlay */
+.y-axis-labels {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 32px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.y-axis-item {
+  position: absolute;
+  left: 0;
+  font-size: 0.76rem;
+  font-family: inherit;
+  font-weight: 600;
+  color: var(--fuse-text-secondary, #64748b);
+  line-height: 1;
+}
+
+/* Crisp HTML X-Axis Labels Overlay */
+.x-axis-labels {
+  position: absolute;
+  bottom: 8px;
+  height: 20px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.x-axis-item {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: 0.76rem;
+  font-family: inherit;
+  font-weight: 600;
+  color: var(--fuse-text-secondary, #64748b);
+  white-space: nowrap;
+}
+
+.grid-line {
+  stroke: var(--fuse-border, rgba(226, 232, 240, 0.6));
+  stroke-dasharray: 4 4;
+  stroke-width: 1;
+}
+
+.line-stroke {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3.5px;
+  filter: drop-shadow(0 4px 6px rgba(5, 122, 85, 0.15));
+}
+
+.crosshair-line {
+  stroke: #057a55;
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+  opacity: 0.8;
+}
+
+.point-node {
+  cursor: pointer;
+}
+
+.point-circle {
+  transition: r 0.2s ease, fill 0.2s ease, stroke-width 0.2s ease;
+
+  &.has-value {
+    fill: #057a55;
+    stroke: #ffffff;
+  }
+}
+
+.empty-chart-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fuse-text-secondary, #64748b);
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.chart-tooltip {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+  z-index: 25;
+  padding: 0.55rem 0.85rem;
+  border-radius: 0.75rem;
+  background: var(--fuse-bg-card, #ffffff);
+  border: 1px solid var(--fuse-border, #e2e8f0);
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.14);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 8rem;
+  backdrop-filter: blur(8px);
+  transition: left 0.1s ease-out, top 0.1s ease-out;
+
+  .tooltip-header {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .tooltip-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+  }
+
+  .tooltip-label {
+    font-size: 0.76rem;
+    color: var(--fuse-text-secondary, #64748b);
+    font-weight: 600;
+  }
+
+  .tooltip-value {
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+
+    strong {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--fuse-text-default, #0f172a);
+      line-height: 1;
+    }
+
+    .tooltip-sub {
+      font-size: 0.72rem;
+      color: var(--fuse-text-secondary, #64748b);
+      font-weight: 500;
+    }
+  }
+}
+
+:host-context(.dark) {
+  .grid-line {
+    stroke: rgba(241, 245, 249, 0.1);
+  }
+
+  .y-axis-item,
+  .x-axis-item {
+    color: #94a3b8;
+  }
+
+  .chart-tooltip {
+    background: rgba(30, 41, 59, 0.95);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+  }
+}

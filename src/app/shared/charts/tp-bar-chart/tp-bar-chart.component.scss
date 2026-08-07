@@ -1,0 +1,111 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.tp-chart-container {
+  position: relative;
+  width: 100%;
+}
+
+.tp-svg-chart {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.grid-line {
+  stroke: var(--fuse-border, rgba(226, 232, 240, 0.6));
+  stroke-dasharray: 4 4;
+  stroke-width: 1;
+}
+
+.bar-node {
+  cursor: pointer;
+
+  .bar-rect {
+    transition: transform 0.2s ease, filter 0.2s ease, opacity 0.2s ease;
+
+    &:hover,
+    &.active {
+      filter: drop-shadow(0 6px 12px rgba(15, 23, 42, 0.15));
+      opacity: 0.95;
+    }
+  }
+}
+
+/* Crisp Top Value Badges Overlay */
+.bar-values-overlay {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.bar-val-item {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+
+  strong {
+    font-size: 0.88rem;
+    font-family: inherit;
+    color: var(--fuse-text-default, #0f172a);
+    font-weight: 800;
+    line-height: 1;
+    white-space: nowrap;
+  }
+}
+
+/* Crisp Bottom Category Labels Overlay */
+.bar-labels-overlay {
+  position: absolute;
+  bottom: 8px;
+  height: 22px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.bar-label-item {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+
+  span {
+    font-size: 0.8rem;
+    font-family: inherit;
+    font-weight: 650;
+    color: var(--fuse-text-secondary, #64748b);
+    white-space: nowrap;
+  }
+}
+
+.empty-chart-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fuse-text-secondary, #64748b);
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+:host-context(.dark) {
+  .grid-line {
+    stroke: rgba(241, 245, 249, 0.1);
+  }
+
+  .bar-val-item strong {
+    color: #f1f5f9;
+  }
+
+  .bar-label-item span {
+    color: #94a3b8;
+  }
+}

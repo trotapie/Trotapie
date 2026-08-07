@@ -1,0 +1,100 @@
+<div class="tp-chart-container" [style.height.px]="height">
+  <!-- HTML Y-Axis Labels Overlay (Crisp Browser Font) -->
+  <div class="y-axis-labels">
+    <span
+      *ngFor="let grid of gridLines"
+      class="y-axis-item"
+      [style.top.px]="grid.y - 8"
+    >{{ grid.value }}</span>
+  </div>
+
+  <!-- SVG Chart Vector Layer -->
+  <svg
+    #svgRef
+    [attr.viewBox]="viewBox"
+    class="tp-svg-chart"
+    preserveAspectRatio="none"
+    (mousemove)="onSvgMouseMove($event)"
+    (mouseleave)="hoverPoint(null)"
+  >
+    <defs>
+      <linearGradient [id]="gradientId" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" [attr.stop-color]="gradientStart" />
+        <stop offset="100%" [attr.stop-color]="gradientEnd" />
+      </linearGradient>
+    </defs>
+
+    <!-- Grid lines -->
+    <g class="grid-group">
+      <line
+        *ngFor="let grid of gridLines"
+        [attr.x1]="paddingLeft"
+        [attr.y1]="grid.y"
+        [attr.x2]="width - paddingRight"
+        [attr.y2]="grid.y"
+        class="grid-line"
+      />
+    </g>
+
+    <!-- Area Fill -->
+    <path *ngIf="areaPath" [attr.d]="areaPath" [attr.fill]="'url(#' + gradientId + ')'" class="area-fill" />
+
+    <!-- Line Stroke -->
+    <path *ngIf="linePath" [attr.d]="linePath" [attr.stroke]="strokeColor" class="line-stroke" />
+
+    <!-- Vertical Dotted Crosshair Guide -->
+    <line
+      *ngIf="activePoint"
+      [attr.x1]="activePoint.x"
+      [attr.y1]="paddingTop"
+      [attr.x2]="activePoint.x"
+      [attr.y2]="height - paddingBottom"
+      class="crosshair-line"
+    />
+
+    <!-- Point Circles -->
+    <g *ngFor="let pt of computedPoints; index as idx" class="point-node" (click)="onPointClick(pt)">
+      <circle
+        [attr.cx]="pt.x"
+        [attr.cy]="pt.y"
+        [attr.r]="activePointIndex === idx ? 6.5 : (pt.data.value > 0 ? 4 : 2.5)"
+        [attr.fill]="activePointIndex === idx ? strokeColor : (pt.data.value > 0 ? strokeColor : '#ffffff')"
+        [attr.stroke]="strokeColor"
+        stroke-width="2"
+        class="point-circle"
+        [class.has-value]="pt.data.value > 0"
+      />
+    </g>
+  </svg>
+
+  <!-- HTML X-Axis Date Labels Overlay (Crisp Browser Font) -->
+  <div class="x-axis-labels" [style.left.px]="paddingLeft" [style.right.px]="paddingRight">
+    <span
+      *ngFor="let item of sampledXLabels"
+      class="x-axis-item"
+      [style.left.%]="item.xPercent"
+    >{{ item.label }}</span>
+  </div>
+
+  <!-- Empty State Overlay -->
+  <div *ngIf="computedPoints.length === 0" class="empty-chart-overlay">
+    <span>Sin datos de actividad para los últimos 30 días</span>
+  </div>
+
+  <!-- Floating Glassmorphism Tooltip Badge -->
+  <div
+    *ngIf="activePoint"
+    class="chart-tooltip"
+    [style.left.%]="((activePoint.x - paddingLeft) / (width - paddingLeft - paddingRight)) * 80 + 10"
+    [style.top.px]="Math.max(activePoint.y - 75, 10)"
+  >
+    <div class="tooltip-header">
+      <span class="tooltip-dot" [style.background]="strokeColor"></span>
+      <span class="tooltip-label">{{ activePoint.data.date || activePoint.data.label }}</span>
+    </div>
+    <div class="tooltip-value">
+      <strong>{{ activePoint.data.value | number:'1.0-0':'en-US' }}</strong>
+      <span class="tooltip-sub">{{ activePoint.data.value === 1 ? 'solicitud' : 'solicitudes' }}</span>
+    </div>
+  </div>
+</div>

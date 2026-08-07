@@ -1,159 +1,288 @@
 <div class="admin-dashboard">
+  <!-- Top Header Section matching design reference -->
   <header class="dashboard-header">
-    <div class="header-copy">
-      <div class="eyebrow"><span class="eyebrow-dot"></span>Centro de operaciones</div>
-      <div class="title-row">
-        <div>
-          <h1>{{ tituloDashboard }}</h1>
-          <p>{{ subtituloDashboard }}</p>
-        </div>
+    <div class="header-content">
+      <div class="eyebrow">
+        <span class="eyebrow-dot"></span>
+        CENTRO DE OPERACIONES
+      </div>
+      <h1 class="dashboard-main-title">{{ tituloDashboard }}</h1>
+      <div class="header-subline">
+        <p class="dashboard-subtitle">{{ subtituloDashboard }}</p>
         <span *ngIf="updatedAt" class="last-update">
           <span class="status-dot"></span>
           Actualizado {{ updatedAt | date:'dd/MM/yyyy, HH:mm' }}
+          <button mat-icon-button type="button" class="refresh-mini-btn" (click)="recargarDashboard()" [disabled]="isLoading" matTooltip="Actualizar datos" aria-label="Actualizar datos">
+            <mat-icon [class.spinning]="isLoading">sync</mat-icon>
+          </button>
         </span>
       </div>
     </div>
-
-    <div class="header-actions">
-      <button mat-stroked-button type="button" class="action-button" (click)="abrirSolicitudes()">
-        <mat-icon>format_list_bulleted</mat-icon>
-        Ver solicitudes
-      </button>
-      <button mat-flat-button color="primary" type="button" class="refresh-button" (click)="recargarDashboard()" [disabled]="isLoading">
-        <mat-icon>{{ isLoading ? 'sync' : 'refresh' }}</mat-icon>
-        {{ isLoading ? 'Actualizando' : 'Actualizar' }}
-      </button>
-    </div>
   </header>
 
-  <div *ngIf="isLoading" class="dashboard-state loading-state" role="status" aria-live="polite">
-    <div class="state-icon"><mat-icon>insights</mat-icon></div>
-    <div>
-      <strong>Preparando tu resumen</strong>
-      <span>{{ esVistaPersonal ? 'Estamos reuniendo tu actividad.' : 'Estamos reuniendo la actividad del equipo.' }}</span>
+  <!-- Global Loading / Error / Warning states -->
+  <div *ngIf="isInitialLoading" class="dashboard-loading" role="status" aria-live="polite" aria-label="Cargando dashboard">
+    <div class="loading-summary">
+      <span class="skeleton skeleton-kicker"></span>
+      <span class="skeleton skeleton-title"></span>
+      <span class="skeleton skeleton-subtitle"></span>
+    </div>
+    <div class="skeleton-metrics" aria-hidden="true">
+      <div *ngFor="let metric of [1, 2, 3, 4]" class="skeleton-metric">
+        <span class="skeleton skeleton-icon"></span>
+        <span class="skeleton skeleton-label"></span>
+        <span class="skeleton skeleton-value"></span>
+        <span class="skeleton skeleton-hint"></span>
+      </div>
+    </div>
+    <div class="skeleton-work-grid" aria-hidden="true">
+      <div class="skeleton-panel skeleton-queue">
+        <span class="skeleton skeleton-panel-kicker"></span>
+        <span class="skeleton skeleton-panel-title"></span>
+        <span class="skeleton skeleton-panel-copy"></span>
+        <span *ngFor="let row of [1, 2, 3, 4]" class="skeleton skeleton-row"></span>
+      </div>
+      <div class="skeleton-panel skeleton-actions">
+        <span class="skeleton skeleton-panel-kicker"></span>
+        <span class="skeleton skeleton-panel-title"></span>
+        <span *ngFor="let action of [1, 2, 3, 4]" class="skeleton skeleton-action"></span>
+      </div>
+    </div>
+    <div class="skeleton-chart-grid" aria-hidden="true">
+      <div class="skeleton-panel skeleton-chart skeleton-chart-wide"><span class="skeleton skeleton-panel-title"></span><span class="skeleton skeleton-chart-area"></span></div>
+      <div class="skeleton-panel skeleton-chart"><span class="skeleton skeleton-panel-title"></span><span class="skeleton skeleton-chart-area"></span></div>
+      <div class="skeleton-panel skeleton-chart"><span class="skeleton skeleton-panel-title"></span><span class="skeleton skeleton-chart-area"></span></div>
     </div>
   </div>
 
-  <div *ngIf="!isLoading && errorMessage" class="dashboard-state error-state" role="alert">
+  <div *ngIf="!isInitialLoading && errorMessage" class="dashboard-state error-state" role="alert">
     <div class="state-icon"><mat-icon>error_outline</mat-icon></div>
     <div><strong>No pudimos cargar el dashboard</strong><span>{{ errorMessage }}</span></div>
     <button mat-button type="button" (click)="recargarDashboard()">Intentar de nuevo</button>
   </div>
 
-  <ng-container *ngIf="!isLoading && !errorMessage">
+  <ng-container *ngIf="!isInitialLoading">
     <div *ngIf="warnings.length > 0" class="dashboard-state warning-state" role="status">
       <mat-icon>warning_amber</mat-icon>
       <span><strong>Datos parciales:</strong> {{ warnings.join(' · ') }}</span>
     </div>
 
+    <!-- Overview / Rendimiento Section matching design reference -->
     <section class="overview-section" aria-labelledby="overview-title">
       <div class="section-heading">
         <div>
-          <span class="section-kicker">Rendimiento</span>
+          <span class="section-kicker">RENDIMIENTO</span>
           <h2 id="overview-title">Resumen de actividad</h2>
         </div>
-        <button mat-button type="button" class="text-action" (click)="abrirSolicitudes()">Explorar solicitudes <mat-icon>arrow_forward</mat-icon></button>
+        <button mat-button type="button" class="text-action-link" (click)="abrirSolicitudes()">
+          Explorar solicitudes <mat-icon class="link-arrow">east</mat-icon>
+        </button>
       </div>
 
-      <div class="primary-metrics">
-        <button type="button" class="metric-card metric-primary" (click)="abrirSolicitudes()" aria-label="Ver todas las solicitudes">
-          <span class="metric-topline"><span class="metric-icon blue"><mat-icon>inbox</mat-icon></span><mat-icon class="metric-arrow">north_east</mat-icon></span>
-          <span class="metric-label">Solicitudes totales</span>
-          <strong class="metric-value">{{ totalSolicitudes | number:'1.0-0':'en-US' }}</strong>
-          <span class="metric-hint">Actividad registrada</span>
+      <!-- Critical Alert Card (Red banner) -->
+      <article *ngIf="totalPendientes > 0" class="alert-card alert-critical" (click)="abrirSolicitudesPorEstatus('Pendiente')" role="button" tabindex="0">
+        <div class="alert-left-content">
+          <div class="alert-icon-wrapper">
+            <mat-icon>warning_amber</mat-icon>
+          </div>
+          <div class="alert-body">
+            <div class="alert-meta-row">
+              <span class="badge-critical">CRÍTICO</span>
+              <span class="alert-title">Solicitudes Pendientes</span>
+            </div>
+            <div class="alert-value-row">
+              <strong class="alert-count">{{ totalPendientes | number:'1.0-0':'en-US' }}</strong>
+              <span class="alert-text">requieren seguimiento inmediato</span>
+            </div>
+          </div>
+        </div>
+        <button mat-flat-button type="button" class="btn-atender-ahora" (click)="$event.stopPropagation(); abrirSolicitudesPorEstatus('Pendiente')">
+          Atender ahora <mat-icon>east</mat-icon>
         </button>
-        <button type="button" class="metric-card metric-primary" (click)="abrirSolicitudesPorEstatus('Pendiente')" aria-label="Ver solicitudes pendientes">
-          <span class="metric-topline"><span class="metric-icon amber"><mat-icon>schedule</mat-icon></span><mat-icon class="metric-arrow">north_east</mat-icon></span>
-          <span class="metric-label">Pendientes</span>
-          <strong class="metric-value">{{ totalPendientes | number:'1.0-0':'en-US' }}</strong>
-          <span class="metric-hint">Requieren seguimiento</span>
-        </button>
-        <button type="button" class="metric-card metric-primary" (click)="abrirSolicitudesPorEstatus('Cotizada')" aria-label="Ver solicitudes cotizadas">
-          <span class="metric-topline"><span class="metric-icon green"><mat-icon>check_circle</mat-icon></span><mat-icon class="metric-arrow">north_east</mat-icon></span>
-          <span class="metric-label">Cotizadas</span>
-          <strong class="metric-value">{{ totalCotizadas | number:'1.0-0':'en-US' }}</strong>
-          <span class="metric-hint">{{ tasaCotizacion }}% del total</span>
-        </button>
-        <article class="metric-card metric-primary metric-accent">
-          <span class="metric-topline"><span class="metric-icon violet"><mat-icon>trending_up</mat-icon></span><span class="metric-period">30 días</span></span>
-          <span class="metric-label">Nuevas solicitudes</span>
-          <strong class="metric-value">{{ totalUltimos30Dias | number:'1.0-0':'en-US' }}</strong>
-          <span class="metric-hint">{{ promedioSolicitudesDia30 }} promedio diario</span>
+      </article>
+
+      <!-- Middle 2-Card Row -->
+      <div class="cards-duo-grid">
+        <!-- Left Card: Nuevas Solicitudes -->
+        <article class="hero-metric-card card-nuevas" (click)="abrirSolicitudes()" role="button" tabindex="0">
+          <div class="card-left-section">
+            <div class="card-icon-badge icon-sky">
+              <mat-icon>inbox</mat-icon>
+            </div>
+            <div class="card-text-group">
+              <div class="card-badge-row">
+                <span class="badge-pill pill-sky">ENTRADA</span>
+                <span class="card-metric-title">Nuevas Solicitudes</span>
+              </div>
+              <div class="card-main-stat">
+                <strong class="stat-big">{{ totalUltimos30Dias | number:'1.0-0':'en-US' }}</strong>
+                <span class="stat-sub">en 30 días ({{ promedioSolicitudesDia30 }}/día)</span>
+              </div>
+            </div>
+          </div>
+          <button mat-stroked-button type="button" class="btn-card-action" (click)="$event.stopPropagation(); abrirSolicitudes()">
+            Revisar
+          </button>
+        </article>
+
+        <!-- Right Card: Cotizadas / Totales -->
+        <article class="hero-metric-card card-cotizadas" (click)="abrirSolicitudesPorEstatus('Cotizada')" role="button" tabindex="0">
+          <div class="card-full-content">
+            <div class="card-top-header">
+              <div class="card-badge-row">
+                <span class="badge-pill pill-emerald">EN PROGRESO</span>
+                <span class="card-metric-title">Cotizadas / Totales</span>
+              </div>
+              <div class="fraction-display">
+                <strong class="fraction-current">{{ totalCotizadas | number:'1.0-0':'en-US' }}</strong>
+                <span class="fraction-total">de {{ totalSolicitudes | number:'1.0-0':'en-US' }}</span>
+              </div>
+            </div>
+
+            <div class="progress-bar-wrapper">
+              <div class="progress-track">
+                <div class="progress-fill" [style.width.%]="tasaCotizacion"></div>
+              </div>
+              <div class="progress-footnote">
+                <span>{{ tasaCotizacion }}% completado</span>
+              </div>
+            </div>
+          </div>
         </article>
       </div>
 
-      <div class="secondary-metrics">
-        <div><span>Canceladas</span><strong>{{ totalCanceladas | number:'1.0-0':'en-US' }}</strong></div>
-        <div><span>Tasa pendiente</span><strong>{{ tasaPendientes }}%</strong></div>
-        <div><span>Destinos activos</span><strong>{{ destinosEnSolicitudes | number:'1.0-0':'en-US' }}</strong></div>
-        <div><span>Hoteles utilizados</span><strong>{{ hotelesEnSolicitudes | number:'1.0-0':'en-US' }}</strong></div>
-        <div><span>Empleados con actividad</span><strong>{{ empleadosConActividad | number:'1.0-0':'en-US' }}</strong></div>
+      <!-- Secondary Metric Strip (5 items horizontal) -->
+      <div class="metrics-strip">
+        <div class="strip-item">
+          <span class="strip-label">Canceladas</span>
+          <strong class="strip-value">{{ totalCanceladas | number:'1.0-0':'en-US' }}</strong>
+        </div>
+        <div class="strip-item">
+          <span class="strip-label">Tasa pendiente</span>
+          <strong class="strip-value">{{ tasaPendientes }}%</strong>
+        </div>
+        <div class="strip-item">
+          <span class="strip-label">Destinos activos</span>
+          <strong class="strip-value">{{ destinosEnSolicitudes | number:'1.0-0':'en-US' }}</strong>
+        </div>
+        <div class="strip-item">
+          <span class="strip-label">Hoteles utilizados</span>
+          <strong class="strip-value">{{ hotelesEnSolicitudes | number:'1.0-0':'en-US' }}</strong>
+        </div>
+        <div class="strip-item">
+          <span class="strip-label">Empleados con actividad</span>
+          <strong class="strip-value">{{ empleadosConActividad | number:'1.0-0':'en-US' }}</strong>
+        </div>
       </div>
     </section>
 
+    <!-- Analytics Section (Line chart) -->
     <section class="analytics-section" aria-labelledby="activity-title">
       <div class="section-heading">
-        <div><span class="section-kicker">En el tiempo</span><h2 id="activity-title">Actividad de solicitudes</h2></div>
+        <div>
+          <span class="section-kicker">EN EL TIEMPO</span>
+          <h2 id="activity-title">Actividad de solicitudes</h2>
+        </div>
         <span class="chart-note"><mat-icon>touch_app</mat-icon> Selecciona un punto para ver el detalle</span>
       </div>
       <article class="chart-card chart-featured">
         <div class="chart-header">
-          <div><h3>Tendencia diaria</h3><p>Solicitudes recibidas durante los últimos 30 días</p></div>
+          <div>
+            <h3>Tendencia diaria</h3>
+            <p>Solicitudes recibidas durante los últimos 30 días</p>
+          </div>
           <div class="trend-actions">
-            <button mat-icon-button type="button" class="trend-menu-trigger" [matMenuTriggerFor]="trendDownloadMenu" matTooltip="Descargar gráfica" aria-label="Abrir opciones de descarga">
-              <mat-icon>more_horiz</mat-icon>
-            </button>
+            <app-tp-actions-menu
+              [actions]="accionesDescargaTendencia"
+              ariaLabel="Opciones de descarga de la gráfica"
+              tooltip="Descargar gráfica"
+              (actionSelected)="onDescargaTendenciaSeleccionada($event)">
+            </app-tp-actions-menu>
             <span class="chart-badge"><span class="status-dot"></span>En vivo</span>
           </div>
         </div>
-        <mat-menu #trendDownloadMenu="matMenu" xPosition="before" yPosition="below" class="trend-download-menu">
-          <button mat-menu-item type="button" (click)="descargarTendencia('png')"><mat-icon>image</mat-icon><span>Descargar PNG</span></button>
-          <button mat-menu-item type="button" (click)="descargarTendencia('svg')"><mat-icon>image_aspect_ratio</mat-icon><span>Descargar SVG</span></button>
-          <button mat-menu-item type="button" (click)="descargarTendencia('csv')"><mat-icon>table_chart</mat-icon><span>Descargar CSV</span></button>
-        </mat-menu>
         <apx-chart class="trend-chart"
           [chart]="chartSolicitudes30Dias.chart" [colors]="chartSolicitudes30Dias.colors" [dataLabels]="chartSolicitudes30Dias.dataLabels"
-          [grid]="chartSolicitudes30Dias.grid" [markers]="chartSolicitudes30Dias.markers" [series]="chartSolicitudes30Dias.series"
-          [stroke]="chartSolicitudes30Dias.stroke" [tooltip]="chartSolicitudes30Dias.tooltip" [xaxis]="chartSolicitudes30Dias.xaxis" [yaxis]="chartSolicitudes30Dias.yaxis"
+          [fill]="chartSolicitudes30Dias.fill" [grid]="chartSolicitudes30Dias.grid" [markers]="chartSolicitudes30Dias.markers"
+          [series]="chartSolicitudes30Dias.series" [stroke]="chartSolicitudes30Dias.stroke" [tooltip]="chartSolicitudes30Dias.tooltip"
+          [xaxis]="chartSolicitudes30Dias.xaxis" [yaxis]="chartSolicitudes30Dias.yaxis"
         ></apx-chart>
       </article>
     </section>
 
+    <!-- Charts Section (Donuts and bar) -->
     <section class="charts-section" aria-labelledby="distribution-title">
-      <div class="section-heading"><div><span class="section-kicker">Desglose</span><h2 id="distribution-title">Composición del negocio</h2></div></div>
+      <div class="section-heading">
+        <div>
+          <span class="section-kicker">DESGLOSE</span>
+          <h2 id="distribution-title">Composición del negocio</h2>
+        </div>
+      </div>
       <div class="charts-grid charts-grid-two">
-        <article class="chart-card"><div class="chart-header"><div><h3>Solicitudes por estatus</h3><p>Haz clic en una categoría para filtrarla</p></div></div>
-          <apx-chart [chart]="chartDistribucion.chart" [colors]="chartDistribucion.colors" [labels]="chartDistribucion.labels" [legend]="chartDistribucion.legend" [plotOptions]="chartDistribucion.plotOptions" [series]="chartDistribucion.series" [tooltip]="chartDistribucion.tooltip" [noData]="chartDistribucion.noData"></apx-chart>
+        <article class="chart-card">
+          <div class="chart-header"><div><h3>Solicitudes por estatus</h3><p>Haz clic en una categoría para filtrarla</p></div></div>
+          <tp-donut-chart
+            [data]="estatusChartData"
+            title="Total"
+            [height]="280"
+            (segmentClick)="onEstatusClick($event)"
+          ></tp-donut-chart>
         </article>
-        <article class="chart-card"><div class="chart-header"><div><h3>Tipos de destino</h3><p>Distribución de la demanda actual</p></div></div>
-          <apx-chart [chart]="chartTipoDestino.chart" [colors]="chartTipoDestino.colors" [labels]="chartTipoDestino.labels" [legend]="chartTipoDestino.legend" [plotOptions]="chartTipoDestino.plotOptions" [series]="chartTipoDestino.series" [tooltip]="chartTipoDestino.tooltip" [noData]="chartTipoDestino.noData"></apx-chart>
+        <article class="chart-card">
+          <div class="chart-header"><div><h3>Tipos de destino</h3><p>Distribución de la demanda actual</p></div></div>
+          <tp-donut-chart
+            [data]="tipoDestinoChartData"
+            title="Destinos"
+            [height]="280"
+          ></tp-donut-chart>
         </article>
-        <article class="chart-card chart-bar"><div class="chart-header"><div><h3>Resumen de solicitudes</h3><p>Comparativa rápida de los principales indicadores</p></div></div>
-          <apx-chart [chart]="chartResumen.chart" [colors]="chartResumen.colors" [dataLabels]="chartResumen.dataLabels" [grid]="chartResumen.grid" [plotOptions]="chartResumen.plotOptions" [series]="chartResumen.series" [stroke]="chartResumen.stroke" [tooltip]="chartResumen.tooltip" [xaxis]="chartResumen.xaxis" [yaxis]="chartResumen.yaxis"></apx-chart>
+        <article class="chart-card chart-bar">
+          <div class="chart-header"><div><h3>Resumen de solicitudes</h3><p>Comparativa rápida de los principales indicadores</p></div></div>
+          <tp-bar-chart
+            [data]="resumenChartData"
+            [height]="280"
+            (barClick)="onResumenBarClick($event)"
+          ></tp-bar-chart>
         </article>
       </div>
     </section>
 
+    <!-- Rankings Section -->
     <section class="rankings-section" aria-labelledby="ranking-title">
-      <div class="section-heading"><div><span class="section-kicker">Oportunidades</span><h2 id="ranking-title">Lo que está moviendo la operación</h2></div></div>
+      <div class="section-heading">
+        <div>
+          <span class="section-kicker">OPORTUNIDADES</span>
+          <h2 id="ranking-title">Lo que está moviendo la operación</h2>
+        </div>
+      </div>
       <div class="ranking-grid">
-        <article class="ranking-card"><div class="ranking-heading"><div><h3>Destinos más solicitados</h3><span>Por volumen de solicitudes</span></div><mat-icon>place</mat-icon></div>
+        <article class="ranking-card">
+          <div class="ranking-heading"><div><h3>Destinos más solicitados</h3><span>Por volumen de solicitudes</span></div><mat-icon>place</mat-icon></div>
           <ol *ngIf="topDestinosCotizados.length > 0; else emptyDestinos" class="ranking-list"><li *ngFor="let item of topDestinosCotizados; index as i"><span class="ranking-position">{{ i + 1 }}</span><span class="ranking-name">{{ item.nombre }}</span><span class="ranking-bar"><span [style.width.%]="(item.total / topDestinosCotizados[0].total) * 100"></span></span><strong>{{ item.total | number:'1.0-0':'en-US' }}</strong></li></ol>
           <ng-template #emptyDestinos><span class="ranking-empty">Aún no hay datos para mostrar.</span></ng-template>
         </article>
-        <article class="ranking-card"><div class="ranking-heading"><div><h3>Hoteles más cotizados</h3><span>Por volumen de solicitudes</span></div><mat-icon>hotel</mat-icon></div>
+        <article class="ranking-card">
+          <div class="ranking-heading"><div><h3>Hoteles más cotizados</h3><span>Por volumen de solicitudes</span></div><mat-icon>hotel</mat-icon></div>
           <ol *ngIf="topHotelesCotizados.length > 0; else emptyHoteles" class="ranking-list"><li *ngFor="let item of topHotelesCotizados; index as i"><span class="ranking-position">{{ i + 1 }}</span><span class="ranking-name">{{ item.nombre }}</span><span class="ranking-bar"><span [style.width.%]="(item.total / topHotelesCotizados[0].total) * 100"></span></span><strong>{{ item.total | number:'1.0-0':'en-US' }}</strong></li></ol>
           <ng-template #emptyHoteles><span class="ranking-empty">Aún no hay datos para mostrar.</span></ng-template>
         </article>
-        <article class="ranking-card"><div class="ranking-heading"><div><h3>Equipo con más actividad</h3><span>Solicitudes gestionadas</span></div><mat-icon>groups</mat-icon></div>
+        <article class="ranking-card">
+          <div class="ranking-heading"><div><h3>Equipo con más actividad</h3><span>Solicitudes gestionadas</span></div><mat-icon>groups</mat-icon></div>
           <ol *ngIf="topEmpleadosCotizados.length > 0; else emptyEmpleados" class="ranking-list"><li *ngFor="let item of topEmpleadosCotizados; index as i"><span class="ranking-position">{{ i + 1 }}</span><span class="ranking-name">{{ item.nombre }}</span><span class="ranking-bar"><span [style.width.%]="(item.total / topEmpleadosCotizados[0].total) * 100"></span></span><strong>{{ item.total | number:'1.0-0':'en-US' }}</strong></li></ol>
           <ng-template #emptyEmpleados><span class="ranking-empty">Aún no hay datos para mostrar.</span></ng-template>
         </article>
       </div>
     </section>
 
+    <!-- Inventory / Catalogs Section -->
     <section *ngIf="mostrarSeccionesAdmin" class="inventory-section" aria-labelledby="inventory-title">
-      <div class="section-heading"><div><span class="section-kicker">Administración</span><h2 id="inventory-title">Catálogos y recursos</h2></div><span class="chart-note">Selecciona un recurso para administrarlo</span></div>
+      <div class="section-heading">
+        <div>
+          <span class="section-kicker">ADMINISTRACIÓN</span>
+          <h2 id="inventory-title">Catálogos y recursos</h2>
+        </div>
+        <span class="chart-note">Selecciona un recurso para administrarlo</span>
+      </div>
       <div class="inventory-grid">
         <button type="button" (click)="abrirRuta('/admin/destinos')" aria-label="Administrar destinos"><mat-icon>public</mat-icon><span>Destinos</span><strong>{{ totalDestinos | number:'1.0-0':'en-US' }}</strong></button>
         <button type="button" (click)="abrirRuta('/admin/hoteles')" aria-label="Administrar hoteles"><mat-icon>hotel</mat-icon><span>Hoteles</span><strong>{{ totalHoteles | number:'1.0-0':'en-US' }}</strong></button>
@@ -167,3 +296,4 @@
     </section>
   </ng-container>
 </div>
+
