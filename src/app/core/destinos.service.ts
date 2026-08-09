@@ -1670,8 +1670,13 @@ export class DestinosService {
     if (divisionAreaIds.length) query = query.in('division_area_id', divisionAreaIds);
     if (filtros.soloActivos) query = query.eq('activo', true);
 
-    const busqueda = (filtros.busqueda ?? '').trim().replace(/[,%]/g, '');
-    if (busqueda) query = query.ilike('destino_nombre', `%${busqueda}%`);
+    const busqueda = (filtros.busqueda ?? '')
+      .trim()
+      .replace(/[,%]/g, '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+    if (busqueda) query = query.ilike('destino_nombre_normalizado', `%${busqueda}%`);
 
     const { data, error, count } = await query.range(page * pageSize, (page + 1) * pageSize - 1);
     if (error) throw error;
