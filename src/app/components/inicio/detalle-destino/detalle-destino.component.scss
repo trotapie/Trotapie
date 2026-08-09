@@ -40,6 +40,33 @@
     -webkit-backdrop-filter: blur(var(--effect-blur, 0px));
 }
 
+// The configured value is the desktop maximum; smaller viewports use a calmer scale.
+.carousel-slide__label {
+    font-size: clamp(0.625rem, 1.1vw, var(--font-size));
+}
+
+.carousel-slide__title {
+    font-size: clamp(2rem, 5vw, var(--font-size));
+}
+
+.carousel-slide__description {
+    font-size: clamp(1rem, 2vw, var(--font-size));
+}
+
+@media (max-width: 767px) {
+    .carousel-slide__label {
+        font-size: clamp(0.625rem, 3.3vw, min(var(--font-size), 0.9rem));
+    }
+
+    .carousel-slide__title {
+        font-size: clamp(1.6rem, 6.5vw, min(var(--font-size), 2.25rem));
+    }
+
+    .carousel-slide__description {
+        font-size: clamp(0.9rem, 4vw, min(var(--font-size), 1.15rem));
+    }
+}
+
 @keyframes dot-blink {
 
     0%,

@@ -23,9 +23,11 @@ export const compactNavigation: FuseNavigationItem[] = [
     {
         id   : 'destinos',
         title: 'Destinos',
+        // id   : 'configuracion-destinos',
+        // title: 'Configuracion destinos',
         type : 'basic',
         icon : 'heroicons_outline:map-pin',
-        link : '/admin/destinos',
+        link : '/admin/destinos/catalogo-destinos',
         meta : { permissions: ['destinos.view'] }
     },
     {
@@ -57,7 +59,7 @@ export const compactNavigation: FuseNavigationItem[] = [
         title: 'Cotizaciones',
         type : 'basic',
         icon : 'heroicons_outline:inbox-stack',
-        link : '/admin/cotizaciones',
+        link : '/admin/cotizaciones/solicitudes',
         meta : { permissions: ['cotizaciones.view'] }
     },
     // {

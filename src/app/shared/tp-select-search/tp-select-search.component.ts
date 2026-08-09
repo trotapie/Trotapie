@@ -36,6 +36,7 @@ export class TpSelectSearchComponent implements ControlValueAccessor {
   abierto = false;
   busqueda = '';
   valorSeleccionado: string | number | null = null;
+  private controlDisabled = false;
   readonly posiciones: ConnectedPosition[] = [
     { originX: 'start', originY: 'bottom', overlayX: 'start', overlayY: 'top', offsetY: 8 },
     { originX: 'start', originY: 'top', overlayX: 'start', overlayY: 'bottom', offsetY: -8 }
@@ -52,13 +53,15 @@ export class TpSelectSearchComponent implements ControlValueAccessor {
     return this.options.find((option) => this.sameValue(option.value, this.valorSeleccionado))?.label ?? this.placeholder;
   }
 
+  get isDisabled(): boolean { return this.disabled || this.controlDisabled; }
+
   writeValue(value: string | number | null): void { this.valorSeleccionado = value; }
   registerOnChange(fn: (value: string | number | null) => void): void { this.onChange = fn; }
   registerOnTouched(fn: () => void): void { this.onTouched = fn; }
-  setDisabledState(isDisabled: boolean): void { this.disabled = isDisabled; }
+  setDisabledState(isDisabled: boolean): void { this.controlDisabled = isDisabled; }
 
   abrir(): void {
-    if (this.disabled) return;
+    if (this.isDisabled) return;
     this.abierto = true;
     setTimeout(() => this.searchInput?.nativeElement.focus());
   }

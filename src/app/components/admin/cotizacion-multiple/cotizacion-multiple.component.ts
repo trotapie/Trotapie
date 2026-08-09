@@ -16,6 +16,7 @@ import { TratamientoCliente } from 'app/core/cliente-nombre.util';
 import { MaterialModule } from 'app/shared/material.module';
 import { backdropFade, modalScaleFade } from 'app/shared/animations';
 import { SupabaseService } from 'app/core/supabase.service';
+import { TpInputComponent } from 'app/shared/tp-input/tp-input.component';
 
 type IHotelAdmin = IHotelAdminCatalogo;
 
@@ -55,7 +56,7 @@ type Room = { adults: number; children: number; childAges: (number | null)[] };
 @Component({
   selector: 'app-cotizacion-multiple',
   standalone: true,
-  imports: [MaterialModule, RouterLink],
+  imports: [MaterialModule, RouterLink, TpInputComponent],
   templateUrl: './cotizacion-multiple.component.html',
   styleUrl: './cotizacion-multiple.component.scss',
   animations: [modalScaleFade, backdropFade],

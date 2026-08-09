@@ -1,5 +1,15 @@
 <div class="flex min-w-0 flex-auto flex-col bg-gray-50">
-  <mat-drawer-container class="activity-editor-drawer-container" [autosize]="true">
+  <app-blocking-loader
+    [open]="cargando || guardandoImagenes || guardandoTraducciones || traduciendoActividad"
+    [title]="cargando ? 'Cargando actividad' : guardandoImagenes ? 'Guardando imágenes' : guardandoTraducciones ? 'Guardando actividad' : 'Traduciendo actividad'"
+    [message]="cargando ? 'Estamos cargando los datos para que puedas editarlos.' : guardandoImagenes ? 'No cierres la pantalla mientras guardamos las imágenes.' : guardandoTraducciones ? 'No cierres la pantalla mientras guardamos los cambios.' : 'Estamos generando las traducciones automaticamente.'"
+  />
+
+  <mat-drawer-container
+    class="activity-editor-drawer-container"
+    [class.activity-editor-drawer-container--modal-open]="editorImagenAbierto || mostrarModalConfirmarEliminarGaleria || mostrarModalConfirmarEliminarCarpeta || mostrarModalCargaDriveImagenes || mostrarModalConfirmarMoverImagen"
+    [autosize]="true"
+  >
     <mat-drawer
       class="activity-editor-drawer"
       [mode]="drawerModo"
@@ -54,12 +64,6 @@
 
     <mat-drawer-content class="min-w-0">
       <div class="activity-editor-main mx-auto flex w-full max-w-screen-xl flex-col px-6 py-6 sm:px-8">
-    <app-blocking-loader
-      [open]="cargando || guardandoImagenes || guardandoTraducciones || traduciendoActividad"
-      [title]="cargando ? 'Cargando actividad' : guardandoImagenes ? 'Guardando imágenes' : guardandoTraducciones ? 'Guardando actividad' : 'Traduciendo actividad'"
-      [message]="cargando ? 'Estamos cargando los datos para que puedas editarlos.' : guardandoImagenes ? 'No cierres la pantalla mientras guardamos las imágenes.' : guardandoTraducciones ? 'No cierres la pantalla mientras guardamos los cambios.' : 'Estamos generando las traducciones automaticamente.'"
-    />
-
     <div class="activity-editor-header sticky top-0 z-[100] mb-4 w-full rounded-xl border border-transparent bg-transparent px-2 py-2 backdrop-blur-md transition-all duration-300 md:px-4">
       <div class="w-full md:flex md:items-center md:justify-between">
         <div>
@@ -282,12 +286,12 @@
                     }
                     <div class="relative" [style.color]="imagenEditandoControl.get('texto_color')?.value">
                       <span
-                        class="inline-block rounded-full px-4 py-1 font-bold uppercase tracking-widest text-white"
-                        [style.font-size.px]="imagenEditandoControl.get('etiqueta_font_size')?.value"
+                        class="image-edit-modal__preview-label inline-block rounded-full px-4 py-1 font-bold uppercase tracking-widest text-white"
+                        [style.--font-size.px]="imagenEditandoControl.get('etiqueta_font_size')?.value"
                         [style.background-color]="imagenEditandoControl.get('etiqueta_color')?.value"
                       >{{ destinoNombre }}</span>
-                      <p class="mt-2 font-black leading-tight" [style.font-size.px]="imagenEditandoControl.get('titulo_font_size')?.value">{{ actividadNombre }}</p>
-                      <p class="mt-2 font-medium opacity-90" [style.font-size.px]="imagenEditandoControl.get('descripcion_font_size')?.value">Descripción de la actividad</p>
+                      <p class="image-edit-modal__preview-title mt-2 font-black leading-tight" [style.--font-size.px]="imagenEditandoControl.get('titulo_font_size')?.value">{{ actividadNombre }}</p>
+                      <p class="image-edit-modal__preview-description mt-2 font-medium opacity-90" [style.--font-size.px]="imagenEditandoControl.get('descripcion_font_size')?.value">Descripción de la actividad</p>
                     </div>
                   </div>
                 </div>
@@ -420,16 +424,6 @@
 
               <div class="image-edit-modal__footer flex flex-col gap-3 border-t border-gray-100 px-6 py-5 sm:flex-row sm:items-center sm:justify-end">
                 <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">
-                <button
-                  mat-stroked-button
-                  color="warn"
-                  type="button"
-                  (click)="eliminarImagenEditando()"
-                  [disabled]="guardandoImagenes || !puedeEliminarImagenEditando"
-                >
-                  <mat-icon class="mr-2 icon-size-5" svgIcon="heroicons_outline:trash"></mat-icon>
-                  Eliminar
-                </button>
                 <button mat-stroked-button type="button" (click)="cerrarEditorImagen()">
                   <mat-icon class="mr-2 icon-size-5" svgIcon="heroicons_outline:x-mark"></mat-icon>
                   Cancelar

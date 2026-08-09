@@ -1,0 +1,33 @@
+<main class="geo-page">
+  <header class="geo-hero">
+    <div><a routerLink="/admin/destinos" class="geo-back"><mat-icon>arrow_back</mat-icon> Configuración destinos</a><p class="geo-kicker">Estructura geográfica</p><h1>{{ titulo }}</h1><p>{{ descripcion }}</p></div>
+    <button mat-flat-button color="primary" type="button" (click)="nuevo()"><mat-icon>add</mat-icon> Nuevo {{ titulo.slice(0, -1) }}</button>
+  </header>
+
+  @if (error) { <div class="geo-alert" role="alert"><mat-icon>error_outline</mat-icon>{{ error }}</div> }
+
+  <section class="geo-layout">
+    <div class="geo-panel">
+      <div class="geo-toolbar"><strong>{{ registros.length }} registros</strong><app-tp-input label="Buscar" placeholder="Buscar por nombre" [ngModel]="busqueda" [ngModelOptions]="{standalone: true}" (ngModelChange)="actualizarBusqueda($event)"></app-tp-input></div>
+      @if (cargando) { <div class="geo-empty"><mat-spinner diameter="32"></mat-spinner></div> }
+      @else if (!registrosFiltrados.length) { <div class="geo-empty"><mat-icon>public</mat-icon><p>No hay registros para mostrar.</p></div> }
+      @else { <div class="geo-table-wrap"><table><thead><tr><th>Nombre</th>@if (tipo !== 'continentes') { <th>{{ tipo === 'paises' ? 'Continente' : 'País' }}</th> }@if (tipo === 'paises') { <th>ISO2</th> }@if (tipo === 'continentes') { <th>Países</th><th>Destinos</th> }<th aria-label="Acciones"></th></tr></thead><tbody>@for (registro of registrosPaginados; track registro.id) { <tr><td><strong>{{ registro.nombre }}</strong><small>{{ registro.slug }}</small></td>@if (tipo !== 'continentes') { <td>{{ tipo === 'paises' ? registro.region_nombre : registro.pais_nombre }}</td> }@if (tipo === 'paises') { <td>{{ registro.iso2 }}</td> }@if (tipo === 'continentes') { <td>{{ registro.total_paises }}</td><td>{{ registro.total_destinos }}</td> }<td class="geo-actions"><button mat-icon-button aria-label="Editar" (click)="editar(registro)"><mat-icon>edit</mat-icon></button><button mat-icon-button color="warn" aria-label="Eliminar" (click)="eliminar(registro)"><mat-icon>delete_outline</mat-icon></button></td></tr> }</tbody></table></div><footer class="geo-pagination"><span>Mostrando {{ desdeRegistro }}-{{ hastaRegistro }} de {{ registrosFiltrados.length }}</span><div><button mat-icon-button aria-label="Página anterior" [disabled]="pagina === 0" (click)="paginaAnterior()"><mat-icon>chevron_left</mat-icon></button><span>Página {{ pagina + 1 }} de {{ totalPaginas }}</span><button mat-icon-button aria-label="Página siguiente" [disabled]="pagina >= totalPaginas - 1" (click)="paginaSiguiente()"><mat-icon>chevron_right</mat-icon></button></div></footer> }
+    </div>
+
+  </section>
+
+  @if (modalAbierto) {
+  <div class="geo-modal-backdrop" (click)="cancelar()">
+    <section class="geo-modal" role="dialog" aria-modal="true" [attr.aria-labelledby]="'geo-modal-title'" (click)="$event.stopPropagation()">
+      <div class="geo-editor__heading"><div><p>{{ editando ? 'Editar registro' : 'Nuevo registro' }}</p><h2 id="geo-modal-title">{{ editando?.nombre || titulo.slice(0, -1) }}</h2></div><button mat-icon-button aria-label="Cerrar" (click)="cancelar()"><mat-icon>close</mat-icon></button></div>
+      <form [formGroup]="form" (ngSubmit)="guardar()">
+        <app-tp-input label="Nombre" [required]="true" formControlName="nombre" (blur)="actualizarSlug()"></app-tp-input>
+        <app-tp-input label="Slug" [required]="true" formControlName="slug"></app-tp-input>
+        @if (tipo === 'paises') { <app-tp-select-search label="Continente" [required]="true" [options]="continentesOpciones" formControlName="region_id"></app-tp-select-search><app-tp-input label="Código ISO2" [required]="true" maxLength="2" formControlName="iso2"></app-tp-input> }
+        @if (tipo === 'divisiones-area') { <app-tp-select-search label="País" [required]="true" [options]="paisesOpciones" formControlName="pais_id"></app-tp-select-search> }
+        <div class="geo-editor__actions"><button mat-stroked-button type="button" (click)="cancelar()">Cancelar</button><button mat-flat-button color="primary" type="submit" [disabled]="guardando">{{ guardando ? 'Guardando...' : 'Guardar' }}</button></div>
+      </form>
+    </section>
+  </div>
+  }
+</main>

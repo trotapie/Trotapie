@@ -55,9 +55,9 @@
           <mat-icon svgIcon="heroicons_outline:map"></mat-icon>
         </div>
         <div class="resumen-geografia">
-          <div><strong>{{ resumen.geografia.regionesInternacionales | number }}</strong><span>Continentes</span></div>
-          <div><strong>{{ resumen.geografia.paises | number }}</strong><span>Países</span></div>
-          <div><strong>{{ resumen.geografia.divisionesArea | number }}</strong><span>Divisiones de área</span></div>
+          <button type="button" (click)="irA('/admin/destinos/continentes')"><strong>{{ resumen.geografia.continentes | number }}</strong><span>Continentes</span></button>
+          <button type="button" (click)="irA('/admin/destinos/paises')"><strong>{{ resumen.geografia.paises | number }}</strong><span>Países</span></button>
+          <button type="button" (click)="irA('/admin/destinos/divisiones-area')"><strong>{{ resumen.geografia.divisionesArea | number }}</strong><span>Divisiones de área</span></button>
         </div>
       </section>
 

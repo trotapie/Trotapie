@@ -38,13 +38,8 @@ export default [
     },
     {
         path: 'continentes',
-        component: CatalogoPlaceholderComponent,
-        data: {
-            ...ADMIN_ONLY,
-            catalogoKey: 'continentes',
-            titulo: 'Continentes',
-            descripcion: 'Gestiona continentes para clasificar destinos internacionales.'
-        }
+        redirectTo: '/admin/destinos/continentes',
+        pathMatch: 'full'
     },
     {
         path: 'descuentos',

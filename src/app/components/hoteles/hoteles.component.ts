@@ -108,14 +108,16 @@ export class HotelesComponent {
         if (sessionStorage.getItem('tipoDestino') === null) {
             this.router.navigate(['/inicio']);
         } else {
-            this.obtenerSoloDestinos();
-
             this.hotelesForm = this.formBuilder.group({
                 hotelSeleccionado: ['']
             });
-            if (sessionStorage.getItem('tipoDestino') !== null) {
-                this.obtenerDestinos()
-            }
+            this.hotelesForm.get('hotelSeleccionado')?.valueChanges.subscribe(valor => {
+                this.consulaHoteles();
+                if (valor !== null) {
+                    sessionStorage.setItem('ciudad', valor.toString());
+                }
+            });
+            await this.obtenerDestinos();
             // TODO: no hacer de nuevo la petición al cambiar idioma sino solo remplar los textos
             this._translocoService.langChanges$.subscribe(async (activeLang) => {
                 this.iniciarCarga();
@@ -195,9 +197,11 @@ export class HotelesComponent {
 
     }
 
-    async obtenerDestinos() {
+    async obtenerDestinos(tipoDestino?: number) {
         this.iniciarCarga();
-        this.tipoDestino = sessionStorage.getItem('tipoDestino') !== null ? +sessionStorage.getItem('tipoDestino') : this.tipoDestino
+        this.tipoDestino = tipoDestino ?? (sessionStorage.getItem('tipoDestino') !== null
+            ? +sessionStorage.getItem('tipoDestino')
+            : this.tipoDestino);
 
         try {
             if (this.tipoDestino === 1) {
@@ -213,20 +217,11 @@ export class HotelesComponent {
             return;
         }
 
-        const ciudad = sessionStorage.getItem('ciudad') !== null ? sessionStorage.getItem('ciudad') : +this.destinoId;
+        const ciudadGuardada = Number(sessionStorage.getItem('ciudad'));
+        const destinoSeleccionado = this.destinos.find(destino => destino.id === ciudadGuardada)
+            ?? this.destinos[0];
 
-        this.listaHoteles = JSON.parse(sessionStorage.getItem('hoteles'));
-
-        this.hotelesForm.patchValue({ hotelSeleccionado: +ciudad });
-
-        this.hotelesForm.get('hotelSeleccionado')?.valueChanges.subscribe(valor => {
-            this.consulaHoteles();
-
-            sessionStorage.setItem('ciudad', valor.toString())
-
-            const destino = this.listaHotelesFiltrada.find(item => item.ciudad.trim() === valor);
-
-        });
+        this.hotelesForm.patchValue({ hotelSeleccionado: destinoSeleccionado?.id ?? null }, { emitEvent: false });
 
         await this.consulaHoteles().finally(() => this.finalizarCarga());
     }
@@ -422,11 +417,7 @@ export class HotelesComponent {
     }
 
     async actualizacionDestinos() {
-        const { data, error } = await this.supabase.obtenerDestinos(this.tipoDestino);
-        if (error) { this.error = error.message; return; }
-        this.destinos = data;
-        let ciudad = this.destinos[0].id
-        this.hotelesForm.patchValue({ hotelSeleccionado: +ciudad });
+        await this.obtenerDestinos(this.tipoDestino);
     }
 
     agruparHotelesPorDestino(hoteles: any[]): GrupoDestino[] {
@@ -465,34 +456,11 @@ export class HotelesComponent {
         }));
     }
 
-    async obtenerSoloDestinos() {
-        this.tipoDestino = sessionStorage.getItem('tipoDestino') !== null ? +sessionStorage.getItem('tipoDestino') : this.tipoDestino
-        const { data, error } = await this.supabase.obtenerDestinos(this.tipoDestino);
-
-        if (error) { this.error = error.message; return; }
-
-        this.destinos = data;
-
-        if (this.tipoDestino === 2) {
-            const mapa = new Map<string, any[]>();
-            this.destinos.forEach(dest => {
-                const padre = dest.continente.nombre;
-                if (!mapa.has(padre)) mapa.set(padre, []);
-                mapa.get(padre)!.push(dest);
-            });
-
-            this.agrupadosDestinos = Array.from(mapa, ([nombrePadre, destinos]) => ({
-                nombrePadre,
-                destinos
-            }));
-        }
-    }
-
     cargaInfo(item) {
         this.destinoId = this.tipoDestino === 1 ? +item.id : +item.destinos[0].id
         sessionStorage.setItem('ciudad', this.destinoId.toString())
 
-        this.obtenerDestinos();
+        this.obtenerDestinos(this.tipoDestino);
     }
 
 

@@ -1,27 +1,30 @@
 <div class="phone-input" [class.phone-input--booking]="bookingStyle">
-  <label class="phone-input__label">{{ label }}</label>
   <div class="phone-input__fields" [class.phone-input__fields--invalid]="invalid">
-    <select
+    <app-tp-select-search
       class="phone-input__dial-code"
-      [value]="selectedDialCode"
+      label="Código de país"
+      placeholder="Selecciona código"
+      searchPlaceholder="Buscar país o código"
+      [options]="countryDialCodeOptions"
+      [bookingStyle]="bookingStyle"
+      [ngModel]="selectedDialCode"
+      [ngModelOptions]="{ standalone: true }"
       [disabled]="disabled"
-      aria-label="Código de país"
-      (change)="updateDialCode($event)"
-      (blur)="touch()">
-      @for (country of countryDialCodes; track country.country) {
-      <option [value]="country.dialCode">{{ country.country }} (+{{ country.dialCode }})</option>
-      }
-    </select>
-    <input
-      type="tel"
-      class="phone-input__number"
-      [value]="value"
-      [disabled]="disabled"
-      [placeholder]="placeholder"
-      inputmode="numeric"
-      autocomplete="tel-national"
-      maxlength="15"
-      (input)="updatePhone($event)"
-      (blur)="touch()" />
+      (selectionChange)="updateDialCode($event)">
+    </app-tp-select-search>
+    <label class="phone-input__number-field">
+      <span class="phone-input__field-label">{{ label }}</span>
+      <input
+        type="tel"
+        class="phone-input__number"
+        [value]="value"
+        [disabled]="disabled"
+        [placeholder]="placeholder"
+        inputmode="numeric"
+        autocomplete="tel-national"
+        maxlength="15"
+        (input)="updatePhone($event)"
+        (blur)="touch()" />
+    </label>
   </div>
 </div>

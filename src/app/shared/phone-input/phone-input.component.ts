@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, Output, forwardRef } from '@angular/core';
-import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { TpSelectSearchComponent, TpSelectSearchOption } from 'app/shared/tp-select-search/tp-select-search.component';
 
 interface CountryDialCode {
   country: string;
@@ -9,6 +10,7 @@ interface CountryDialCode {
 @Component({
   selector: 'app-phone-input',
   standalone: true,
+  imports: [FormsModule, TpSelectSearchComponent],
   templateUrl: './phone-input.component.html',
   styleUrl: './phone-input.component.scss',
   providers: [{
@@ -73,6 +75,13 @@ export class PhoneInputComponent implements ControlValueAccessor {
     { country: 'Venezuela', dialCode: '58' },
   ];
 
+  get countryDialCodeOptions(): TpSelectSearchOption[] {
+    return this.countryDialCodes.map((country) => ({
+      value: country.dialCode,
+      label: `${country.country} (+${country.dialCode})`,
+    }));
+  }
+
   value = '';
   selectedDialCode = '52';
   disabled = false;
@@ -101,8 +110,9 @@ export class PhoneInputComponent implements ControlValueAccessor {
     this.onChange(this.value);
   }
 
-  updateDialCode(event: Event): void {
-    this.selectedDialCode = (event.target as HTMLSelectElement).value;
+  updateDialCode(value: string | number | null): void {
+    if (value === null) return;
+    this.selectedDialCode = String(value);
     this.dialCodeChange.emit(this.selectedDialCode);
   }
 

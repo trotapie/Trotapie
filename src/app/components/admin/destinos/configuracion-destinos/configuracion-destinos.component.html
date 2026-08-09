@@ -1,0 +1,22 @@
+<main class="destinos-config-page">
+  <header class="destinos-config-header">
+    <p class="destinos-config-kicker">Administración geográfica</p>
+    <h1>Configuración destinos</h1>
+    <p>Centraliza la estructura territorial y el catálogo que da contexto a cada destino.</p>
+  </header>
+
+  <section class="destinos-config-grid" aria-label="Secciones de configuración de destinos">
+    @for (seccion of secciones; track seccion.ruta) {
+    <a class="destinos-config-card" [routerLink]="seccion.ruta">
+      <div class="destinos-config-card__image" [style.background-image]="'url(' + seccion.imagen + ')'">
+        <span class="destinos-config-card__icon"><mat-icon [svgIcon]="seccion.icono"></mat-icon></span>
+      </div>
+      <div class="destinos-config-card__content">
+        <h2>{{ seccion.titulo }}</h2>
+        <p>{{ seccion.descripcion }}</p>
+        <span>Administrar <mat-icon>arrow_forward</mat-icon></span>
+      </div>
+    </a>
+    }
+  </section>
+</main>

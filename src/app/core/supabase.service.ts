@@ -2979,7 +2979,7 @@ export class SupabaseService {
       query = query.ilike('email', `%${email}%`);
     }
     if (telefono) {
-      query = query.ilike('telefono', `%${telefono}%`);
+      query = query.eq('telefono', Number(telefono));
     }
 
     const { data, error } = await query;
@@ -4008,43 +4008,28 @@ export class SupabaseService {
 
   async obtenerHotelesAdminPorCatalogoDestino(catalogoDestinoId: number) {
     const { data, error } = await this.client
-      .from('hoteles')
+      .from('v_hoteles_catalogo_admin')
       .select(`
         id,
         orden,
         regimen_id,
-        destino_id,
-        catalogoDestino:catalogo_destino_id!inner ( id ),
-        traducciones:hotel_traducciones (
-          idioma_id,
-          nombre_hotel
-        ),
-        regimen:regimen_id (
-          id,
-          traducciones:regimen_traducciones (
-            idioma_id,
-            descripcion
-          )
-        )
+        legacy_destino_id,
+        nombre_hotel,
+        regimen
       `)
-      .eq('catalogoDestino.id', catalogoDestinoId)
+      .eq('catalogo_destino_id_resuelto', catalogoDestinoId)
       .order('orden', { ascending: true });
 
     if (error) throw error;
 
-    return (data ?? []).map((item: any) => {
-      const traduccionEs = item?.traducciones?.find((x: any) => x.idioma_id === ES_ID);
-      const regimenEs = item?.regimen?.traducciones?.find((x: any) => x.idioma_id === ES_ID);
-
-      return {
-        id: item.id,
-        orden: item.orden ?? null,
-        regimen_id: item.regimen_id ?? null,
-        destino_id: item.destino_id,
-        nombre_hotel: traduccionEs?.nombre_hotel ?? '',
-        regimen: regimenEs?.descripcion ?? ''
-      };
-    });
+    return (data ?? []).map((item: any) => ({
+      id: item.id,
+      orden: item.orden ?? null,
+      regimen_id: item.regimen_id ?? null,
+      destino_id: item.legacy_destino_id,
+      nombre_hotel: item.nombre_hotel ?? '',
+      regimen: item.regimen ?? ''
+    }));
   }
 
   async obtenerHotelesAdminPorPaisCatalogo(paisId: number) {
@@ -4085,6 +4070,20 @@ export class SupabaseService {
 
     return [...new Set((data ?? [])
       .map((item: any) => Number(item.catalogo_destino_id_resuelto))
+      .filter((id) => Number.isFinite(id) && id > 0))];
+  }
+
+  async obtenerDestinosInternacionalesConHoteles(): Promise<number[]> {
+    const { data, error } = await this.client
+      .from('v_hoteles_catalogo_admin')
+      .select('legacy_destino_id')
+      .eq('tipo_catalogo', 'INTERNACIONAL')
+      .not('legacy_destino_id', 'is', null);
+
+    if (error) throw error;
+
+    return [...new Set((data ?? [])
+      .map((item: any) => Number(item.legacy_destino_id))
       .filter((id) => Number.isFinite(id) && id > 0))];
   }
 

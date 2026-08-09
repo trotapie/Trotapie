@@ -211,15 +211,15 @@
                                                 }
                                                 <div class="relative">
                                                 <span
-                                                    class="mb-4 inline-block w-fit rounded-full px-4 py-1 font-bold uppercase tracking-widest text-white"
-                                                    [style.font-size.px]="slide.etiqueta_font_size"
+                                                    class="carousel-slide__label mb-4 inline-block w-fit rounded-full px-4 py-1 font-bold uppercase tracking-widest text-white"
+                                                    [style.--font-size.px]="slide.etiqueta_font_size"
                                                     [style.background-color]="slide.etiqueta_color">{{detallesDestino?.nombre}}</span>
-                                                <h1 class="font-black leading-tight mb-4" [style.color]="slide.texto_color"
-                                                    [style.font-size]="'clamp(2rem, 5vw, ' + slide.titulo_font_size + 'px)'">
+                                                <h1 class="carousel-slide__title font-black leading-tight mb-4" [style.color]="slide.texto_color"
+                                                    [style.--font-size.px]="slide.titulo_font_size">
                                                     {{slide.nombre}}
                                                 </h1>
-                                                <p class="font-medium opacity-90" [style.color]="slide.texto_color"
-                                                    [style.font-size]="'clamp(1rem, 2vw, ' + slide.descripcion_font_size + 'px)'">{{slide.descripcion}}
+                                                <p class="carousel-slide__description font-medium opacity-90" [style.color]="slide.texto_color"
+                                                    [style.--font-size.px]="slide.descripcion_font_size">{{slide.descripcion}}
                                                 </p>
                                                 </div>
                                             </div>

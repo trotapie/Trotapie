@@ -1,5 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
+import { Router } from '@angular/router';
 import { DestinosService, ResumenCatalogoDestinos } from 'app/core/destinos.service';
 import { MaterialModule } from 'app/shared/material.module';
 
@@ -13,6 +14,7 @@ import { MaterialModule } from 'app/shared/material.module';
 export class ResumenCatalogoDestinosComponent implements OnInit {
   private readonly destinosService = inject(DestinosService);
   private readonly dialogRef = inject(MatDialogRef<ResumenCatalogoDestinosComponent>);
+  private readonly router = inject(Router);
 
   resumen: ResumenCatalogoDestinos | null = null;
   cargando = true;
@@ -38,5 +40,10 @@ export class ResumenCatalogoDestinosComponent implements OnInit {
 
   cerrar(): void {
     this.dialogRef.close();
+  }
+
+  irA(ruta: string): void {
+    this.dialogRef.close();
+    void this.router.navigateByUrl(ruta);
   }
 }

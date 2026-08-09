@@ -732,9 +732,9 @@
                                     <h2>Tarifas por habitación</h2>
                                     <p>Configura las políticas una vez por tarifa; se aplicarán a todas las habitaciones.</p>
                                 </div>
-                                <mat-form-field appearance="fill" class="tp-select quick-quote-editor__status">
+                                <mat-form-field appearance="fill" class="quick-quote-editor__status">
                                     <mat-label>Estatus de la cotización</mat-label>
-                                    <mat-select formControlName="estatus">
+                                    <mat-select tpSelect formControlName="estatus">
                                         <mat-option value="" disabled>Selecciona estatus</mat-option>
                                         @for (estatus of estatusOpciones; track estatus.id) {
                                         <mat-option [value]="estatus.clave">{{ estatus.nombre }}</mat-option>

@@ -4,6 +4,8 @@ import { EditarDestinoComponent } from './editar-destino/editar-destino.componen
 import { EditarPreviewDestinoComponent } from './editar-preview-destino/editar-preview-destino.component';
 import { EditarActividadDestinoComponent } from './editar-actividad-destino/editar-actividad-destino.component';
 import { ConfigurarAtraccionesComponent } from './configurar-atracciones/configurar-atracciones.component';
+import { ConfiguracionGeograficaComponent } from './configuracion-geografica/configuracion-geografica.component';
+import { ConfiguracionDestinosComponent } from './configuracion-destinos/configuracion-destinos.component';
 
 const DESTINOS_VIEW = { permissions: ['destinos.view'] };
 const DESTINOS_EDIT = { permissions: ['destinos.edit'] };
@@ -11,6 +13,11 @@ const DESTINOS_EDIT = { permissions: ['destinos.edit'] };
 export default [
     {
         path: '',
+        component: ConfiguracionDestinosComponent,
+        data: DESTINOS_VIEW,
+    },
+    {
+        path: 'catalogo-destinos',
         component: DestinosComponent,
         data: DESTINOS_VIEW,
     },
@@ -18,6 +25,21 @@ export default [
         path: 'configurar-destinos',
         component: DestinosComponent,
         data: DESTINOS_VIEW,
+    },
+    {
+        path: 'continentes',
+        component: ConfiguracionGeograficaComponent,
+        data: { ...DESTINOS_EDIT, tipo: 'continentes' },
+    },
+    {
+        path: 'paises',
+        component: ConfiguracionGeograficaComponent,
+        data: { ...DESTINOS_EDIT, tipo: 'paises' },
+    },
+    {
+        path: 'divisiones-area',
+        component: ConfiguracionGeograficaComponent,
+        data: { ...DESTINOS_EDIT, tipo: 'divisiones-area' },
     },
     {
         path: 'configurar-destinos/editar/:id',

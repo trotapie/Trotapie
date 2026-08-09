@@ -49,89 +49,90 @@
                     </div>
 
                     @if (tipoBusqueda === 'NACIONAL') {
-                    <mat-form-field class="w-full">
-                        <mat-label>Destino nacional</mat-label>
-                        <mat-select [value]="destinoNacionalId" (valueChange)="seleccionarDestinoNacional($event)">
-                            <mat-option [value]="null">Selecciona destino</mat-option>
-                            @for (destino of destinosNacionales; track destino.id) {
-                            <mat-option [value]="destino.id">{{ destino.nombre }}</mat-option>
-                            }
-                        </mat-select>
-                    </mat-form-field>
+                    <app-tp-select-search
+                        label="Destino nacional"
+                        placeholder="Selecciona un destino"
+                        searchPlaceholder="Buscar destino"
+                        [options]="destinosNacionalesOpciones"
+                        [ngModel]="destinoNacionalId"
+                        [ngModelOptions]="{ standalone: true }"
+                        (ngModelChange)="seleccionarDestinoNacional($event)">
+                    </app-tp-select-search>
                     } @else {
                     <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
-                        <mat-form-field class="w-full">
-                            <mat-label>Continente</mat-label>
-                            <mat-select [value]="continenteSeleccionadoId" (valueChange)="seleccionarContinente($event)">
-                                <mat-option [value]="null">Selecciona continente</mat-option>
-                                @for (continente of continentes; track continente.id) {
-                                <mat-option [value]="continente.id">{{ continente.nombre }}</mat-option>
-                                }
-                            </mat-select>
-                        </mat-form-field>
+                        <app-tp-select-search
+                            label="Continente"
+                            placeholder="Selecciona un continente"
+                            searchPlaceholder="Buscar continente"
+                            [options]="continentesOpciones"
+                            [ngModel]="continenteSeleccionadoId"
+                            [ngModelOptions]="{ standalone: true }"
+                            (ngModelChange)="seleccionarContinente($event)">
+                        </app-tp-select-search>
 
-                        <mat-form-field class="w-full">
-                            <mat-label>Destino</mat-label>
-                            <mat-select [value]="paisSeleccionadoId" (valueChange)="seleccionarPais($event)"
-                                [disabled]="!continenteSeleccionadoId">
-                                <mat-option [value]="null">Selecciona destino</mat-option>
-                                @for (pais of paisesInternacionales; track pais.id) {
-                                <mat-option [value]="pais.id">{{ pais.nombre }}</mat-option>
-                                }
-                            </mat-select>
-                        </mat-form-field>
+                        <app-tp-select-search
+                            label="País"
+                            placeholder="Selecciona un país"
+                            searchPlaceholder="Buscar país"
+                            [options]="paisesInternacionalesOpciones"
+                            [disabled]="!continenteSeleccionadoId"
+                            [ngModel]="paisSeleccionadoId"
+                            [ngModelOptions]="{ standalone: true }"
+                            (ngModelChange)="seleccionarPais($event)">
+                        </app-tp-select-search>
 
-                        <mat-form-field class="w-full">
-                            <mat-label>Ciudad</mat-label>
-                            <mat-select [value]="ciudadInternacionalId" (valueChange)="seleccionarCiudadInternacional($event)"
-                                [disabled]="!paisSeleccionadoId">
-                                <mat-option [value]="null">Selecciona ciudad</mat-option>
-                                @for (ciudad of ciudadesInternacionales; track ciudad.id) {
-                                <mat-option [value]="ciudad.id">{{ ciudad.nombre }}</mat-option>
-                                }
-                            </mat-select>
-                        </mat-form-field>
+                        <app-tp-select-search
+                            label="Destino"
+                            placeholder="Destinos con hoteles"
+                            searchPlaceholder="Buscar destino"
+                            [options]="ciudadesInternacionalesOpciones"
+                            [disabled]="!paisSeleccionadoId"
+                            [ngModel]="ciudadInternacionalId"
+                            [ngModelOptions]="{ standalone: true }"
+                            (ngModelChange)="seleccionarCiudadInternacional($event)">
+                        </app-tp-select-search>
                     </div>
                     }
 
                     <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-                        <mat-form-field class="w-full">
-                            <mat-label>Hotel</mat-label>
-                            <mat-select formControlName="hotel_id" [disabled]="cargandoHoteles || !hoteles.length"
-                                (valueChange)="onHotelChange($event)">
-                                <mat-option [value]="null">Selecciona hotel</mat-option>
-                                @for (hotel of hoteles; track hotel.id) {
-                                <mat-option [value]="hotel.id">{{ hotel.nombre_hotel }}</mat-option>
-                                }
-                            </mat-select>
+                        <div>
+                            <app-tp-select-search
+                                label="Hotel"
+                                placeholder="Selecciona un hotel"
+                                searchPlaceholder="Buscar hotel"
+                                [options]="hotelesOpciones"
+                                [required]="true"
+                                formControlName="hotel_id"
+                                (selectionChange)="onHotelChange($event)">
+                            </app-tp-select-search>
                             @if (cargandoHoteles) {
-                            <mat-hint>Cargando hoteles...</mat-hint>
+                            <p class="mt-1 text-sm text-secondary">Cargando hoteles...</p>
                             } @else if (!hoteles.length) {
-                            <mat-hint>Selecciona destino para ver hoteles.</mat-hint>
+                            <p class="mt-1 text-sm text-secondary">Selecciona destino para ver hoteles.</p>
                             }
-                            @if (form.get('hotel_id')?.hasError('required')) {
-                            <mat-error>Selecciona un hotel.</mat-error>
+                            @if (destinoSeleccionadoParaHotel && form.get('hotel_id')?.hasError('required')) {
+                            <p class="mt-1 text-sm text-red-600">Selecciona un hotel.</p>
                             }
-                        </mat-form-field>
+                        </div>
 
-                        <mat-form-field class="w-full">
-                            <mat-label>Regimen</mat-label>
-                            <mat-select formControlName="regimen_id"
-                                [disabled]="cargandoRegimenes || !regimenes.length || !form.get('hotel_id')?.value">
-                                <mat-option [value]="null">Selecciona regimen</mat-option>
-                                @for (regimen of regimenes; track regimen.id) {
-                                <mat-option [value]="regimen.id">{{ regimen.descripcion }}</mat-option>
-                                }
-                            </mat-select>
+                        <div>
+                            <app-tp-select-search
+                                label="Regimen"
+                                placeholder="Selecciona un regimen"
+                                searchPlaceholder="Buscar regimen"
+                                [options]="regimenesOpciones"
+                                [required]="true"
+                                formControlName="regimen_id">
+                            </app-tp-select-search>
                             @if (cargandoRegimenes) {
-                            <mat-hint>Cargando regimenes...</mat-hint>
+                            <p class="mt-1 text-sm text-secondary">Cargando regimenes...</p>
                             } @else if (form.get('hotel_id')?.value && !regimenes.length) {
-                            <mat-hint>Este hotel no tiene regimenes disponibles.</mat-hint>
+                            <p class="mt-1 text-sm text-secondary">Este hotel no tiene regimenes disponibles.</p>
                             }
-                            @if (form.get('regimen_id')?.hasError('required')) {
-                            <mat-error>Selecciona un regimen.</mat-error>
+                            @if (destinoSeleccionadoParaHotel && form.get('hotel_id')?.value && form.get('regimen_id')?.hasError('required')) {
+                            <p class="mt-1 text-sm text-red-600">Selecciona un regimen.</p>
                             }
-                        </mat-form-field>
+                        </div>
                     </div>
 
                     <div class="step-actions">
@@ -150,15 +151,13 @@
                     <h2 class="section-title">Fechas y Personas</h2>
 
                     <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-                        <mat-form-field class="w-full" [formGroupName]="'rangoFechas'">
-                            <mat-label>Rango de fechas ({{ noches }} noches)</mat-label>
-                            <mat-date-range-input [rangePicker]="picker" [dateFilter]="dateFilter">
-                                <input matStartDate placeholder="Fecha entrada" formControlName="start" />
-                                <input matEndDate placeholder="Fecha salida" formControlName="end" />
-                            </mat-date-range-input>
-                            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-                            <mat-date-range-picker #picker></mat-date-range-picker>
-                        </mat-form-field>
+                        <app-date-range-filter
+                            class="w-full"
+                            formControlName="rangoFechas"
+                            label="Rango de fechas"
+                            [min]="fechaMinima"
+                            [mostrarEstadia]="true">
+                        </app-date-range-filter>
                     </div>
 
                     <div class="rooms-shell">
@@ -214,16 +213,16 @@
                                 @if (room.children > 0) {
                                 <div class="ages-grid">
                                     @for (age of room.childAges; track $index; let j = $index) {
-                                    <mat-form-field class="w-full" appearance="outline">
-                                        <mat-label>Edad menor {{ j + 1 }}</mat-label>
-                                        <mat-select [value]="age" panelClass="age-select-panel" panelWidth="min(28rem, calc(100vw - 1.5rem))"
-                                            (selectionChange)="setChildAge(i, j, $event.value)">
-                                            <mat-option [value]="null">Selecciona edad</mat-option>
-                                            @for (option of ageOptions; track option) {
-                                            <mat-option [value]="option">{{ option }}</mat-option>
-                                            }
-                                        </mat-select>
-                                    </mat-form-field>
+                                    <app-tp-select-search
+                                        class="w-full"
+                                        [label]="'Edad menor ' + (j + 1)"
+                                        placeholder="Selecciona edad"
+                                        searchPlaceholder="Buscar edad"
+                                        [options]="edadesOpciones"
+                                        [ngModel]="age"
+                                        [ngModelOptions]="{ standalone: true }"
+                                        (selectionChange)="setChildAge(i, j, $event === null ? null : Number($event))">
+                                    </app-tp-select-search>
                                     }
                                 </div>
                                 }
@@ -272,50 +271,49 @@
 
                     <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
                         <div class="client-name-fields md:col-span-2">
-                            <mat-form-field class="w-full client-name-fields__prefix">
-                                <mat-label>Tratamiento</mat-label>
-                                <mat-select formControlName="tratamiento_id">
-                                    <mat-option [value]="null">Sin tratamiento</mat-option>
-                                    @for (tratamiento of tratamientos; track tratamiento.id) {
-                                    <mat-option [value]="tratamiento.id">{{ tratamiento.abreviacion }}</mat-option>
-                                    }
-                                </mat-select>
-                            </mat-form-field>
+                            <app-tp-select-search
+                                class="w-full client-name-fields__prefix"
+                                label="Tratamiento"
+                                placeholder="Sin tratamiento"
+                                searchPlaceholder="Buscar tratamiento"
+                                [options]="tratamientosOpciones"
+                                formControlName="tratamiento_id">
+                            </app-tp-select-search>
 
-                            <mat-form-field class="w-full client-name-fields__name">
-                                <mat-label>Nombre completo</mat-label>
-                                <input matInput formControlName="nombre_completo" />
-                                @if (form.get('nombre_completo')?.invalid && (form.get('nombre_completo')?.touched || form.get('nombre_completo')?.dirty)) {
-                                <mat-error>Captura el nombre completo.</mat-error>
-                                }
-                            </mat-form-field>
+                            <app-tp-input
+                                class="w-full client-name-fields__name"
+                                label="Nombre completo"
+                                [required]="true"
+                                [error]="form.get('nombre_completo')?.invalid && (form.get('nombre_completo')?.touched || form.get('nombre_completo')?.dirty) ? 'Captura el nombre completo.' : ''"
+                                formControlName="nombre_completo">
+                            </app-tp-input>
                         </div>
 
-                        <mat-form-field class="w-full">
-                            <mat-label>Telefono</mat-label>
-                            <input matInput formControlName="telefono" (input)="onTelefonoInput($event)" />
-                        </mat-form-field>
+                        <app-phone-input
+                            class="w-full md:col-span-2"
+                            label="Telefono"
+                            placeholder="Número de teléfono"
+                            [invalid]="form.get('telefono')?.invalid && (form.get('telefono')?.touched || form.get('telefono')?.dirty)"
+                            formControlName="telefono">
+                        </app-phone-input>
 
-                        <mat-form-field class="w-full">
-                            <mat-label>Correo</mat-label>
-                            <input matInput formControlName="correo" />
-                        </mat-form-field>
+                        <app-tp-input class="w-full" label="Correo" type="email" formControlName="correo"></app-tp-input>
 
-                        <mat-form-field class="w-full">
-                            <mat-label>Asesor</mat-label>
-                            <mat-select formControlName="asesor_id">
-                                <mat-option [value]="null">Selecciona asesor</mat-option>
-                                @for (asesor of asesores; track asesor.id) {
-                                <mat-option [value]="asesor.id">{{ asesor.nombre }}</mat-option>
-                                }
-                            </mat-select>
-                        </mat-form-field>
+                        <app-tp-select-search
+                            class="w-full"
+                            label="Asesor"
+                            [options]="asesorActualOpciones"
+                            [disabled]="true"
+                            formControlName="asesor_id">
+                        </app-tp-select-search>
                     </div>
 
-                    <mat-form-field class="w-full">
-                        <mat-label>Peticiones especiales</mat-label>
-                        <textarea matInput rows="3" formControlName="especiales"></textarea>
-                    </mat-form-field>
+                    <app-tp-textarea
+                        class="w-full"
+                        label="Peticiones especiales"
+                        [rows]="3"
+                        formControlName="especiales">
+                    </app-tp-textarea>
 
                     <div class="summary-card">
                         <span class="summary-label">Resumen de la cotizacion</span>
@@ -365,20 +363,28 @@
         </div>
 
         <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
-            <mat-form-field class="w-full">
-                <mat-label>Nombre</mat-label>
-                <input matInput [(ngModel)]="clienteBusquedaNombre" [ngModelOptions]="{standalone: true}" />
-            </mat-form-field>
+            <app-tp-input
+                class="w-full"
+                label="Nombre"
+                [(ngModel)]="clienteBusquedaNombre"
+                [ngModelOptions]="{standalone: true}">
+            </app-tp-input>
 
-            <mat-form-field class="w-full">
-                <mat-label>Correo</mat-label>
-                <input matInput [(ngModel)]="clienteBusquedaEmail" [ngModelOptions]="{standalone: true}" />
-            </mat-form-field>
+            <app-tp-input
+                class="w-full"
+                label="Correo"
+                type="email"
+                [(ngModel)]="clienteBusquedaEmail"
+                [ngModelOptions]="{standalone: true}">
+            </app-tp-input>
 
-            <mat-form-field class="w-full">
-                <mat-label>Telefono</mat-label>
-                <input matInput [(ngModel)]="clienteBusquedaTelefono" [ngModelOptions]="{standalone: true}" />
-            </mat-form-field>
+            <app-tp-input
+                class="w-full"
+                label="Telefono"
+                type="tel"
+                [(ngModel)]="clienteBusquedaTelefono"
+                [ngModelOptions]="{standalone: true}">
+            </app-tp-input>
         </div>
 
         <div class="step-actions">

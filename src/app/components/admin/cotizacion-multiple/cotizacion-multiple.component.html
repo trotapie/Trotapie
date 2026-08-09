@@ -510,20 +510,28 @@
         </div>
 
         <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
-            <mat-form-field class="w-full">
-                <mat-label>Nombre</mat-label>
-                <input matInput [(ngModel)]="clienteBusquedaNombre" [ngModelOptions]="{standalone: true}" />
-            </mat-form-field>
+            <app-tp-input
+                class="w-full"
+                label="Nombre"
+                [(ngModel)]="clienteBusquedaNombre"
+                [ngModelOptions]="{standalone: true}">
+            </app-tp-input>
 
-            <mat-form-field class="w-full">
-                <mat-label>Correo</mat-label>
-                <input matInput [(ngModel)]="clienteBusquedaEmail" [ngModelOptions]="{standalone: true}" />
-            </mat-form-field>
+            <app-tp-input
+                class="w-full"
+                label="Correo"
+                type="email"
+                [(ngModel)]="clienteBusquedaEmail"
+                [ngModelOptions]="{standalone: true}">
+            </app-tp-input>
 
-            <mat-form-field class="w-full">
-                <mat-label>Telefono</mat-label>
-                <input matInput [(ngModel)]="clienteBusquedaTelefono" [ngModelOptions]="{standalone: true}" />
-            </mat-form-field>
+            <app-tp-input
+                class="w-full"
+                label="Telefono"
+                type="tel"
+                [(ngModel)]="clienteBusquedaTelefono"
+                [ngModelOptions]="{standalone: true}">
+            </app-tp-input>
         </div>
 
         <div class="step-actions">

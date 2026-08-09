@@ -1,21 +1,21 @@
 ﻿import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { TratamientoCliente } from 'app/core/cliente-nombre.util';
+import { DestinoCatalogo, DestinosService, PaisCatalogo, RegionCatalogo } from 'app/core/destinos.service';
 import { SupabaseService } from 'app/core/supabase.service';
+import { DateRangeFilterComponent } from 'app/shared/date-range-filter/date-range-filter.component';
+import { DateRangeFilterValue, EMPTY_DATE_RANGE } from 'app/shared/date-range-filter/date-range-filter.model';
 import { MaterialModule } from 'app/shared/material.module';
+import { PhoneInputComponent } from 'app/shared/phone-input/phone-input.component';
+import { TpInputComponent } from 'app/shared/tp-input/tp-input.component';
+import { TpSelectSearchComponent, TpSelectSearchOption } from 'app/shared/tp-select-search/tp-select-search.component';
+import { TpTextareaComponent } from 'app/shared/tp-textarea/tp-textarea.component';
 
-interface IDestinoFiltro {
+interface IDestinoCatalogoFiltro {
   id: number;
   nombre: string;
-  tipo_desino_id: number;
-  destino_padre_id: number | null;
-  continente_id?: number | null;
-}
-
-interface IContinente {
-  id: number;
-  nombre: string;
+  division_area_nombre?: string;
 }
 
 interface IHotelAdmin {
@@ -31,7 +31,7 @@ interface IRegimen {
   descripcion: string;
 }
 
-interface IAsesor {
+interface IAsesorActual {
   id: number;
   nombre: string;
 }
@@ -51,19 +51,33 @@ type Room = { adults: number; children: number; childAges: (number | null)[] };
 @Component({
   selector: 'app-crear-cotizacion',
   standalone: true,
-  imports: [MaterialModule, RouterLink],
+  imports: [
+    FormsModule,
+    MaterialModule,
+    RouterLink,
+    TpSelectSearchComponent,
+    DateRangeFilterComponent,
+    TpInputComponent,
+    PhoneInputComponent,
+    TpTextareaComponent,
+  ],
   templateUrl: './crear-cotizacion.component.html',
   styleUrl: './crear-cotizacion.component.scss'
 })
 export class CrearCotizacionComponent implements OnInit {
   private fb = inject(FormBuilder);
   private supabase = inject(SupabaseService);
+  private destinosService = inject(DestinosService);
   private router = inject(Router);
 
   tipoBusqueda: 'NACIONAL' | 'INTERNACIONAL' = 'NACIONAL';
-  destinos: IDestinoFiltro[] = [];
-  continentes: IContinente[] = [];
-  asesores: IAsesor[] = [];
+  destinosNacionalesCatalogo: IDestinoCatalogoFiltro[] = [];
+  continentes: RegionCatalogo[] = [];
+  paisesInternacionalesCatalogo: PaisCatalogo[] = [];
+  destinosInternacionalesCatalogo: DestinoCatalogo[] = [];
+  private paisesInternacionalesConHotelesIds = new Set<number>();
+  private destinosInternacionalesConHotelesIds = new Set<number>();
+  asesorActual: IAsesorActual | null = null;
   hoteles: IHotelAdmin[] = [];
   regimenes: IRegimen[] = [];
   tratamientos: TratamientoCliente[] = [];
@@ -92,6 +106,8 @@ export class CrearCotizacionComponent implements OnInit {
   readonly MAX_ROOMS = 10;
   readonly MAX_PER_ROOM = 6;
   readonly MIN_ADULTS = 1;
+  readonly ASESOR_RESPALDO_ID = 6;
+  readonly fechaMinima = new Date();
 
   ageOptions = Array.from({ length: 18 }, (_, i) => i);
   rooms = signal<Room[]>([{ adults: 2, children: 0, childAges: [] }]);
@@ -103,12 +119,11 @@ export class CrearCotizacionComponent implements OnInit {
   });
 
   form = this.fb.group({
-    hotel_id: [null as number | null, [Validators.required]],
-    regimen_id: [null as number | null, [Validators.required]],
-    rangoFechas: this.fb.group({
-      start: [null as Date | null, [Validators.required]],
-      end: [null as Date | null, [Validators.required]],
-    }),
+    hotel_id: [{ value: null as number | null, disabled: true }, [Validators.required]],
+    regimen_id: [{ value: null as number | null, disabled: true }, [Validators.required]],
+    rangoFechas: this.fb.control<DateRangeFilterValue>({ ...EMPTY_DATE_RANGE }, [
+      (control) => control.value?.start && control.value?.end ? null : { required: true },
+    ]),
     asesor_id: [null as number | null, [Validators.required]],
     tratamiento_id: [null as number | null],
     nombre_completo: ['', [Validators.required]],
@@ -120,27 +135,33 @@ export class CrearCotizacionComponent implements OnInit {
   async ngOnInit() {
     try {
       this.cargando = true;
-      const [destinos, continentesResponse, empleadosResponse, tratamientos] = await Promise.all([
-        this.supabase.obtenerDestinosAdmin(),
-        this.supabase.continentes(),
-        this.supabase.empleados(),
-        this.supabase.obtenerTratamientosActivos()
+      const [destinosNacionalesCatalogo, regiones, ubicacionesConHoteles, tratamientos, asesorActual] = await Promise.all([
+        this.destinosService.obtenerDestinosCatalogoPublicables('NACIONAL'),
+        this.destinosService.obtenerCatalogoInternacionalRegiones(),
+        this.supabase.obtenerUbicacionesCatalogoConHoteles(),
+        this.supabase.obtenerTratamientosActivos(),
+        this.obtenerAsesorActual(),
       ]);
 
-      this.destinos = (destinos ?? []) as IDestinoFiltro[];
-      this.continentes = (continentesResponse?.data ?? []) as IContinente[];
+      const ubicacionesNacionales = ubicacionesConHoteles.filter((item) => item.tipo === 'NACIONAL');
+      const ubicacionesInternacionales = ubicacionesConHoteles.filter((item) => item.tipo === 'INTERNACIONAL');
+      const destinosConHotelesIds = new Set(ubicacionesNacionales.map((item) => item.catalogoDestinoId));
+      this.destinosNacionalesCatalogo = (destinosNacionalesCatalogo ?? [])
+        .filter((destino: any) => destinosConHotelesIds.has(Number(destino.id))) as IDestinoCatalogoFiltro[];
+      this.paisesInternacionalesConHotelesIds = new Set(
+        ubicacionesInternacionales.map((item) => item.paisId).filter((id) => id > 0)
+      );
+      this.destinosInternacionalesConHotelesIds = new Set(
+        ubicacionesInternacionales.map((item) => item.catalogoDestinoId)
+      );
+      this.continentes = (regiones ?? []).filter((region) =>
+        ubicacionesInternacionales.some((item) => item.regionId === region.id)
+      );
       this.tratamientos = tratamientos;
+      this.asesorActual = asesorActual;
+      this.form.patchValue({ asesor_id: asesorActual.id });
 
-      if (empleadosResponse.error) {
-        throw empleadosResponse.error;
-      }
-
-      this.asesores = (empleadosResponse.data ?? []).map((item: any) => ({
-        id: Number(item.id),
-        nombre: String(item.nombre ?? '')
-      }));
-
-      this.form.get('rangoFechas')?.valueChanges.subscribe((range: any) => {
+      this.form.get('rangoFechas')?.valueChanges.subscribe((range) => {
         this.calcularNoches(range?.start ?? null, range?.end ?? null);
       });
     } catch (error: any) {
@@ -150,38 +171,73 @@ export class CrearCotizacionComponent implements OnInit {
     }
   }
 
-  get destinosNacionales(): IDestinoFiltro[] {
-    return this.destinos.filter(
-      (d) => d.destino_padre_id === null && Number(d.tipo_desino_id) !== 2
-    );
+  get destinosNacionales(): IDestinoCatalogoFiltro[] {
+    return this.destinosNacionalesCatalogo;
   }
 
-  get paisesInternacionales(): IDestinoFiltro[] {
-    return this.destinos.filter(
-      (d) =>
-        Number(d.tipo_desino_id) === 2 &&
-        d.destino_padre_id === null &&
-        (this.continenteSeleccionadoId ? Number(d.continente_id) === this.continenteSeleccionadoId : true)
-    );
+  get paisesInternacionales(): PaisCatalogo[] {
+    return this.paisesInternacionalesCatalogo;
   }
 
-  get ciudadesInternacionales(): IDestinoFiltro[] {
-    if (!this.paisSeleccionadoId) return [];
-    return this.destinos.filter(
-      (d) =>
-        Number(d.tipo_desino_id) === 2 &&
-        Number(d.destino_padre_id) === this.paisSeleccionadoId
-    );
+  get ciudadesInternacionales(): DestinoCatalogo[] {
+    return this.destinosInternacionalesCatalogo;
+  }
+
+  get destinosNacionalesOpciones(): TpSelectSearchOption[] {
+    return this.destinosNacionales.map((destino) => ({
+      value: destino.id,
+      label: destino.nombre,
+      group: destino.division_area_nombre
+    }));
+  }
+
+  get continentesOpciones(): TpSelectSearchOption[] {
+    return this.continentes.map((continente) => ({ value: continente.id, label: continente.nombre }));
+  }
+
+  get paisesInternacionalesOpciones(): TpSelectSearchOption[] {
+    return this.paisesInternacionales.map((pais) => ({ value: pais.id, label: pais.nombre }));
+  }
+
+  get ciudadesInternacionalesOpciones(): TpSelectSearchOption[] {
+    return this.ciudadesInternacionales.map((ciudad) => ({ value: ciudad.id, label: ciudad.nombre }));
+  }
+
+  get hotelesOpciones(): TpSelectSearchOption[] {
+    return this.hoteles.map((hotel) => ({ value: hotel.id, label: hotel.nombre_hotel }));
+  }
+
+  get regimenesOpciones(): TpSelectSearchOption[] {
+    return this.regimenes.map((regimen) => ({ value: regimen.id, label: regimen.descripcion }));
+  }
+
+  get tratamientosOpciones(): TpSelectSearchOption[] {
+    return this.tratamientos.map((tratamiento) => ({
+      value: tratamiento.id,
+      label: tratamiento.abreviacion,
+    }));
+  }
+
+  get edadesOpciones(): TpSelectSearchOption[] {
+    return this.ageOptions.map((edad) => ({ value: edad, label: `${edad} anos` }));
+  }
+
+  get asesorActualOpciones(): TpSelectSearchOption[] {
+    return this.asesorActual ? [{ value: this.asesorActual.id, label: this.asesorActual.nombre }] : [];
+  }
+
+  get destinoSeleccionadoParaHotel(): boolean {
+    return this.tipoBusqueda === 'NACIONAL'
+      ? this.destinoNacionalId !== null
+      : this.ciudadInternacionalId !== null;
   }
 
   get fechaSalida(): string {
-    const end = this.form.get('rangoFechas.end')?.value as Date | null;
-    return end ? this.formatDate(end) : '';
+    return this.form.get('rangoFechas')?.value?.end ?? '';
   }
 
   get fechaEntrada(): string {
-    const start = this.form.get('rangoFechas.start')?.value as Date | null;
-    return start ? this.formatDate(start) : '';
+    return this.form.get('rangoFechas')?.value?.start ?? '';
   }
 
   get resumenFechasPersonas(): string {
@@ -222,22 +278,14 @@ export class CrearCotizacionComponent implements OnInit {
     return this.form.get('rangoFechas')?.valid === true && !this.hasMissingAges() && this.noches > 0;
   }
 
-  dateFilter = (date: Date | null): boolean => {
-    if (!date) return false;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const d = new Date(date);
-    d.setHours(0, 0, 0, 0);
-    return d >= today;
-  };
-
   cambiarTipoBusqueda(tipo: 'NACIONAL' | 'INTERNACIONAL') {
     this.tipoBusqueda = tipo;
     this.continenteSeleccionadoId = null;
     this.paisSeleccionadoId = null;
     this.destinoNacionalId = null;
     this.ciudadInternacionalId = null;
+    this.paisesInternacionalesCatalogo = [];
+    this.destinosInternacionalesCatalogo = [];
     this.error = '';
     this.resetHotelSelection();
   }
@@ -249,19 +297,42 @@ export class CrearCotizacionComponent implements OnInit {
     await this.cargarHoteles(destinoId);
   }
 
-  seleccionarContinente(continenteId: number | null) {
+  async seleccionarContinente(continenteId: number | null) {
     this.continenteSeleccionadoId = continenteId;
     this.paisSeleccionadoId = null;
     this.ciudadInternacionalId = null;
+    this.paisesInternacionalesCatalogo = [];
+    this.destinosInternacionalesCatalogo = [];
     this.error = '';
     this.resetHotelSelection();
+
+    if (!continenteId) return;
+
+    try {
+      this.paisesInternacionalesCatalogo = (await this.destinosService
+        .obtenerCatalogoInternacionalPaises([continenteId]))
+        .filter((pais) => this.paisesInternacionalesConHotelesIds.has(pais.id));
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudieron cargar los países.';
+    }
   }
 
-  seleccionarPais(paisId: number | null) {
+  async seleccionarPais(paisId: number | null) {
     this.paisSeleccionadoId = paisId;
     this.ciudadInternacionalId = null;
+    this.destinosInternacionalesCatalogo = [];
     this.error = '';
     this.resetHotelSelection();
+
+    if (!paisId) return;
+
+    try {
+      this.destinosInternacionalesCatalogo = (await this.destinosService
+        .obtenerCatalogoInternacionalDestinosPorPais(paisId))
+        .filter((destino) => this.destinosInternacionalesConHotelesIds.has(destino.id));
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudieron cargar los destinos.';
+    }
   }
 
   async seleccionarCiudadInternacional(ciudadId: number | null) {
@@ -274,15 +345,10 @@ export class CrearCotizacionComponent implements OnInit {
   async onHotelChange(hotelId: number | null) {
     this.form.patchValue({ hotel_id: hotelId, regimen_id: null });
     this.regimenes = [];
+    this.actualizarDisponibilidadSeleccionHotel();
 
     if (!hotelId) return;
     await this.cargarRegimenesHotel(hotelId);
-  }
-
-  onTelefonoInput(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const limpio = (input.value ?? '').replace(/\D/g, '');
-    this.form.get('telefono')?.setValue(limpio, { emitEvent: false });
   }
 
   abrirModalClientes() {
@@ -350,21 +416,55 @@ export class CrearCotizacionComponent implements OnInit {
 
   private async cargarHoteles(destinoId: number | null) {
     this.hoteles = [];
+    this.actualizarDisponibilidadSeleccionHotel();
     if (!destinoId) return;
 
     this.cargandoHoteles = true;
+    this.actualizarDisponibilidadSeleccionHotel();
     try {
-      const hoteles = await this.supabase.obtenerHotelesAdminPorDestino(destinoId);
+      const hoteles = await this.supabase.obtenerHotelesAdminPorCatalogoDestino(destinoId);
       this.hoteles = (hoteles ?? []) as IHotelAdmin[];
     } catch (error: any) {
       this.error = error?.message ?? 'No se pudieron cargar los hoteles del destino.';
     } finally {
       this.cargandoHoteles = false;
+      this.actualizarDisponibilidadSeleccionHotel();
     }
+  }
+
+  private async obtenerAsesorActual(): Promise<IAsesorActual> {
+    const { data: session, error: sessionError } = await this.supabase.getClient().auth.getUser();
+    if (!sessionError && session.user?.id) {
+      const { data: empleado, error: empleadoError } = await this.supabase
+        .getClient()
+        .from('empleados')
+        .select('id, nombre')
+        .eq('auth_user_id', session.user.id)
+        .maybeSingle();
+
+      if (!empleadoError && empleado?.id && empleado.nombre) {
+        return { id: Number(empleado.id), nombre: String(empleado.nombre) };
+      }
+    }
+
+    const { data: asesorRespaldo, error: asesorRespaldoError } = await this.supabase
+      .getClient()
+      .from('empleados')
+      .select('id, nombre')
+      .eq('id', this.ASESOR_RESPALDO_ID)
+      .single();
+
+    if (asesorRespaldoError) throw asesorRespaldoError;
+
+    return {
+      id: Number(asesorRespaldo.id),
+      nombre: String(asesorRespaldo.nombre),
+    };
   }
 
   private async cargarRegimenesHotel(hotelId: number) {
     this.cargandoRegimenes = true;
+    this.actualizarDisponibilidadSeleccionHotel();
 
     try {
       const infoHotel = await this.supabase.infoHotel(hotelId, 'es');
@@ -397,6 +497,7 @@ export class CrearCotizacionComponent implements OnInit {
         : [];
     } finally {
       this.cargandoRegimenes = false;
+      this.actualizarDisponibilidadSeleccionHotel();
     }
   }
 
@@ -404,6 +505,29 @@ export class CrearCotizacionComponent implements OnInit {
     this.hoteles = [];
     this.regimenes = [];
     this.form.patchValue({ hotel_id: null, regimen_id: null });
+    this.actualizarDisponibilidadSeleccionHotel();
+  }
+
+  private actualizarDisponibilidadSeleccionHotel() {
+    const hotelControl = this.form.get('hotel_id');
+    const regimenControl = this.form.get('regimen_id');
+    const puedeSeleccionarHotel = this.destinoSeleccionadoParaHotel && !this.cargandoHoteles && this.hoteles.length > 0;
+    const puedeSeleccionarRegimen = puedeSeleccionarHotel &&
+      !this.cargandoRegimenes &&
+      this.regimenes.length > 0 &&
+      Boolean(hotelControl?.value);
+
+    if (puedeSeleccionarHotel) {
+      hotelControl?.enable({ emitEvent: false });
+    } else {
+      hotelControl?.disable({ emitEvent: false });
+    }
+
+    if (puedeSeleccionarRegimen) {
+      regimenControl?.enable({ emitEvent: false });
+    } else {
+      regimenControl?.disable({ emitEvent: false });
+    }
   }
 
   private destinoActualNombre(): string {
@@ -541,8 +665,8 @@ export class CrearCotizacionComponent implements OnInit {
       return;
     }
 
-    const fechaEntrada = this.formatDate(start);
-    const fechaSalida = this.formatDate(end);
+    const fechaEntrada = start;
+    const fechaSalida = end;
 
     this.guardando = true;
     try {
@@ -609,29 +733,23 @@ export class CrearCotizacionComponent implements OnInit {
     };
   }
 
-  private calcularNoches(start: Date | null, end: Date | null) {
+  private calcularNoches(start: string | null, end: string | null) {
     if (!start || !end) {
       this.noches = 0;
       return;
     }
 
-    const startDate = new Date(start);
-    const endDate = new Date(end);
-
-    startDate.setHours(0, 0, 0, 0);
-    endDate.setHours(0, 0, 0, 0);
+    const startDate = this.dateFromKey(start);
+    const endDate = this.dateFromKey(end);
 
     const diffMs = endDate.getTime() - startDate.getTime();
     const result = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     this.noches = result > 0 ? result : 0;
   }
 
-  private formatDate(value: Date): string {
-    const date = new Date(value);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+  private dateFromKey(value: string): Date {
+    const [year, month, day] = value.split('-').map(Number);
+    return new Date(year, month - 1, day);
   }
 
   private parseTratamientoId(value: number | null | undefined): number | null {

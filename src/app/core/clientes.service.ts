@@ -51,7 +51,7 @@ export class ClientesService {
       query = query.ilike('email', `%${email}%`);
     }
     if (telefono) {
-      query = query.ilike('telefono', `%${telefono}%`);
+      query = query.eq('telefono', Number(telefono));
     }
 
     const { data, error } = await query;

@@ -31,6 +31,22 @@ export interface DivisionAreaCatalogo {
   es_fallback?: boolean;
 }
 
+export type ConfiguracionGeograficaTipo = 'continentes' | 'paises' | 'divisiones-area';
+
+export interface RegistroGeograficoAdmin {
+  id: number;
+  nombre: string;
+  slug: string;
+  iso2?: string;
+  region_id?: number;
+  region_nombre?: string;
+  pais_id?: number;
+  pais_nombre?: string;
+  total_paises?: number;
+  total_divisiones?: number;
+  total_destinos?: number;
+}
+
 export interface DestinoCatalogo {
   id: number;
   pais_id: number;
@@ -88,7 +104,7 @@ export interface ResumenCatalogoDestinos {
     publicables: number;
   };
   geografia: {
-    regionesInternacionales: number;
+    continentes: number;
     paises: number;
     divisionesArea: number;
   };
@@ -1166,7 +1182,18 @@ export class DestinosService {
             .map((imagen) => ({
               imagen_url: imagen.imagen_url,
               activa: imagen.activa,
-              oscurecer_fondo: Boolean(imagen.oscurecer_fondo)
+              oscurecer_fondo: Boolean(imagen.oscurecer_fondo),
+              texto_color: imagen.texto_color ?? '#FFFFFF',
+              titulo_font_size: Number(imagen.titulo_font_size ?? 48),
+              descripcion_font_size: Number(imagen.descripcion_font_size ?? 18),
+              overlay_color: imagen.overlay_color ?? '#0F172A',
+              overlay_opacidad: Number(imagen.overlay_opacidad ?? 0),
+              blur_px: Number(imagen.blur_px ?? 0),
+              efecto_destino: imagen.efecto_destino === 'texto' || imagen.efecto_destino === 'ambos'
+                ? imagen.efecto_destino
+                : 'fondo' as 'fondo' | 'texto' | 'ambos',
+              etiqueta_font_size: Number(imagen.etiqueta_font_size ?? 12),
+              etiqueta_color: imagen.etiqueta_color ?? '#F9B44B'
             }));
 
           return {
@@ -1364,6 +1391,73 @@ export class DestinosService {
     }));
   }
 
+  async obtenerConfiguracionGeografica(tipo: ConfiguracionGeograficaTipo): Promise<RegistroGeograficoAdmin[]> {
+    if (tipo === 'continentes') {
+      const [regionesResultado, resumenResultado] = await Promise.all([
+        this.client.from('regiones').select('id, nombre, slug').order('nombre', { ascending: true }),
+        this.client.from('v_catalogo_internacional_regiones').select('region_id, total_paises, total_divisiones, total_destinos')
+      ]);
+      if (regionesResultado.error) throw regionesResultado.error;
+      if (resumenResultado.error) throw resumenResultado.error;
+      const resumenPorRegion = new Map((resumenResultado.data ?? []).map((item: any) => [Number(item.region_id), item]));
+      return (regionesResultado.data ?? []).map((item: any) => {
+        const resumen = resumenPorRegion.get(Number(item.id));
+        return {
+          id: Number(item.id), nombre: String(item.nombre ?? ''), slug: String(item.slug ?? ''),
+          total_paises: Number(resumen?.total_paises ?? 0), total_divisiones: Number(resumen?.total_divisiones ?? 0), total_destinos: Number(resumen?.total_destinos ?? 0)
+        };
+      });
+    }
+
+    if (tipo === 'paises') {
+      const { data, error } = await this.client
+        .from('v_catalogo_internacional_paises')
+        .select('region_id, region_nombre, pais_id, pais_nombre, pais_iso2, pais_slug, total_divisiones, total_destinos')
+        .order('region_nombre', { ascending: true })
+        .order('pais_nombre', { ascending: true });
+      if (error) throw error;
+      return (data ?? []).map((item: any) => ({
+        id: Number(item.pais_id), nombre: String(item.pais_nombre ?? ''), slug: String(item.pais_slug ?? ''), iso2: String(item.pais_iso2 ?? ''),
+        region_id: Number(item.region_id), region_nombre: String(item.region_nombre ?? ''),
+        total_divisiones: Number(item.total_divisiones ?? 0), total_destinos: Number(item.total_destinos ?? 0)
+      }));
+    }
+
+    const { data, error } = await this.client
+      .from('divisiones_area')
+      .select('id, nombre, slug, pais:pais_id(id, nombre, region:region_id(id, nombre))')
+      .order('nombre', { ascending: true })
+      .limit(1000);
+    if (error) throw error;
+    return (data ?? []).map((item: any) => ({
+      id: Number(item.id), nombre: String(item.nombre ?? ''), slug: String(item.slug ?? ''),
+      pais_id: Number(item.pais?.id), pais_nombre: String(item.pais?.nombre ?? ''),
+      region_id: Number(item.pais?.region?.id), region_nombre: String(item.pais?.region?.nombre ?? '')
+    }));
+  }
+
+  async guardarConfiguracionGeografica(tipo: ConfiguracionGeograficaTipo, registro: Partial<RegistroGeograficoAdmin>): Promise<void> {
+    const nombre = String(registro.nombre ?? '').trim();
+    const slug = String(registro.slug ?? '').trim();
+    if (!nombre || !slug) throw new Error('Nombre y slug son obligatorios.');
+
+    const tabla = tipo === 'continentes' ? 'regiones' : tipo === 'paises' ? 'paises' : 'divisiones_area';
+    const payload: Record<string, any> = { nombre, slug };
+    if (tipo === 'paises') { payload.region_id = registro.region_id; payload.iso2 = String(registro.iso2 ?? '').trim().toUpperCase(); }
+    if (tipo === 'divisiones-area') payload.pais_id = registro.pais_id;
+    const query = registro.id
+      ? this.client.from(tabla).update(payload).eq('id', registro.id)
+      : this.client.from(tabla).insert(payload);
+    const { error } = await query;
+    if (error) throw error;
+  }
+
+  async eliminarConfiguracionGeografica(tipo: ConfiguracionGeograficaTipo, id: number): Promise<void> {
+    const tabla = tipo === 'continentes' ? 'regiones' : tipo === 'paises' ? 'paises' : 'divisiones_area';
+    const { error } = await this.client.from(tabla).delete().eq('id', id);
+    if (error) throw error;
+  }
+
   async obtenerCatalogoInternacionalPaises(regionIds?: number[]): Promise<PaisCatalogo[]> {
     let query = this.client
       .from('v_catalogo_internacional_paises')
@@ -1537,7 +1631,7 @@ export class DestinosService {
         publicables: publicables.count ?? 0
       },
       geografia: {
-        regionesInternacionales: regionesInternacionales.count ?? 0,
+        continentes: regionesInternacionales.count ?? 0,
         paises: paises.count ?? 0,
         divisionesArea: divisionesArea.count ?? 0
       },
