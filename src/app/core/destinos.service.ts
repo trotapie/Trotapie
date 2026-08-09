@@ -1036,6 +1036,10 @@ export class DestinosService {
   }
 
   async actualizarUbicacionDestinoAdmin(catalogoDestinoId: number, ubicacion: string | null): Promise<void> {
+    if (!ubicacion?.trim()) {
+      throw new Error('Falta la ubicación del destino. Ingresa la URL de Google Maps para poder guardar.');
+    }
+
     const { data: detallesExistentes, error: detalleExistenteError } = await this.client
       .from('detalles_destinos')
       .select('id')

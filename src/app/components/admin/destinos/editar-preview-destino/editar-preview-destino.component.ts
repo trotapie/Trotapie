@@ -91,7 +91,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
   coordenadasUbicacion: { lat: number; lng: number } | null = null;
 
   form = this.fb.group({
-    ubicacion: [''],
+    ubicacion: ['', [Validators.required]],
     traducciones: this.fb.array([]),
     detallesRapidos: this.fb.array([]),
     actividades: this.fb.array([])
@@ -242,14 +242,24 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
 
 
   async guardar(mostrarExito = true): Promise<boolean> {
-    const ubicacionGuardada = await this.guardarUbicacion();
-    if (!ubicacionGuardada) {
+    if (this.traduciendoTextoPreview) {
       return false;
     }
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.error = 'La ubicación se guardó, pero faltan campos obligatorios en el contenido en español.';
+      const mensaje = `Completa los campos obligatorios antes de guardar: ${this.obtenerCamposPendientes().join(', ')}.`;
+      this.error = '';
+      this.toast.show({
+        title: 'Faltan campos por completar',
+        message: mensaje,
+        variant: 'error'
+      });
+      return false;
+    }
+
+    const ubicacionGuardada = await this.guardarUbicacion();
+    if (!ubicacionGuardada) {
       return false;
     }
 
@@ -1399,6 +1409,29 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
       descripcion_corta: this.limpiarTexto(traduccionEspanol?.get('descripcion_corta')?.value) ?? '',
       descripcion_larga: this.limpiarTexto(traduccionEspanol?.get('descripcion_larga')?.value) ?? ''
     };
+  }
+
+  private obtenerCamposPendientes(): string[] {
+    const pendientes: string[] = [];
+    const ubicacion = this.form.get('ubicacion');
+    if (ubicacion?.invalid) {
+      pendientes.push('Ubicación (URL)');
+    }
+
+    const camposEspanol = [
+      ['nombre', 'Nombre'],
+      ['titulo_descripcion', 'Título de la descripción'],
+      ['descripcion_corta', 'Descripción corta'],
+      ['descripcion_larga', 'Descripción larga']
+    ];
+    const traduccionEspanol = this.traduccionesArray.at(this.indiceEspanol);
+    camposEspanol.forEach(([controlName, label]) => {
+      if (traduccionEspanol?.get(controlName)?.invalid) {
+        pendientes.push(label);
+      }
+    });
+
+    return pendientes.length ? pendientes : ['campos obligatorios'];
   }
 
   private buildValoresGroup(initial?: Record<string, string>, requerirEspanol = false) {

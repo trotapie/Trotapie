@@ -197,6 +197,27 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
       : Number.isFinite(destinoId) || Number.isFinite(catalogoDestinoId);
   }
 
+  get estrellasSeleccionadas(): number {
+    const valor = Number(this.form.get('estrellas')?.value);
+    return Number.isFinite(valor) ? Math.min(5, Math.max(0, Math.round(valor * 2) / 2)) : 0;
+  }
+
+  get estrellasConstelacion(): Array<{ indice: number; tipo: 'full' | 'half'; clave: string }> {
+    const completas = Math.floor(this.estrellasSeleccionadas);
+    const estrellas: Array<{ indice: number; tipo: 'full' | 'half'; clave: string }> = Array.from({ length: completas }, (_, index) => ({
+      indice: index + 1,
+      tipo: 'full' as const,
+      clave: `${index + 1}-full`
+    }));
+
+    if (this.estrellasSeleccionadas % 1 >= 0.5) {
+      const indice = completas + 1;
+      estrellas.push({ indice, tipo: 'half', clave: `${indice}-half` });
+    }
+
+    return estrellas;
+  }
+
   desplazarASeccion(id: string): void {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }

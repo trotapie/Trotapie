@@ -25,10 +25,12 @@
             <mat-icon class="mr-2 icon-size-5" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
             Regresar
           </button>
-          <button mat-flat-button color="primary" class="text-white" type="submit" form="form-editar-preview" [disabled]="guardando">
+          <button mat-flat-button color="primary" class="text-white" type="submit" form="form-editar-preview" [disabled]="guardando || traduciendoTextoPreview">
             <mat-icon class="mr-2 icon-size-5 text-white">save</mat-icon>
             @if (guardando) {
               Guardando...
+            } @else if (traduciendoTextoPreview) {
+              Traduciendo...
             } @else {
               Guardar preview
             }
@@ -56,7 +58,7 @@
              <div>
                <app-tp-input
                  class="w-full"
-                 label="Ubicación (URL)"
+                  label="Ubicación (URL) *"
                  placeholder="https://maps.google.com/..."
                  [disabled]="guardandoUbicacion"
                  formControlName="ubicacion"

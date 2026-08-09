@@ -24,6 +24,7 @@ import { ColorPickerComponent } from 'app/shared/color-picker/color-picker.compo
 import { TpInputComponent } from 'app/shared/tp-input/tp-input.component';
 import { TpTextareaComponent } from 'app/shared/tp-textarea/tp-textarea.component';
 import { TpSelectSearchComponent, TpSelectSearchOption } from 'app/shared/tp-select-search/tp-select-search.component';
+import { TpToastService } from 'app/shared/tp-toast/tp-toast.service';
 
 interface ILangConfig {
   code: string;
@@ -104,6 +105,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   private readonly destinosService = inject(DestinosService);
   private readonly actividadesService = inject(ActividadesService);
   private readonly traduccionesService = inject(TraduccionesService);
+  private readonly toast = inject(TpToastService);
   private readonly fb = inject(UntypedFormBuilder);
 
   private readonly idiomasConfig: ILangConfig[] = [
@@ -148,6 +150,8 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   procesandoCrearCarpeta = false;
   mostrarModalConfirmarMoverImagen = false;
   mostrarModalConfirmarEliminarGaleria = false;
+  mostrarModalConfirmarEliminarImagen = false;
+  imagenAEliminar: FolderImageManagerImage | null = null;
   eliminandoGaleria = false;
   imagenAReubicar: {
     draft_key: string;
@@ -1177,7 +1181,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   async consultarCarpetasDriveActividad(): Promise<void> {
     const driveUrl = this.limpiarTexto(this.driveActividadUrl);
     if (!driveUrl) {
-      this.error = 'Pega la URL o el ID de la carpeta de Drive.';
+      this.mostrarErrorDrive('Pega la URL o el ID de la carpeta de Drive.');
       return;
     }
 
@@ -1203,7 +1207,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       });
     } catch (error: any) {
       this.carpetasDriveActividad = [];
-      this.error = error?.message ?? 'No se pudieron consultar las imagenes de Drive.';
+      this.mostrarErrorDrive(error?.message ?? 'No se pudieron consultar las imagenes de Drive.');
     } finally {
       this.consultandoDriveActividad = false;
     }
@@ -1240,6 +1244,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
         ? {
             ...carpeta,
             nombre: nombreNormalizado,
+            carpetaDestinoId: null,
             carpetaDestinoNombre: nombreNormalizado
           }
         : carpeta
@@ -1253,12 +1258,12 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   async cargarImagenesSeleccionadasDesdeDrive(): Promise<void> {
     const carpetasSeleccionadas = this.carpetasDriveActividad.filter((carpeta) => carpeta.seleccionado && carpeta.imagenes.length);
     if (!carpetasSeleccionadas.length) {
-      this.error = 'Selecciona al menos una carpeta de Drive para cargar.';
+      this.mostrarErrorDrive('Selecciona al menos una carpeta de Drive para cargar.');
       return;
     }
 
     if (carpetasSeleccionadas.some((carpeta) => !this.normalizarCarpeta(carpeta.carpetaDestinoNombre))) {
-      this.error = 'Escribe el nombre de la carpeta que se creara para las imagenes sin carpeta en Drive.';
+      this.mostrarErrorDrive('Selecciona una carpeta existente o escribe el nombre de una carpeta nueva.');
       return;
     }
 
@@ -1324,7 +1329,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       }
 
       if (!insertadas) {
-        this.error = 'No se agregaron imagenes nuevas. Las URLs ya existen en la actividad.';
+        this.mostrarErrorDrive('No se agregaron imagenes nuevas. Las URLs ya existen en la actividad.');
         return;
       }
 
@@ -1333,6 +1338,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       const guardadoOk = await this.guardarImagenes();
 
       if (!guardadoOk) {
+        this.mostrarErrorDrive(this.error || 'No se pudieron guardar las imagenes seleccionadas.');
         while (this.imagenesArray.length > totalImagenesInicial) {
           this.imagenesArray.removeAt(this.imagenesArray.length - 1);
         }
@@ -1358,10 +1364,19 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       this.carpetaActiva = primeraCarpetaSeleccionada;
       this.cerrarModalCargaDriveImagenes();
     } catch (error: any) {
-      this.error = error?.message ?? 'No se pudieron preparar las imagenes desde Drive.';
+      this.mostrarErrorDrive(error?.message ?? 'No se pudieron preparar las imagenes desde Drive.');
     } finally {
       this.aplicandoCargaDriveActividad = false;
     }
+  }
+
+  private mostrarErrorDrive(message: string): void {
+    this.error = '';
+    this.toast.show({
+      title: 'No se pudieron cargar las imágenes',
+      message,
+      variant: 'error'
+    });
   }
 
   private agregarImagenManual() {
@@ -1617,13 +1632,25 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     }
   }
 
-  async eliminarImagenDesdeGestor(image: FolderImageManagerImage): Promise<void> {
-    const nombre = image?.name ?? 'esta imagen';
-    const confirmado = typeof window === 'undefined'
-      ? true
-      : window.confirm(`Quieres eliminar ${nombre}? Esta accion no se puede deshacer.`);
+  eliminarImagenDesdeGestor(image: FolderImageManagerImage): void {
+    this.imagenAEliminar = image;
+    this.mostrarModalConfirmarEliminarImagen = true;
+    this.setModalLocked(true);
+  }
 
-    if (!confirmado) {
+  cerrarModalConfirmarEliminarImagen(): void {
+    if (this.guardandoImagenes) {
+      return;
+    }
+
+    this.mostrarModalConfirmarEliminarImagen = false;
+    this.imagenAEliminar = null;
+    this.setModalLocked(false);
+  }
+
+  async confirmarEliminarImagenDesdeGestor(): Promise<void> {
+    const image = this.imagenAEliminar;
+    if (!image) {
       return;
     }
 
@@ -1634,10 +1661,12 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     );
 
     if (!Number.isFinite(index)) {
+      this.cerrarModalConfirmarEliminarImagen();
       return;
     }
 
     await this.eliminarImagen(index);
+    this.cerrarModalConfirmarEliminarImagen();
   }
 
   async alternarCarpetaActivaDesdeGestor(folder: FolderImageManagerFolder): Promise<void> {

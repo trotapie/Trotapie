@@ -2,10 +2,10 @@
   @if (label) { <label class="tp-input__label" [class.tp-input__label--required]="required">{{ label }}</label> }
   @if (multiline) {
     <textarea class="tp-input__field" [disabled]="disabled" [placeholder]="placeholder" [value]="value" [rows]="rows" [attr.maxlength]="maxLength"
-      (input)="actualizar($any($event.target).value)" (blur)="marcarTouched()"></textarea>
+      (input)="actualizar($any($event.target).value, $any($event.target))" (focus)="enfocar()" (blur)="marcarTouched()"></textarea>
   } @else {
-    <input class="tp-input__field" [type]="type" [disabled]="disabled" [placeholder]="placeholder" [value]="value" [attr.min]="min" [attr.max]="max" [attr.maxlength]="maxLength"
-      (input)="actualizar($any($event.target).value)" (blur)="marcarTouched()" />
+    <input class="tp-input__field" [type]="type" [attr.inputmode]="inputMode || null" [disabled]="disabled" [placeholder]="placeholder" [value]="value" [attr.min]="min" [attr.max]="max" [attr.step]="step" [attr.maxlength]="maxLength"
+      (input)="actualizar($any($event.target).value, $any($event.target))" (focus)="enfocar()" (blur)="marcarTouched()" />
   }
   @if (error) { <span class="tp-input__error" role="alert">{{ error }}</span> }
 </div>

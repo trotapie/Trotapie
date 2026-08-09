@@ -1,13 +1,13 @@
 <div class="flex min-w-0 flex-auto flex-col bg-gray-50">
   <app-blocking-loader
-    [open]="cargando || guardandoImagenes || guardandoTraducciones || traduciendoActividad"
-    [title]="cargando ? 'Cargando actividad' : guardandoImagenes ? 'Guardando imágenes' : guardandoTraducciones ? 'Guardando actividad' : 'Traduciendo actividad'"
-    [message]="cargando ? 'Estamos cargando los datos para que puedas editarlos.' : guardandoImagenes ? 'No cierres la pantalla mientras guardamos las imágenes.' : guardandoTraducciones ? 'No cierres la pantalla mientras guardamos los cambios.' : 'Estamos generando las traducciones automaticamente.'"
+    [open]="cargando || consultandoDriveActividad || aplicandoCargaDriveActividad || guardandoImagenes || guardandoTraducciones || traduciendoActividad"
+    [title]="cargando ? 'Cargando actividad' : consultandoDriveActividad ? 'Consultando Drive' : aplicandoCargaDriveActividad ? 'Cargando imágenes' : guardandoImagenes ? 'Guardando imágenes' : guardandoTraducciones ? 'Guardando actividad' : 'Traduciendo actividad'"
+    [message]="cargando ? 'Estamos cargando los datos para que puedas editarlos.' : consultandoDriveActividad ? 'Estamos consultando las carpetas e imágenes disponibles.' : aplicandoCargaDriveActividad ? 'Estamos preparando y guardando las imágenes seleccionadas.' : guardandoImagenes ? 'No cierres la pantalla mientras guardamos las imágenes.' : guardandoTraducciones ? 'No cierres la pantalla mientras guardamos los cambios.' : 'Estamos generando las traducciones automaticamente.'"
   />
 
   <mat-drawer-container
     class="activity-editor-drawer-container"
-    [class.activity-editor-drawer-container--modal-open]="editorImagenAbierto || mostrarModalConfirmarEliminarGaleria || mostrarModalConfirmarEliminarCarpeta || mostrarModalCargaDriveImagenes || mostrarModalConfirmarMoverImagen"
+    [class.activity-editor-drawer-container--modal-open]="editorImagenAbierto || mostrarModalConfirmarEliminarGaleria || mostrarModalConfirmarEliminarImagen || mostrarModalConfirmarEliminarCarpeta || mostrarModalCargaDriveImagenes || mostrarModalConfirmarMoverImagen"
     [autosize]="true"
   >
     <mat-drawer
@@ -232,6 +232,28 @@
                   } @else {
                     Eliminar definitivamente
                   }
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+
+        @if (mostrarModalConfirmarEliminarImagen && imagenAEliminar) {
+          <div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center px-4">
+            <div class="absolute inset-0 bg-black/50" @backdropFade></div>
+            <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="eliminar-imagen-title" @modalScaleFade>
+              <h3 id="eliminar-imagen-title" class="text-xl font-semibold text-gray-900">Eliminar imagen</h3>
+              <p class="mt-2 text-sm text-gray-600">
+                Quieres eliminar <span class="font-semibold text-gray-900">{{ imagenAEliminar.name || 'esta imagen' }}</span>?
+              </p>
+              <p class="mt-2 text-sm font-medium text-red-700">Esta accion no se puede deshacer.</p>
+
+              <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <button mat-stroked-button type="button" (click)="cerrarModalConfirmarEliminarImagen()" [disabled]="guardandoImagenes">
+                  Cancelar
+                </button>
+                <button mat-flat-button color="warn" type="button" (click)="confirmarEliminarImagenDesdeGestor()" [disabled]="guardandoImagenes">
+                  {{ guardandoImagenes ? 'Eliminando...' : 'Eliminar definitivamente' }}
                 </button>
               </div>
             </div>
@@ -669,14 +691,28 @@
 
                           @if (carpeta.requiereNombreCarpeta) {
                             <mat-form-field class="mt-3 w-full">
-                              <mat-label>Nombre de la carpeta a crear</mat-label>
+                              <mat-label>Usar carpeta existente</mat-label>
+                              <mat-select
+                                [value]="carpeta.carpetaDestinoId"
+                                (selectionChange)="actualizarCarpetaDestinoDrive(carpeta.id, $event.value)"
+                              >
+                                @for (destino of carpetasParaSelector; track destino.id) {
+                                  <mat-option [value]="destino.id">
+                                    {{ destino.nombre }}
+                                  </mat-option>
+                                }
+                              </mat-select>
+                              <mat-hint>Selecciona una carpeta ya creada o escribe un nombre nuevo abajo.</mat-hint>
+                            </mat-form-field>
+                            <mat-form-field class="mt-3 w-full">
+                              <mat-label>O crea una carpeta nueva</mat-label>
                               <input
                                 matInput
                                 [value]="carpeta.carpetaDestinoNombre"
                                 (input)="actualizarNombreCarpetaDrive(carpeta.id, $any($event.target).value)"
                                 placeholder="Ej. Galeria principal"
                               />
-                              <mat-hint>Drive no indicó una carpeta para estas imágenes.</mat-hint>
+                              <mat-hint>Al escribir aquí se creará una carpeta nueva con ese nombre.</mat-hint>
                             </mat-form-field>
                           } @else {
                             <mat-form-field class="mt-3 w-full">

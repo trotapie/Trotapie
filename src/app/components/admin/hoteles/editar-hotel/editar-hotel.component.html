@@ -106,13 +106,26 @@
                     [required]="esCreacion" [error]="esCreacion && form.get('regimen_principal_id')?.invalid && form.get('regimen_principal_id')?.touched ? 'El regimen principal es requerido.' : ''"
                     (selectionChange)="onRegimenPrincipalChange($event === 0 ? null : $event)"></app-tp-select-search>
 
-                <mat-form-field class="w-full">
-                    <mat-label>Estrellas</mat-label>
-                    <input matInput type="number" min="0" max="5" formControlName="estrellas" />
-                    @if (form.get('estrellas')?.invalid && form.get('estrellas')?.touched) {
-                    <mat-error>Las estrellas deben estar entre 0 y 5.</mat-error>
-                    }
-                </mat-form-field>
+                <div class="hotel-rating-field w-full">
+                    <app-tp-input class="hotel-rating-field__input" label="Estrellas" inputMode="decimal" [numeric]="true" [min]="0" [max]="5" [step]="0.5"
+                        [preserveNumericInputWhileFocused]="true" formControlName="estrellas"
+                        [error]="form.get('estrellas')?.invalid && form.get('estrellas')?.touched ? 'Las estrellas deben estar entre 0 y 5.' : ''"></app-tp-input>
+
+                    <div class="hotel-rating-field__preview">
+                        <div class="hotel-rating-constellation" aria-live="polite">
+                            @if (estrellasSeleccionadas) {
+                            <div class="hotel-rating-constellation__stars" [attr.aria-label]="estrellasSeleccionadas + ' estrellas seleccionadas'">
+                                @for (estrella of estrellasConstelacion; track estrella.clave) {
+                                <mat-icon class="hotel-rating-constellation__star" [style.--star-index]="estrella.indice">{{ estrella.tipo === 'half' ? 'star_half' : 'star' }}</mat-icon>
+                                }
+                            </div>
+                            <span class="hotel-rating-constellation__count">{{ estrellasSeleccionadas }} / 5</span>
+                            } @else {
+                            <span class="hotel-rating-constellation__empty">Sin clasificación</span>
+                            }
+                        </div>
+                    </div>
+                </div>
 
                 <app-tp-textarea class="w-full md:col-span-2 lg:col-span-3" label="Descripcion" formControlName="descripcion" [rows]="5"
                     (blur)="traducirHotelDesdeEspanol()"></app-tp-textarea>
