@@ -4090,7 +4090,7 @@ export class SupabaseService {
   async obtenerUbicacionesCatalogoConHoteles(tipo?: 'NACIONAL' | 'INTERNACIONAL') {
     let query = this.client
       .from('v_hoteles_catalogo_admin')
-      .select('catalogo_destino_id_resuelto, catalogo_destino_nombre_resuelto, pais_id_resuelto, pais_nombre_resuelto, region_id_resuelto, tipo_catalogo')
+      .select('catalogo_destino_id_resuelto, catalogo_destino_nombre_resuelto, division_area_nombre_resuelto, pais_id_resuelto, pais_nombre_resuelto, region_id_resuelto, tipo_catalogo')
       .not('catalogo_destino_id_resuelto', 'is', null);
 
     if (tipo) query = query.eq('tipo_catalogo', tipo);
@@ -4101,6 +4101,7 @@ export class SupabaseService {
     return (data ?? []).map((item: any) => ({
       catalogoDestinoId: Number(item.catalogo_destino_id_resuelto),
       catalogoDestinoNombre: String(item.catalogo_destino_nombre_resuelto ?? ''),
+      divisionAreaNombre: String(item.division_area_nombre_resuelto ?? ''),
       paisId: Number(item.pais_id_resuelto),
       paisNombre: String(item.pais_nombre_resuelto ?? ''),
       regionId: Number(item.region_id_resuelto),

@@ -392,17 +392,25 @@ export class AdminHotelesComponent implements OnInit {
   }
 
   private async cargarCatalogosDisponibles(): Promise<void> {
-    const [destinosNacionalesCatalogo, regiones, ubicacionesConHoteles] = await Promise.all([
-      this.destinosService.obtenerDestinosCatalogoPublicables('NACIONAL'),
+    const [regiones, ubicacionesConHoteles] = await Promise.all([
       this.destinosService.obtenerCatalogoInternacionalRegiones(),
       this.supabase.obtenerUbicacionesCatalogoConHoteles()
     ]);
+    const ubicacionesNacionales = ubicacionesConHoteles.filter((item) => item.tipo === 'NACIONAL');
     const ubicacionesInternacionales = ubicacionesConHoteles.filter((item) => item.tipo === 'INTERNACIONAL');
     this.destinosConHotelesIds = new Set(ubicacionesConHoteles.map((item) => item.catalogoDestinoId));
     this.paisesConHotelesIds = new Set(ubicacionesInternacionales.map((item) => item.paisId).filter((id) => id > 0));
     this.regionesConHotelesIds = new Set(ubicacionesInternacionales.map((item) => item.regionId).filter((id) => id > 0));
-    this.destinosNacionalesCatalogo = (destinosNacionalesCatalogo ?? [])
-      .filter((destino: any) => this.destinosConHotelesIds.has(Number(destino.id))) as IDestinoCatalogoFiltro[];
+    this.destinosNacionalesCatalogo = [...new Map(ubicacionesNacionales.map((ubicacion) => [
+      ubicacion.catalogoDestinoId,
+      {
+        id: ubicacion.catalogoDestinoId,
+        nombre: ubicacion.catalogoDestinoNombre,
+        division_area_nombre: ubicacion.divisionAreaNombre
+      }
+    ])).values()].sort((a, b) =>
+      (a.division_area_nombre ?? '').localeCompare(b.division_area_nombre ?? '') || a.nombre.localeCompare(b.nombre)
+    );
     this.continentes = (regiones ?? [])
       .filter((region) => this.regionesConHotelesIds.has(region.id))
       .map((region) => ({ id: region.id, nombre: region.nombre }));
