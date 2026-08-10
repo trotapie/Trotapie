@@ -1,7 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { DestinosService, DivisionAreaCatalogo } from 'app/core/destinos.service';
+import { DestinosService, DivisionAreaCatalogo, TipoTuristicoCatalogo } from 'app/core/destinos.service';
 import { BlockingLoaderComponent } from 'app/shared/blocking-loader/blocking-loader.component';
 import { MaterialModule } from 'app/shared/material.module';
 import { CustomSwitchComponent } from 'app/shared/custom-switch/custom-switch.component';
@@ -48,10 +48,13 @@ export class EditarDestinoComponent implements OnInit {
   continentes: IContinente[] = [];
   destinosPadre: IDestinoPadre[] = [];
   divisionesArea: DivisionAreaCatalogo[] = [];
+  tiposTuristicos: TipoTuristicoCatalogo[] = [];
 
   form = this.fb.group({
     nombre: ['', [Validators.required]],
     orden: [null as number | null, [Validators.min(0)]],
+    prioridad: [2 as 1 | 2, [Validators.required]],
+    tipo_turistico_id: [null as number | null],
     tipo_desino_id: [null as number | null, [Validators.required]],
     destino_padre_id: [{ value: null as number | null, disabled: true }],
     continente_id: [{ value: null as number | null, disabled: true }],
@@ -72,8 +75,13 @@ export class EditarDestinoComponent implements OnInit {
     this.esCatalogo = !this.esCreacion;
 
     try {
-      if (this.esCatalogo) {
-        this.divisionesArea = await this.supabase.obtenerCatalogoNacionalesDivisionAreas();
+        if (this.esCatalogo) {
+          const [divisionesArea, tiposTuristicos] = await Promise.all([
+            this.supabase.obtenerCatalogoNacionalesDivisionAreas(),
+            this.supabase.obtenerTiposTuristicosCatalogo(true)
+          ]);
+          this.divisionesArea = divisionesArea;
+          this.tiposTuristicos = tiposTuristicos;
         this.configurarFormularioCatalogo();
       } else {
         await this.cargarCatalogos();
@@ -120,6 +128,8 @@ export class EditarDestinoComponent implements OnInit {
         await this.supabase.actualizarCatalogoDestinoAdmin(this.destinoId, {
           nombre: (raw.nombre ?? '').trim(),
           orden: this.parseNumber(raw.orden) ?? 0,
+          prioridad: raw.prioridad === 1 ? 1 : 2,
+          tipo_turistico_id: raw.tipo_turistico_id ?? null,
           division_area_id: raw.division_area_id ?? null,
           imagen_destino: this.limpiarTexto(raw.imagen_destino),
           activo: raw.activo ?? true
@@ -168,6 +178,13 @@ export class EditarDestinoComponent implements OnInit {
     return this.divisionesArea.map((division) => ({ value: division.id, label: division.nombre }));
   }
 
+  get tiposTuristicosOpciones(): TpSelectSearchOption[] {
+    return this.tiposTuristicos.map((tipo) => ({
+      value: tipo.id,
+      label: tipo.activo ? tipo.nombre : `${tipo.nombre} (inactivo)`
+    }));
+  }
+
   desplazarASeccion(id: string): void {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -202,6 +219,8 @@ export class EditarDestinoComponent implements OnInit {
     this.form.patchValue({
       nombre: data.nombre ?? '',
       orden: data.orden ?? 0,
+      prioridad: data.prioridad === 1 ? 1 : 2,
+      tipo_turistico_id: data.tipo_turistico_id ?? null,
       division_area_id: data.division_area_id ?? null,
       imagen_destino: data.imagen_destino ?? '',
       activo: data.activo ?? true

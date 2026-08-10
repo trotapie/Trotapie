@@ -17,7 +17,7 @@ export class DestinosComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
   private readonly toast = inject(TpToastService);
-  readonly displayedColumns = ['destino', 'ubicacion', 'estado', 'acciones'];
+  readonly displayedColumns = ['destino', 'clasificacion', 'ubicacion', 'estado', 'acciones'];
   tipoVisible: 'NACIONAL' | 'INTERNACIONAL' = 'NACIONAL';
   regiones: RegionCatalogo[] = []; paises: PaisCatalogo[] = []; divisiones: DivisionAreaCatalogo[] = [];
   regionIds: number[] = []; paisIds: number[] = []; divisionAreaIds: number[] = [];
@@ -42,6 +42,7 @@ export class DestinosComponent implements OnInit {
   async limpiarFiltros() { this.regionIds = []; this.paisIds = []; this.divisionAreaIds = []; this.busqueda = ''; this.soloActivos = false; this.pageIndex = 0; await this.cargarFiltros(); await this.cargarDestinos(); this.actualizarUrlFiltros(); }
   async cambiarPagina(event: PageEvent) { this.pageIndex = event.pageIndex; this.pageSize = event.pageSize; await this.cargarDestinos(); this.actualizarUrlFiltros(); }
   editarDestino(destino: DestinoCatalogoNavegable) { return this.router.navigate(['/admin/destinos/configurar-destinos/editar', destino.destinoId], { queryParams: this.obtenerQueryParamsFiltros() }); }
+  administrarTiposTuristicos() { return this.router.navigate(['/admin/catalogos/tipos-turisticos']); }
   editarPreview(destino: DestinoCatalogoNavegable) { return this.router.navigate(['/admin/destinos/configurar-destinos/preview', destino.destinoId], { queryParams: this.obtenerQueryParamsFiltros() }); }
   verHoteles(destino: DestinoCatalogoNavegable) { return this.router.navigate(['/admin/hoteles'], { queryParams: { catalogoDestinoId: destino.destinoId, divisionAreaId: destino.divisionAreaId, tipo: destino.tipo } }); }
   async activarDestino(destino: DestinoCatalogoNavegable) {

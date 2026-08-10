@@ -187,7 +187,7 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
       // Durante la vinculación manual conservamos el selector vigente como fallback.
       this.destinos = (publicables as any[])
         .filter((destino) => destino.activo === true)
-        .sort((a, b) => (a.orden - b.orden) || a.nombre.localeCompare(b.nombre)) as Destinos[];
+        .sort((a, b) => (a.prioridad - b.prioridad) || a.nombre.localeCompare(b.nombre)) as Destinos[];
 
       this.agrupadosDestinos = [];
       this.destinosFiltrados = this.destinos;

@@ -19,7 +19,8 @@ export type CatalogoAdminKey =
   | 'tipo_imagen'
   | 'tipos_habitacion'
   | 'atracciones'
-  | 'tratamientos';
+  | 'tratamientos'
+  | 'tipos_turisticos';
 
 export interface IPoliticaTarifaAdmin {
   id: number;
@@ -218,6 +219,15 @@ export class CatalogosAdminService {
           .order('id', { ascending: true });
         if (error) throw error;
         return data ?? [];
+      }
+      case 'tipos_turisticos': {
+        const { data, error } = await this.client
+          .from('catalogo_tipos_turisticos')
+          .select('id, slug, nombre, activo, orden')
+          .order('orden', { ascending: true })
+          .order('id', { ascending: true });
+        if (error) throw error;
+        return (data ?? []).map((item: any) => ({ ...item, clave: item.slug }));
       }
       case 'idiomas': {
         const { data, error } = await this.client
@@ -503,7 +513,8 @@ export class CatalogosAdminService {
       tipo_imagen: 'tipos_imagen',
       tipos_habitacion: null,
       atracciones: 'catalogo_atracciones',
-      tratamientos: null
+      tratamientos: null,
+      tipos_turisticos: 'catalogo_tipos_turisticos'
     };
 
     const tabla = tablaPorCatalogo[catalogo];
@@ -596,7 +607,8 @@ export class CatalogosAdminService {
         return data;
       }
       case 'estatus_empleado':
-      case 'estatus_cotizacion': {
+      case 'estatus_cotizacion':
+      case 'tipos_turisticos': {
         const tabla = catalogo;
         const { data: ultimoRegistro, error: ultimoError } = await this.client
           .from(tabla)
@@ -609,16 +621,10 @@ export class CatalogosAdminService {
 
         const ordenMaximo = Number((ultimoRegistro as any)?.orden);
         const siguienteOrden = Number.isFinite(ordenMaximo) ? ordenMaximo + 1 : 1;
-        const { data, error } = await this.client
-          .from(tabla)
-          .insert({
-            clave: payload.clave ?? null,
-            nombre: payload.nombre ?? null,
-            activo: payload.activo ?? true,
-            orden: siguienteOrden
-          })
-          .select('id, clave, nombre, activo, orden')
-          .single();
+        const insertPayload = catalogo === 'tipos_turisticos'
+          ? { slug: payload.clave ?? null, nombre: payload.nombre ?? null, activo: payload.activo ?? true, orden: siguienteOrden }
+          : { clave: payload.clave ?? null, nombre: payload.nombre ?? null, activo: payload.activo ?? true, orden: siguienteOrden };
+        const { data, error } = await this.client.from(tabla).insert(insertPayload).select('id, nombre, activo, orden').single();
 
         if (error) throw error;
         return data;
@@ -887,6 +893,14 @@ export class CatalogosAdminService {
         if (error) throw error;
         return { deleted: 1 };
       }
+      case 'tipos_turisticos': {
+        const { error } = await this.client
+          .from('catalogo_tipos_turisticos')
+          .delete()
+          .eq('id', id);
+        if (error) throw error;
+        return { deleted: 1 };
+      }
       case 'tipo_imagen': {
         const { error: deleteTraduccionesError } = await this.client
           .from('tipos_imagen_traducciones')
@@ -1002,6 +1016,16 @@ export class CatalogosAdminService {
           .maybeSingle();
         if (error) throw error;
         await this.guardarTraduccionesActividad(id, payload.descripcion ?? '');
+        return data;
+      }
+      case 'tipos_turisticos': {
+        const { data, error } = await this.client
+          .from('catalogo_tipos_turisticos')
+          .update({ slug: payload.clave ?? null, nombre: payload.nombre ?? null, activo: payload.activo ?? null })
+          .eq('id', id)
+          .select('id')
+          .maybeSingle();
+        if (error) throw error;
         return data;
       }
       case 'conceptos': {

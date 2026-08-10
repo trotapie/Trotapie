@@ -64,6 +64,7 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
   totalEmpleados = 0;
   totalContinentes = 0;
   totalTiposDestino = 0;
+  totalTiposTuristicos = 0;
   totalIdiomas = 0;
   totalAtraccionesPrincipales = 0;
   totalTiposHabitacion = 0;
@@ -192,6 +193,7 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
         const [
           totalDestinosCatalogo,
           tiposDestino,
+          tiposTuristicos,
           empleados,
           continentes,
           idiomas,
@@ -201,6 +203,7 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
         ] = await Promise.all([
           this._safeCall('destinos', () => this._destinosService.contarDestinosCatalogoAdmin(), 0),
           this._safeCall('tipos de destino', () => this._destinosService.obtenerTiposDestinoAdmin(), [] as any[]),
+          this._safeCall('tipos turísticos', () => this._destinosService.obtenerTiposTuristicosCatalogo(true), [] as any[]),
           this._safeCall('empleados', async () => {
             const { data, error } = await this._empleadosService.empleados({ incluirInhabilitados: true });
             if (error) throw error;
@@ -238,6 +241,7 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
         this.totalEmpleados = empleados.length;
         this.totalContinentes = continentes.length;
         this.totalTiposDestino = tiposDestino.length;
+        this.totalTiposTuristicos = tiposTuristicos.length;
         this.totalIdiomas = idiomas.length;
         this.totalAtraccionesPrincipales = atraccionesPrincipales;
         this.totalTiposHabitacion = tiposHabitacion.length;
@@ -274,6 +278,7 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
         this.totalEmpleados = solicitudesFiltradas.length ? this._contarUnicosPorCampo(solicitudesFiltradas, 'empleado_nombre') : 1;
         this.totalContinentes = 0;
         this.totalTiposDestino = 0;
+        this.totalTiposTuristicos = 0;
         this.totalIdiomas = 0;
         this.totalAtraccionesPrincipales = 0;
         this.totalTiposHabitacion = 0;

@@ -11,6 +11,7 @@ import { TraduccionesService } from 'app/core/traducciones.service';
 import { EstatusComponent } from 'app/shared/estatus/estatus.component';
 import { MaterialModule } from 'app/shared/material.module';
 import { CustomSwitchComponent } from 'app/shared/custom-switch/custom-switch.component';
+import { TpInputComponent } from 'app/shared/tp-input/tp-input.component';
 import { backdropFade, modalScaleFade } from 'app/shared/animations';
 
 interface IPoliticaTraduccionPreview {
@@ -42,7 +43,7 @@ interface CatalogoVistaConfig {
 @Component({
   selector: 'app-catalogo-placeholder',
   standalone: true,
-  imports: [CommonModule, A11yModule, MaterialModule, RouterLink, DragDropModule, EstatusComponent, CustomSwitchComponent],
+  imports: [CommonModule, A11yModule, MaterialModule, RouterLink, DragDropModule, EstatusComponent, CustomSwitchComponent, TpInputComponent],
   templateUrl: './catalogo-placeholder.component.html',
   styleUrl: './catalogo-placeholder.component.scss',
   animations: [modalScaleFade, backdropFade],
@@ -117,6 +118,18 @@ export class CatalogoPlaceholderComponent implements OnInit {
       booleanKeys: ['activo']
     },
     estatus_cotizacion: {
+      columnas: [
+        { key: 'id', label: 'ID' },
+        { key: 'clave', label: 'Clave' },
+        { key: 'nombre', label: 'Nombre' },
+        { key: 'activo', label: 'Activo' },
+        { key: 'orden', label: 'Orden' }
+      ],
+      tieneOrden: true,
+      editableKeys: ['clave', 'nombre', 'activo'],
+      booleanKeys: ['activo']
+    },
+    tipos_turisticos: {
       columnas: [
         { key: 'id', label: 'ID' },
         { key: 'clave', label: 'Clave' },
@@ -341,8 +354,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   get esCatalogoEstatus(): boolean {
-    return this.catalogoKey === 'estatus_empleado' || this.catalogoKey === 'estatus_cotizacion';
+    return this.catalogoKey === 'estatus_empleado' || this.catalogoKey === 'estatus_cotizacion' || this.catalogoKey === 'tipos_turisticos';
   }
+
+  get esCatalogoTiposTuristicos(): boolean { return this.catalogoKey === 'tipos_turisticos'; }
 
   get esCatalogoDescuentos(): boolean {
     return this.catalogoKey === 'descuentos';
@@ -373,7 +388,8 @@ export class CatalogoPlaceholderComponent implements OnInit {
         this.catalogoKey === 'descuentos' ||
         this.catalogoKey === 'atracciones' ||
         this.catalogoKey === 'estatus_empleado' ||
-        this.catalogoKey === 'estatus_cotizacion' ||
+         this.catalogoKey === 'estatus_cotizacion' ||
+         this.catalogoKey === 'tipos_turisticos' ||
         this.catalogoKey === 'idiomas' ||
       this.catalogoKey === 'origen_reservacion' ||
       this.catalogoKey === 'roles_empresa' ||
@@ -574,6 +590,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   get tituloModalCrear(): string {
+    if (this.esCatalogoTiposTuristicos) return 'Nuevo tipo turístico';
     if (this.esCatalogoEstatus) {
       return 'Nuevo estatus';
     } else if (this.esCatalogoIdiomas) {
@@ -628,6 +645,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   get descripcionModalCrear(): string {
+    if (this.esCatalogoTiposTuristicos) return 'Captura la clave, el nombre y el estatus del nuevo tipo turístico.';
     if (this.esCatalogoEstatus) {
       return 'Captura la clave, el nombre y el estatus del nuevo registro.';
     }
@@ -684,6 +702,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   get tituloModalEdicion(): string {
+    if (this.esCatalogoTiposTuristicos) return 'Editar tipo turístico';
     if (this.esCatalogoEstatus) {
       return 'Editar estatus';
     }
@@ -740,6 +759,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   get descripcionModalEdicion(): string {
+    if (this.esCatalogoTiposTuristicos) return 'Actualiza la clave, el nombre y el estatus del tipo turístico.';
     if (this.esCatalogoEstatus) {
       return 'Actualiza la clave, el nombre y el estatus del registro.';
     }
@@ -796,6 +816,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   get textoBotonCrear(): string {
+    if (this.esCatalogoTiposTuristicos) return 'Nuevo tipo turístico';
     if (this.esCatalogoEstatus) {
       return 'Nuevo estatus';
     }
@@ -852,6 +873,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   get textoBotonConfirmarCrear(): string {
+    if (this.esCatalogoTiposTuristicos) return 'Crear tipo turístico';
     if (this.esCatalogoEstatus) {
       return 'Crear estatus';
     }
@@ -908,6 +930,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   get mensajeExitoEdicion(): string {
+    if (this.esCatalogoTiposTuristicos) return 'Tipo turístico guardado correctamente.';
     if (this.esCatalogoEstatus) {
       return 'Estatus guardado correctamente.';
     }
@@ -960,6 +983,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   get mensajeExitoCreacion(): string {
+    if (this.esCatalogoTiposTuristicos) return 'Tipo turístico creado correctamente.';
     if (this.esCatalogoEstatus) {
       return 'Estatus creado correctamente.';
     }
@@ -1016,6 +1040,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   get mensajeExitoEliminacion(): string {
+    if (this.esCatalogoTiposTuristicos) return 'Tipo turístico eliminado correctamente.';
     if (this.esCatalogoEstatus) {
       return 'Estatus eliminado correctamente.';
     }

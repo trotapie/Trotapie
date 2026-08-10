@@ -54,6 +54,9 @@ export interface DestinoCatalogo {
   nombre: string;
   slug?: string;
   orden: number;
+  prioridad: 1 | 2;
+  tipo_turistico_id?: number | null;
+  tipo_turistico_nombre?: string | null;
   imagen_destino?: string | null;
   activo: boolean;
 }
@@ -65,6 +68,9 @@ export interface DestinoCatalogoNavegable {
   regionId: number;
   destinoNombre: string;
   orden: number;
+  prioridad: 1 | 2;
+  tipoTuristicoId: number | null;
+  tipoTuristicoNombre: string | null;
   divisionAreaNombre: string;
   paisNombre: string;
   regionNombre: string;
@@ -79,6 +85,14 @@ export interface PaginaDestinoCatalogo {
   total: number;
   page: number;
   pageSize: number;
+}
+
+export interface TipoTuristicoCatalogo {
+  id: number;
+  nombre: string;
+  slug: string;
+  orden: number;
+  activo: boolean;
 }
 
 export interface FiltrosDestinoCatalogo {
@@ -219,7 +233,7 @@ export class DestinosService {
   async obtenerCatalogoDestinoAdmin(id: number) {
     const { data, error } = await this.client
       .from('catalogo_destinos')
-      .select('id, division_area_id, nombre, slug, orden, imagen_destino, activo')
+      .select('id, division_area_id, nombre, slug, orden, prioridad, tipo_turistico_id, imagen_destino, activo')
       .eq('id', id)
       .maybeSingle();
 
@@ -229,13 +243,13 @@ export class DestinosService {
 
   async actualizarCatalogoDestinoAdmin(
     id: number,
-    payload: { nombre: string; orden: number; division_area_id: number | null; imagen_destino: string | null; activo: boolean }
+    payload: { nombre: string; orden: number; prioridad: 1 | 2; tipo_turistico_id: number | null; division_area_id: number | null; imagen_destino: string | null; activo: boolean }
   ) {
     const { data, error } = await this.client
       .from('catalogo_destinos')
       .update(payload)
       .eq('id', id)
-      .select('id, division_area_id, nombre, orden, imagen_destino, activo')
+      .select('id, division_area_id, nombre, orden, prioridad, tipo_turistico_id, imagen_destino, activo')
       .single();
 
     if (error) throw error;
@@ -1395,6 +1409,42 @@ export class DestinosService {
     }));
   }
 
+  async obtenerTiposTuristicosCatalogo(incluirInactivos = false): Promise<TipoTuristicoCatalogo[]> {
+    let query = this.client
+      .from('catalogo_tipos_turisticos')
+      .select('id, nombre, slug, orden, activo')
+      .order('orden', { ascending: true })
+      .order('nombre', { ascending: true });
+    if (!incluirInactivos) query = query.eq('activo', true);
+    const { data, error } = await query;
+    if (error) throw error;
+    return (data ?? []).map((item: any) => ({
+      id: Number(item.id), nombre: String(item.nombre ?? ''), slug: String(item.slug ?? ''),
+      orden: Number(item.orden ?? 0), activo: Boolean(item.activo)
+    }));
+  }
+
+  async crearTipoTuristicoCatalogo(payload: Omit<TipoTuristicoCatalogo, 'id'>) {
+    const { data, error } = await this.client
+      .from('catalogo_tipos_turisticos')
+      .insert(payload)
+      .select('id, nombre, slug, orden, activo')
+      .single();
+    if (error) throw error;
+    return data;
+  }
+
+  async actualizarTipoTuristicoCatalogo(id: number, payload: Omit<TipoTuristicoCatalogo, 'id'>) {
+    const { data, error } = await this.client
+      .from('catalogo_tipos_turisticos')
+      .update(payload)
+      .eq('id', id)
+      .select('id, nombre, slug, orden, activo')
+      .single();
+    if (error) throw error;
+    return data;
+  }
+
   async obtenerConfiguracionGeografica(tipo: ConfiguracionGeograficaTipo): Promise<RegistroGeograficoAdmin[]> {
     if (tipo === 'continentes') {
       const [regionesResultado, resumenResultado] = await Promise.all([
@@ -1510,6 +1560,9 @@ export class DestinosService {
       division_area_id: item.divisionAreaId,
       nombre: item.destinoNombre,
       orden: item.orden,
+      prioridad: item.prioridad,
+      tipo_turistico_id: item.tipoTuristicoId,
+      tipo_turistico_nombre: item.tipoTuristicoNombre,
       slug: item.slug,
       activo: item.activo
     }));
@@ -1537,6 +1590,9 @@ export class DestinosService {
       division_area_id: item.divisionAreaId,
       nombre: item.destinoNombre,
       orden: item.orden,
+      prioridad: item.prioridad,
+      tipo_turistico_id: item.tipoTuristicoId,
+      tipo_turistico_nombre: item.tipoTuristicoNombre,
       slug: item.slug,
       activo: item.activo
     }));
@@ -1561,6 +1617,9 @@ export class DestinosService {
       division_area_id: item.divisionAreaId,
       nombre: item.destinoNombre,
       orden: item.orden,
+      prioridad: item.prioridad,
+      tipo_turistico_id: item.tipoTuristicoId,
+      tipo_turistico_nombre: item.tipoTuristicoNombre,
       slug: item.slug,
       activo: item.activo
     }));
@@ -1655,10 +1714,10 @@ export class DestinosService {
     let query = this.client
       .from(vista)
       .select(
-        'region_id, region_nombre, pais_id, pais_nombre, division_area_id, division_area_nombre, destino_id, destino_nombre, destino_slug, destino_orden, activo',
+        'region_id, region_nombre, pais_id, pais_nombre, division_area_id, division_area_nombre, destino_id, destino_nombre, destino_slug, destino_orden, destino_prioridad, tipo_turistico_id, tipo_turistico_nombre, activo',
         { count: 'exact' }
       )
-      .order('destino_orden', { ascending: true })
+      .order('destino_prioridad', { ascending: true })
       .order('destino_nombre', { ascending: true })
       .order('destino_id', { ascending: true });
 
@@ -1703,17 +1762,11 @@ export class DestinosService {
 
     let query = this.client
       .from(vista)
-      .select('destino_id, region_nombre, pais_nombre, division_area_nombre, destino_nombre, destino_orden, imagen_destino, activo')
-      .eq('activo', true);
-    if (tipo === 'NACIONAL') {
-      query = query
-        .order('division_area_nombre', { ascending: true })
-        .order('destino_nombre', { ascending: true });
-    } else {
-      query = query
-        .order('destino_orden', { ascending: true })
-        .order('destino_nombre', { ascending: true });
-    }
+      .select('destino_id, region_nombre, pais_nombre, division_area_nombre, destino_nombre, destino_orden, destino_prioridad, tipo_turistico_id, tipo_turistico_nombre, imagen_destino, activo')
+      .eq('activo', true)
+      .order('destino_prioridad', { ascending: true })
+      .order('destino_nombre', { ascending: true })
+      .order('destino_id', { ascending: true });
 
     const { data, error } = await query;
     if (error) throw error;
@@ -1723,6 +1776,9 @@ export class DestinosService {
       nombre: String(item.destino_nombre ?? ''),
       division_area_nombre: String(item.division_area_nombre ?? ''),
       orden: Number(item.destino_orden ?? 0),
+      prioridad: Number(item.destino_prioridad) === 1 ? 1 : 2,
+      tipo_turistico_id: item.tipo_turistico_id ? Number(item.tipo_turistico_id) : null,
+      tipo_turistico_nombre: item.tipo_turistico_nombre ? String(item.tipo_turistico_nombre) : null,
       imagen_destino: item.imagen_destino ?? null,
       activo: Boolean(item.activo),
       continente: { nombre: String(item.region_nombre ?? '') },
@@ -1739,6 +1795,9 @@ export class DestinosService {
       regionId: Number(item.region_id),
       destinoNombre: String(item.destino_nombre ?? ''),
       orden: Number(item.destino_orden ?? 0),
+      prioridad: Number(item.destino_prioridad) === 1 ? 1 : 2,
+      tipoTuristicoId: item.tipo_turistico_id ? Number(item.tipo_turistico_id) : null,
+      tipoTuristicoNombre: item.tipo_turistico_nombre ? String(item.tipo_turistico_nombre) : null,
       divisionAreaNombre: String(item.division_area_nombre ?? ''),
       paisNombre: String(item.pais_nombre ?? ''),
       regionNombre: String(item.region_nombre ?? ''),

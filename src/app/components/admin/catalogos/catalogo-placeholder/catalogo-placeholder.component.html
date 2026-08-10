@@ -962,7 +962,26 @@
             </div>
             }
 
-            @if (esCatalogoEstatus) {
+            @if (esCatalogoTiposTuristicos) {
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <app-tp-input
+                    class="w-full"
+                    label="Clave"
+                    placeholder="Ej. playa"
+                    [value]="editingDraft['clave'] ?? ''"
+                    [maxLength]="50"
+                    (valueChange)="actualizarTextoDraft('clave', $event)">
+                </app-tp-input>
+                <app-tp-input
+                    class="w-full"
+                    label="Nombre"
+                    placeholder="Ej. Playa"
+                    [value]="editingDraft['nombre'] ?? ''"
+                    [maxLength]="120"
+                    (valueChange)="actualizarTextoDraft('nombre', $event)">
+                </app-tp-input>
+            </div>
+            } @else if (esCatalogoEstatus) {
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <mat-form-field appearance="outline" class="w-full">
                     <mat-label>Clave</mat-label>
@@ -1011,7 +1030,13 @@
             </div>
             }
 
-            @if (esCatalogoEstatus || esCatalogoIdiomas || esCatalogoPoliticas || esCatalogoTarifas || esCatalogoAmenidades) {
+            @if (esCatalogoTiposTuristicos) {
+            <app-custom-switch class="mt-3 block"
+                [ngModel]="!!editingDraft['activo']"
+                [ngModelOptions]="{ standalone: true }"
+                [label]="editingDraft['activo'] ? 'Activo' : 'Inactivo'"
+                (ngModelChange)="actualizarBooleanDraft('activo', $event)"></app-custom-switch>
+            } @else if (esCatalogoEstatus || esCatalogoIdiomas || esCatalogoPoliticas || esCatalogoTarifas || esCatalogoAmenidades) {
             <div class="switch-row">
                 <span class="switch-label">{{ !!editingDraft['activo'] ? 'Activo' : 'Inactivo' }}</span>
                 <label class="switch">
@@ -1438,7 +1463,26 @@
             </mat-form-field>
             }
 
-            @if (esCatalogoEstatus) {
+            @if (esCatalogoTiposTuristicos) {
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <app-tp-input
+                    class="w-full"
+                    label="Clave"
+                    placeholder="Ej. playa"
+                    [value]="nuevoRegistroDraft['clave'] ?? ''"
+                    [maxLength]="50"
+                    (valueChange)="actualizarTextoCreacion('clave', $event)">
+                </app-tp-input>
+                <app-tp-input
+                    class="w-full"
+                    label="Nombre"
+                    placeholder="Ej. Playa"
+                    [value]="nuevoRegistroDraft['nombre'] ?? ''"
+                    [maxLength]="120"
+                    (valueChange)="actualizarTextoCreacion('nombre', $event)">
+                </app-tp-input>
+            </div>
+            } @else if (esCatalogoEstatus) {
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <mat-form-field appearance="outline" class="w-full">
                     <mat-label>Clave</mat-label>
@@ -1967,7 +2011,13 @@
             </div>
             }
 
-            @if (esCatalogoIdiomas || esCatalogoPoliticas || esCatalogoTarifas || esCatalogoAmenidades) {
+            @if (esCatalogoTiposTuristicos) {
+            <app-custom-switch class="mt-3 block"
+                [ngModel]="!!nuevoRegistroDraft['activo']"
+                [ngModelOptions]="{ standalone: true }"
+                [label]="nuevoRegistroDraft['activo'] ? 'Activo' : 'Inactivo'"
+                (ngModelChange)="actualizarBooleanCreacion('activo', $event)"></app-custom-switch>
+            } @else if (esCatalogoIdiomas || esCatalogoPoliticas || esCatalogoTarifas || esCatalogoAmenidades) {
             <div class="switch-row">
                 <span class="switch-label">{{ !!nuevoRegistroDraft['activo'] ? 'Activo' : 'Inactivo' }}</span>
                 <label class="switch">

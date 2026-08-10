@@ -117,6 +117,13 @@ export class AdminActividadesComponent {
       link: '/admin/catalogos/atracciones'
     },
     {
+      titulo: 'Tipos turísticos',
+      descripcion: 'Gestiona las categorías internas para clasificar destinos.',
+      icono: 'heroicons_outline:tag',
+      imagen: 'https://images.unsplash.com/photo-1523867904486-8153c8afb94f?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      link: '/admin/catalogos/tipos-turisticos'
+    },
+    {
       titulo: 'Titulos y tratamientos',
       descripcion: 'Gestiona tratamientos como Sr., Sra., Lic. o Dr. para clientes y cotizaciones.',
       icono: 'heroicons_outline:identification',

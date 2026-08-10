@@ -17,6 +17,16 @@ export default [
         pathMatch: 'full',
     },
     {
+        path: 'tipos-turisticos',
+        component: CatalogoPlaceholderComponent,
+        data: {
+            ...ADMIN_ONLY,
+            catalogoKey: 'tipos_turisticos',
+            titulo: 'Tipos turísticos',
+            descripcion: 'Gestiona las categorías internas disponibles para clasificar destinos.'
+        }
+    },
+    {
         path: 'amenidades',
         component: CatalogoPlaceholderComponent,
         data: {

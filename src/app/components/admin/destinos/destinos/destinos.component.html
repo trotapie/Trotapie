@@ -128,6 +128,17 @@
               <small>{{ item.paisNombre }} · {{ item.regionNombre }}</small>
             </td>
           </ng-container>
+          <ng-container matColumnDef="clasificacion">
+            <th mat-header-cell *matHeaderCellDef>Clasificación</th>
+            <td mat-cell *matCellDef="let item">
+              <div class="flex flex-col gap-1">
+                <span class="text-xs font-semibold" [class.text-primary-600]="item.prioridad === 1" [class.dark:text-primary-400]="item.prioridad === 1">
+                  {{ item.prioridad === 1 ? 'Prioridad 1 · Destacado' : 'Prioridad 2 · Regular' }}
+                </span>
+                <small>{{ item.tipoTuristicoNombre || 'Sin tipo turístico' }}</small>
+              </div>
+            </td>
+          </ng-container>
           <ng-container matColumnDef="estado">
             <th mat-header-cell *matHeaderCellDef>Estado</th>
             <td mat-cell *matCellDef="let item">

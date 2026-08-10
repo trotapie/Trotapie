@@ -75,6 +75,26 @@
                         ></app-tp-input>
 
                         @if (esCatalogo) {
+                            <mat-form-field class="w-full">
+                                <mat-label>Prioridad pública</mat-label>
+                                <mat-select formControlName="prioridad">
+                                    <mat-option [value]="1">1 - Destacado</mat-option>
+                                    <mat-option [value]="2">2 - Regular</mat-option>
+                                </mat-select>
+                                <mat-hint>Los destacados aparecen primero en el selector público.</mat-hint>
+                            </mat-form-field>
+
+                            <app-tp-select-search
+                                class="w-full"
+                                label="Tipo turístico"
+                                placeholder="Sin tipo turístico"
+                                searchPlaceholder="Buscar tipo"
+                                [options]="tiposTuristicosOpciones"
+                                formControlName="tipo_turistico_id"
+                            ></app-tp-select-search>
+                        }
+
+                        @if (esCatalogo) {
                             <app-tp-select-search
                                 class="w-full"
                                 label="División de área"
