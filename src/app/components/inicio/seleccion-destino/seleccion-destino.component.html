@@ -1,293 +1,163 @@
-<style>
-    .accordion-content {
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .accordion-item.active .accordion-content {
-        max-height: 1000px;
-    }
-
-    .accordion-item.active .chevron-icon {
-        transform: rotate(180deg);
-    }
-
-    .destinos-scrollbar {
-        scrollbar-width: auto;
-        scrollbar-color: #147052 #edf3ef;
-    }
-
-    .destinos-scrollbar::-webkit-scrollbar {
-        width: 30px;
-    }
-
-    .destinos-scrollbar::-webkit-scrollbar-track {
-        background: #edf3ef;
-        border-radius: 9999px;
-    }
-
-    .destinos-scrollbar::-webkit-scrollbar-thumb {
-        background-color: #147052;
-        border: 4px solid #edf3ef;
-        border-radius: 9999px;
-    }
-
-    .destinos-scrollbar::-webkit-scrollbar-thumb:hover {
-        background-color: #0f5c43;
-    }
-</style>
-
-<div #scrollContainer class="absolute inset-0 flex flex-col min-w-0 overflow-y-auto" cdkScrollable>
-    <ng-container *transloco="let t">
-        <div (click)="closeDropdown()" class="min-h-full flex items-center justify-center">
-            <div class="flex min-w-0 flex-auto flex-col mt-2 items-center justify-center h-full w-full">
-                <div class="relative flex justify-center items-center p-3 sm:p-5 md:p-8 w-full h-full">
-                    <h1 class="sr-only">Hoteles y destinos para tus vacaciones con Trotapie</h1>
-                    <fuse-card class="flex flex-col max-w-xl w-full md:w-[600px] h-[70vh] sm:h-[80vh] md:h-[70vh]"
-                        [flippable]="true" #heroCard>
-
-                        <ng-container fuseCardFront>
-                            <div class="relative w-full h-full rounded-3xl overflow-hidden shadow-lg
-                    flex items-center justify-center text-white bg-cover bg-center"
-                                style="backface-visibility: hidden; -webkit-backface-visibility: hidden;"
-                                [ngStyle]="{ 'background-image': currentImage ? 'url(' + currentImage + ')' : 'none' }"
-                                [style.pointerEvents]="heroCard?.face === 'back' ? 'none' : 'auto'"
-                                [style.visibility]="heroCard?.face === 'back' ? 'hidden' : 'visible'"
-                                [style.zIndex]="heroCard?.face === 'front' ? 20 : 0">
-
-                                <div *ngIf="overlayImage"
-                                    class="absolute inset-0 bg-cover bg-center transition-opacity duration-500 pointer-events-none"
-                                    [ngStyle]="{ 'background-image': 'url(' + overlayImage + ')' }"
-                                    [class.opacity-0]="!isTransitioning" [class.opacity-100]="isTransitioning"></div>
-
-                                <div class="absolute inset-0 bg-black/40 z-0 pointer-events-none"></div>
-
-                                <div class="absolute top-1 transform flex flex-col gap-4 z-20"
-                                    (click)="closeDropdown()">
-                                    <div class="relative w-full mx-auto" (click)="$event.stopPropagation()">
-                                        <button type="button" (click)="toggleDropdown($event)" class="w-full bg-green-700 hover:bg-emerald-800 text-white px-8 py-5 rounded-full
-             flex items-center justify-between shadow-2xl
-             transition-all duration-300 active:scale-[0.98]">
-                                            <span class="flex items-center gap-3 text-lg font-semibold">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                                    stroke-width="1.5" stroke="currentColor" class="size-6">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498
-               4.875-2.437c.381-.19.622-.58.622-1.006V4.82
-               c0-.836-.88-1.38-1.628-1.006l-3.869 1.934
-               c-.317.159-.69.159-1.006 0L9.503 3.252
-               a1.125 1.125 0 0 0-1.006 0L3.622 5.689
-               C3.24 5.88 3 6.27 3 6.695V19.18
-               c0 .836.88 1.38 1.628 1.006l3.869-1.934
-               c.317-.159.69-.159 1.006 0l4.994 2.497
-               c.317.158.69.158 1.006 0Z" />
-                                                </svg>
-
-                                                {{ t('selecciona-proxima-aventura') }}
-                                            </span>
-                                        </button>
-
-                                        <div class="absolute top-full left-0 right-0 mt-3
-             bg-white/70 dark:bg-gray-800 rounded-[2rem]
-             overflow-hidden dropdown-shadow
-             transition-all duration-300 z-20
-             border border-white/20" [ngClass]="dropdownOpen
-        ? 'opacity-100 translate-y-0 pointer-events-auto'
-        : 'opacity-0 translate-y-4 pointer-events-none'">
-                                            <div class="p-2">
-
-                                                <button type="button" class="w-full group/item flex items-center gap-4 px-5 py-2
-                 rounded-[1.5rem] transition-all duration-200
-                 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                                    (click)="cargarDestinos(1); showOverlay(); closeDropdown();">
-                                                     <div class="w-12 h-12 shrink-0 flex items-center justify-center
-                   rounded-full overflow-hidden">
-                                                        <img class="w-full h-full object-cover"
-                                                            src="images/flags/MX.svg" alt="México" />
-                                                    </div>
-
-                                                    <div class="text-left">
-                                                        <span
-                                                            class="block text-lg font-bold text-gray-800 dark:text-gray-100">
-                                                            {{ t('destinos-nacionales') }}
-                                                        </span>
-                                                        <span class="text-sm text-gray-500 dark:text-gray-400">
-                                                            {{ t('descubre-la-magia-de-mexico') }}
-                                                        </span>
-                                                    </div>
-                                                </button>
-                                                <button type="button" class="w-full group/item flex items-center gap-4 px-5 py-2
-                  rounded-[1.5rem] transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50" 
-                                                    (click)="cargarDestinos(2); showOverlay(); closeDropdown();" [disabled]="true">
-                                                     <div class="w-12 h-12 shrink-0 flex items-center justify-center
-                   rounded-full overflow-hidden">
-                                                        <img class="w-full h-full object-cover"
-                                                            src="images/earth-icon.svg" alt="Internacional" />
-                                                    </div>
-
-                                                    <div class="text-left">
-                                                        <span
-                                                            class="block text-lg font-bold text-gray-800 dark:text-gray-100">
-                                                            {{ t('destinos-internacionales') }}
-                                                        </span>
-                                                        <span class="text-sm text-gray-500 dark:text-gray-400">
-                                                            <!-- {{ t('texto-internacionales') }} -->
-                                                            {{ t('proximamente') }}
-                                                        </span>
-                                                    </div>
-                                                </button>
-                                                <button type="button" class="w-full group/item flex items-center gap-4 px-5 py-2
-                 rounded-[1.5rem] transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50
-                 hover:bg-gray-100 dark:hover:bg-gray-700" [disabled]="true"
-                                                    (click)="cargarDestinos(2); showOverlay(); closeDropdown();">
-                                                     <div class="w-12 h-12 shrink-0 flex items-center justify-center
-                   rounded-full overflow-hidden">
-                                                        <img class="w-full h-full object-cover"
-                                                            src="images/cruceros.svg" alt="Internacional" />
-                                                    </div>
-
-                                                    <div class="text-left">
-                                                        <span
-                                                            class="block text-lg font-bold text-gray-800 dark:text-gray-100">
-                                                            {{ t('circuitos-cruceros') }}
-                                                        </span>
-                                                        <span class="text-sm text-gray-500 dark:text-gray-400">
-                                                            {{ t('proximamente') }}
-                                                        </span>
-                                                    </div>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div
-                                    class="absolute bottom-5 transform flex flex-col gap-4 z-20 text-3xl text-[#f7be07]">
-                                    <strong>{{currentText}}</strong>
-                                </div>
-                            </div>
-                        </ng-container>
-
-                        <!-- <ng-container fuseCardBack>
-                            <div class="relative w-full h-full rounded-3xl shadow-lg
-                bg-[#0B0B2B] flex flex-col px-8 pt-10 pb-6 text-white z-[1000]">
-                            </div>
-                        </ng-container> -->
-
-                    </fuse-card>
-                    @if(overlayAnimatedOnce){
-
-                    <div class="absolute max-w-xl w-full md:w-[600px] h-[70vh] sm:h-[80vh] md:h-[70vh] px-3 sm:px-0"
-                        [ngClass]="[
-        heroCard?.face === 'back'
-          ? 'opacity-100 z-[50] pointer-events-auto'
-          : 'opacity-0 z-[-1] pointer-events-none',
-    
-        overlayAnimatedOnce
-          ? 'transition-opacity duration-1000'
-          : ''
-      ]">
-                        <div class="bg-white rounded-2xl shadow-xlw-full h-full flex flex-col">
-
-                            <div
-                                class="bg-gradient-to-b from-[#147052] via-[#2f8a6d] to-white rounded-t-2xl px-8 pt-6 pb-8">
-                                <div class="flex items-center justify-between">
-                                    <button type="button" mat-icon-button
-                                        class="rounded-full hover:bg-white/60 transition" (click)="hideOverlay()">
-                                        <mat-icon class="text-white">arrow_back</mat-icon>
-                                    </button>
-
-                                    <h2 class="flex-1 text-center text-4xl font-bold text-[#F8FAF7]">
-                                        {{ tipoDestino === 1 ? t('selecciona-destino') : t('explora-continente') }}
-                                    </h2>
-
-                                </div>
-
-                                <p class="mt-3 text-center text-white text-md font-sans drop-shadow-lg">
-                                    {{ tipoDestino === 1 ? t('texto-nacionales') : t('texto-internacionales') }}
-                                </p>
-                            </div>
-
-                            <form [formGroup]="filterForm">
-                                <div class="my-2 flex justify-center">
-                                    <div class="relative w-[60%]">
-
-                                        <div
-                                            class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor"
-                                                stroke-width="2" viewBox="0 0 24 24">
-                                                <path
-                                                    d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
-                                                    stroke-linecap="round" stroke-linejoin="round">
-                                                </path>
-                                            </svg>
-                                        </div>
-
-                                        <input formControlName="busqueda" class="w-full pl-11 pr-4 py-3 rounded-full border
-             focus:ring-2 focus:ring-brand-green/20 focus:outline-none
-             placeholder-gray-400 text-gray-800 text-sm shadow-sm
-             transition-shadow border-[#004d2c]" [placeholder]="t('buscar-destinos')" type="text" />
-                                    </div>
-                                </div>
-                            </form>
-
-                            <div class="destinos-scrollbar flex-1 min-h-0 overflow-y-auto cdkScrollable px-4">
-                                <a *ngFor="let item of destinosFiltrados"
-                                    class="group flex items-center justify-between border-b hover:bg-gray-50  transition-colors py-6 border-[#f0f0f0]"
-                                    (click)="cargaInfo(item)">
-                                    <div class="flex items-center gap-4">
-                                        @if(tipoDestino === 1){
-                                        <img [alt]="item.nombre"
-                                            class="w-16 h-16 rounded-2xl object-cover group-hover:scale-105 transition-transform duration-300"
-                                            [src]="item.imagen_destino" />
-                                        }
-                                        <span
-                                            class="font-bold group-hover:text-brand-green transition-colors text-xl text-[#1a1a1a]">
-                                            {{ item.nombre }}</span>
-                                    </div>
-                                    <div
-                                        class="flex items-center gap-1 text-[#006400] text-sm font-medium shrink-0 leading-none mr-2">
-                                        <span class="leading-none">{{ t('explorar') }}</span>
-                                        <svg class="w-4 h-4 block" fill="none" stroke="currentColor" stroke-width="2"
-                                            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M4.5 19.5 19.5 4.5m0 0H8.25m11.25 0v11.25" stroke-linecap="round"
-                                                stroke-linejoin="round"></path>
-                                        </svg>
-                                    </div>
-                                </a>
-                                <div *ngIf="destinosFiltrados.length === 0 "
-                                    class="mt-12 flex flex-col items-center justify-center text-center animate-fadeIn">
-
-                                    <div class="flex flex-col items-center justify-center bg-red-100/20 border border-red-400/40
-              rounded-2xl p-6 max-w-md shadow-lg backdrop-blur-sm">
-
-                                        <div
-                                            class="w-16 h-16 flex items-center justify-center rounded-full bg-red-500/20 mb-4">
-                                            <mat-icon class="text-red-500 text-4xl">travel_explore</mat-icon>
-                                        </div>
-
-                                        <h3 class="text-xl font-semibold text-red-500 mb-2">
-                                            {{ t('no-destinos') }}
-                                        </h3>
-
-                                        <p class="text-base text-gray-400">
-                                            {{ t('destinos-no-encontrados') }}
-                                            <br>
-                                            {{ t('intenta-otra-busqueda') }}
-                                        </p>
-
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
+<ng-container *transloco="let t">
+    <main class="destination-page">
+        @if (!overlayAnimatedOnce) {
+        <section class="destination-landing" aria-labelledby="landing-title">
+            <div class="landing-image" [style.background-image]="currentImage ? 'url(' + currentImage + ')' : 'none'">
+                <div class="landing-scrim"></div>
+                <div class="landing-copy">
+                    <span class="landing-kicker">Trotapie</span>
+                    <h1 id="landing-title">Viaja a tu manera</h1>
+                    <p>Encuentra destinos que se parezcan a lo que quieres vivir.</p>
+                    @if (currentText) {
+                    <span class="landing-location">Ahora en {{ currentText }}</span>
                     }
-
                 </div>
             </div>
-        </div>
+
+            <div class="landing-panel">
+                <div class="landing-panel-header">
+                    <span class="section-kicker">Tu próxima escapada</span>
+                    <h2>¿Qué quieres explorar?</h2>
+                    <p>Comienza por el tipo de viaje que tienes en mente.</p>
+                </div>
+
+                <div class="travel-options" role="list" aria-label="Tipos de viaje">
+                    <button type="button" class="travel-option travel-option-active" (click)="cargarDestinos(1); showOverlay()"
+                        role="listitem">
+                        <span class="option-icon option-icon-map">
+                            <img src="images/flags/MX.svg" alt="" aria-hidden="true" />
+                        </span>
+                        <span class="option-copy">
+                            <strong>{{ t('destinos-nacionales') }}</strong>
+                            <small>Descubre la magia de México</small>
+                        </span>
+                        <mat-icon class="option-arrow" aria-hidden="true">arrow_forward</mat-icon>
+                    </button>
+
+                    <button type="button" class="travel-option travel-option-disabled" disabled role="listitem">
+                        <span class="option-icon option-icon-globe">
+                            <img src="images/earth-icon.svg" alt="" aria-hidden="true" />
+                        </span>
+                        <span class="option-copy">
+                            <strong>{{ t('destinos-internacionales') }}</strong>
+                            <small>{{ t('proximamente') }}</small>
+                        </span>
+                        <mat-icon class="option-arrow" aria-hidden="true">lock</mat-icon>
+                    </button>
+
+                    <button type="button" class="travel-option travel-option-disabled" disabled role="listitem">
+                        <span class="option-icon option-icon-sun">
+                            <img src="images/cruceros.svg" alt="" aria-hidden="true" />
+                        </span>
+                        <span class="option-copy">
+                            <strong>{{ t('circuitos-cruceros') }}</strong>
+                            <small>{{ t('proximamente') }}</small>
+                        </span>
+                        <mat-icon class="option-arrow" aria-hidden="true">lock</mat-icon>
+                    </button>
+                </div>
+            </div>
+        </section>
+        }
+
+        @if (overlayAnimatedOnce) {
+        <section class="catalog-page" aria-labelledby="catalog-title">
+            <header class="catalog-header">
+                <button type="button" class="back-button" (click)="hideOverlay()" aria-label="Volver a tipos de viaje">
+                    <mat-icon aria-hidden="true">arrow_back</mat-icon>
+                    <span>Tipos de viaje</span>
+                </button>
+
+                <div class="catalog-heading">
+                    <span class="section-kicker">Destinos nacionales</span>
+                    <h1 id="catalog-title">Explora México</h1>
+                    <p>Elige una experiencia o busca el destino que tienes en mente.</p>
+                </div>
+            </header>
+
+            <div class="catalog-toolbar">
+                <form [formGroup]="filterForm" class="search-form" role="search">
+                    <label for="destination-search" class="sr-only">Buscar destinos</label>
+                    <mat-icon aria-hidden="true">search</mat-icon>
+                    <input id="destination-search" formControlName="busqueda" type="search"
+                        [placeholder]="t('buscar-destinos')" autocomplete="off" />
+                    @if (filterForm.get('busqueda')?.value) {
+                    <button type="button" class="clear-search" (click)="filterForm.get('busqueda')?.setValue('')"
+                        aria-label="Limpiar búsqueda">
+                        <mat-icon aria-hidden="true">close</mat-icon>
+                    </button>
+                    }
+                </form>
+
+                <div class="category-block" aria-labelledby="category-title">
+                    <div class="category-heading">
+                        <span id="category-title">Explora por experiencia</span>
+                        <span class="result-count">{{ destinosFiltrados.length }} destinos</span>
+                    </div>
+                    <div class="category-list" role="tablist" aria-label="Filtrar por tipo de experiencia">
+                        <button type="button" role="tab" [attr.aria-selected]="selectedTipoTuristicoId === null"
+                            [class.category-active]="selectedTipoTuristicoId === null" (click)="filtrarPorTipo(null)">
+                            Todos
+                        </button>
+                        <button *ngFor="let tipo of tiposTuristicos" type="button" role="tab"
+                            [attr.aria-selected]="selectedTipoTuristicoId === tipo.id"
+                            [class.category-active]="selectedTipoTuristicoId === tipo.id"
+                            (click)="filtrarPorTipo(tipo.id)">
+                            {{ tipo.nombre }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            @if (cargando) {
+            <div class="destination-list" tabindex="0" aria-label="Cargando destinos" aria-busy="true">
+                <div *ngFor="let skeleton of [1, 2, 3, 4, 5, 6]" class="destination-skeleton">
+                    <div class="skeleton-image"></div>
+                    <div class="skeleton-line skeleton-line-long"></div>
+                    <div class="skeleton-line skeleton-line-short"></div>
+                </div>
+            </div>
+            } @else if (error) {
+            <div class="catalog-state catalog-error" role="alert">
+                <mat-icon aria-hidden="true">cloud_off</mat-icon>
+                <h2>No pudimos cargar los destinos</h2>
+                <p>Revisa tu conexión e inténtalo de nuevo.</p>
+                <button type="button" class="state-button" (click)="cargarDestinos(tipoDestino)">Intentar de nuevo</button>
+            </div>
+            } @else if (destinosFiltrados.length === 0) {
+            <div class="catalog-state" role="status">
+                <mat-icon aria-hidden="true">travel_explore</mat-icon>
+                <h2>No encontramos ese destino</h2>
+                <p>Prueba con otra búsqueda o explora todas las experiencias.</p>
+                <button type="button" class="state-button state-button-secondary" (click)="limpiarFiltros()">Ver todos los destinos</button>
+            </div>
+            } @else {
+            <div class="destination-list" tabindex="0" aria-label="Lista de destinos" aria-live="polite">
+                <button *ngFor="let item of destinosFiltrados" type="button" class="destination-row"
+                    (click)="cargaInfo(item)" [attr.aria-label]="'Explorar ' + item.nombre">
+                    <div class="destination-thumbnail" [class.destination-image-empty]="!item.imagen_destino">
+                        @if (item.imagen_destino) {
+                        <img [src]="item.imagen_destino" [alt]="'Vista de ' + item.nombre" loading="lazy" />
+                        } @else {
+                        <mat-icon aria-hidden="true">landscape</mat-icon>
+                        }
+                    </div>
+                    <div class="destination-row-content">
+                        <div>
+                            <h2>{{ item.nombre }}</h2>
+                            <p>{{ item.division_area_nombre || 'México' }}</p>
+                        </div>
+                        @if (item.tipo_turistico_nombre) {
+                        <span class="destination-type">{{ item.tipo_turistico_nombre }}</span>
+                        }
+                    </div>
+                    <span class="destination-link">Ver destino <mat-icon aria-hidden="true">arrow_forward</mat-icon></span>
+                </button>
+            </div>
+            }
+        </section>
+        }
 
         <app-footer />
-    </ng-container>
-</div>
+    </main>
+</ng-container>
