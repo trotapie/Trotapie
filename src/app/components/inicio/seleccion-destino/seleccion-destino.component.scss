@@ -1,4 +1,6 @@
 .destination-page {
+  display: flex;
+  flex-direction: column;
   width: 100%;
   min-height: 100dvh;
   background: #f4f7f5;
@@ -7,6 +9,7 @@
 }
 
 .destination-landing {
+  flex: 1 0 auto;
   width: 100%;
   min-height: 760px;
   display: grid;
@@ -200,11 +203,19 @@
 .option-arrow { color: #227653; }
 
 .catalog-page {
+  flex: 1 0 auto;
   width: 100%;
   max-width: 1120px;
   min-height: calc(100dvh - 5rem);
   margin: 0 auto;
   padding: clamp(1.25rem, 4vw, 4.5rem) clamp(1rem, 4vw, 3.5rem) 5rem;
+}
+
+.destination-page > app-footer {
+  display: block;
+  flex: 0 0 auto;
+  width: 100%;
+  margin-top: auto;
 }
 
 .catalog-header {
