@@ -2,10 +2,9 @@ import { AfterViewInit, Component, ElementRef, inject, OnInit, ViewChild, ViewEn
 import { FormBuilder, FormControl, FormGroup, FormsModule } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import { Router } from '@angular/router';
-import { FuseCardComponent } from '@fuse/components/card';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { SupabaseService } from 'app/core/supabase.service';
-import { DestinosService } from 'app/core/destinos.service';
+import { DestinosService, TipoTuristicoCatalogo } from 'app/core/destinos.service';
 import { MaterialModule } from 'app/shared/material.module';
 import { startWith } from 'rxjs';
 import { MatSelect, MatSelectChange } from '@angular/material/select';
@@ -19,6 +18,7 @@ import { IImagenesFondo } from './imagenes-fondo.interface';
   selector: 'app-seleccion-destino',
   imports: [MaterialModule, TranslocoModule, FormsModule, FooterComponent],
   templateUrl: './seleccion-destino.component.html',
+  styleUrl: './seleccion-destino.component.scss',
   encapsulation: ViewEncapsulation.None,
   standalone: true
 })
@@ -86,10 +86,6 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
   destinoFiltroCtrl = new FormControl(''); // solo para el texto del autocomplete
   @ViewChild('selectDestino') selectDestinoInternacionales!: MatSelect;
   overlayAnimatedOnce = false;
-  @ViewChild('heroCard', { static: false })
-  heroCard!: FuseCardComponent;
-
-
   avisoUrl = '';
   filtroDestino: string = '';
   verTodos = false;
@@ -100,6 +96,8 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
   filterForm: FormGroup;
 
   destinosFiltrados: any[] = [];
+  tiposTuristicos: TipoTuristicoCatalogo[] = [];
+  selectedTipoTuristicoId: number | null = null;
   constructor() {
   }
 
@@ -180,9 +178,14 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
   }
 
   async obtenerSoloDestinos() {
+    this.cargando = true;
+    this.error = '';
     try {
       const tipo = this.tipoDestino === 1 ? 'NACIONAL' : 'INTERNACIONAL';
-      const publicables = await this.destinosService.obtenerDestinosCatalogoPublicables(tipo);
+      const [publicables, tipos] = await Promise.all([
+        this.destinosService.obtenerDestinosCatalogoPublicables(tipo),
+        this.destinosService.obtenerTiposTuristicosCatalogo()
+      ]);
 
       // Durante la vinculación manual conservamos el selector vigente como fallback.
       this.destinos = (publicables as any[])
@@ -190,9 +193,18 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
         .sort((a, b) => (a.prioridad - b.prioridad) || a.nombre.localeCompare(b.nombre)) as Destinos[];
 
       this.agrupadosDestinos = [];
-      this.destinosFiltrados = this.destinos;
+      const tiposDisponibles = new Set(
+        this.destinos
+          .map((destino: any) => destino.tipo_turistico_id)
+          .filter((id: number | null | undefined): id is number => Number.isFinite(id))
+      );
+      this.tiposTuristicos = tipos.filter((tipo) => tiposDisponibles.has(tipo.id));
+      this.selectedTipoTuristicoId = null;
+      this.filtrarDestinos(this.filterForm?.get('busqueda')?.value ?? '');
     } catch (error: any) {
       this.error = error?.message ?? 'No se pudieron cargar los destinos.';
+    } finally {
+      this.cargando = false;
     }
   }
 
@@ -237,21 +249,11 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
   }
 
   showOverlay(): void {
-    this.heroCard.face = 'back';
-
-    if (!this.overlayAnimatedOnce) {
-      setTimeout(() => {
-        this.overlayAnimatedOnce = true;
-      }, 350); // ajusta al tiempo del flip
-    }
+    this.overlayAnimatedOnce = true;
   }
 
   hideOverlay(): void {
-    this.heroCard.face = 'front';
     this.overlayAnimatedOnce = false;
-    setTimeout(() => {
-      this.dropdownOpen = true;
-    }, 500);
   }
 
   toggleDropdown(ev: Event) {
@@ -387,7 +389,9 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
   // Tu filtro final
   // ===================
   filtrarDestinos(value?: string) {
-    const lista = this.destinos;
+    const lista = this.selectedTipoTuristicoId === null
+      ? this.destinos
+      : this.destinos.filter((destino: any) => destino.tipo_turistico_id === this.selectedTipoTuristicoId);
 
     const raw = value ?? '';
     const term = this.normalize(raw);
@@ -408,5 +412,15 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
       .filter(x => x.s > 0)
       .sort((a, b) => (b.s - a.s) || ((a.d?.orden ?? 9999) - (b.d?.orden ?? 9999)))
       .map(x => x.d);
+  }
+
+  filtrarPorTipo(tipoId: number | null): void {
+    this.selectedTipoTuristicoId = tipoId;
+    this.filtrarDestinos(this.filterForm?.get('busqueda')?.value ?? '');
+  }
+
+  limpiarFiltros(): void {
+    this.selectedTipoTuristicoId = null;
+    this.filterForm.get('busqueda')?.setValue('');
   }
 }
