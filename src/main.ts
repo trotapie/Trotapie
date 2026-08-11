@@ -16,6 +16,7 @@ import { bootstrapApplication } from '@angular/platform-browser';
 import { AppComponent } from 'app/app.component';
 import { appConfig } from 'app/app.config';
 import { injectSpeedInsights } from '@vercel/speed-insights';
+import { inject } from '@vercel/analytics';
 
 const unlockAppScroll = (): void => {
   if (typeof document === 'undefined') {
@@ -59,6 +60,7 @@ const releaseSkeleton = wireAppSkeleton();
 
 if (typeof window !== 'undefined') {
   injectSpeedInsights();
+  inject();
 }
 
 bootstrapApplication(AppComponent, appConfig)
