@@ -71,6 +71,16 @@
                         {{ textoBotonFiltrosAtracciones }}
                     </button>
                     }
+
+                    @if (esCatalogoCodigosPais) {
+                    <button mat-raised-button color="accent" class="text-white" type="button"
+                        (click)="toggleFiltrosCodigosPais()">
+                        <mat-icon class="mr-2 icon-size-5 text-white">
+                            {{ mostrarFiltrosCodigosPais ? 'filter_alt_off' : 'filter_alt' }}
+                        </mat-icon>
+                        {{ textoBotonFiltrosCodigosPais }}
+                    </button>
+                    }
                 </div>
             </div>
         </div>
@@ -158,6 +168,31 @@
                 <div class="flex items-end">
                     <button mat-stroked-button type="button" class="w-full" (click)="limpiarFiltrosAtracciones()"
                         [disabled]="!hayFiltrosAtracciones">
+                        Limpiar filtros
+                    </button>
+                </div>
+            </div>
+        </div>
+        }
+
+        @if (esCatalogoCodigosPais && mostrarFiltrosCodigosPais) {
+        <div class="mb-4 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                <app-tp-input class="w-full" label="Filtrar ID" [value]="filtrosCodigosPais.id"
+                    (valueChange)="filtrosCodigosPais.id = $event; onFiltrosCodigosPaisChange()"></app-tp-input>
+                <app-tp-input class="w-full" label="Filtrar país" [value]="filtrosCodigosPais.pais"
+                    (valueChange)="filtrosCodigosPais.pais = $event; onFiltrosCodigosPaisChange()"></app-tp-input>
+                <app-tp-input class="w-full" label="Filtrar prefijo" inputMode="numeric" [value]="filtrosCodigosPais.prefijo"
+                    (valueChange)="filtrosCodigosPais.prefijo = $event; onFiltrosCodigosPaisChange()"></app-tp-input>
+                <app-tp-input class="w-full" label="Filtrar orden" inputMode="numeric" [value]="filtrosCodigosPais.orden"
+                    (valueChange)="filtrosCodigosPais.orden = $event; onFiltrosCodigosPaisChange()"></app-tp-input>
+                <app-tp-select-search class="w-full" label="Filtrar estado" placeholder="Todos"
+                    [options]="opcionesFiltroEstado" [ngModel]="filtrosCodigosPais.activo || null"
+                    [ngModelOptions]="{ standalone: true }"
+                    (selectionChange)="actualizarFiltroEstadoCodigosPais($event)"></app-tp-select-search>
+                <div class="flex items-end xl:col-span-5">
+                    <button mat-stroked-button type="button" (click)="limpiarFiltrosCodigosPais()"
+                        [disabled]="!hayFiltrosCodigosPais">
                         Limpiar filtros
                     </button>
                 </div>
@@ -325,6 +360,8 @@
                 No hay tipos de imagen que coincidan con los filtros.
                 } @else if (esCatalogoAtracciones && items.length > 0) {
                 No hay atracciones que coincidan con los filtros.
+                } @else if (esCatalogoCodigosPais && items.length > 0) {
+                No hay códigos de país que coincidan con los filtros.
                 } @else {
                 No hay registros en este catalogo.
                 }
@@ -418,6 +455,30 @@
             <app-custom-switch [checked]="!!editingDraft['estatus']"
                 [label]="editingDraft['estatus'] ? 'Activo' : 'Inactivo'"
                 (change)="actualizarBooleanDraft('estatus', $event)"></app-custom-switch>
+            }
+
+            @if (esCatalogoMesesDisponibles) {
+            <app-tp-input
+                class="w-full"
+                label="Meses"
+                type="number"
+                inputMode="numeric"
+                [min]="1"
+                [step]="1"
+                [value]="editingDraft['meses'] ?? ''"
+                (valueChange)="actualizarTextoDraft('meses', $event)">
+            </app-tp-input>
+            <app-custom-switch class="mt-4 block" [checked]="!!editingDraft['activo']"
+                [label]="editingDraft['activo'] ? 'Activo' : 'Inactivo'"
+                (change)="actualizarBooleanDraft('activo', $event)"></app-custom-switch>
+            }
+
+            @if (esCatalogoCodigosPais) {
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <app-tp-input label="País" [value]="editingDraft['pais'] ?? ''" (valueChange)="actualizarTextoDraft('pais', $event)"></app-tp-input>
+                <app-tp-input label="Prefijo" type="tel" inputMode="numeric" [value]="editingDraft['prefijo'] ?? ''" (valueChange)="actualizarTextoDraft('prefijo', $event)"></app-tp-input>
+            </div>
+            <app-custom-switch class="mt-4 block" [checked]="!!editingDraft['activo']" [label]="editingDraft['activo'] ? 'Activo' : 'Inactivo'" (change)="actualizarBooleanDraft('activo', $event)"></app-custom-switch>
             }
 
             @if (esCatalogoOrigenReservacion) {
@@ -995,7 +1056,7 @@
                         (input)="actualizarTextoDraft('nombre', $any($event.target).value)" maxlength="120" />
                 </mat-form-field>
             </div>
-            } @else if (!esCatalogoPoliticas && !esCatalogoTarifas && !esCatalogoTiposHabitacion && !esCatalogoAmenidades && !esCatalogoDescuentos && !esCatalogoTipoImagen && !esCatalogoAtracciones && !esCatalogoConceptos && !esCatalogoTratamientos && !esCatalogoOrigenReservacion && !esCatalogoRolesEmpresa) {
+            } @else if (!esCatalogoPoliticas && !esCatalogoTarifas && !esCatalogoTiposHabitacion && !esCatalogoAmenidades && !esCatalogoDescuentos && !esCatalogoTipoImagen && !esCatalogoAtracciones && !esCatalogoConceptos && !esCatalogoTratamientos && !esCatalogoMesesDisponibles && !esCatalogoCodigosPais && !esCatalogoOrigenReservacion && !esCatalogoRolesEmpresa) {
             <mat-form-field appearance="outline" class="w-full">
                 <mat-label>Nombre</mat-label>
                 <input matInput [value]="editingDraft['nombre'] ?? ''"
@@ -1578,6 +1639,30 @@
                 (change)="actualizarBooleanCreacion('estatus', $event)"></app-custom-switch>
             }
 
+            @if (esCatalogoMesesDisponibles) {
+            <app-tp-input
+                class="w-full"
+                label="Meses"
+                type="number"
+                inputMode="numeric"
+                [min]="1"
+                [step]="1"
+                [value]="nuevoRegistroDraft['meses'] ?? ''"
+                (valueChange)="actualizarTextoCreacion('meses', $event)">
+            </app-tp-input>
+            <app-custom-switch class="mt-4 block" [checked]="!!nuevoRegistroDraft['activo']"
+                [label]="nuevoRegistroDraft['activo'] ? 'Activo' : 'Inactivo'"
+                (change)="actualizarBooleanCreacion('activo', $event)"></app-custom-switch>
+            }
+
+            @if (esCatalogoCodigosPais) {
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <app-tp-input label="País" [value]="nuevoRegistroDraft['pais'] ?? ''" (valueChange)="actualizarTextoCreacion('pais', $event)"></app-tp-input>
+                <app-tp-input label="Prefijo" type="tel" inputMode="numeric" [value]="nuevoRegistroDraft['prefijo'] ?? ''" (valueChange)="actualizarTextoCreacion('prefijo', $event)"></app-tp-input>
+            </div>
+            <app-custom-switch class="mt-4 block" [checked]="!!nuevoRegistroDraft['activo']" [label]="nuevoRegistroDraft['activo'] ? 'Activo' : 'Inactivo'" (change)="actualizarBooleanCreacion('activo', $event)"></app-custom-switch>
+            }
+
             @if (esCatalogoOrigenReservacion) {
             <div class="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <mat-form-field appearance="outline" class="w-full">
@@ -1821,7 +1906,7 @@
             </div>
             }
 
-            @if (!esCatalogoPoliticas && !esCatalogoTarifas && !esCatalogoTiposHabitacion && !esCatalogoAmenidades && !esCatalogoDescuentos && !esCatalogoTipoImagen && !esCatalogoAtracciones && !esCatalogoConceptos && !esCatalogoTratamientos && !esCatalogoOrigenReservacion && !esCatalogoRolesEmpresa ) {
+            @if (!esCatalogoPoliticas && !esCatalogoTarifas && !esCatalogoTiposHabitacion && !esCatalogoAmenidades && !esCatalogoDescuentos && !esCatalogoTipoImagen && !esCatalogoAtracciones && !esCatalogoConceptos && !esCatalogoTratamientos && !esCatalogoMesesDisponibles && !esCatalogoCodigosPais && !esCatalogoOrigenReservacion && !esCatalogoRolesEmpresa ) {
             <mat-form-field appearance="outline" class="w-full">
                 <mat-label>Nombre</mat-label>
                 <input matInput [value]="nuevoRegistroDraft['nombre'] ?? ''"

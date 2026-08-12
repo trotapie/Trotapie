@@ -9,7 +9,7 @@
                 <mat-icon svgIcon="heroicons_outline:x-mark" class="w-8 h-8"></mat-icon>
             </button>
 
-            <div *ngIf="!form">
+            <div *ngIf="!form" class="flex h-full flex-col">
                 <div>
                     <div class="flex justify-center mt-[5%] mb-8">
                         <img class="w-56 h-15 " src="assets/images/logos/trotapie.png" alt="Logo Trotapie" />
@@ -35,12 +35,20 @@
                             <mat-icon svgIcon="heroicons_outline:credit-card" class="w-8 h-8 mr-2 text-black">
                             </mat-icon>
                             <span [innerHTML]="t('beneficio-meses')"></span>
+                            <button
+                                type="button"
+                                mat-icon-button
+                                class="ml-1 !h-6 !w-6 !min-h-6 !min-w-6"
+                                [matMenuTriggerFor]="mesesDisponiblesMenu"
+                                aria-label="Ver meses sin intereses disponibles">
+                                <mat-icon svgIcon="heroicons_outline:information-circle" class="!h-5 !w-5 text-gray-500"></mat-icon>
+                            </button>
                         </div>
 
-                        <div class="flex items-center mb-4">
+                        <button type="button" class="flex items-center mb-4 text-left" (click)="abrirForm()" aria-label="Solicitar cotización con atención personalizada">
                             <img class="w-8 h-8 mr-2" src="assets/icons/support.svg" />
                             <span [innerHTML]="t('beneficio-atencion')"></span>
-                        </div>
+                        </button>
 
                         <div class="flex items-center">
                             <img class="w-8 h-8 mr-2" src="assets/icons/tips.svg" />
@@ -49,26 +57,45 @@
                     </div>
                 </div>
 
+                <mat-menu #mesesDisponiblesMenu="matMenu" class="meses-disponibles-menu">
+                    <div class="px-4 py-3" (click)="$event.stopPropagation()">
+                        <p class="text-sm font-semibold text-gray-900">Meses sin intereses</p>
+                        @if (mesesDisponibles.length) {
+                            <div class="mt-2 flex flex-wrap gap-2">
+                                @for (meses of mesesDisponibles; track meses) {
+                                    <span class="rounded-full bg-primary-50 px-2.5 py-1 text-xs font-semibold text-primary-700">
+                                        {{ meses }} {{ meses === 1 ? 'mes' : 'meses' }}
+                                    </span>
+                                }
+                            </div>
+                        } @else {
+                            <p class="mt-1 text-xs text-gray-500">No hay meses sin intereses disponibles.</p>
+                        }
+                    </div>
+                </mat-menu>
+
                 <div class="relative h-[4px] overflow-hidden bg-gray-200/60 my-6">
                     <span class="absolute inset-0 shimmer"></span>
                 </div>
 
-                <div class="absolute left-0 right-0 bottom-4 px-6 space-y-2">
-                    <article class="text-center ">
-                        <strong> {{t('operadores-verificados')}}</strong>
-                    </article>
-                    <button mat-raised-button color="primary"
-                        class="w-full text-white animate-pulse-slow shadow-lg bg-[#F9B44B]  hover:bg-[#e0a13a] [text-shadow:_0_2px_2px_rgba(0,0,0,0.50)]"
-                        (click)="abrirForm()">
-                        <div class="flex items-center justify-center ">
-                            <img class="w-6 h-6 mr-3 [filter:drop-shadow(0_2px_2px_rgba(0,0,0,0.45))]"
-                                src="assets/icons/concerge.svg" />
-                            <b>{{t('cotiza-ahora')}}</b>
-                        </div>
-                    </button>
-                    <article class="text-center ">
-                        <strong> {{t('cotizacion')}}</strong>
-                    </article>
+                <div class="flex flex-1 items-center px-6">
+                    <div class="w-full space-y-2">
+                        <article class="text-center ">
+                            <strong> {{t('operadores-verificados')}}</strong>
+                        </article>
+                        <button mat-raised-button color="primary"
+                            class="w-full text-white animate-pulse-slow shadow-lg bg-[#F9B44B]  hover:bg-[#e0a13a] [text-shadow:_0_2px_2px_rgba(0,0,0,0.50)]"
+                            (click)="abrirForm()">
+                            <div class="flex items-center justify-center ">
+                                <img class="w-6 h-6 mr-3 [filter:drop-shadow(0_2px_2px_rgba(0,0,0,0.45))]"
+                                    src="assets/icons/concerge.svg" />
+                                <b>{{t('cotiza-ahora')}}</b>
+                            </div>
+                        </button>
+                        <article class="text-center ">
+                            <strong> {{t('cotizacion')}}</strong>
+                        </article>
+                    </div>
                 </div>
             </div>
             <div *ngIf="form" class="grid grid-rows-[auto,1fr,auto] h-full overscroll-contain touch-pan-y">

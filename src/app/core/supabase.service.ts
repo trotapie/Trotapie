@@ -3008,6 +3008,35 @@ export class SupabaseService {
     return data ?? [];
   }
 
+  async obtenerMesesDisponibles() {
+    const { data, error } = await this.client
+      .from('meses_disponibles')
+      .select('meses')
+      .eq('activo', true)
+      .order('orden', { ascending: true })
+      .order('meses', { ascending: true });
+
+    if (error) throw error;
+    return (data ?? [])
+      .map((item: any) => Number(item.meses))
+      .filter((meses) => Number.isInteger(meses) && meses > 0);
+  }
+
+  async obtenerCodigosPaisDisponibles() {
+    const { data, error } = await this.client
+      .from('codigos_pais')
+      .select('pais, prefijo')
+      .eq('activo', true)
+      .order('orden', { ascending: true })
+      .order('pais', { ascending: true });
+
+    if (error) throw error;
+    return (data ?? []).map((item: any) => ({
+      value: String(item.prefijo),
+      label: `${String(item.pais)} (+${String(item.prefijo)})`
+    }));
+  }
+
   async upsertCliente(cliente: {
     nombre: string;
     nombre_completo: string;

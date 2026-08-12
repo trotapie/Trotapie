@@ -129,6 +129,20 @@ export class AdminActividadesComponent {
       icono: 'heroicons_outline:identification',
       imagen: 'https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
       link: '/admin/catalogos/tratamientos'
+    },
+    {
+      titulo: 'Meses sin intereses',
+      descripcion: 'Configura los plazos disponibles para las cotizaciones.',
+      icono: 'heroicons_outline:calendar-days',
+      imagen: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=1470&auto=format&fit=crop',
+      link: '/admin/catalogos/meses-disponibles'
+    },
+    {
+      titulo: 'Códigos de país',
+      descripcion: 'Configura códigos telefónicos y su prioridad en cotizaciones.',
+      icono: 'heroicons_outline:phone',
+      imagen: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1470&auto=format&fit=crop',
+      link: '/admin/catalogos/codigos-pais'
     }
   ];
 }

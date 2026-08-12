@@ -182,6 +182,21 @@ export default [
         }
     },
     {
+        path: 'meses-disponibles',
+        component: CatalogoPlaceholderComponent,
+        data: {
+            ...ADMIN_ONLY,
+            catalogoKey: 'meses_disponibles',
+            titulo: 'Meses sin intereses',
+            descripcion: 'Gestiona los plazos que se muestran a los viajeros al cotizar.'
+        }
+    },
+    {
+        path: 'codigos-pais',
+        component: CatalogoPlaceholderComponent,
+        data: { ...ADMIN_ONLY, catalogoKey: 'codigos_pais', titulo: 'Códigos de país', descripcion: 'Gestiona códigos telefónicos y su prioridad en cotizaciones.' }
+    },
+    {
         path: 'atracciones/editar/:id',
         component: AtraccionesDetalleComponent,
         data: ADMIN_ONLY

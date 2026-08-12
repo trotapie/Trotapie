@@ -20,6 +20,8 @@ export type CatalogoAdminKey =
   | 'tipos_habitacion'
   | 'atracciones'
   | 'tratamientos'
+  | 'meses_disponibles'
+  | 'codigos_pais'
   | 'tipos_turisticos';
 
 export interface IPoliticaTarifaAdmin {
@@ -484,6 +486,20 @@ export class CatalogosAdminService {
         if (error) throw error;
         return data ?? [];
       }
+      case 'meses_disponibles': {
+        const { data, error } = await this.client
+          .from('meses_disponibles')
+          .select('id, meses, activo, orden')
+          .order('orden', { ascending: true })
+          .order('meses', { ascending: true });
+        if (error) throw error;
+        return data ?? [];
+      }
+      case 'codigos_pais': {
+        const { data, error } = await this.client.from('codigos_pais').select('id, pais, prefijo, activo, orden').order('orden').order('pais');
+        if (error) throw error;
+        return data ?? [];
+      }
       default:
         return [];
     }
@@ -514,6 +530,8 @@ export class CatalogosAdminService {
       tipos_habitacion: null,
       atracciones: 'catalogo_atracciones',
       tratamientos: null,
+      meses_disponibles: 'meses_disponibles',
+      codigos_pais: 'codigos_pais',
       tipos_turisticos: 'catalogo_tipos_turisticos'
     };
 
@@ -603,6 +621,31 @@ export class CatalogosAdminService {
           })
           .select('id, nombre, abreviacion, estatus')
           .single();
+        if (error) throw error;
+        return data;
+      }
+      case 'meses_disponibles': {
+        const { data: ultimoRegistro, error: ultimoError } = await this.client
+          .from('meses_disponibles')
+          .select('orden')
+          .order('orden', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (ultimoError) throw ultimoError;
+
+        const orden = Number(ultimoRegistro?.orden ?? 0) + 1;
+        const { data, error } = await this.client
+          .from('meses_disponibles')
+          .insert({ meses: payload.meses, activo: payload.activo ?? true, orden })
+          .select('id, meses, activo, orden')
+          .single();
+        if (error) throw error;
+        return data;
+      }
+      case 'codigos_pais': {
+        const { data: ultimo, error: ultimoError } = await this.client.from('codigos_pais').select('orden').order('orden', { ascending: false }).limit(1).maybeSingle();
+        if (ultimoError) throw ultimoError;
+        const { data, error } = await this.client.from('codigos_pais').insert({ pais: payload.pais, prefijo: payload.prefijo, activo: payload.activo ?? true, orden: Number(ultimo?.orden ?? 0) + 1 }).select('id, pais, prefijo, activo, orden').single();
         if (error) throw error;
         return data;
       }
@@ -961,6 +1004,19 @@ export class CatalogosAdminService {
         if (error) throw error;
         return { deleted: 1 };
       }
+      case 'meses_disponibles': {
+        const { error } = await this.client
+          .from('meses_disponibles')
+          .delete()
+          .eq('id', id);
+        if (error) throw error;
+        return { deleted: 1 };
+      }
+      case 'codigos_pais': {
+        const { error } = await this.client.from('codigos_pais').delete().eq('id', id);
+        if (error) throw error;
+        return { deleted: 1 };
+      }
       case 'origen_reservacion': {
         const { error } = await this.client
           .from('origen_reservacion')
@@ -1064,6 +1120,21 @@ export class CatalogosAdminService {
           .eq('id', id)
           .select('id, nombre, abreviacion, estatus')
           .maybeSingle();
+        if (error) throw error;
+        return data;
+      }
+      case 'meses_disponibles': {
+        const { data, error } = await this.client
+          .from('meses_disponibles')
+          .update({ meses: payload.meses, activo: payload.activo })
+          .eq('id', id)
+          .select('id, meses, activo, orden')
+          .maybeSingle();
+        if (error) throw error;
+        return data;
+      }
+      case 'codigos_pais': {
+        const { data, error } = await this.client.from('codigos_pais').update({ pais: payload.pais, prefijo: payload.prefijo, activo: payload.activo }).eq('id', id).select('id, pais, prefijo, activo, orden').maybeSingle();
         if (error) throw error;
         return data;
       }

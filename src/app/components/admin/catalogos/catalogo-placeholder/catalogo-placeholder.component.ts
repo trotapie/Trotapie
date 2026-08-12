@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { A11yModule } from '@angular/cdk/a11y';
+import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Component, HostListener, inject, OnInit } from '@angular/core';
 import { PageEvent } from '@angular/material/paginator';
@@ -12,6 +13,7 @@ import { EstatusComponent } from 'app/shared/estatus/estatus.component';
 import { MaterialModule } from 'app/shared/material.module';
 import { CustomSwitchComponent } from 'app/shared/custom-switch/custom-switch.component';
 import { TpInputComponent } from 'app/shared/tp-input/tp-input.component';
+import { TpSelectSearchComponent } from 'app/shared/tp-select-search/tp-select-search.component';
 import { backdropFade, modalScaleFade } from 'app/shared/animations';
 
 interface IPoliticaTraduccionPreview {
@@ -43,7 +45,7 @@ interface CatalogoVistaConfig {
 @Component({
   selector: 'app-catalogo-placeholder',
   standalone: true,
-  imports: [CommonModule, A11yModule, MaterialModule, RouterLink, DragDropModule, EstatusComponent, CustomSwitchComponent, TpInputComponent],
+  imports: [CommonModule, FormsModule, A11yModule, MaterialModule, RouterLink, DragDropModule, EstatusComponent, CustomSwitchComponent, TpInputComponent, TpSelectSearchComponent],
   templateUrl: './catalogo-placeholder.component.html',
   styleUrl: './catalogo-placeholder.component.scss',
   animations: [modalScaleFade, backdropFade],
@@ -95,6 +97,23 @@ export class CatalogoPlaceholderComponent implements OnInit {
       tieneOrden: false,
       editableKeys: ['nombre', 'abreviacion', 'estatus'],
       booleanKeys: ['estatus']
+    },
+    meses_disponibles: {
+      columnas: [
+        { key: 'id', label: 'ID' },
+        { key: 'meses', label: 'Meses' },
+        { key: 'activo', label: 'Activo' },
+        { key: 'orden', label: 'Orden' }
+      ],
+      tieneOrden: true,
+      editableKeys: ['meses', 'activo'],
+      booleanKeys: ['activo']
+    },
+    codigos_pais: {
+      columnas: [{ key: 'id', label: 'ID' }, { key: 'pais', label: 'País' }, { key: 'prefijo', label: 'Prefijo' }, { key: 'activo', label: 'Activo' }, { key: 'orden', label: 'Orden' }],
+      tieneOrden: true,
+      editableKeys: ['pais', 'prefijo', 'activo'],
+      booleanKeys: ['activo']
     },
     descuentos: {
       columnas: [
@@ -283,6 +302,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
   mostrarFiltrosAmenidades = false;
   mostrarFiltrosTipoImagen = false;
   mostrarFiltrosAtracciones = false;
+  mostrarFiltrosCodigosPais = false;
   filtrosAmenidades = {
     id: '',
     descripcion: '',
@@ -304,6 +324,17 @@ export class CatalogoPlaceholderComponent implements OnInit {
     icono: '',
     activo: ''
   };
+  filtrosCodigosPais = {
+    id: '',
+    pais: '',
+    prefijo: '',
+    orden: '',
+    activo: ''
+  };
+  readonly opcionesFiltroEstado = [
+    { value: 'activo', label: 'Activos' },
+    { value: 'inactivo', label: 'Inactivos' }
+  ];
   politicasTarifaSeleccionadas = new Set<number>();
   pageSize = 20;
   pageIndex = 0;
@@ -336,6 +367,11 @@ export class CatalogoPlaceholderComponent implements OnInit {
   get esCatalogoTratamientos(): boolean {
     return this.catalogoKey === 'tratamientos';
   }
+
+  get esCatalogoMesesDisponibles(): boolean {
+    return this.catalogoKey === 'meses_disponibles';
+  }
+  get esCatalogoCodigosPais(): boolean { return this.catalogoKey === 'codigos_pais'; }
 
   get esCatalogoIdiomas(): boolean {
     return this.catalogoKey === 'idiomas';
@@ -384,6 +420,8 @@ export class CatalogoPlaceholderComponent implements OnInit {
       this.catalogoKey === 'actividades' ||
       this.catalogoKey === 'conceptos' ||
        this.catalogoKey === 'tratamientos' ||
+       this.esCatalogoMesesDisponibles ||
+       this.esCatalogoCodigosPais ||
         this.catalogoKey === 'continentes' ||
         this.catalogoKey === 'descuentos' ||
         this.catalogoKey === 'atracciones' ||
@@ -404,7 +442,9 @@ export class CatalogoPlaceholderComponent implements OnInit {
     return (
       this.catalogoKey === 'actividades' ||
       this.catalogoKey === 'conceptos' ||
-      this.catalogoKey === 'tratamientos' ||
+       this.catalogoKey === 'tratamientos' ||
+       this.esCatalogoMesesDisponibles ||
+       this.esCatalogoCodigosPais ||
       this.catalogoKey === 'continentes' ||
        this.catalogoKey === 'descuentos' ||
        this.esCatalogoEstatus ||
@@ -423,7 +463,9 @@ export class CatalogoPlaceholderComponent implements OnInit {
     return (
       this.catalogoKey === 'actividades' ||
       this.catalogoKey === 'conceptos' ||
-      this.catalogoKey === 'tratamientos' ||
+       this.catalogoKey === 'tratamientos' ||
+       this.esCatalogoMesesDisponibles ||
+       this.esCatalogoCodigosPais ||
       this.catalogoKey === 'continentes' ||
        this.catalogoKey === 'descuentos' ||
        this.esCatalogoEstatus ||
@@ -481,6 +523,24 @@ export class CatalogoPlaceholderComponent implements OnInit {
       });
     }
 
+    if (this.esCatalogoCodigosPais) {
+      return this.items.filter((item) => {
+        const filtros = this.filtrosCodigosPais;
+        const coincideActivo =
+          !this.limpiarTexto(filtros.activo) ||
+          (filtros.activo === 'activo' && Boolean(item?.activo)) ||
+          (filtros.activo === 'inactivo' && !Boolean(item?.activo));
+
+        return (
+          this.coincideFiltro(String(item?.id ?? ''), filtros.id) &&
+          this.coincideFiltro(String(item?.pais ?? ''), filtros.pais) &&
+          this.coincideFiltro(String(item?.prefijo ?? ''), filtros.prefijo) &&
+          this.coincideFiltro(String(item?.orden ?? ''), filtros.orden) &&
+          coincideActivo
+        );
+      });
+    }
+
     if (!this.esCatalogoAmenidades) {
       return this.items;
     }
@@ -521,6 +581,14 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
   get textoBotonFiltrosAtracciones(): string {
     return this.mostrarFiltrosAtracciones ? 'Ocultar filtros' : 'Mostrar filtros';
+  }
+
+  get hayFiltrosCodigosPais(): boolean {
+    return Object.values(this.filtrosCodigosPais).some((value) => Boolean(this.limpiarTexto(value)));
+  }
+
+  get textoBotonFiltrosCodigosPais(): string {
+    return this.mostrarFiltrosCodigosPais ? 'Ocultar filtros' : 'Mostrar filtros';
   }
 
   get tieneTraduccionesPoliticaPreview(): boolean {
@@ -604,6 +672,8 @@ export class CatalogoPlaceholderComponent implements OnInit {
     if (this.esCatalogoTratamientos) {
       return 'Nuevo tratamiento';
     }
+    if (this.esCatalogoMesesDisponibles) return 'Nuevo plazo';
+    if (this.esCatalogoCodigosPais) return 'Nuevo código de país';
 
     if (this.esCatalogoOrigenReservacion) {
       return 'Nuevo origen';
@@ -661,6 +731,8 @@ export class CatalogoPlaceholderComponent implements OnInit {
     if (this.esCatalogoTratamientos) {
       return 'Captura nombre y abreviacion para crear el nuevo tratamiento.';
     }
+    if (this.esCatalogoMesesDisponibles) return 'Indica el plazo de meses sin intereses y su estatus.';
+    if (this.esCatalogoCodigosPais) return 'Indica el país, prefijo telefónico y estatus.';
 
     if (this.esCatalogoOrigenReservacion) {
       return 'Captura clave, nombre cotizador y estatus para crear el nuevo origen de reservacion.';
@@ -718,6 +790,8 @@ export class CatalogoPlaceholderComponent implements OnInit {
     if (this.esCatalogoTratamientos) {
       return 'Editar tratamiento';
     }
+    if (this.esCatalogoMesesDisponibles) return 'Editar plazo';
+    if (this.esCatalogoCodigosPais) return 'Editar código de país';
 
     if (this.esCatalogoOrigenReservacion) {
       return 'Editar origen de reservacion';
@@ -775,6 +849,8 @@ export class CatalogoPlaceholderComponent implements OnInit {
     if (this.esCatalogoTratamientos) {
       return 'Actualiza nombre, abreviacion y estatus del tratamiento.';
     }
+    if (this.esCatalogoMesesDisponibles) return 'Actualiza el plazo de meses sin intereses y su estatus.';
+    if (this.esCatalogoCodigosPais) return 'Actualiza el país, prefijo telefónico y estatus.';
 
     if (this.esCatalogoOrigenReservacion) {
       return 'Actualiza la clave, el nombre cotizador y el estatus del origen de reservacion.';
@@ -832,6 +908,8 @@ export class CatalogoPlaceholderComponent implements OnInit {
     if (this.esCatalogoTratamientos) {
       return 'Nuevo tratamiento';
     }
+    if (this.esCatalogoMesesDisponibles) return 'Nuevo plazo';
+    if (this.esCatalogoCodigosPais) return 'Nuevo código';
 
     if (this.esCatalogoOrigenReservacion) {
       return 'Nuevo origen';
@@ -889,6 +967,8 @@ export class CatalogoPlaceholderComponent implements OnInit {
     if (this.esCatalogoTratamientos) {
       return 'Crear tratamiento';
     }
+    if (this.esCatalogoMesesDisponibles) return 'Crear plazo';
+    if (this.esCatalogoCodigosPais) return 'Crear código';
 
     if (this.esCatalogoOrigenReservacion) {
       return 'Crear origen';
@@ -946,6 +1026,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
     if (this.esCatalogoTratamientos) {
       return 'Tratamiento guardado correctamente.';
     }
+    if (this.esCatalogoMesesDisponibles) return 'Plazo guardado correctamente.';
 
     if (this.esCatalogoOrigenReservacion) {
       return 'Origen de reservacion guardado correctamente.';
@@ -999,6 +1080,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
     if (this.esCatalogoTratamientos) {
       return 'Tratamiento creado correctamente.';
     }
+    if (this.esCatalogoMesesDisponibles) return 'Plazo creado correctamente.';
 
     if (this.esCatalogoOrigenReservacion) {
       return 'Origen de reservacion creado correctamente.';
@@ -1688,6 +1770,31 @@ export class CatalogoPlaceholderComponent implements OnInit {
             ? { ...current, ...payload }
             : current
         );
+      } else if (this.esCatalogoMesesDisponibles) {
+        const meses = Number(this.editingDraft['meses']);
+        const activo = Boolean(this.editingDraft['activo']);
+        if (!Number.isInteger(meses) || meses < 1) {
+          this.errorModalEdicion = 'Captura un número de meses válido.';
+          this.guardandoEdicion = false;
+          return;
+        }
+
+        const payload = { meses, activo };
+        await this.catalogosAdmin.actualizarCatalogoAdmin('meses_disponibles', this.editingId, payload);
+        this.items = this.items.map((current) =>
+          Number(current.id) === this.editingId ? { ...current, ...payload } : current
+        );
+      } else if (this.esCatalogoCodigosPais) {
+        const pais = String(this.editingDraft['pais'] ?? '').trim();
+        const prefijo = String(this.editingDraft['prefijo'] ?? '').replace(/\D/g, '');
+        if (!pais || !prefijo) {
+          this.errorModalEdicion = 'País y prefijo son obligatorios.';
+          this.guardandoEdicion = false;
+          return;
+        }
+        const payload = { pais, prefijo, activo: Boolean(this.editingDraft['activo']) };
+        await this.catalogosAdmin.actualizarCatalogoAdmin('codigos_pais', this.editingId, payload);
+        this.items = this.items.map((current) => Number(current.id) === this.editingId ? { ...current, ...payload } : current);
       } else if (this.esCatalogoOrigenReservacion) {
         const clave = String(this.editingDraft['clave'] ?? '').trim();
         const nombreCotizador = String(this.editingDraft['nombre_cotizador'] ?? '').trim();
@@ -2005,6 +2112,14 @@ export class CatalogoPlaceholderComponent implements OnInit {
         abreviacion: '',
         estatus: true
       };
+    } else if (this.esCatalogoMesesDisponibles) {
+      this.nuevoRegistroDraft = {
+        ...this.nuevoRegistroDraft,
+        meses: null,
+        activo: true
+      };
+    } else if (this.esCatalogoCodigosPais) {
+      this.nuevoRegistroDraft = { ...this.nuevoRegistroDraft, pais: '', prefijo: '', activo: true };
     } else if (this.esCatalogoOrigenReservacion) {
       this.nuevoRegistroDraft = {
         ...this.nuevoRegistroDraft,
@@ -2238,6 +2353,25 @@ export class CatalogoPlaceholderComponent implements OnInit {
           abreviacion,
           estatus
         });
+      } else if (this.esCatalogoMesesDisponibles) {
+        const meses = Number(this.nuevoRegistroDraft['meses']);
+        const activo = Boolean(this.nuevoRegistroDraft['activo']);
+        if (!Number.isInteger(meses) || meses < 1) {
+          this.errorModalCreacion = 'Captura un número de meses válido.';
+          this.guardandoCreacion = false;
+          return;
+        }
+
+        await this.catalogosAdmin.crearCatalogoAdmin(this.catalogoKey, { meses, activo });
+      } else if (this.esCatalogoCodigosPais) {
+        const pais = String(this.nuevoRegistroDraft['pais'] ?? '').trim();
+        const prefijo = String(this.nuevoRegistroDraft['prefijo'] ?? '').replace(/\D/g, '');
+        if (!pais || !prefijo) {
+          this.errorModalCreacion = 'País y prefijo son obligatorios.';
+          this.guardandoCreacion = false;
+          return;
+        }
+        await this.catalogosAdmin.crearCatalogoAdmin(this.catalogoKey, { pais, prefijo, activo: Boolean(this.nuevoRegistroDraft['activo']) });
       } else if (this.esCatalogoOrigenReservacion) {
         const clave = String(this.nuevoRegistroDraft['clave'] ?? '').trim();
         const nombreCotizador = String(this.nuevoRegistroDraft['nombre_cotizador'] ?? '').trim();
@@ -2588,6 +2722,17 @@ export class CatalogoPlaceholderComponent implements OnInit {
     this.pageIndex = 0;
   }
 
+  onFiltrosCodigosPaisChange() {
+    if (this.esCatalogoCodigosPais) {
+      this.pageIndex = 0;
+    }
+  }
+
+  actualizarFiltroEstadoCodigosPais(valor: string | number | null) {
+    this.filtrosCodigosPais.activo = String(valor ?? '');
+    this.onFiltrosCodigosPaisChange();
+  }
+
   toggleFiltrosAmenidades() {
     this.mostrarFiltrosAmenidades = !this.mostrarFiltrosAmenidades;
   }
@@ -2598,6 +2743,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
   toggleFiltrosAtracciones() {
     this.mostrarFiltrosAtracciones = !this.mostrarFiltrosAtracciones;
+  }
+
+  toggleFiltrosCodigosPais() {
+    this.mostrarFiltrosCodigosPais = !this.mostrarFiltrosCodigosPais;
   }
 
   limpiarFiltrosAmenidades() {
@@ -2630,6 +2779,11 @@ export class CatalogoPlaceholderComponent implements OnInit {
       icono: '',
       activo: ''
     };
+    this.pageIndex = 0;
+  }
+
+  limpiarFiltrosCodigosPais() {
+    this.filtrosCodigosPais = { id: '', pais: '', prefijo: '', orden: '', activo: '' };
     this.pageIndex = 0;
   }
 
@@ -2907,12 +3061,17 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   private coincideFiltro(valor: string, filtro: string): boolean {
-    const normalizadoFiltro = this.limpiarTexto(filtro).toLowerCase();
+    const normalizar = (texto: string) =>
+      this.limpiarTexto(texto)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
+    const normalizadoFiltro = normalizar(filtro);
     if (!normalizadoFiltro) {
       return true;
     }
 
-    return this.limpiarTexto(valor).toLowerCase().includes(normalizadoFiltro);
+    return normalizar(valor).includes(normalizadoFiltro);
   }
 
   irEditarAtracciones(item: any) {

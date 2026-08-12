@@ -44,16 +44,17 @@ export class BotCotizadorComponent implements OnInit {
   otroId: number;
   asesores: IAsesores[] = [];
   tratamientos: TratamientoCliente[] = [];
+  mesesDisponibles: number[] = [];
 
+  codigosPaisOpciones: TpSelectSearchOption[] = [];
+  /*
   readonly codigosPaisOpciones: TpSelectSearchOption[] = [
-    { value: '54', label: 'Argentina (+54)' },
     { value: '61', label: 'Australia (+61)' },
     { value: '43', label: 'Austria (+43)' },
     { value: '32', label: 'Belgium (+32)' },
     { value: '591', label: 'Bolivia (+591)' },
     { value: '55', label: 'Brazil (+55)' },
     { value: '359', label: 'Bulgaria (+359)' },
-    { value: '1', label: 'Canada (+1)' },
     { value: '56', label: 'Chile (+56)' },
     { value: '86', label: 'China (+86)' },
     { value: '57', label: 'Colombia (+57)' },
@@ -68,7 +69,6 @@ export class BotCotizadorComponent implements OnInit {
     { value: '91', label: 'India (+91)' },
     { value: '39', label: 'Italy (+39)' },
     { value: '81', label: 'Japan (+81)' },
-    { value: '52', label: 'México (+52)' },
     { value: '31', label: 'Netherlands (+31)' },
     { value: '505', label: 'Nicaragua (+505)' },
     { value: '507', label: 'Panama (+507)' },
@@ -84,7 +84,7 @@ export class BotCotizadorComponent implements OnInit {
     { value: '44', label: 'United Kingdom (+44)' },
     { value: '598', label: 'Uruguay (+598)' },
     { value: '58', label: 'Venezuela (+58)' }
-  ];
+  ]; */
 
   readonly MAX_ROOMS = 5;
   readonly MAX_PER_ROOM = 6;
@@ -110,6 +110,8 @@ export class BotCotizadorComponent implements OnInit {
   ngOnInit(): void {
     this.obtenerEmpleados();
     this.obtenerTratamientos();
+    this.obtenerMesesDisponibles();
+    this.obtenerCodigosPaisDisponibles();
     this.formulario();
   }
 
@@ -162,6 +164,22 @@ export class BotCotizadorComponent implements OnInit {
       this.hidratarPrefillCliente();
     } catch (error: any) {
       this.error = error?.message ?? 'No se pudieron cargar los tratamientos.';
+    }
+  }
+
+  async obtenerMesesDisponibles() {
+    try {
+      this.mesesDisponibles = await this.supabase.obtenerMesesDisponibles();
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudieron cargar los meses sin intereses.';
+    }
+  }
+
+  async obtenerCodigosPaisDisponibles() {
+    try {
+      this.codigosPaisOpciones = await this.supabase.obtenerCodigosPaisDisponibles();
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudieron cargar los códigos de país.';
     }
   }
 
