@@ -45,9 +45,9 @@ export class TpMultiselectComponent implements ControlValueAccessor {
   private onTouched: () => void = () => undefined;
 
   get opcionesFiltradas(): TpMultiselectOption[] {
-    const filtro = this.busqueda.trim().toLocaleLowerCase();
+    const filtro = this.normalizarTexto(this.busqueda);
     if (!filtro) return this.options;
-    return this.options.filter((option) => option.label.toLocaleLowerCase().includes(filtro));
+    return this.options.filter((option) => this.normalizarTexto(option.label).includes(filtro));
   }
 
   get opcionesDisponibles(): TpMultiselectOption[] {
@@ -141,5 +141,13 @@ export class TpMultiselectComponent implements ControlValueAccessor {
 
   private sameValue(left: string | number, right: string | number): boolean {
     return String(left) === String(right);
+  }
+
+  private normalizarTexto(value: string): string {
+    return value
+      .trim()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLocaleLowerCase();
   }
 }

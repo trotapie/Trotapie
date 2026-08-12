@@ -163,6 +163,10 @@ export class ActividadesService {
       typeof value === 'object' && value !== null
         ? String(value.nombre ?? value.name ?? value.fileName ?? value.filename ?? value.title ?? '').trim() || null
         : null;
+    const thumbnailUrl =
+      typeof value === 'object' && value !== null
+        ? String(value.thumbnailUrl ?? value.thumbnail_url ?? value.thumbnail ?? '').trim() || null
+        : null;
     const extension =
       typeof value === 'object' && value !== null
         ? String(value.extension ?? value.ext ?? '').trim().toLowerCase() || this.derivarExtensionImagen(nombre, publicImageUrl)
@@ -182,6 +186,7 @@ export class ActividadesService {
 
     return {
       publicImageUrl,
+      thumbnailUrl,
       nombre,
       extension,
       mimeType,
@@ -277,37 +282,34 @@ export class ActividadesService {
       });
     }
 
-    if (folders.length) {
-      return folders;
-    }
-
     const objetoAgrupado = [result?.data?.folders, result?.data?.carpetas, result?.folders, result?.carpetas]
       .find((item) => item && typeof item === 'object' && !Array.isArray(item));
 
-    if (objetoAgrupado && typeof objetoAgrupado === 'object') {
+    if (!folders.length && objetoAgrupado && typeof objetoAgrupado === 'object') {
       Object.entries(objetoAgrupado).forEach(([key, value], index) => {
         pushFolder(key, value, `${key}-${index}`);
       });
     }
 
+    const imagenesRaiz = this.recolectarImagenesDrive(
+      result?.data?.imagenes
+      ?? result?.data?.images
+      ?? result?.data?.urls
+      ?? result?.imagenes
+      ?? result?.images
+      ?? result?.urls
+    );
+
+    if (imagenesRaiz.length) {
+      folders.push({ id: 'sin-carpeta', nombre: '', imagenes: imagenesRaiz });
+    }
+
     if (folders.length) {
       return folders;
     }
 
-    const imagenesPlanas = this.recolectarImagenesDrive(
-      result?.data?.imagenes
-      ?? result?.data?.images
-      ?? result?.data?.urls
-      ?? result?.data
-      ?? result?.imagenes
-      ?? result?.images
-      ?? result?.urls
-      ?? result
-    );
-
-    return imagenesPlanas.length
-      ? [{ id: 'sin-carpeta', nombre: '', imagenes: imagenesPlanas }]
-      : [];
+    const imagenesPlanas = this.recolectarImagenesDrive(result?.data ?? result);
+    return imagenesPlanas.length ? [{ id: 'sin-carpeta', nombre: '', imagenes: imagenesPlanas }] : [];
   }
 
   async obtenerImagenesActividadDesdeDrive(folderUrlOrId: string): Promise<IDriveActividadImportFolder[]> {

@@ -18,6 +18,7 @@ export interface IIdiomaPreviewAdmin {
 
 export interface IDriveActividadImportImage {
   publicImageUrl: string;
+  thumbnailUrl?: string | null;
   nombre?: string | null;
   extension?: string | null;
   mimeType?: string | null;

@@ -62,10 +62,11 @@
 
     <app-tp-search-input
       class="catalogo-filtros__buscador"
-      label="Buscar destino"
-      placeholder="Ej. Acapulco de Juárez"
-      searchAriaLabel="Buscar destinos"
-      [(ngModel)]="busqueda"
+       label="Buscar destino"
+       placeholder="Ej. Acapulco de Juárez"
+       searchAriaLabel="Buscar destinos"
+       [searchDelay]="1000"
+       [(ngModel)]="busqueda"
       (search)="buscar()">
     </app-tp-search-input>
 

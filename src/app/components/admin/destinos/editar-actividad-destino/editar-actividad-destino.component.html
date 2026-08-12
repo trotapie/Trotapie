@@ -654,9 +654,9 @@
                   <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4">
                     <div class="flex flex-wrap items-center justify-between gap-3">
                       <div>
-                        <p class="text-sm font-semibold text-gray-900">Carpetas encontradas</p>
-                        <p class="text-sm text-gray-500">
-                          Selecciona cuales quieres cargar. Las carpetas nuevas se prepararan con el mismo nombre.
+                          <p class="text-sm font-semibold text-gray-900">Contenido encontrado</p>
+                          <p class="text-sm text-gray-500">
+                           Elige carpetas completas o imagenes individuales. Las carpetas nuevas se prepararan con el mismo nombre.
                         </p>
                       </div>
 
@@ -670,8 +670,9 @@
                       </div>
                     </div>
 
-                    <div class="drive-import-modal__folders mt-4 grid gap-3 sm:grid-cols-2">
-                      @for (carpeta of carpetasDriveActividad; track trackByDriveFolder($index, carpeta)) {
+                    @if (carpetasDriveActividadConNombre.length) {
+                      <div class="drive-import-modal__folders mt-4 grid gap-3 sm:grid-cols-2">
+                      @for (carpeta of carpetasDriveActividadConNombre; track trackByDriveFolder($index, carpeta)) {
                         <div class="drive-import-modal__folder-card rounded-2xl border border-gray-200 bg-white p-4">
                           <div class="flex items-start gap-3">
                             <input
@@ -731,7 +732,58 @@
                           }
                         </div>
                       }
-                    </div>
+                      </div>
+                    }
+
+                    @if (imagenesRaizDriveActividad; as imagenesRaiz) {
+                      <section class="drive-import-modal__root-images mt-4" aria-labelledby="drive-root-images-title">
+                        <div class="flex items-baseline justify-between gap-3">
+                          <div>
+                            <p id="drive-root-images-title" class="font-semibold text-gray-900">Imagenes de esta carpeta</p>
+                            <p class="text-sm text-gray-500">Selecciona solo las que quieras cargar.</p>
+                          </div>
+                          <span class="text-sm font-medium text-gray-600">
+                            {{ imagenesRaiz.imagenesSeleccionadas.length }} de {{ imagenesRaiz.imagenes.length }}
+                          </span>
+                        </div>
+
+                        <div class="drive-import-modal__image-grid mt-3">
+                          @for (imagen of imagenesRaiz.imagenes; track trackByDriveImage($index, imagen)) {
+                            <label class="drive-import-modal__image-card" [class.drive-import-modal__image-card--selected]="imagenesRaiz.imagenesSeleccionadas.includes(imagen.publicImageUrl)">
+                              <input
+                                type="checkbox"
+                                class="sr-only"
+                                [checked]="imagenesRaiz.imagenesSeleccionadas.includes(imagen.publicImageUrl)"
+                                (change)="actualizarSeleccionImagenRaizDrive(imagen.publicImageUrl, $any($event.target).checked)"
+                              />
+                              <img [src]="imagen.thumbnailUrl || imagen.publicImageUrl" [alt]="imagen.nombre || 'Imagen de Drive'" />
+                              <span class="drive-import-modal__image-check" aria-hidden="true">
+                                <mat-icon>check</mat-icon>
+                              </span>
+                              <span class="drive-import-modal__image-name">{{ imagen.nombre || 'Imagen sin nombre' }}</span>
+                            </label>
+                          }
+                        </div>
+
+                        <div class="mt-4 grid gap-3 sm:grid-cols-2">
+                          <mat-form-field class="w-full">
+                            <mat-label>Usar carpeta existente</mat-label>
+                            <mat-select
+                              [value]="imagenesRaiz.carpetaDestinoId"
+                              (selectionChange)="actualizarCarpetaDestinoDrive(imagenesRaiz.id, $event.value)"
+                            >
+                              @for (destino of carpetasParaSelector; track destino.id) {
+                                <mat-option [value]="destino.id">{{ destino.nombre }}</mat-option>
+                              }
+                            </mat-select>
+                          </mat-form-field>
+                          <mat-form-field class="w-full">
+                            <mat-label>O crea una carpeta nueva</mat-label>
+                            <input matInput [value]="imagenesRaiz.carpetaDestinoNombre" (input)="actualizarNombreCarpetaDrive(imagenesRaiz.id, $any($event.target).value)" placeholder="Ej. Galeria principal" />
+                          </mat-form-field>
+                        </div>
+                      </section>
+                    }
                   </div>
                 }
               </div>

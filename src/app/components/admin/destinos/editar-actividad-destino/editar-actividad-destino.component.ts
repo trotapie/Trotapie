@@ -44,6 +44,7 @@ type DriveActividadFolderDraft = {
   nombre: string;
   imagenes: IDriveActividadImportImage[];
   seleccionado: boolean;
+  imagenesSeleccionadas: string[];
   requiereNombreCarpeta: boolean;
   carpetaDestinoId: number | null;
   carpetaDestinoNombre: string;
@@ -441,14 +442,25 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     return this.carpetasDriveActividad.length > 0;
   }
 
+  get carpetasDriveActividadConNombre(): DriveActividadFolderDraft[] {
+    return this.carpetasDriveActividad.filter((carpeta) => carpeta.nombre);
+  }
+
+  get imagenesRaizDriveActividad(): DriveActividadFolderDraft | null {
+    return this.carpetasDriveActividad.find((carpeta) => !carpeta.nombre) ?? null;
+  }
+
   get totalImagenesDriveActividadSeleccionadas(): number {
     return this.carpetasDriveActividad
-      .filter((carpeta) => carpeta.seleccionado)
-      .reduce((total, carpeta) => total + carpeta.imagenes.length, 0);
+      .reduce((total, carpeta) => total + (carpeta.nombre
+        ? (carpeta.seleccionado ? carpeta.imagenes.length : 0)
+        : carpeta.imagenesSeleccionadas.length), 0);
   }
 
   get todasLasCarpetasDriveSeleccionadas(): boolean {
-    return this.carpetasDriveActividad.length > 0 && this.carpetasDriveActividad.every((carpeta) => carpeta.seleccionado);
+    return this.carpetasDriveActividad.every((carpeta) => carpeta.nombre
+      ? carpeta.seleccionado
+      : carpeta.imagenesSeleccionadas.length === carpeta.imagenes.length);
   }
 
   get indiceIdiomaEspanol(): number {
@@ -1200,6 +1212,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
           nombre: nombreNormalizado,
           imagenes: folder.imagenes,
           seleccionado: true,
+          imagenesSeleccionadas: nombreNormalizado ? [] : folder.imagenes.map((imagen) => imagen.publicImageUrl),
           requiereNombreCarpeta: !nombreNormalizado,
           carpetaDestinoId: carpetaDestino?.id ?? null,
           carpetaDestinoNombre: carpetaDestino?.nombre ?? nombreNormalizado
@@ -1216,8 +1229,26 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   toggleSeleccionTodasCarpetasDrive(seleccionar: boolean): void {
     this.carpetasDriveActividad = this.carpetasDriveActividad.map((carpeta) => ({
       ...carpeta,
-      seleccionado: seleccionar
+      seleccionado: seleccionar,
+      imagenesSeleccionadas: seleccionar ? carpeta.imagenes.map((imagen) => imagen.publicImageUrl) : []
     }));
+  }
+
+  actualizarSeleccionImagenRaizDrive(imageUrl: string, seleccionado: boolean): void {
+    this.carpetasDriveActividad = this.carpetasDriveActividad.map((carpeta) => {
+      if (carpeta.nombre) {
+        return carpeta;
+      }
+
+      const imagenesSeleccionadas = new Set(carpeta.imagenesSeleccionadas);
+      if (seleccionado) {
+        imagenesSeleccionadas.add(imageUrl);
+      } else {
+        imagenesSeleccionadas.delete(imageUrl);
+      }
+
+      return { ...carpeta, imagenesSeleccionadas: [...imagenesSeleccionadas] };
+    });
   }
 
   actualizarCarpetaDestinoDrive(folderId: string, carpetaDestinoId: number | null): void {
@@ -1243,7 +1274,6 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       carpeta.id === folderId
         ? {
             ...carpeta,
-            nombre: nombreNormalizado,
             carpetaDestinoId: null,
             carpetaDestinoNombre: nombreNormalizado
           }
@@ -1255,8 +1285,19 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     return folder.id;
   }
 
+  trackByDriveImage(_: number, image: IDriveActividadImportImage): string {
+    return image.publicImageUrl;
+  }
+
   async cargarImagenesSeleccionadasDesdeDrive(): Promise<void> {
-    const carpetasSeleccionadas = this.carpetasDriveActividad.filter((carpeta) => carpeta.seleccionado && carpeta.imagenes.length);
+    const carpetasSeleccionadas = this.carpetasDriveActividad
+      .map((carpeta) => ({
+        ...carpeta,
+        imagenes: carpeta.nombre
+          ? (carpeta.seleccionado ? carpeta.imagenes : [])
+          : carpeta.imagenes.filter((imagen) => carpeta.imagenesSeleccionadas.includes(imagen.publicImageUrl))
+      }))
+      .filter((carpeta) => carpeta.imagenes.length);
     if (!carpetasSeleccionadas.length) {
       this.mostrarErrorDrive('Selecciona al menos una carpeta de Drive para cargar.');
       return;
@@ -1290,7 +1331,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
         const carpetaNombre = carpetaLocal?.nombre ?? carpeta.carpetaDestinoNombre;
 
         carpeta.imagenes.forEach((imagen) => {
-          const url = this.limpiarTexto(imagen.publicImageUrl);
+          const url = this.limpiarTexto(imagen.thumbnailUrl) ?? this.limpiarTexto(imagen.publicImageUrl);
           const clavesImagen = this.construirClavesIdentidadImagen({
             url,
             nombre: imagen.nombre,

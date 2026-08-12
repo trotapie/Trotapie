@@ -326,13 +326,13 @@
                         @if (imagenesActivas.length > 0) {
                           <div class="flex flex-wrap items-center gap-1.5">
                             @for (img of imagenesActivas.slice(0, 4); track img.id) {
-                              <a [href]="img.imagen_url" target="_blank" rel="noopener noreferrer" class="block">
+                              <span class="block">
                                 <img
                                   [src]="img.imagen_url"
                                   alt="Imagen de actividad"
                                   class="h-10 w-14 rounded-md border border-gray-200 object-cover dark:border-gray-600"
                                 />
-                              </a>
+                              </span>
                             }
                             @if (imagenesActivas.length > 4) {
                               <div class="flex h-10 w-14 items-center justify-center rounded-md border border-gray-200 bg-gray-100 text-sm font-semibold text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300">
@@ -341,13 +341,13 @@
                             }
                           </div>
                         } @else if (fila.control.get('imagen_fondo')?.value) {
-                          <a [href]="fila.control.get('imagen_fondo')?.value" target="_blank" rel="noopener noreferrer" class="block">
+                          <span class="block">
                             <img
                               [src]="fila.control.get('imagen_fondo')?.value"
                               alt="Imagen de actividad"
                               class="h-10 w-14 rounded-md border border-gray-200 object-cover dark:border-gray-600"
                             />
-                          </a>
+                          </span>
                         } @else {
                           <span class="text-sm text-amber-700 dark:text-amber-400">Sin imagen cargada</span>
                         }
