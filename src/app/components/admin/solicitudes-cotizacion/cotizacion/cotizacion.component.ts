@@ -1,4 +1,4 @@
-﻿import { Component, HostListener, inject, OnInit, ViewChild } from '@angular/core';
+﻿import { Component, ElementRef, HostListener, inject, OnInit, ViewChild } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CatalogosAdminService } from 'app/core/catalogos-admin.service';
@@ -148,6 +148,8 @@ export class CotizacionComponent implements OnInit {
 
   informacionCotizacion: ICotizacion
   @ViewChild(ImagenesCarruselComponent) galeriaHotel?: ImagenesCarruselComponent;
+  @ViewChild('hotelImagesMobile') hotelImagesMobile?: ElementRef<HTMLDivElement>;
+  indiceImagenHotelMovil = 0;
   esEdicion: boolean;
   exportandoPdf = false;
   enviarCotizacion: boolean;
@@ -692,6 +694,20 @@ export class CotizacionComponent implements OnInit {
     this.galeriaHotel?.open(indice, evento);
   }
 
+  actualizarIndiceImagenHotelMovil(): void {
+    const carrusel = this.hotelImagesMobile?.nativeElement;
+    if (!carrusel) return;
+
+    this.indiceImagenHotelMovil = Math.round(carrusel.scrollLeft / carrusel.clientWidth);
+  }
+
+  moverImagenHotelMovil(direccion: -1 | 1): void {
+    const carrusel = this.hotelImagesMobile?.nativeElement;
+    if (!carrusel) return;
+
+    carrusel.scrollBy({ left: direccion * carrusel.clientWidth, behavior: 'smooth' });
+  }
+
   private async cargarOrigenesReservacionPublicos(): Promise<void> {
     try {
       const origenes = await this.catalogosAdmin.obtenerCatalogoAdmin('origen_reservacion');
@@ -948,7 +964,7 @@ export class CotizacionComponent implements OnInit {
 
   get enlaceCorreoContacto(): string {
     const asunto = `Consulta sobre cotización ${this.folioCotizacionVisual()}`;
-    return `mailto:reservas@trotapie.com?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(this.mensajeContactoCotizacion)}`;
+    return `mailto:atencionalcliente@trotapie.com?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(this.mensajeContactoCotizacion)}`;
   }
 
   private get mensajeContactoCotizacion(): string {
@@ -1470,7 +1486,7 @@ export class CotizacionComponent implements OnInit {
       pdf.setFillColor(...green);
       pdf.rect(0, pageHeight - footerHeight, pageWidth, footerHeight, 'F');
       drawIcon('mail', pageWidth / 2 - 56, pageHeight - 6.8, [255, 255, 255], 0.85);
-      drawText('reservas@www.trotapie.com', pageWidth / 2 - 28, pageHeight - 3.8, { size: 7, color: [255, 255, 255], align: 'center' });
+      drawText('atencionalcliente@trotapie.com', pageWidth / 2 - 28, pageHeight - 3.8, { size: 7, color: [255, 255, 255], align: 'center' });
       drawIcon('phone', pageWidth / 2 + 13, pageHeight - 7.3, [255, 255, 255], 0.82);
       drawText('+52 618 803 2093', pageWidth / 2 + 34, pageHeight - 3.8, { size: 7, color: [255, 255, 255], align: 'center' });
       pdf.setDrawColor(255, 255, 255);

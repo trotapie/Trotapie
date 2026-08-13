@@ -90,7 +90,9 @@
                                                 }
                                             </button>
 
-                                            <div class="quote-hotel-card__media-mobile" aria-label="Fotos del hotel. Desliza para ver más imágenes.">
+                                            <div #hotelImagesMobile class="quote-hotel-card__media-mobile"
+                                                aria-label="Fotos del hotel. Desliza para ver más imágenes."
+                                                (scroll)="actualizarIndiceImagenHotelMovil()">
                                                 @if (imagenesHotel.length) {
                                                     @for (imagen of imagenesHotel; track imagen) {
                                                     <img
@@ -105,6 +107,18 @@
                                                     [src]="informacionCotizacion.fondo || ''" />
                                                 }
                                             </div>
+                                            @if (imagenesHotel.length > 1) {
+                                            <button type="button" class="quote-hotel-card__mobile-control quote-hotel-card__mobile-control--previous"
+                                                aria-label="Ver imagen anterior" [disabled]="indiceImagenHotelMovil === 0"
+                                                (click)="moverImagenHotelMovil(-1)">
+                                                <mat-icon [svgIcon]="'heroicons_outline:chevron-left'"></mat-icon>
+                                            </button>
+                                            <button type="button" class="quote-hotel-card__mobile-control quote-hotel-card__mobile-control--next"
+                                                aria-label="Ver siguiente imagen" [disabled]="indiceImagenHotelMovil >= imagenesHotel.length - 1"
+                                                (click)="moverImagenHotelMovil(1)">
+                                                <mat-icon [svgIcon]="'heroicons_outline:chevron-right'"></mat-icon>
+                                            </button>
+                                            }
                                         </div>
                                         <app-imagenes-carrusel
                                             [imagenesCargadas]="imagenesHotel.length ? informacionCotizacion.imagenes : (informacionCotizacion.fondo ? [informacionCotizacion.fondo] : [])"
@@ -2562,9 +2576,9 @@
 
                             @if (!esEdicion) {
                             <section class="quote-contact-bar" aria-label="Datos de contacto Trotapie">
-                                <a class="quote-contact-bar__item" [href]="enlaceCorreoContacto" aria-label="Enviar correo a reservas Trotapie">
+                                <a class="quote-contact-bar__item" [href]="enlaceCorreoContacto" aria-label="Enviar correo a atencion al cliente Trotapie">
                                     <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:envelope'"></mat-icon>
-                                    <span>reservas&#64;www.trotapie.com</span>
+                                    <span>atencionalcliente&#64;trotapie.com</span>
                                 </a>
                                 <span class="quote-contact-bar__divider" aria-hidden="true"></span>
                                 <a class="quote-contact-bar__item" [href]="enlaceWhatsappContacto" target="_blank" rel="noopener noreferrer" aria-label="Contactar por WhatsApp a Trotapie">
