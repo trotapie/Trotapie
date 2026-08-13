@@ -450,6 +450,12 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     return this.carpetasDriveActividad.find((carpeta) => !carpeta.nombre) ?? null;
   }
 
+  get todasLasImagenesRaizDriveSeleccionadas(): boolean {
+    const imagenesRaiz = this.imagenesRaizDriveActividad;
+    return !!imagenesRaiz?.imagenes.length
+      && imagenesRaiz.imagenesSeleccionadas.length === imagenesRaiz.imagenes.length;
+  }
+
   get totalImagenesDriveActividadSeleccionadas(): number {
     return this.carpetasDriveActividad
       .reduce((total, carpeta) => total + (carpeta.nombre
@@ -551,7 +557,9 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   }
 
   regresar() {
-    this.router.navigate(['/admin/destinos/configurar-destinos/preview/' + this.destinoId]);
+    this.router.navigate(['/admin/destinos/configurar-destinos/preview/' + this.destinoId], {
+      queryParams: this.route.snapshot.queryParams
+    });
   }
 
   get tieneCambiosSinGuardar(): boolean {
@@ -1249,6 +1257,21 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
 
       return { ...carpeta, imagenesSeleccionadas: [...imagenesSeleccionadas] };
     });
+  }
+
+  toggleSeleccionTodasImagenesRaizDrive(): void {
+    const seleccionar = !this.todasLasImagenesRaizDriveSeleccionadas;
+
+    this.carpetasDriveActividad = this.carpetasDriveActividad.map((carpeta) =>
+      carpeta.nombre
+        ? carpeta
+        : {
+            ...carpeta,
+            imagenesSeleccionadas: seleccionar
+              ? carpeta.imagenes.map((imagen) => imagen.publicImageUrl)
+              : []
+          }
+    );
   }
 
   actualizarCarpetaDestinoDrive(folderId: string, carpetaDestinoId: number | null): void {

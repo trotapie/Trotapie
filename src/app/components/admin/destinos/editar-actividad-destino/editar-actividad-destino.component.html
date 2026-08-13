@@ -737,14 +737,23 @@
 
                     @if (imagenesRaizDriveActividad; as imagenesRaiz) {
                       <section class="drive-import-modal__root-images mt-4" aria-labelledby="drive-root-images-title">
-                        <div class="flex items-baseline justify-between gap-3">
+                        <div class="flex flex-wrap items-center justify-between gap-3">
                           <div>
                             <p id="drive-root-images-title" class="font-semibold text-gray-900">Imagenes de esta carpeta</p>
                             <p class="text-sm text-gray-500">Selecciona solo las que quieras cargar.</p>
                           </div>
-                          <span class="text-sm font-medium text-gray-600">
-                            {{ imagenesRaiz.imagenesSeleccionadas.length }} de {{ imagenesRaiz.imagenes.length }}
-                          </span>
+                          <div class="flex items-center gap-3">
+                            <span class="text-sm font-medium text-gray-600">
+                              {{ imagenesRaiz.imagenesSeleccionadas.length }} de {{ imagenesRaiz.imagenes.length }}
+                            </span>
+                            <button
+                              mat-stroked-button
+                              type="button"
+                              (click)="toggleSeleccionTodasImagenesRaizDrive()"
+                            >
+                              {{ todasLasImagenesRaizDriveSeleccionadas ? 'Quitar seleccion' : 'Seleccionar todas' }}
+                            </button>
+                          </div>
                         </div>
 
                         <div class="drive-import-modal__image-grid mt-3">

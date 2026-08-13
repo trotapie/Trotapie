@@ -519,7 +519,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
       this.destinoId,
       'actividad',
       actividadId
-    ]);
+    ], { queryParams: this.route.snapshot.queryParams });
   }
 
   cerrarModalActividad() {
