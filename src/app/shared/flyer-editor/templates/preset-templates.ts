@@ -101,7 +101,7 @@ function landscapeGranTour(id: number, nombre: string, descripcion: string, cate
         textEl('destinations', 1040, 452, 'CDMX  •  Queretaro  •  San Miguel  •  Guanajuato', { width: 720, fontSize: 15, fill: text, fontWeight: 'bold' }),
 
         rectEl('footer_bar', 0, 960, 1920, 120, { fill: bg2, selectable: false }),
-        textEl('footer_text', 60, 1000, 'www.trotapie.com  |  contacto@www.trotapie.com', { width: 600, fontSize: 16, fill: text, opacity: 0.68 }),
+        textEl('footer_text', 60, 1000, 'www.trotapie.com  |  contacto@trotapie.com', { width: 600, fontSize: 16, fill: text, opacity: 0.68 }),
         textEl('cta', 1400, 1000, 'Cotiza este circuito', { width: 460, fontSize: 16, fill: accent, textAlign: 'right', fontWeight: 'bold' }),
       ],
     },
