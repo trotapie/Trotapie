@@ -948,7 +948,7 @@ export class CotizacionComponent implements OnInit {
 
   get enlaceCorreoContacto(): string {
     const asunto = `Consulta sobre cotización ${this.folioCotizacionVisual()}`;
-    return `mailto:reservas@www.trotapie.com?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(this.mensajeContactoCotizacion)}`;
+    return `mailto:reservas@trotapie.com?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(this.mensajeContactoCotizacion)}`;
   }
 
   private get mensajeContactoCotizacion(): string {

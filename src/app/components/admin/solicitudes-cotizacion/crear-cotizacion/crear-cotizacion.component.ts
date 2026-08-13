@@ -219,7 +219,7 @@ export class CrearCotizacionComponent implements OnInit {
   }
 
   get edadesOpciones(): TpSelectSearchOption[] {
-    return this.ageOptions.map((edad) => ({ value: edad, label: `${edad} anos` }));
+    return this.ageOptions.map((edad) => ({ value: edad, label: `${edad} años` }));
   }
 
   get asesorActualOpciones(): TpSelectSearchOption[] {
@@ -612,10 +612,10 @@ export class CrearCotizacionComponent implements OnInit {
     }
   }
 
-  setChildAge(roomIndex: number, childIndex: number, age: number | null) {
+  setChildAge(roomIndex: number, childIndex: number, age: number | string | null) {
     const copy = [...this.rooms()];
     const room = { ...copy[roomIndex], childAges: [...copy[roomIndex].childAges] };
-    room.childAges[childIndex] = age;
+    room.childAges[childIndex] = age === null ? null : Number(age);
     copy[roomIndex] = room;
     this.rooms.set(copy);
   }

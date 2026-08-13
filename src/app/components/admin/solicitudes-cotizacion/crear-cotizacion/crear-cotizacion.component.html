@@ -179,7 +179,7 @@
                                 <div class="room-row">
                                     <div>
                                         <div class="label">Adultos</div>
-                                        <div class="hint">+18 anos</div>
+                                        <div class="hint">+18 años</div>
                                     </div>
                                     <div class="counter">
                                         <button mat-mini-fab type="button" (click)="decAdults(i)" [disabled]="room.adults <= MIN_ADULTS">
@@ -196,7 +196,7 @@
                                 <div class="room-row">
                                     <div>
                                         <div class="label">Menores</div>
-                                        <div class="hint">-18 anos</div>
+                                        <div class="hint">-18 años</div>
                                     </div>
                                     <div class="counter">
                                         <button mat-mini-fab type="button" (click)="decChildren(i)" [disabled]="room.children <= 0">
@@ -221,7 +221,7 @@
                                         [options]="edadesOpciones"
                                         [ngModel]="age"
                                         [ngModelOptions]="{ standalone: true }"
-                                        (selectionChange)="setChildAge(i, j, $event === null ? null : Number($event))">
+                                        (selectionChange)="setChildAge(i, j, $event)">
                                     </app-tp-select-search>
                                     }
                                 </div>
