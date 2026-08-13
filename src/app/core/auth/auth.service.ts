@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { UserService } from 'app/core/user/user.service';
 import { from, map, Observable, of, switchMap, catchError, throwError, timeout } from 'rxjs';
 import { SupabaseService } from '../supabase.service';
+import { InactivitySessionService } from './inactivity-session.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -15,6 +16,7 @@ export class AuthService {
 
   private _supabase = inject(SupabaseService);
   private _userService = inject(UserService);
+  private _inactivitySession = inject(InactivitySessionService);
 
   // ---------------------------------------------
   // Access token (in-memory only)
@@ -225,6 +227,7 @@ export class AuthService {
             };
 
             this._userService.user = enrichedUser as any;
+            this._inactivitySession.start();
 
             return { user: enrichedUser, session: data.session };
           })
@@ -236,6 +239,7 @@ export class AuthService {
             this._authenticated = false;
             this._accessToken = '';
             this._clearAccessState();
+            this._inactivitySession.stop();
             return throwError(() => err);
           })
         );
@@ -252,12 +256,14 @@ export class AuthService {
         this._accessToken = '';
         this._authenticated = false;
         this._clearAccessState();
+        this._inactivitySession.stop();
         return true;
       }),
       catchError(() => {
         this._accessToken = '';
         this._authenticated = false;
         this._clearAccessState();
+        this._inactivitySession.stop();
         return of(true);
       })
     );
@@ -310,6 +316,7 @@ export class AuthService {
         if (error || !session) {
           this._authenticated = false;
           this._clearAccessState();
+          this._inactivitySession.stop();
           return of(false);
         }
 
@@ -341,6 +348,8 @@ export class AuthService {
               employeeStatusId: this._employeeStatusId,
             } as any;
 
+            this._inactivitySession.start();
+
             return true;
           })
         );
@@ -351,6 +360,7 @@ export class AuthService {
         this._accessToken = '';
         this._authenticated = false;
         this._clearAccessState();
+        this._inactivitySession.stop();
         return of(false);
       })
     );
