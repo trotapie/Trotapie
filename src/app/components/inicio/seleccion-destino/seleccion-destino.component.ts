@@ -2,6 +2,7 @@ import { AfterViewInit, Component, ElementRef, inject, OnInit, ViewChild, ViewEn
 import { FormBuilder, FormControl, FormGroup, FormsModule } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import { Router } from '@angular/router';
+import { FuseCardComponent } from '@fuse/components/card';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { SupabaseService } from 'app/core/supabase.service';
 import { DestinosService, TipoTuristicoCatalogo } from 'app/core/destinos.service';
@@ -86,6 +87,10 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
   destinoFiltroCtrl = new FormControl(''); // solo para el texto del autocomplete
   @ViewChild('selectDestino') selectDestinoInternacionales!: MatSelect;
   overlayAnimatedOnce = false;
+  @ViewChild('heroCard', { static: false })
+  heroCard!: FuseCardComponent;
+
+
   avisoUrl = '';
   filtroDestino: string = '';
   verTodos = false;
@@ -193,13 +198,11 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
         .sort((a, b) => (a.prioridad - b.prioridad) || a.nombre.localeCompare(b.nombre)) as Destinos[];
 
       this.agrupadosDestinos = [];
-      const tiposDisponibles = new Set(
-        this.destinos
-          .map((destino: any) => destino.tipo_turistico_id)
-          .filter((id: number | null | undefined): id is number => Number.isFinite(id))
-      );
+      const tiposDisponibles = new Set(this.destinos.map((destino: any) => destino.tipo_turistico_id).filter(Number.isFinite));
       this.tiposTuristicos = tipos.filter((tipo) => tiposDisponibles.has(tipo.id));
-      this.selectedTipoTuristicoId = null;
+      this.selectedTipoTuristicoId = this.tiposTuristicos.find(
+        (tipo) => tipo.nombre.toLocaleLowerCase() === 'playa'
+      )?.id ?? this.tiposTuristicos[0]?.id ?? null;
       this.filtrarDestinos(this.filterForm?.get('busqueda')?.value ?? '');
     } catch (error: any) {
       this.error = error?.message ?? 'No se pudieron cargar los destinos.';
@@ -249,11 +252,21 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
   }
 
   showOverlay(): void {
-    this.overlayAnimatedOnce = true;
+    this.heroCard.face = 'back';
+
+    if (!this.overlayAnimatedOnce) {
+      setTimeout(() => {
+        this.overlayAnimatedOnce = true;
+      }, 350); // ajusta al tiempo del flip
+    }
   }
 
   hideOverlay(): void {
+    this.heroCard.face = 'front';
     this.overlayAnimatedOnce = false;
+    setTimeout(() => {
+      this.dropdownOpen = true;
+    }, 500);
   }
 
   toggleDropdown(ev: Event) {
@@ -417,10 +430,5 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
   filtrarPorTipo(tipoId: number | null): void {
     this.selectedTipoTuristicoId = tipoId;
     this.filtrarDestinos(this.filterForm?.get('busqueda')?.value ?? '');
-  }
-
-  limpiarFiltros(): void {
-    this.selectedTipoTuristicoId = null;
-    this.filterForm.get('busqueda')?.setValue('');
   }
 }
