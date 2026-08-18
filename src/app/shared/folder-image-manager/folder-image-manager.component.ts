@@ -60,6 +60,8 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
   @Input() isSavingFolder = false;
   @Input() showDeleteAllImages = false;
   @Input() isDeletingAllImages = false;
+  @Input() showUpdateOrder = false;
+  @Input() isUpdatingOrder = false;
 
   @Output() imageSelected = new EventEmitter<FolderImageManagerImage>();
   @Output() folderSelected = new EventEmitter<FolderImageManagerFolder | null>();
@@ -68,10 +70,13 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
   @Output() deleteFolder = new EventEmitter<FolderImageManagerFolder>();
   @Output() addImage = new EventEmitter<void>();
   @Output() deleteAllImages = new EventEmitter<void>();
+  @Output() updateOrder = new EventEmitter<void>();
   @Output() imageDroppedOnFolder = new EventEmitter<{ image: FolderImageManagerImage; folder: FolderImageManagerFolder }>();
+  @Output() imageReorderPreview = new EventEmitter<{ image: FolderImageManagerImage; target: FolderImageManagerImage }>();
   @Output() editImage = new EventEmitter<FolderImageManagerImage>();
   @Output() toggleImageActive = new EventEmitter<{ image: FolderImageManagerImage; checked: boolean }>();
   @Output() deleteImage = new EventEmitter<FolderImageManagerImage>();
+  @Output() deleteSelectedImages = new EventEmitter<FolderImageManagerImage[]>();
   @Output() toggleImageDarken = new EventEmitter<{ image: FolderImageManagerImage; checked: boolean }>();
   @Output() toggleFolderActive = new EventEmitter<FolderImageManagerFolder>();
   @Output() toggleSelectedImagesActive = new EventEmitter<FolderImageManagerImage[]>();
@@ -91,6 +96,8 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
   folderActionsTargetFolder: FolderImageManagerFolder | null = null;
   draggedImage: FolderImageManagerImage | null = null;
   dropTargetFolderId: string | number | null = null;
+  private dragPreview: HTMLElement | null = null;
+  private dragOverImageId: string | null = null;
   private previousActiveImageIdSet = new Set<string>();
 
   get activeImageIdSet(): Set<string> {
@@ -504,15 +511,52 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
   onImageDragStart(image: FolderImageManagerImage, event: DragEvent): void {
     this.draggedImage = image;
     this.dropTargetFolderId = null;
+    this.dragOverImageId = null;
     if (event.dataTransfer) {
       event.dataTransfer.effectAllowed = 'move';
       event.dataTransfer.setData('text/plain', String(image.id));
+      const source = event.currentTarget as HTMLElement | null;
+      if (source && typeof document !== 'undefined') {
+        const bounds = source.getBoundingClientRect();
+        this.dragPreview?.remove();
+        this.dragPreview = source.cloneNode(true) as HTMLElement;
+        Object.assign(this.dragPreview.style, {
+          position: 'fixed', left: '-10000px', top: '0', width: `${bounds.width}px`, height: `${bounds.height}px`, opacity: '0.95'
+        });
+        document.body.appendChild(this.dragPreview);
+        event.dataTransfer.setDragImage(this.dragPreview, bounds.width / 2, bounds.height / 2);
+      }
     }
   }
 
   onImageDragEnd(): void {
     this.draggedImage = null;
     this.dropTargetFolderId = null;
+    this.dragOverImageId = null;
+    this.dragPreview?.remove();
+    this.dragPreview = null;
+  }
+
+  onImageDragOver(target: FolderImageManagerImage, event: DragEvent): void {
+    if (!this.draggedImage) return;
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+    if (String(this.draggedImage.id) === String(target.id) || this.draggedImage.folderId !== target.folderId) return;
+    const targetId = String(target.id);
+    if (this.dragOverImageId === targetId) return;
+    this.dragOverImageId = targetId;
+    this.imageReorderPreview.emit({ image: this.draggedImage, target });
+  }
+
+  onImageDrop(target: FolderImageManagerImage, event: DragEvent): void {
+    event.preventDefault();
+    const image = this.draggedImage;
+    this.draggedImage = null;
+    this.dropTargetFolderId = null;
+    this.dragOverImageId = null;
+    this.dragPreview?.remove();
+    this.dragPreview = null;
+    if (!image || String(image.id) === String(target.id) || image.folderId !== target.folderId) return;
   }
 
   onFolderDragOver(folder: FolderImageManagerFolder, event: DragEvent): void {

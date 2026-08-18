@@ -55,6 +55,7 @@ export interface IDetalleRapidoPreviewAdmin {
 
 export interface IActividadPreviewAdmin {
   id: number | null;
+  orden?: number | null;
   catalogo_atraccion_id?: number | null;
   tipo_actividad?: string | null;
   imagen_fondo: string;
@@ -95,8 +96,10 @@ export interface IActividadPreviewAdmin {
     vigencia_desde: string | null;
     vigencia_hasta: string | null;
     created_at: string | null;
+    traducciones?: Record<number, { nombre: string; descripcion: string }>;
   }>;
-  traducciones: Record<number, { nombre: string; descripcion: string }>;
+  // Kept optional while older administrative RPC readers are phased out.
+  traducciones?: Record<number, { nombre: string; descripcion: string }>;
 }
 
 export interface IPreviewDestinoAdmin {

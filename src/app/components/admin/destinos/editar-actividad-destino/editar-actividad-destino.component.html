@@ -67,7 +67,7 @@
     <div class="activity-editor-header sticky top-0 z-[100] mb-4 w-full rounded-xl border border-transparent bg-transparent px-2 py-2 backdrop-blur-md transition-all duration-300 md:px-4">
       <div class="w-full md:flex md:items-center md:justify-between">
         <div>
-          <h1 class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">Editar actividad</h1>
+          <h1 class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">Galería de {{ actividadNombre }}</h1>
           <p class="mt-1 text-sm text-gray-500">{{ destinoNombre }} · {{ actividadNombre }}</p>
         </div>
 
@@ -76,112 +76,12 @@
             <mat-icon class="mr-2 icon-size-5" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
             Regresar
           </button>
-          <button mat-raised-button color="primary" class="inline-flex whitespace-nowrap text-white" type="button" (click)="guardarTraducciones()" [disabled]="guardandoTraducciones">
-            <mat-icon class="mr-2 icon-size-5">save</mat-icon>
-            @if (guardandoTraducciones) {
-              Guardando...
-            } @else {
-              Guardar
-            }
-          </button>
         </div>
       </div>
     </div>
 
     @if (!cargando) {
       <form [formGroup]="form" class="space-y-6">
-        <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
-          <div class="mb-4">
-            <h2 class="text-lg font-semibold text-gray-900">Tipo de actividad</h2>
-            <p class="mt-1 text-sm text-gray-500">Clasifica esta atracción para organizarla en el preview del destino.</p>
-          </div>
-
-           <app-tp-select-search
-             class="block w-full sm:max-w-md"
-             label="Tipo de actividad"
-             placeholder="Selecciona un tipo"
-             searchPlaceholder="Filtrar tipos de actividad"
-             [options]="catalogoAtraccionesOpciones"
-             formControlName="catalogo_atraccion_id"
-           ></app-tp-select-search>
-         </section>
-
-        <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
-          <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h2 class="text-lg font-semibold text-gray-900">Traducciones</h2>
-              <p class="text-sm text-gray-500">Escribe el contenido principal en español y se completará el resto automaticamente.</p>
-            </div>
-
-            <button
-              mat-stroked-button
-              type="button"
-              (click)="onActividadEsBlurOEnter('es')"
-              [disabled]="traduciendoActividad"
-            >
-              @if (traduciendoActividad) {
-                Traduciendo...
-              } @else {
-                Traducir ahora
-              }
-            </button>
-          </div>
-
-          <div formArrayName="traducciones" class="space-y-4">
-            @if (traduccionPrincipalControl) {
-              <div class="rounded-xl border border-gray-200 p-4" [formGroupName]="indiceIdiomaEspanol">
-                <p class="mb-3 text-sm font-semibold text-gray-700">
-                  {{ getNombreIdioma(traduccionPrincipalControl.get('codigo')?.value ?? 'es') }}
-                </p>
-
-                <div class="grid grid-cols-1 gap-4">
-                   <app-tp-input
-                     class="w-full"
-                     label="Nombre principal"
-                     placeholder="Nombre de la actividad"
-                     formControlName="nombre"
-                     [required]="true"
-                     [maxLength]="160"
-                     (blur)="onActividadEsBlurOEnter('es')"
-                   ></app-tp-input>
-
-                   <app-tp-textarea
-                     class="w-full"
-                     label="Descripcion principal"
-                     placeholder="Describe la actividad"
-                     formControlName="descripcion"
-                     [rows]="3"
-                     (blur)="onActividadEsBlurOEnter('es')"
-                   ></app-tp-textarea>
-                </div>
-              </div>
-            } @else {
-              <div class="rounded-xl border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800">
-                No se encontró la traducción en español para capturar la actividad.
-              </div>
-            }
-
-            <div class="rounded-xl border border-gray-200 bg-gray-50 p-3">
-              <p class="mb-3 text-sm font-semibold text-gray-700">Traducciones automáticas</p>
-              <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-                @for (idioma of idiomas; track idioma.id) {
-                  @if (idioma.codigo !== 'es') {
-                    <div class="rounded-lg border border-gray-200 bg-white p-3">
-                      <p class="mb-1 text-sm font-semibold text-gray-700">{{ getNombreIdioma(idioma.codigo) }}</p>
-                      <p class="text-sm text-gray-900">
-                        {{ getTraduccionIdioma(idioma.codigo)?.nombre || 'Sin nombre' }}
-                      </p>
-                      <p class="mt-1 text-sm text-gray-600">
-                        {{ getTraduccionIdioma(idioma.codigo)?.descripcion || 'Sin descripcion' }}
-                      </p>
-                    </div>
-                  }
-                }
-              </div>
-            </div>
-          </div>
-        </section>
-
         <section class="rounded-2xl border border-gray-200 bg-white shadow-sm">
           <app-folder-image-manager
             [title]="'Galería de Imágenes'"
@@ -194,8 +94,11 @@
             [isSavingFolder]="procesandoCrearCarpeta"
             [showDeleteAllImages]="imagenesArray.length > 0 || carpetasActividad.length > 0"
             [isDeletingAllImages]="guardandoImagenes || eliminandoGaleria"
+            [showUpdateOrder]="ordenImagenesPendiente"
+            [isUpdatingOrder]="guardandoImagenes"
             (addImage)="agregarImagen()"
             (deleteAllImages)="abrirModalConfirmarEliminarGaleria()"
+            (updateOrder)="actualizarOrdenImagenes()"
             (folderSelected)="seleccionarCarpeta($event?.name ?? 'Todas')"
             (createFolder)="crearCarpetaActividad($event)"
             (renameFolder)="renombrarCarpetaActividad($event.folder, $event.name)"
@@ -205,9 +108,11 @@
             (toggleImageActive)="alternarImagenActivaDesdeGestor($event)"
             (toggleImageDarken)="alternarOscurecerFondoDesdeGestor($event)"
             (deleteImage)="eliminarImagenDesdeGestor($event)"
+            (deleteSelectedImages)="eliminarImagenesSeleccionadasDesdeGestor($event)"
             (toggleFolderActive)="alternarCarpetaActivaDesdeGestor($event)"
             (toggleSelectedImagesActive)="activarImagenesSeleccionadasDesdeGestor($event)"
             (imageDroppedOnFolder)="solicitarMoverImagenDesdeGestor($event)"
+            (imageReorderPreview)="previsualizarReordenImagenDesdeGestor($event)"
           />
         </section>
 
@@ -238,13 +143,17 @@
           </div>
         }
 
-        @if (mostrarModalConfirmarEliminarImagen && imagenAEliminar) {
+        @if (mostrarModalConfirmarEliminarImagen && (imagenAEliminar || imagenesSeleccionadasAEliminar.length)) {
           <div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center px-4">
             <div class="absolute inset-0 bg-black/50" @backdropFade></div>
             <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="eliminar-imagen-title" @modalScaleFade>
-              <h3 id="eliminar-imagen-title" class="text-xl font-semibold text-gray-900">Eliminar imagen</h3>
+              <h3 id="eliminar-imagen-title" class="text-xl font-semibold text-gray-900">Eliminar {{ imagenesSeleccionadasAEliminar.length ? 'imágenes seleccionadas' : 'imagen' }}</h3>
               <p class="mt-2 text-sm text-gray-600">
-                Quieres eliminar <span class="font-semibold text-gray-900">{{ imagenAEliminar.name || 'esta imagen' }}</span>?
+                @if (imagenesSeleccionadasAEliminar.length) {
+                  Quieres eliminar permanentemente las {{ imagenesSeleccionadasAEliminar.length }} imágenes seleccionadas?
+                } @else {
+                  Quieres eliminar <span class="font-semibold text-gray-900">{{ imagenAEliminar?.name || 'esta imagen' }}</span>?
+                }
               </p>
               <p class="mt-2 text-sm font-medium text-red-700">Esta accion no se puede deshacer.</p>
 
@@ -311,15 +220,15 @@
                         class="image-edit-modal__preview-label inline-block rounded-full px-4 py-1 font-bold uppercase tracking-widest text-white"
                         [style.--font-size.px]="imagenEditandoControl.get('etiqueta_font_size')?.value"
                         [style.background-color]="imagenEditandoControl.get('etiqueta_color')?.value"
-                      >{{ destinoNombre }}</span>
-                      <p class="image-edit-modal__preview-title mt-2 font-black leading-tight" [style.--font-size.px]="imagenEditandoControl.get('titulo_font_size')?.value">{{ actividadNombre }}</p>
-                      <p class="image-edit-modal__preview-description mt-2 font-medium opacity-90" [style.--font-size.px]="imagenEditandoControl.get('descripcion_font_size')?.value">Descripción de la actividad</p>
+                       >{{ destinoNombre }}</span>
+                       <p class="image-edit-modal__preview-title mt-2 font-black leading-tight" [style.--font-size.px]="imagenEditandoControl.get('titulo_font_size')?.value">{{ imagenEditandoControl.get(['traducciones', 'es', 'nombre'])?.value || 'Título de la imagen' }}</p>
+                       <p class="image-edit-modal__preview-description mt-2 font-medium opacity-90" [style.--font-size.px]="imagenEditandoControl.get('descripcion_font_size')?.value">{{ imagenEditandoControl.get(['traducciones', 'es', 'descripcion'])?.value || 'Descripción de la imagen' }}</p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div class="image-edit-modal__content space-y-5 px-6 py-5">
+                <div class="image-edit-modal__content space-y-5 px-6 py-5" [formGroup]="imagenEditandoControl">
                 <section class="image-edit-modal__section rounded-2xl border border-gray-100 bg-white p-4" aria-labelledby="imagen-section-title">
                   <div class="mb-4 flex items-start gap-3">
                     <span class="image-edit-modal__section-index">01</span>
@@ -351,12 +260,37 @@
                        </mat-form-field>
                      </div>
                    </div>
-                </section>
+                 </section>
 
-                    <section class="image-edit-modal__section rounded-2xl border border-gray-100 bg-white p-4" aria-labelledby="presentacion-section-title">
+                 <section class="image-edit-modal__section rounded-2xl border border-gray-100 bg-white p-4" aria-labelledby="contenido-imagen-section-title" formGroupName="traducciones">
+                   <div class="mb-4 flex items-start gap-3">
+                     <span class="image-edit-modal__section-index">02</span>
+                     <div>
+                       <h4 id="contenido-imagen-section-title" class="text-sm font-bold uppercase tracking-[0.16em] text-gray-800">Contenido del carrusel</h4>
+                       <p class="mt-1 text-xs text-gray-500">Este texto se mostrará únicamente con esta imagen en el sitio público.</p>
+                     </div>
+                   </div>
+                   <div formGroupName="es" class="grid gap-4">
+                     <app-tp-input label="Nombre" placeholder="Título de esta imagen" formControlName="nombre" [required]="true" (blur)="onImagenEsBlurOEnter()"></app-tp-input>
+                     <app-tp-textarea label="Descripción" placeholder="Describe esta imagen" formControlName="descripcion" [rows]="3" (blur)="onImagenEsBlurOEnter()"></app-tp-textarea>
+                   </div>
+                   <div class="mt-4 grid gap-3 md:grid-cols-2">
+                     @for (idioma of idiomas; track idioma.id) {
+                       @if (idioma.codigo !== 'es') {
+                         <div class="rounded-lg border border-gray-200 bg-gray-50 p-3" [formGroupName]="idioma.codigo">
+                           <p class="text-sm font-semibold text-gray-700">{{ getNombreIdioma(idioma.codigo) }}</p>
+                           <p class="mt-1 text-sm text-gray-900">{{ imagenEditandoControl.get(['traducciones', idioma.codigo, 'nombre'])?.value || 'Sin nombre' }}</p>
+                           <p class="mt-1 text-sm text-gray-600">{{ imagenEditandoControl.get(['traducciones', idioma.codigo, 'descripcion'])?.value || 'Sin descripción' }}</p>
+                         </div>
+                       }
+                     }
+                   </div>
+                 </section>
+
+                     <section class="image-edit-modal__section rounded-2xl border border-gray-100 bg-white p-4" aria-labelledby="presentacion-section-title">
                     <div class="mb-4 flex items-start justify-between gap-3">
                       <div class="flex items-start gap-3">
-                        <span class="image-edit-modal__section-index">02</span>
+                         <span class="image-edit-modal__section-index">03</span>
                         <div>
                           <h4 id="presentacion-section-title" class="text-sm font-bold uppercase tracking-[0.16em] text-gray-800">Presentación</h4>
                           <p class="mt-1 text-xs text-gray-500">Define cómo se verá la imagen detrás del contenido.</p>
@@ -415,7 +349,7 @@
 
                     <section class="image-edit-modal__section rounded-2xl border border-gray-100 bg-white p-4" aria-labelledby="tipografia-section-title">
                       <div class="mb-4 flex items-start gap-3">
-                        <span class="image-edit-modal__section-index">03</span>
+                        <span class="image-edit-modal__section-index">04</span>
                         <div>
                           <h4 id="tipografia-section-title" class="text-sm font-bold uppercase tracking-[0.16em] text-gray-800">Tipografía</h4>
                           <p class="mt-1 text-xs text-gray-500">Ajusta color y escala del texto del carrusel.</p>

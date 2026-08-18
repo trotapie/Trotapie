@@ -23,7 +23,7 @@ import { CustomSwitchComponent } from 'app/shared/custom-switch/custom-switch.co
 import { ColorPickerComponent } from 'app/shared/color-picker/color-picker.component';
 import { TpInputComponent } from 'app/shared/tp-input/tp-input.component';
 import { TpTextareaComponent } from 'app/shared/tp-textarea/tp-textarea.component';
-import { TpSelectSearchComponent, TpSelectSearchOption } from 'app/shared/tp-select-search/tp-select-search.component';
+import { TpSelectSearchOption } from 'app/shared/tp-select-search/tp-select-search.component';
 import { TpToastService } from 'app/shared/tp-toast/tp-toast.service';
 
 interface ILangConfig {
@@ -77,6 +77,7 @@ type ImagenActividadForm = {
   vigencia_desde: string | null;
   vigencia_hasta: string | null;
   created_at: string | null;
+  traducciones: Array<{ idioma_id: number; nombre: string | null; descripcion: string | null }>;
 };
 
 const VALORES_PREDETERMINADOS_ESTILO_IMAGEN = {
@@ -95,7 +96,7 @@ const VALORES_PREDETERMINADOS_ESTILO_IMAGEN = {
 @Component({
   selector: 'app-editar-actividad-destino',
   standalone: true,
-  imports: [CommonModule, MaterialModule, ReactiveFormsModule, FolderImageManagerComponent, BlockingLoaderComponent, CustomSwitchComponent, ColorPickerComponent, TpInputComponent, TpTextareaComponent, TpSelectSearchComponent],
+  imports: [CommonModule, MaterialModule, ReactiveFormsModule, FolderImageManagerComponent, BlockingLoaderComponent, CustomSwitchComponent, ColorPickerComponent, TpInputComponent, TpTextareaComponent],
   templateUrl: './editar-actividad-destino.component.html',
   styleUrl: './editar-actividad-destino.component.scss',
   animations: [modalScaleFade, backdropFade],
@@ -119,6 +120,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
 
   cargando = true;
   guardandoImagenes = false;
+  ordenImagenesPendiente = false;
   guardandoTraducciones = false;
   error = '';
   destinoId = 0;
@@ -153,6 +155,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   mostrarModalConfirmarEliminarGaleria = false;
   mostrarModalConfirmarEliminarImagen = false;
   imagenAEliminar: FolderImageManagerImage | null = null;
+  imagenesSeleccionadasAEliminar: FolderImageManagerImage[] = [];
   eliminandoGaleria = false;
   imagenAReubicar: {
     draft_key: string;
@@ -1383,7 +1386,8 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
               orden: [this.imagenesArray.length + 1],
               vigencia_desde: [null],
               vigencia_hasta: [null],
-              created_at: [null]
+               created_at: [null],
+               traducciones: this.fb.group(this.crearTraduccionesImagen(undefined))
             })
           );
 
@@ -1472,7 +1476,8 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
         orden: [this.imagenesArray.length + 1],
         vigencia_desde: [null],
         vigencia_hasta: [null],
-        created_at: [null]
+        created_at: [null],
+        traducciones: this.fb.group(this.crearTraduccionesImagen(undefined))
       })
     );
     this.normalizarOrdenImagenes();
@@ -1697,7 +1702,16 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   }
 
   eliminarImagenDesdeGestor(image: FolderImageManagerImage): void {
+    this.imagenesSeleccionadasAEliminar = [];
     this.imagenAEliminar = image;
+    this.mostrarModalConfirmarEliminarImagen = true;
+    this.setModalLocked(true);
+  }
+
+  eliminarImagenesSeleccionadasDesdeGestor(images: FolderImageManagerImage[]): void {
+    if (!images.length) return;
+    this.imagenAEliminar = null;
+    this.imagenesSeleccionadasAEliminar = images;
     this.mostrarModalConfirmarEliminarImagen = true;
     this.setModalLocked(true);
   }
@@ -1709,10 +1723,28 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
 
     this.mostrarModalConfirmarEliminarImagen = false;
     this.imagenAEliminar = null;
+    this.imagenesSeleccionadasAEliminar = [];
     this.setModalLocked(false);
   }
 
   async confirmarEliminarImagenDesdeGestor(): Promise<void> {
+    const imagenes = this.imagenesSeleccionadasAEliminar;
+    if (imagenes.length) {
+      if (imagenes.length === this.imagenesArray.length) {
+        this.mostrarModalConfirmarEliminarImagen = false;
+        this.imagenesSeleccionadasAEliminar = [];
+        await this.eliminarGaleriaActividad();
+        return;
+      }
+
+      for (const image of imagenes) {
+        const index = this.obtenerIndiceImagen(image);
+        if (index !== null) await this.eliminarImagen(index);
+      }
+      this.cerrarModalConfirmarEliminarImagen();
+      return;
+    }
+
     const image = this.imagenAEliminar;
     if (!image) {
       return;
@@ -1843,9 +1875,30 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   }
 
   async guardarImagenEditando(): Promise<void> {
-    const guardadoOk = await this.guardarImagenes();
-    if (guardadoOk) {
+    const control = this.imagenEditandoControl;
+    if (!control || this.guardandoImagenes) return;
+
+    await this.traducirImagenEditando();
+    const imagen = this.normalizarImagenesActividadPayload([control.getRawValue()])[0];
+    if (!imagen?.imagen_url) {
+      control.get('imagen_url')?.markAsTouched();
+      return;
+    }
+
+    this.guardandoImagenes = true;
+    this.error = '';
+    try {
+      const guardada = await this.actividadesService.guardarImagenActividadAdmin({
+        destino_id: this.destinoId,
+        actividad_id: this.actividadId,
+        imagen
+      });
+      if (guardada.id) control.get('id')?.setValue(guardada.id);
       this.cerrarEditorImagen();
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudo guardar la imagen.';
+    } finally {
+      this.guardandoImagenes = false;
     }
   }
 
@@ -1942,7 +1995,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
         destino_id: this.destinoId,
         actividad_id: this.actividadId,
         imagen_fondo: null,
-        imagenes: imagenesConPendientes
+        imagenes
       });
 
       this.aplicarPendientesImagenesAlFormulario();
@@ -1996,6 +2049,96 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     }
   }
 
+  async moverImagenEditando(direccion: -1 | 1): Promise<void> {
+    const indiceOrigen = this.imagenEditandoIndex;
+    if (indiceOrigen === null || this.guardandoImagenes) return;
+    const indiceDestino = indiceOrigen + direccion;
+    await this.reordenarImagen(indiceOrigen, indiceDestino, true);
+  }
+
+  previsualizarReordenImagenDesdeGestor(evento: { image: FolderImageManagerImage; target: FolderImageManagerImage }): void {
+    const indiceOrigen = this.obtenerIndiceImagen(evento.image);
+    const indiceDestino = this.obtenerIndiceImagen(evento.target);
+    if (indiceOrigen === null || indiceDestino === null || indiceOrigen === indiceDestino) return;
+    void this.reordenarImagen(indiceOrigen, indiceDestino, false);
+  }
+
+  private async reordenarImagen(indiceOrigen: number, indiceDestino: number, mantenerEditor: boolean): Promise<void> {
+    if (this.guardandoImagenes || indiceDestino < 0 || indiceDestino >= this.imagenesArray.length) return;
+
+    const imagen = this.imagenesArray.at(indiceOrigen);
+    this.imagenesArray.removeAt(indiceOrigen);
+    this.imagenesArray.insert(indiceDestino, imagen);
+    if (mantenerEditor) this.imagenEditandoIndex = indiceDestino;
+    this.imagenSeleccionadaIndex = mantenerEditor ? indiceDestino : null;
+    this.normalizarOrdenImagenes();
+    this.ordenImagenesPendiente = true;
+  }
+
+  async actualizarOrdenImagenes(): Promise<void> {
+    if (!this.ordenImagenesPendiente || this.guardandoImagenes) return;
+    const imagenes = this.imagenesArray.controls
+      .map((control, index) => ({ id: this.parseNumber(control.get('id')?.value), orden: index + 1 }))
+      .filter((imagen): imagen is { id: number; orden: number } => imagen.id !== null);
+    if (!imagenes.length) return;
+
+    this.guardandoImagenes = true;
+    this.error = '';
+    try {
+      await this.actividadesService.actualizarOrdenImagenesActividadAdmin({
+        destino_id: this.destinoId,
+        actividad_id: this.actividadId,
+        imagenes
+      });
+      this.ordenImagenesPendiente = false;
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudo actualizar el orden de las imágenes.';
+    } finally {
+      this.guardandoImagenes = false;
+    }
+  }
+
+  private obtenerIndiceImagen(imagen: FolderImageManagerImage): number | null {
+    const id = String(imagen.id);
+    const index = this.imagenesArray.controls.findIndex((control, controlIndex) => {
+      const controlId = this.parseNumber(control.get('id')?.value);
+      const draftKey = this.limpiarTexto(control.get('draft_key')?.value) ?? `actividad-imagen-${controlIndex}`;
+      return String(controlId ?? draftKey) === id;
+    });
+    return index >= 0 ? index : null;
+  }
+
+  async onImagenEsBlurOEnter(event?: Event): Promise<void> {
+    if (event instanceof KeyboardEvent && event.key === 'Enter') {
+      event.preventDefault();
+    }
+    await this.traducirImagenEditando();
+  }
+
+  private async traducirImagenEditando(): Promise<void> {
+    const control = this.imagenEditandoControl;
+    const traducciones = control?.get('traducciones')?.value;
+    const es = traducciones?.es;
+    const nombre = this.limpiarTexto(es?.nombre);
+    const descripcion = this.limpiarTexto(es?.descripcion);
+    if (!control || !nombre || !descripcion || this.traduciendoActividad) return;
+
+    this.traduciendoActividad = true;
+    try {
+      const respuesta = await this.traduccionesService.traducirDesdeEspanol({ title: nombre, description: descripcion });
+      this.idiomas.forEach((idioma) => {
+        const traduccion = idioma.codigo === 'es'
+          ? { title: nombre, description: descripcion }
+          : respuesta?.[idioma.codigo];
+        if (!traduccion) return;
+        control.get(['traducciones', idioma.codigo, 'nombre'])?.setValue(traduccion.title ?? '');
+        control.get(['traducciones', idioma.codigo, 'descripcion'])?.setValue(traduccion.description ?? '');
+      });
+    } finally {
+      this.traduciendoActividad = false;
+    }
+  }
+
   private buildImagenesFormArray(imagenes: any[] = []) {
     const carpetaDefault = this.obtenerCarpetaDefaultActividad();
     return this.fb.array(
@@ -2029,10 +2172,23 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
           orden: [Number.isFinite(Number(imagen?.orden)) ? Number(imagen.orden) : index + 1],
           vigencia_desde: [this.parseDateValue(imagen?.vigencia_desde)],
           vigencia_hasta: [this.parseDateValue(imagen?.vigencia_hasta)],
-          created_at: [imagen?.created_at ?? null]
+          created_at: [imagen?.created_at ?? null],
+          traducciones: this.fb.group(this.crearTraduccionesImagen(imagen?.traducciones))
         })
       )
     );
+  }
+
+  private crearTraduccionesImagen(
+    traducciones: Record<number, { nombre: string; descripcion: string }> | undefined
+  ): Record<string, any> {
+    return this.idiomas.reduce((controles, idioma) => {
+      controles[idioma.codigo] = this.fb.group({
+        nombre: [traducciones?.[idioma.id]?.nombre ?? ''],
+        descripcion: [traducciones?.[idioma.id]?.descripcion ?? '']
+      });
+      return controles;
+    }, {} as Record<string, any>);
   }
 
   private normalizarImagenesActividadPayload(imagenes: Array<any> = []): ImagenActividadForm[] {
@@ -2065,7 +2221,12 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
           etiqueta_color: this.normalizarColorHex(imagen?.etiqueta_color, '#F9B44B'),
           orden: this.parseNumber(imagen?.orden) ?? index + 1,
           vigencia_desde: this.normalizarFechaYYYYMMDD(imagen?.vigencia_desde),
-          vigencia_hasta: this.normalizarFechaYYYYMMDD(imagen?.vigencia_hasta),
+           vigencia_hasta: this.normalizarFechaYYYYMMDD(imagen?.vigencia_hasta),
+           traducciones: this.idiomas.map((idioma) => ({
+             idioma_id: idioma.id,
+             nombre: this.limpiarTexto(imagen?.traducciones?.[idioma.codigo]?.nombre),
+             descripcion: this.limpiarTexto(imagen?.traducciones?.[idioma.codigo]?.descripcion)
+           })),
           created_at: imagen?.created_at ?? null
       }))
       .filter((imagen) => !!imagen.imagen_url);
@@ -2499,16 +2660,10 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   }
 
   private obtenerNombreActividad(actividad: any, preview: IPreviewDestinoAdmin): string {
-    const es = this.idiomas.find((idioma) => idioma.codigo === 'es');
-    if (es) {
-      const traduccion = actividad?.traducciones?.[es.id];
-      if (traduccion?.nombre) {
-        return traduccion.nombre;
-      }
-    }
-
-    const fallback = preview.actividades?.find((item) => Number(item.id) === Number(actividad?.id));
-    return fallback?.traducciones?.[es?.id ?? 1]?.nombre ?? 'Actividad';
+    const tipoId = this.parseNumber(actividad?.catalogo_atraccion_id);
+    return preview.catalogo_atracciones?.find((tipo) => tipo.id === tipoId)?.nombre
+      ?? actividad?.tipo_actividad
+      ?? 'Sin clasificar';
   }
 
   private normalizarOrdenImagenes() {

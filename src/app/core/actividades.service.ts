@@ -427,12 +427,14 @@ export class ActividadesService {
        etiqueta_color?: string;
       orden?: number | null;
       vigencia_desde?: string | null;
-      vigencia_hasta?: string | null;
+       vigencia_hasta?: string | null;
+       traducciones?: Array<{ idioma_id: number; nombre: string | null; descripcion: string | null }>;
     }>,
-    imagenActivaId?: number | null
+    imagenActivaId?: number | null,
+    preservarImagenesNoIncluidas = false
   ) {
     if (!Array.isArray(imagenes)) {
-      return;
+      return [] as number[];
     }
 
     const limpias = imagenes
@@ -462,7 +464,8 @@ export class ActividadesService {
         etiqueta_color: this.normalizarColorHex(imagen?.etiqueta_color, '#F9B44B'),
         orden: Number.isFinite(Number(imagen?.orden)) ? Number(imagen?.orden) : index + 1,
         vigencia_desde: this.normalizarFecha(imagen?.vigencia_desde),
-        vigencia_hasta: this.normalizarFecha(imagen?.vigencia_hasta)
+        vigencia_hasta: this.normalizarFecha(imagen?.vigencia_hasta),
+        traducciones: Array.isArray(imagen?.traducciones) ? imagen.traducciones : []
       }))
       .filter((imagen) => !!imagen.imagen_url);
 
@@ -490,6 +493,7 @@ export class ActividadesService {
 
     const idsExistentes = new Set((existentes ?? []).map((item: any) => Number(item.id)));
     const idsRecibidos = new Set<number>();
+    const idsGuardados: number[] = [];
 
     for (let index = 0; index < limpias.length; index += 1) {
       const imagen = limpias[index];
@@ -549,6 +553,8 @@ export class ActividadesService {
           .eq('atraccion_id', actividadId);
 
         if (updateError) throw updateError;
+        await this.sincronizarTraduccionesImagen(imagen.id, imagen.traducciones);
+        idsGuardados.push(imagen.id);
         continue;
       }
 
@@ -585,10 +591,14 @@ export class ActividadesService {
       if (insertError) throw insertError;
       if (nuevaImagen?.id) {
         idsRecibidos.add(Number(nuevaImagen.id));
+        await this.sincronizarTraduccionesImagen(Number(nuevaImagen.id), imagen.traducciones);
+        idsGuardados.push(Number(nuevaImagen.id));
       }
     }
 
-    const idsParaEliminar = [...idsExistentes].filter((id) => !idsRecibidos.has(id));
+    const idsParaEliminar = preservarImagenesNoIncluidas
+      ? []
+      : [...idsExistentes].filter((id) => !idsRecibidos.has(id));
     if (idsParaEliminar.length) {
       const { error: eliminarError } = await this.client
         .from('atracciones_imagenes')
@@ -598,13 +608,48 @@ export class ActividadesService {
 
       if (eliminarError) throw eliminarError;
     }
+
+    return idsGuardados;
+  }
+
+  private async sincronizarTraduccionesImagen(
+    imagenId: number,
+    traducciones: Array<{ idioma_id: number; nombre: string | null; descripcion: string | null }>
+  ): Promise<void> {
+    const registros = traducciones
+      .filter((traduccion) => (traduccion.nombre ?? '').trim())
+      .map((traduccion) => ({
+        atraccion_imagen_id: imagenId,
+        idioma_id: traduccion.idioma_id,
+        nombre: traduccion.nombre,
+        descripcion: traduccion.descripcion
+      }));
+
+    if (registros.length) {
+      const { error } = await this.client
+        .from('atracciones_imagenes_traducciones')
+        .upsert(registros, { onConflict: 'atraccion_imagen_id,idioma_id' });
+      if (error) throw error;
+    }
+
+    const idiomasVacios = traducciones
+      .filter((traduccion) => !(traduccion.nombre ?? '').trim())
+      .map((traduccion) => traduccion.idioma_id);
+    if (idiomasVacios.length) {
+      const { error } = await this.client
+        .from('atracciones_imagenes_traducciones')
+        .delete()
+        .eq('atraccion_imagen_id', imagenId)
+        .in('idioma_id', idiomasVacios);
+      if (error) throw error;
+    }
   }
 
   async guardarActividadDestinoAdmin(payload: {
     catalogo_destino_id: number;
     actividad_id?: number | null;
     catalogo_atraccion_id?: number | null;
-    imagen_fondo: string | null;
+    imagen_fondo?: string | null;
     imagen_activa_id?: number | null;
       imagenes?: Array<{
         id?: number | null;
@@ -633,12 +678,10 @@ export class ActividadesService {
         orden?: number | null;
         vigencia_desde?: string | null;
         vigencia_hasta?: string | null;
-      }>;
-    traducciones: Array<{
-      idioma_id: number;
-      nombre: string | null;
-      descripcion: string | null;
-    }>;
+       traducciones?: Array<{ idioma_id: number; nombre: string | null; descripcion: string | null }>;
+       }>;
+    // Legacy callers may still provide activity translations during rollout.
+    traducciones?: Array<{ idioma_id: number; nombre: string | null; descripcion: string | null }>;
   }) {
     const { data: detalleExistente, error: detalleExistenteError } = await this.client
       .from('detalles_destinos')
@@ -675,11 +718,18 @@ export class ActividadesService {
       if (actualizarActividadError) throw actualizarActividadError;
       await this.sincronizarImagenesActividad(actividadId, payload.imagenes, payload.imagen_activa_id);
     } else {
+      const { count, error: contarActividadesError } = await this.client
+        .from('atracciones_principales')
+        .select('id', { count: 'exact', head: true })
+        .eq('detalles_destino_id', detallesDestinoId);
+      if (contarActividadesError) throw contarActividadesError;
+
       const { data: nuevaActividad, error: crearActividadError } = await this.client
         .from('atracciones_principales')
         .insert({
           detalles_destino_id: detallesDestinoId,
-          catalogo_atraccion_id: payload.catalogo_atraccion_id ?? null
+          catalogo_atraccion_id: payload.catalogo_atraccion_id ?? null,
+          orden: (count ?? 0) + 1
         })
         .select('id')
         .single();
@@ -689,7 +739,7 @@ export class ActividadesService {
       await this.sincronizarImagenesActividad(actividadId, payload.imagenes, payload.imagen_activa_id);
     }
 
-    const traduccionesPayload = payload.traducciones
+    const traduccionesPayload = (payload.traducciones ?? [])
       .filter((item) => {
         const nombreLimpio = (item.nombre ?? '').trim();
         return !!nombreLimpio;
@@ -711,7 +761,7 @@ export class ActividadesService {
       if (traduccionesError) throw traduccionesError;
     }
 
-    const idiomasSinNombre = payload.traducciones
+    const idiomasSinNombre = (payload.traducciones ?? [])
       .filter((item) => !((item.nombre ?? '').trim()))
       .map((item) => item.idioma_id);
 
@@ -775,6 +825,51 @@ export class ActividadesService {
 
     await this.sincronizarImagenesActividad(payload.actividad_id, payload.imagenes, payload.imagen_activa_id);
     return { id: payload.actividad_id };
+  }
+
+  async guardarImagenActividadAdmin(payload: {
+    destino_id: number;
+    actividad_id: number;
+    imagen: { id?: number | null; imagen_url: string | null; [key: string]: any };
+  }) {
+    const { data: detalleExistente, error: detalleExistenteError } = await this.client
+      .from('detalles_destinos')
+      .select('id')
+      .eq('catalogo_destino_id', payload.destino_id)
+      .maybeSingle();
+
+    if (detalleExistenteError) throw detalleExistenteError;
+    if (!detalleExistente?.id) throw new Error('No se encontro el detalle del destino.');
+
+    const idsGuardados = await this.sincronizarImagenesActividad(
+      payload.actividad_id,
+      [payload.imagen],
+      null,
+      true
+    );
+    return { id: idsGuardados[0] ?? null };
+  }
+
+  async actualizarOrdenImagenesActividadAdmin(payload: {
+    destino_id: number;
+    actividad_id: number;
+    imagenes: Array<{ id: number; orden: number }>;
+  }): Promise<void> {
+    const { data: detalle, error: detalleError } = await this.client
+      .from('detalles_destinos')
+      .select('id')
+      .eq('catalogo_destino_id', payload.destino_id)
+      .maybeSingle();
+    if (detalleError) throw detalleError;
+    if (!detalle?.id) throw new Error('No se encontro el detalle del destino.');
+
+    const resultados = await Promise.all(payload.imagenes.map((imagen) => this.client
+      .from('atracciones_imagenes')
+      .update({ orden: imagen.orden })
+      .eq('id', imagen.id)
+      .eq('atraccion_id', payload.actividad_id)));
+    const error = resultados.find((resultado) => resultado.error)?.error;
+    if (error) throw error;
   }
 
   async guardarTraduccionesActividadAdmin(payload: {

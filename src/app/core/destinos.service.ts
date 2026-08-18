@@ -423,7 +423,7 @@ export class DestinosService {
     let detallesRapidos: any[] = [];
     let detallesRapidosTraducciones: any[] = [];
     let actividades: any[] = [];
-    let actividadesTraducciones: any[] = [];
+    let imagenesActividadesTraducciones: any[] = [];
     let actividadesCarpetas: any[] = [];
     const imagenesActividadPorId = new Map<number, any[]>();
     const carpetasActividadPorId = new Map<number, any[]>();
@@ -479,11 +479,13 @@ export class DestinosService {
         .from('atracciones_principales')
         .select(`
           id,
-          catalogo_atraccion_id,
-          imagen_fondo,
+           catalogo_atraccion_id,
+           orden,
+           imagen_fondo,
           detalles_destino_id
         `)
         .eq('detalles_destino_id', detalleId)
+        .order('orden', { ascending: true })
         .order('id', { ascending: true });
 
       if (actividadesError) throw actividadesError;
@@ -548,17 +550,17 @@ export class DestinosService {
 
           imagenesActividadPorId.get(atraccionId)?.push(imagen);
         });
-      }
 
-      if (actividadIds.length) {
-        const { data: actividadesTrResponse, error: actividadesTraduccionesError } = await this.client
-          .from('atracciones_principales_traducciones')
-          .select('atracciones_principales_id, idioma_id, nombre, descripcion')
-          .in('atracciones_principales_id', actividadIds)
-          .in('idioma_id', idiomaIds);
-
-        if (actividadesTraduccionesError) throw actividadesTraduccionesError;
-        actividadesTraducciones = actividadesTrResponse ?? [];
+        const imagenIds = (imagenesActividadData ?? []).map((imagen: any) => Number(imagen.id));
+        if (imagenIds.length) {
+          const { data, error } = await this.client
+            .from('atracciones_imagenes_traducciones')
+            .select('atraccion_imagen_id, idioma_id, nombre, descripcion')
+            .in('atraccion_imagen_id', imagenIds)
+            .in('idioma_id', idiomaIds);
+          if (error) throw error;
+          imagenesActividadesTraducciones = data ?? [];
+        }
       }
       actividadesCarpetas.forEach((item: any) => {
         const atraccionId = Number(item.atraccion_id);
@@ -597,14 +599,14 @@ export class DestinosService {
         ?.set(item.idioma_id, item.valor ?? '');
     });
 
-    const traduccionesActividadPorId = new Map<number, Map<number, { nombre: string; descripcion: string }>>();
-    actividadesTraducciones.forEach((item: any) => {
-      if (!traduccionesActividadPorId.has(item.atracciones_principales_id)) {
-        traduccionesActividadPorId.set(item.atracciones_principales_id, new Map());
+    const traduccionesImagenPorId = new Map<number, Map<number, { nombre: string; descripcion: string }>>();
+    imagenesActividadesTraducciones.forEach((item: any) => {
+      if (!traduccionesImagenPorId.has(item.atraccion_imagen_id)) {
+        traduccionesImagenPorId.set(item.atraccion_imagen_id, new Map());
       }
 
-      traduccionesActividadPorId
-        .get(item.atracciones_principales_id)
+      traduccionesImagenPorId
+        .get(item.atraccion_imagen_id)
         ?.set(item.idioma_id, {
           nombre: item.nombre ?? '',
           descripcion: item.descripcion ?? ''
@@ -621,7 +623,6 @@ export class DestinosService {
       catalogo_tipos_dato_rapido: catalogoTipos,
       catalogo_atracciones: catalogoAtracciones,
       actividades: (actividades ?? []).map((actividad: any) => {
-        const traduccionesActividad = traduccionesActividadPorId.get(actividad.id) ?? new Map();
         const imagenesActividad = imagenesActividadPorId.get(Number(actividad.id)) ?? [];
         const carpetasActividad = carpetasActividadPorId.get(Number(actividad.id)) ?? [];
         const carpetasActividadMap = new Map<number, any>(
@@ -644,6 +645,11 @@ export class DestinosService {
             const nombreCarpetaNormalizado = this.normalizarNombreCarpeta(nombreCarpetaResuelto) ?? null;
             const carpetaId = carpetaIdCrudo ?? this.parseNumber(carpetaPorNombre?.id);
 
+            const traducciones = traduccionesImagenPorId.get(Number(imagen.id)) ?? new Map();
+            const recordTraducciones: Record<number, { nombre: string; descripcion: string }> = {};
+            idiomas.forEach((idioma) => {
+              recordTraducciones[idioma.id] = traducciones.get(idioma.id) ?? { nombre: '', descripcion: '' };
+            });
             return {
               id: Number(imagen.id),
               imagen_url: imagen.imagen_url ?? '',
@@ -669,24 +675,17 @@ export class DestinosService {
               orden: imagen.orden ?? null,
               vigencia_desde: imagen.vigencia_desde ?? null,
               vigencia_hasta: imagen.vigencia_hasta ?? null,
-              created_at: imagen.created_at ?? null
+              created_at: imagen.created_at ?? null,
+              traducciones: recordTraducciones
             };
           })
         );
         const imagenSeleccionada = imagenesOrdenadas.find((imagen: any) => Boolean(imagen.activa)) ?? imagenesOrdenadas[0] ?? null;
         const imagenFondoUrl = imagenSeleccionada?.imagen_url ?? '';
         const imagenFondoId = this.parseNumber(imagenSeleccionada?.id);
-        const recordTraducciones: Record<number, { nombre: string; descripcion: string }> = {};
-
-        idiomas.forEach((idioma) => {
-          recordTraducciones[idioma.id] = traduccionesActividad.get(idioma.id) ?? {
-            nombre: '',
-            descripcion: ''
-          };
-        });
-
         return {
           id: actividad.id,
+          orden: Number(actividad.orden ?? 0) || null,
           catalogo_atraccion_id: this.parseNumber(actividad.catalogo_atraccion_id),
           tipo_actividad:
             catalogoAtracciones.find((item: any) => Number(item.id) === Number(actividad.catalogo_atraccion_id))?.nombre ?? null,
@@ -720,9 +719,9 @@ export class DestinosService {
             orden: imagen.orden ?? null,
             vigencia_desde: imagen.vigencia_desde ?? null,
             vigencia_hasta: imagen.vigencia_hasta ?? null,
-            created_at: imagen.created_at ?? null
+            created_at: imagen.created_at ?? null,
+            traducciones: imagen.traducciones
           })),
-          traducciones: recordTraducciones
         } as IActividadPreviewAdmin;
       }),
       detalles_rapidos: (detallesRapidos ?? []).map((item: any) => {
@@ -1194,11 +1193,12 @@ export class DestinosService {
       })),
       atracciones_principales: preview.actividades
         .map((actividad) => {
-          const contenido = idioma ? actividad.traducciones[idioma.id] : undefined;
           const imagenes = (actividad.imagenes ?? [])
             .filter((imagen) => imagen.activa && !!imagen.imagen_url)
             .map((imagen) => ({
               imagen_url: imagen.imagen_url,
+              nombre: idioma ? imagen.traducciones?.[idioma.id]?.nombre ?? '' : '',
+              descripcion: idioma ? imagen.traducciones?.[idioma.id]?.descripcion ?? '' : '',
               activa: imagen.activa,
               oscurecer_fondo: Boolean(imagen.oscurecer_fondo),
               texto_color: imagen.texto_color ?? '#FFFFFF',
@@ -1216,8 +1216,6 @@ export class DestinosService {
 
           return {
             id: Number(actividad.id),
-            nombre: contenido?.nombre ?? '',
-            descripcion: contenido?.descripcion ?? '',
             imagen_fondo: imagenes[0]?.imagen_url ?? actividad.imagen_seleccionada ?? actividad.imagen_fondo,
             imagenes
           };
@@ -1407,6 +1405,22 @@ export class DestinosService {
       total_divisiones: Number(item.total_divisiones ?? 0),
       total_destinos: Number(item.total_destinos ?? 0)
     }));
+  }
+
+  async actualizarOrdenActividadesDestinoAdmin(
+    catalogoDestinoId: number,
+    actividades: Array<{ id: number; orden: number }>
+  ): Promise<void> {
+    const detalleId = await this.obtenerDetalleDestinoIdAdmin(catalogoDestinoId);
+    const resultados = await Promise.all(
+      actividades.map((actividad) => this.client
+        .from('atracciones_principales')
+        .update({ orden: actividad.orden })
+        .eq('id', actividad.id)
+        .eq('detalles_destino_id', detalleId))
+    );
+    const error = resultados.find((resultado) => resultado.error)?.error;
+    if (error) throw error;
   }
 
   async obtenerTiposTuristicosCatalogo(incluirInactivos = false): Promise<TipoTuristicoCatalogo[]> {

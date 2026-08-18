@@ -141,11 +141,11 @@ export class DetalleDestinoComponent implements OnInit {
       const urlsMostradas = new Set<string>();
       // The service already returns only active gallery images. Keep legacy RPC
       // responses working too, where `activa` is not included on the image.
-      const imagenes = actividad.imagenes?.length
-        ? actividad.imagenes.filter((imagen) => imagen.activa !== false)
-        : actividad.imagen_fondo
-          ? [{ imagen_url: actividad.imagen_fondo }]
-          : [];
+        const imagenes = actividad.imagenes?.length
+          ? actividad.imagenes.filter((imagen) => imagen.activa !== false)
+          : actividad.imagen_fondo
+            ? [{ imagen_url: actividad.imagen_fondo, nombre: '', descripcion: '' }]
+            : [];
 
       return imagenes
         .filter((imagen) => {
@@ -157,8 +157,8 @@ export class DetalleDestinoComponent implements OnInit {
         })
         .map((imagen) => ({
           imagen_url: imagen.imagen_url,
-          nombre: actividad.nombre,
-          descripcion: actividad.descripcion,
+           nombre: imagen.nombre ?? '',
+           descripcion: imagen.descripcion ?? '',
           oscurecer_fondo: Boolean(imagen.oscurecer_fondo ?? false),
           texto_color: imagen.texto_color ?? '#FFFFFF',
           titulo_font_size: Number(imagen.titulo_font_size ?? 48),

@@ -52,30 +52,14 @@
                         <div class="border-b border-gray-200 px-5 py-5 dark:border-gray-800 sm:px-7">
                             <p class="text-sm font-medium text-primary-600 dark:text-primary-400">Destino {{ indiceDestinoActivo + 1 }} de {{ destinos.length }}</p>
                             <h2 class="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">Atracciones en {{ destinoActivo?.nombre }}</h2>
-                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Completa el nombre y la descripción de cada atracción.</p>
+                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Cada tipo solo puede registrarse una vez. El contenido se agregará en cada imagen.</p>
                         </div>
 
                         <div class="space-y-3 p-4 sm:p-6">
                             @for (atraccion of atracciones; track atraccion.id) {
-                            <article class="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
-                                <button type="button" class="flex w-full items-center justify-between gap-4 bg-gray-50 px-4 py-4 text-left transition-colors hover:bg-gray-100 dark:bg-gray-800/50 dark:hover:bg-gray-800" [attr.aria-expanded]="atraccion.abierta" (click)="alternarAtraccion(atraccion.id)">
-                                    <span class="flex min-w-0 items-center gap-3"><mat-icon class="text-primary-600 dark:text-primary-400">tour</mat-icon><span class="truncate font-semibold text-gray-900 dark:text-white">{{ atraccion.tipo }}</span></span>
-                                    <mat-icon class="transition-transform" [class.rotate-180]="atraccion.abierta">expand_more</mat-icon>
-                                </button>
-                                @if (atraccion.abierta) {
-                                <div class="grid gap-4 border-t border-gray-200 p-4 dark:border-gray-800 sm:p-5">
-                                    <mat-form-field appearance="outline" class="w-full" subscriptSizing="dynamic">
-                                        <mat-label>Nombre de la atracción</mat-label>
-                                        <input matInput [(ngModel)]="atraccion.nombre" (ngModelChange)="programarTraduccion(atraccion)" required>
-                                    </mat-form-field>
-                                    <mat-form-field appearance="outline" class="w-full" subscriptSizing="dynamic">
-                                        <mat-label>Descripción</mat-label>
-                                        <textarea matInput rows="3" [(ngModel)]="atraccion.descripcion" (ngModelChange)="programarTraduccion(atraccion)" placeholder="Describe esta atracción"></textarea>
-                                    </mat-form-field>
-                                    @if (atraccion.traduciendo) {<p class="-mt-2 text-xs text-gray-500 dark:text-gray-400">Generando traducciones...</p>}
-                                    <div class="flex justify-end"><button mat-button color="warn" type="button" (click)="quitarAtraccion(atraccion.id)"><mat-icon class="mr-1 icon-size-5">delete</mat-icon>Quitar</button></div>
-                                </div>
-                                }
+                            <article class="flex items-center justify-between gap-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-4 dark:border-gray-800 dark:bg-gray-800/50">
+                                <span class="flex min-w-0 items-center gap-3"><mat-icon class="text-primary-600 dark:text-primary-400">tour</mat-icon><span class="truncate font-semibold text-gray-900 dark:text-white">{{ atraccion.tipo }}</span></span>
+                                <button mat-button color="warn" type="button" (click)="quitarAtraccion(atraccion.id)"><mat-icon class="mr-1 icon-size-5">delete</mat-icon>Quitar</button>
                             </article>
                             }
                         </div>
@@ -84,7 +68,6 @@
                     <footer class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <button mat-stroked-button type="button" [disabled]="indiceDestinoActivo === 0" (click)="regresarPaso()"><mat-icon class="mr-2 icon-size-5">arrow_back</mat-icon>Regresar</button>
                         <div class="flex flex-col items-end gap-1">
-                            @if (!destinoCompleto) {<p class="text-sm text-red-600 dark:text-red-400">Completa el nombre y la descripción de todas las atracciones.</p>}
                             <button mat-flat-button color="primary" type="button" [disabled]="!destinoCompleto || guardando" (click)="siguiente()">{{ guardando ? 'Guardando...' : indiceDestinoActivo === destinos.length - 1 ? 'Finalizar' : 'Siguiente' }}<mat-icon class="ml-2 icon-size-5">arrow_forward</mat-icon></button>
                         </div>
                     </footer>

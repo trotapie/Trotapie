@@ -92,6 +92,12 @@
           Agregar imagen
         </button>
         @if (showDeleteAllImages) {
+          @if (showUpdateOrder) {
+            <button mat-flat-button color="primary" type="button" (click)="updateOrder.emit()" [disabled]="isUpdatingOrder">
+              <mat-icon class="mr-2 icon-size-4" [svgIcon]="'heroicons_outline:arrows-up-down'"></mat-icon>
+              {{ isUpdatingOrder ? 'Actualizando...' : 'Actualizar orden' }}
+            </button>
+          }
           <button mat-stroked-button color="warn" type="button" (click)="deleteAllImages.emit()" [disabled]="isDeletingAllImages">
             <mat-icon class="mr-2 icon-size-4" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
             Eliminar todas
@@ -117,6 +123,10 @@
             {{ selectedImagesActionLabel }}
           </button>
           }
+          <button mat-stroked-button color="warn" type="button" (click)="deleteSelectedImages.emit(selectedImages)">
+            <mat-icon class="mr-2 icon-size-4" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+            Eliminar seleccionadas
+          </button>
           <button mat-stroked-button type="button" (click)="clearBulkSelection()">Limpiar selección</button>
         </div>
       </div>
@@ -236,6 +246,8 @@
                     [draggable]="!selectionModeActive"
                     (dragstart)="onImageDragStart(image, $event)"
                     (dragend)="onImageDragEnd()"
+                    (dragover)="onImageDragOver(image, $event)"
+                    (drop)="onImageDrop(image, $event)"
                     (click)="selectImage(image)"
                   >
                     @if (selectionModeActive) {

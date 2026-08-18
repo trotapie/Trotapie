@@ -53,6 +53,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
   guardando = false;
   guardandoUbicacion = false;
   actualizandoOrden = false;
+  ordenActividadesPendiente = false;
   error = '';
   mostrarModalExito = false;
   mensajeModalExito = 'Preview del destino actualizado correctamente.';
@@ -155,7 +156,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
       .map((control, formIndex) => ({ control, formIndex }))
       .filter(({ control }) => {
         const tipoId = this.parseNumber(control.get('catalogo_atraccion_id')?.value);
-        const nombre = control.get(['traducciones', 'es', 'nombre'])?.value;
+        const nombre = this.obtenerNombreTipoActividad(control);
 
         return (
           (this.tipoActividadActivo === null || tipoId === this.tipoActividadActivo) &&
@@ -577,8 +578,6 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     this.error = '';
 
     try {
-      await this.traducirActividadDesdeEspanol();
-
       const raw = this.formActividad.getRawValue();
       const actividadIndex = this.indiceActividadEditando;
       const actividadExistente = actividadIndex !== null ? this.actividadesArray.at(actividadIndex) : null;
@@ -605,11 +604,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
                 vigencia_hasta: null
               }]
             : [],
-        traducciones: this.idiomas.map((idioma) => ({
-          idioma_id: idioma.id,
-          nombre: this.limpiarTexto(raw?.traducciones?.[idioma.codigo]?.nombre),
-          descripcion: this.limpiarTexto(raw?.traducciones?.[idioma.codigo]?.descripcion)
-        }))
+        traducciones: []
       });
 
       if (actividadExistente) {
@@ -621,21 +616,13 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
         });
         actividadForm.setControl('imagenes', this.buildImagenesFormArray(imagenes));
 
-        this.idiomas.forEach((idioma) => {
-          actividadExistente.get(['traducciones', idioma.codigo, 'nombre'])?.setValue(
-            raw?.traducciones?.[idioma.codigo]?.nombre ?? ''
-          );
-          actividadExistente.get(['traducciones', idioma.codigo, 'descripcion'])?.setValue(
-            raw?.traducciones?.[idioma.codigo]?.descripcion ?? ''
-          );
-        });
       } else {
         const actividadGroup = this.buildActividadGroup({
           id: guardada.id,
           catalogo_atraccion_id: this.parseNumber(raw.catalogo_atraccion_id),
           imagen_fondo: imagenPrincipal ?? '',
           imagenes,
-          traducciones: raw.traducciones ?? {}
+          traducciones: {}
         });
         this.actividadesArray.push(actividadGroup);
       }
@@ -645,6 +632,65 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
       this.error = error?.message ?? 'No se pudo guardar la actividad.';
     } finally {
       this.guardandoActividad = false;
+    }
+  }
+
+  tipoYaRegistrado(tipoId: number): boolean {
+    return this.actividadesArray.controls.some((actividad) =>
+      this.parseNumber(actividad.get('catalogo_atraccion_id')?.value) === tipoId
+    );
+  }
+
+  async moverActividad(formIndex: number, direccion: -1 | 1): Promise<void> {
+    const destinoIndex = formIndex + direccion;
+    if (this.actualizandoOrden || destinoIndex < 0 || destinoIndex >= this.actividadesArray.length) return;
+
+    const actividad = this.actividadesArray.at(formIndex);
+    if (!this.parseNumber(actividad.get('id')?.value) || !this.parseNumber(this.actividadesArray.at(destinoIndex).get('id')?.value)) return;
+
+    this.actividadesArray.removeAt(formIndex);
+    this.actividadesArray.insert(destinoIndex, actividad);
+    this.normalizarOrdenActividades();
+    this.actualizandoOrden = true;
+    this.error = '';
+    try {
+      await this.destinosService.actualizarOrdenActividadesDestinoAdmin(
+        this.destinoId,
+        this.actividadesArray.controls.map((control, index) => ({ id: Number(control.get('id')?.value), orden: index + 1 }))
+      );
+    } catch (error: any) {
+      this.actividadesArray.removeAt(destinoIndex);
+      this.actividadesArray.insert(formIndex, actividad);
+      this.normalizarOrdenActividades();
+      this.error = error?.message ?? 'No se pudo actualizar el orden de las actividades.';
+    } finally {
+      this.actualizandoOrden = false;
+    }
+  }
+
+  dropActividad(event: CdkDragDrop<any[]>): void {
+    if (event.previousIndex === event.currentIndex || this.actualizandoOrden) return;
+    const actividad = this.actividadesArray.at(event.previousIndex);
+    this.actividadesArray.removeAt(event.previousIndex);
+    this.actividadesArray.insert(event.currentIndex, actividad);
+    this.normalizarOrdenActividades();
+    this.ordenActividadesPendiente = true;
+  }
+
+  async actualizarOrdenActividades(): Promise<void> {
+    if (!this.ordenActividadesPendiente || this.actualizandoOrden) return;
+    this.actualizandoOrden = true;
+    this.error = '';
+    try {
+      await this.destinosService.actualizarOrdenActividadesDestinoAdmin(
+        this.destinoId,
+        this.actividadesArray.controls.map((control, index) => ({ id: Number(control.get('id')?.value), orden: index + 1 }))
+      );
+      this.ordenActividadesPendiente = false;
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudo actualizar el orden de las actividades.';
+    } finally {
+      this.actualizandoOrden = false;
     }
   }
 
@@ -1169,11 +1215,18 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
 
     return this.fb.group({
       id: [this.parseNumber(item?.id)],
+      orden: [this.parseNumber(item?.orden) ?? this.actividadesArray.length + 1],
       catalogo_atraccion_id: [this.parseNumber(item?.catalogo_atraccion_id)],
       tipo_actividad: [item?.tipo_actividad ?? ''],
       imagen_fondo: [item?.imagen_fondo ?? ''],
       imagenes: this.buildImagenesFormArray(imagenes),
       traducciones: this.fb.group(traducciones)
+    });
+  }
+
+  private normalizarOrdenActividades(): void {
+    this.actividadesArray.controls.forEach((actividad, index) => {
+      actividad.get('orden')?.setValue(index + 1, { emitEvent: false });
     });
   }
 
