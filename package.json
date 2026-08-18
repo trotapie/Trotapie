@@ -7,11 +7,11 @@
     "private": true,
     "scripts": {
         "ng": "ng",
-        "start": "ng serve",
-        "build": "ng build",
-        "watch": "ng build --watch --configuration development",
+        "start": "node scripts/generate-environment.mjs && ng serve",
+        "build": "node scripts/generate-environment.mjs && ng build",
+        "watch": "node scripts/generate-environment.mjs && ng build --watch --configuration development",
         "test": "ng test",
-        "deploy": "ng build --configuration production && npx angular-cli-ghpages --dir=dist/fuse/browser",
+        "deploy": "npm run build -- --configuration production && npx angular-cli-ghpages --dir=dist/fuse/browser",
         "analyze": "ng build --stats-json && npx source-map-explorer dist/fuse/browser/*.js"
     },
     "dependencies": {
