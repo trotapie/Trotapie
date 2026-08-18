@@ -1,4 +1,4 @@
-  <div class="tp-select-search" [class.tp-select-search--booking]="bookingStyle" [class.tp-select-search--disabled]="isDisabled" [class.tp-select-search--open]="abierto">
+  <div class="tp-select-search" [class.tp-select-search--booking]="bookingStyle" [class.tp-select-search--disabled]="isDisabled" [class.tp-select-search--open]="abierto" [class.tp-select-search--no-hover-highlight]="!hoverHighlight">
   @if (label) {
     <label class="tp-select-search__label" [class.tp-select-search__label--required]="required">{{ label }}</label>
   }

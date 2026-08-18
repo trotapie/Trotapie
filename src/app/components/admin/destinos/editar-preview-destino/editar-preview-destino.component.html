@@ -574,26 +574,29 @@
 
 @if (mostrarModalEditarActividad || mostrarModalNuevaActividad) {
   <div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
-    <div class="relative flex h-[85vh] w-full max-w-4xl flex-col rounded-2xl bg-white p-6 shadow-2xl">
+    <div [class]="mostrarModalEditarActividad
+      ? 'relative flex h-[85vh] w-full max-w-4xl flex-col rounded-2xl bg-white p-6 shadow-2xl'
+      : 'relative w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl'">
       <h3 class="shrink-0 text-xl font-semibold text-gray-900">
         {{ mostrarModalEditarActividad ? 'Galería de actividad' : 'Crear actividad' }}
       </h3>
 
-      <div class="mt-4 flex-1 overflow-y-auto pr-1">
+      <div [class]="mostrarModalEditarActividad ? 'mt-4 flex-1 overflow-y-auto pr-1' : 'mt-4'">
         <form [formGroup]="formActividad" class="space-y-4">
-          <mat-form-field class="w-full">
-            <mat-label>Tipo de actividad</mat-label>
-            <mat-select formControlName="catalogo_atraccion_id" [disabled]="mostrarModalEditarActividad">
-              @for (tipo of catalogoAtracciones; track tipo.id) {
-                @if (!tipoYaRegistrado(tipo.id) || tipo.id === formActividad.get('catalogo_atraccion_id')?.value) {
-                  <mat-option [value]="tipo.id">{{ tipo.nombre }}</mat-option>
-                }
-              }
-            </mat-select>
-            @if (formActividad.get('catalogo_atraccion_id')?.invalid && formActividad.get('catalogo_atraccion_id')?.touched) {
-              <mat-error>Selecciona un tipo de actividad.</mat-error>
-            }
-          </mat-form-field>
+          <app-tp-select-search
+            class="w-full"
+            label="Tipo de actividad"
+            placeholder="Selecciona un tipo"
+            searchPlaceholder="Buscar tipo de actividad"
+            [options]="opcionesCatalogoActividad"
+            [required]="true"
+            [hoverHighlight]="false"
+            [disabled]="mostrarModalEditarActividad || guardandoActividad"
+            formControlName="catalogo_atraccion_id"
+          ></app-tp-select-search>
+          @if (formActividad.get('catalogo_atraccion_id')?.invalid && formActividad.get('catalogo_atraccion_id')?.touched) {
+            <p class="-mt-2 text-sm text-red-600">Selecciona un tipo de actividad.</p>
+          }
           @if (mostrarModalEditarActividad) {
             <div class="rounded-xl border border-gray-200 bg-gray-50 p-4">
               <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
@@ -619,10 +622,6 @@
                   </a>
                 }
               </div>
-            </div>
-          } @else {
-            <div class="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
-              Puedes crear la actividad sin imagen. Al guardarla, agrega las imágenes desde el editor de imágenes.
             </div>
           }
         </form>

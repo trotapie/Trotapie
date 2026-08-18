@@ -149,6 +149,13 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     return this.catalogoAtracciones.filter((tipo) => tiposCargados.has(tipo.id));
   }
 
+  get opcionesCatalogoActividad(): TpSelectSearchOption[] {
+    const tipoSeleccionado = this.parseNumber(this.formActividad.get('catalogo_atraccion_id')?.value);
+    return this.catalogoAtracciones
+      .filter((tipo) => !this.tipoYaRegistrado(tipo.id) || tipo.id === tipoSeleccionado)
+      .map((tipo) => ({ value: tipo.id, label: tipo.nombre }));
+  }
+
   get actividadesFiltradas(): Array<{ control: any; formIndex: number }> {
     const busqueda = this.normalizarTextoFiltro(this.busquedaActividades);
 

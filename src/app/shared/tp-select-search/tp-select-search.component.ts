@@ -30,6 +30,7 @@ export class TpSelectSearchComponent implements ControlValueAccessor {
   @Input() required = false;
   @Input() disabled = false;
   @Input() bookingStyle = false;
+  @Input() hoverHighlight = true;
   @Output() selectionChange = new EventEmitter<string | number | null>();
   @ViewChild('searchInput') private searchInput?: ElementRef<HTMLInputElement>;
 
