@@ -15,7 +15,8 @@ export class MapaComponent implements OnInit, AfterViewInit {
     hotel: Hotel | null = null;
 
     async ngOnInit() {
-        this.L = await import('leaflet');
+        const leaflet = await import('leaflet');
+        this.L = (leaflet as any).default ?? leaflet;
         const hotel = sessionStorage.getItem('hotel');
 
         if (!hotel) {

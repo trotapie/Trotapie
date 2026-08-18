@@ -220,7 +220,8 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     });
 
     try {
-      this.L = await import('leaflet');
+      const leaflet = await import('leaflet');
+      this.L = (leaflet as any).default ?? leaflet;
       const data = await this.destinosService.obtenerPreviewDestinoAdmin(id);
       this.inicializarFormulario(data);
       this.actualizarPreviewUbicacion();
