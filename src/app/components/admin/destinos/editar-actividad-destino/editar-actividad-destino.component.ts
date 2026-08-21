@@ -1897,6 +1897,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       this.cerrarEditorImagen();
     } catch (error: any) {
       this.error = error?.message ?? 'No se pudo guardar la imagen.';
+      this.toast.show({ title: 'No se pudo guardar la imagen', message: this.error, variant: 'error' });
     } finally {
       this.guardandoImagenes = false;
     }
@@ -1962,6 +1963,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       return true;
     } catch (error: any) {
       this.error = error?.message ?? 'No se pudieron guardar las traducciones.';
+      this.toast.show({ title: 'No se pudieron guardar los cambios', message: this.error, variant: 'error' });
       return false;
     } finally {
       this.guardandoTraducciones = false;
@@ -2003,6 +2005,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       return true;
     } catch (error: any) {
       this.error = error?.message ?? 'No se pudieron guardar las imagenes.';
+      this.toast.show({ title: 'No se pudieron guardar las imágenes', message: this.error, variant: 'error' });
       return false;
     } finally {
       this.guardandoImagenes = false;
@@ -2106,13 +2109,6 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       return String(controlId ?? draftKey) === id;
     });
     return index >= 0 ? index : null;
-  }
-
-  async onImagenEsBlurOEnter(event?: Event): Promise<void> {
-    if (event instanceof KeyboardEvent && event.key === 'Enter') {
-      event.preventDefault();
-    }
-    await this.traducirImagenEditando();
   }
 
   private async traducirImagenEditando(): Promise<void> {

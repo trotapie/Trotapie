@@ -271,8 +271,8 @@
                      </div>
                    </div>
                    <div formGroupName="es" class="grid gap-4">
-                     <app-tp-input label="Nombre" placeholder="Título de esta imagen" formControlName="nombre" [required]="true" (blur)="onImagenEsBlurOEnter()"></app-tp-input>
-                     <app-tp-textarea label="Descripción" placeholder="Describe esta imagen" formControlName="descripcion" [rows]="3" (blur)="onImagenEsBlurOEnter()"></app-tp-textarea>
+                      <app-tp-input label="Nombre" placeholder="Título de esta imagen" formControlName="nombre" [required]="true"></app-tp-input>
+                      <app-tp-textarea label="Descripción" placeholder="Describe esta imagen" formControlName="descripcion" [rows]="3"></app-tp-textarea>
                    </div>
                    <div class="mt-4 grid gap-3 md:grid-cols-2">
                      @for (idioma of idiomas; track idioma.id) {

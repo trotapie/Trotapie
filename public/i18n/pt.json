@@ -121,5 +121,21 @@
   "opcion-sin-seguro": "Tarifa não reembolsável",
   "opcion-con-seguro": "Reserva com sinal",
   "opcion-a-meses": "Em parcelas",
-  "regresar": "Voltar"
+   "regresar": "Voltar",
+   "tipos-de-viaje": "Tipos de viagem",
+   "volver-a-tipos-viaje": "Voltar aos tipos de viagem",
+   "explora-el-mundo": "Explore o mundo",
+   "catalogo-destinos-descripcion": "Escolha uma experiência ou busque o destino que você tem em mente.",
+   "explora-por-experiencia": "Explore por experiência",
+   "cantidad-destinos": "{{cantidad}} destinos",
+   "cargando-destinos": "Carregando destinos...",
+   "error-cargar-destinos": "Não foi possível carregar os destinos",
+   "revisa-conexion": "Verifique sua conexão e tente novamente.",
+   "destino-no-encontrado": "Não encontramos esse destino",
+   "prueba-otra-busqueda": "Tente outra busca ou explore todas as experiências.",
+   "lista-destinos": "Lista de destinos",
+   "explorar-destino": "Explorar {{destino}}",
+   "vista-de-destino": "Vista de {{destino}}",
+   "mexico": "México",
+   "ver-destino": "Ver destino"
 }

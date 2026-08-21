@@ -121,5 +121,21 @@
   "opcion-sin-seguro": "Non-refundable rate",
   "opcion-con-seguro": "Reservation deposit",
   "opcion-a-meses": "Installments",
-  "regresar": "Back"
+   "regresar": "Back",
+   "tipos-de-viaje": "Travel types",
+   "volver-a-tipos-viaje": "Back to travel types",
+   "explora-el-mundo": "Explore the world",
+   "catalogo-destinos-descripcion": "Choose an experience or search for the destination you have in mind.",
+   "explora-por-experiencia": "Explore by experience",
+   "cantidad-destinos": "{{cantidad}} destinations",
+   "cargando-destinos": "Loading destinations...",
+   "error-cargar-destinos": "We couldn't load the destinations",
+   "revisa-conexion": "Check your connection and try again.",
+   "destino-no-encontrado": "We couldn't find that destination",
+   "prueba-otra-busqueda": "Try another search or explore all experiences.",
+   "lista-destinos": "Destination list",
+   "explorar-destino": "Explore {{destino}}",
+   "vista-de-destino": "View of {{destino}}",
+   "mexico": "Mexico",
+   "ver-destino": "View destination"
 }

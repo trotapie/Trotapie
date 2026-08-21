@@ -362,29 +362,43 @@
 
 .category-list {
   display: flex;
-  gap: 0.55rem;
+  gap: 0.4rem;
   overflow-x: auto;
-  padding: 0.2rem 0.1rem 0.45rem;
+  padding: 0.15rem 0.1rem 0.45rem;
   scrollbar-width: none;
 }
 
 .category-list::-webkit-scrollbar { display: none; }
 
 .category-list button {
-  flex: 0 0 auto;
-  min-height: 2.5rem;
-  padding: 0.55rem 0.95rem;
-  border: 1px solid #cddcd4;
-  border-radius: 999px;
-  background: #fff;
-  color: #476156;
-  font-size: 0.84rem;
-  font-weight: 650;
-  transition: background 180ms ease, color 180ms ease, border-color 180ms ease;
+  flex: 0 0 9rem;
+  width: 9rem;
+  min-height: 3.25rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid transparent;
+  border-radius: 0.85rem;
+  background: transparent;
+  color: #63758a;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-align: center;
+  transition: background 180ms ease, color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
 }
 
-.category-list button:hover { border-color: #4a9a79; color: #176a4b; }
-.category-list .category-active { border-color: #176a4b; background: #176a4b; color: #fff; }
+.category-list button:hover {
+  background: #f1f5f2;
+  color: #294f42;
+}
+
+.category-list .category-active {
+  border-color: #176a4b;
+  background: #176a4b;
+  color: #fff;
+  box-shadow: 0 2px 7px rgba(23, 106, 75, 0.18);
+}
+
+.category-list .category-active:hover { background: #125b40; color: #fff; }
+.category-list button:active { transform: scale(0.98); }
 
 .destination-list {
   display: grid;
@@ -496,7 +510,21 @@
   .catalog-toolbar { margin-top: 1.5rem; padding: 0.85rem; border-radius: 0.85rem; }
   .search-form { min-height: 3.25rem; border-radius: 0.8rem; }
   .category-heading { align-items: flex-start; }
-  .category-list { margin-right: -1rem; padding-right: 1rem; }
+  .category-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(calc((100% - 0.7rem) / 3), 1fr));
+    gap: 0.35rem;
+    overflow: visible;
+    margin-right: 0;
+    padding-right: 0;
+  }
+  .category-list button {
+    width: 100%;
+    min-width: 0;
+    flex-basis: auto;
+    padding-inline: 0.4rem;
+    font-size: 0.78rem;
+  }
   .destination-grid { gap: 0.9rem; }
   .destination-row { min-height: 6.5rem; gap: 0.8rem; }
   .destination-thumbnail { flex-basis: 7.25rem; width: 7.25rem; height: 4.8rem; }

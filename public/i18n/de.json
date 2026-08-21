@@ -121,5 +121,21 @@
   "opcion-sin-seguro": "Nicht erstattungsfähiger Tarif",
   "opcion-con-seguro": "Reservierungsanzahlung",
   "opcion-a-meses": "Ratenzahlung",
-  "regresar": "Zurück"
+   "regresar": "Zurück",
+   "tipos-de-viaje": "Reisearten",
+   "volver-a-tipos-viaje": "Zurück zu den Reisearten",
+   "explora-el-mundo": "Entdecke die Welt",
+   "catalogo-destinos-descripcion": "Wähle ein Erlebnis oder suche nach dem Reiseziel, das dir vorschwebt.",
+   "explora-por-experiencia": "Nach Erlebnis entdecken",
+   "cantidad-destinos": "{{cantidad}} Reiseziele",
+   "cargando-destinos": "Reiseziele werden geladen...",
+   "error-cargar-destinos": "Die Reiseziele konnten nicht geladen werden",
+   "revisa-conexion": "Überprüfe deine Verbindung und versuche es erneut.",
+   "destino-no-encontrado": "Dieses Reiseziel wurde nicht gefunden",
+   "prueba-otra-busqueda": "Versuche eine andere Suche oder entdecke alle Erlebnisse.",
+   "lista-destinos": "Liste der Reiseziele",
+   "explorar-destino": "{{destino}} entdecken",
+   "vista-de-destino": "Ansicht von {{destino}}",
+   "mexico": "Mexiko",
+   "ver-destino": "Reiseziel ansehen"
 }

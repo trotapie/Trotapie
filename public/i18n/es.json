@@ -121,6 +121,22 @@
   "opcion-sin-seguro": "Tarifa no reembolsable",
   "opcion-con-seguro": "Apartado",
   "opcion-a-meses": "A meses",
-  "regresar": "Regresar"
+   "regresar": "Regresar",
+   "tipos-de-viaje": "Tipos de viaje",
+   "volver-a-tipos-viaje": "Volver a tipos de viaje",
+   "explora-el-mundo": "Explora el mundo",
+   "catalogo-destinos-descripcion": "Elige una experiencia o busca el destino que tienes en mente.",
+   "explora-por-experiencia": "Explora por experiencia",
+   "cantidad-destinos": "{{cantidad}} destinos",
+   "cargando-destinos": "Cargando destinos...",
+   "error-cargar-destinos": "No pudimos cargar los destinos",
+   "revisa-conexion": "Revisa tu conexión e inténtalo de nuevo.",
+   "destino-no-encontrado": "No encontramos ese destino",
+   "prueba-otra-busqueda": "Prueba con otra búsqueda o explora todas las experiencias.",
+   "lista-destinos": "Lista de destinos",
+   "explorar-destino": "Explorar {{destino}}",
+   "vista-de-destino": "Vista de {{destino}}",
+   "mexico": "México",
+   "ver-destino": "Ver destino"
 
 }

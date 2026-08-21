@@ -60,10 +60,19 @@
       </app-tp-multiselect>
     }
 
+    <app-tp-select-search
+      label="Clasificación"
+      placeholder="Todas las clasificaciones"
+      searchPlaceholder="Buscar clasificación"
+      [options]="clasificacionesOpciones"
+      [ngModel]="tipoTuristicoId ?? 0"
+      (selectionChange)="seleccionarClasificacion($event)">
+    </app-tp-select-search>
+
     <app-tp-search-input
       class="catalogo-filtros__buscador"
        label="Buscar destino"
-       placeholder="Ej. Acapulco de Juárez"
+       [placeholder]="ejemploBusqueda"
        searchAriaLabel="Buscar destinos"
        [searchDelay]="1000"
        [(ngModel)]="busqueda"

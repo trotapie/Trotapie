@@ -3,14 +3,15 @@ import { FormsModule } from '@angular/forms';
 import { PageEvent } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
-import { DestinoCatalogoNavegable, DestinosService, DivisionAreaCatalogo, PaisCatalogo, RegionCatalogo } from 'app/core/destinos.service';
+import { DestinoCatalogoNavegable, DestinosService, DivisionAreaCatalogo, PaisCatalogo, RegionCatalogo, TipoTuristicoCatalogo } from 'app/core/destinos.service';
 import { MaterialModule } from 'app/shared/material.module';
 import { TpMultiselectComponent, TpMultiselectOption } from 'app/shared/tp-multiselect/tp-multiselect.component';
 import { TpSearchInputComponent } from 'app/shared/tp-search-input/tp-search-input.component';
+import { TpSelectSearchComponent, TpSelectSearchOption } from 'app/shared/tp-select-search/tp-select-search.component';
 import { ResumenCatalogoDestinosComponent } from '../resumen-catalogo-destinos/resumen-catalogo-destinos.component';
 import { TpToastService } from 'app/shared/tp-toast/tp-toast.service';
 
-@Component({ selector: 'app-destinos', standalone: true, imports: [MaterialModule, FormsModule, TpMultiselectComponent, TpSearchInputComponent], templateUrl: './destinos.component.html', styleUrl: './destinos.component.scss' })
+@Component({ selector: 'app-destinos', standalone: true, imports: [MaterialModule, FormsModule, TpMultiselectComponent, TpSearchInputComponent, TpSelectSearchComponent], templateUrl: './destinos.component.html', styleUrl: './destinos.component.scss' })
 export class DestinosComponent implements OnInit {
   private readonly destinosService = inject(DestinosService);
   private readonly route = inject(ActivatedRoute);
@@ -19,27 +20,31 @@ export class DestinosComponent implements OnInit {
   private readonly toast = inject(TpToastService);
   readonly displayedColumns = ['destino', 'clasificacion', 'ubicacion', 'estado', 'acciones'];
   tipoVisible: 'NACIONAL' | 'INTERNACIONAL' = 'NACIONAL';
-  regiones: RegionCatalogo[] = []; paises: PaisCatalogo[] = []; divisiones: DivisionAreaCatalogo[] = [];
+  regiones: RegionCatalogo[] = []; paises: PaisCatalogo[] = []; divisiones: DivisionAreaCatalogo[] = []; clasificaciones: TipoTuristicoCatalogo[] = [];
   regionIds: number[] = []; paisIds: number[] = []; divisionAreaIds: number[] = [];
-  busqueda = ''; soloActivos = false; destinos: DestinoCatalogoNavegable[] = []; total = 0;
+  busqueda = ''; tipoTuristicoId: number | null = null; soloActivos = false; destinos: DestinoCatalogoNavegable[] = []; total = 0;
+  ejemploBusqueda = '';
   pageIndex = 0; pageSize = 25; pageSizeOptions = [10, 25, 50, 100]; cargando = true; error = ''; activandoDestinoId: number | null = null;
 
   async ngOnInit() {
     this.restaurarEstadoDesdeUrl();
     await this.cargarFiltros();
+    await this.cargarClasificaciones();
     await this.cargarDestinos();
   }
   get divisionesOpciones(): TpMultiselectOption[] { return this.divisiones.map((item) => ({ value: item.id, label: item.nombre })); }
   get regionesOpciones(): TpMultiselectOption[] { return this.regiones.map((item) => ({ value: item.id, label: item.nombre })); }
   get paisesOpciones(): TpMultiselectOption[] { return this.paises.map((item) => ({ value: item.id, label: item.nombre })); }
+  get clasificacionesOpciones(): TpSelectSearchOption[] { return [{ value: 0, label: 'Todas las clasificaciones' }, ...this.clasificaciones.map((item) => ({ value: item.id, label: item.nombre }))]; }
 
-  async seleccionarTipo(tipo: 'NACIONAL' | 'INTERNACIONAL') { if (tipo === this.tipoVisible) return; this.tipoVisible = tipo; this.regionIds = []; this.paisIds = []; this.divisionAreaIds = []; this.pageIndex = 0; await this.cargarFiltros(); await this.cargarDestinos(); this.actualizarUrlFiltros(); }
-  async seleccionarRegion(ids: Array<string | number>) { this.regionIds = this.normalizarIds(ids); this.paisIds = []; this.pageIndex = 0; await this.cargarPaises(); await this.cargarDestinos(); this.actualizarUrlFiltros(); }
-  async seleccionarPais(ids: Array<string | number>) { this.paisIds = this.normalizarIds(ids); this.pageIndex = 0; await this.cargarDestinos(); this.actualizarUrlFiltros(); }
-  async seleccionarDivision(ids: Array<string | number>) { this.divisionAreaIds = this.normalizarIds(ids); this.pageIndex = 0; await this.cargarDestinos(); this.actualizarUrlFiltros(); }
-  async alternarSoloActivos() { this.soloActivos = !this.soloActivos; this.pageIndex = 0; await this.cargarDestinos(); this.actualizarUrlFiltros(); }
+  async seleccionarTipo(tipo: 'NACIONAL' | 'INTERNACIONAL') { if (tipo === this.tipoVisible) return; this.tipoVisible = tipo; this.regionIds = []; this.paisIds = []; this.divisionAreaIds = []; this.pageIndex = 0; await this.cargarFiltros(); await this.cargarClasificaciones(); await this.cargarDestinos(); this.actualizarUrlFiltros(); }
+  async seleccionarRegion(ids: Array<string | number>) { this.regionIds = this.normalizarIds(ids); this.paisIds = []; this.pageIndex = 0; await this.cargarPaises(); await this.cargarClasificaciones(); await this.cargarDestinos(); this.actualizarUrlFiltros(); }
+  async seleccionarPais(ids: Array<string | number>) { this.paisIds = this.normalizarIds(ids); this.pageIndex = 0; await this.cargarClasificaciones(); await this.cargarDestinos(); this.actualizarUrlFiltros(); }
+  async seleccionarDivision(ids: Array<string | number>) { this.divisionAreaIds = this.normalizarIds(ids); this.pageIndex = 0; await this.cargarClasificaciones(); await this.cargarDestinos(); this.actualizarUrlFiltros(); }
+  async seleccionarClasificacion(value: string | number | null) { const id = Number(value); this.tipoTuristicoId = Number.isInteger(id) && id > 0 ? id : null; this.pageIndex = 0; await this.cargarDestinos(); this.actualizarUrlFiltros(); }
+  async alternarSoloActivos() { this.soloActivos = !this.soloActivos; this.pageIndex = 0; await this.cargarClasificaciones(); await this.cargarDestinos(); this.actualizarUrlFiltros(); }
   async buscar() { this.pageIndex = 0; await this.cargarDestinos(); this.actualizarUrlFiltros(); }
-  async limpiarFiltros() { this.regionIds = []; this.paisIds = []; this.divisionAreaIds = []; this.busqueda = ''; this.soloActivos = false; this.pageIndex = 0; await this.cargarFiltros(); await this.cargarDestinos(); this.actualizarUrlFiltros(); }
+  async limpiarFiltros() { this.regionIds = []; this.paisIds = []; this.divisionAreaIds = []; this.busqueda = ''; this.tipoTuristicoId = null; this.soloActivos = false; this.pageIndex = 0; await this.cargarFiltros(); await this.cargarClasificaciones(); await this.cargarDestinos(); this.actualizarUrlFiltros(); }
   async cambiarPagina(event: PageEvent) { this.pageIndex = event.pageIndex; this.pageSize = event.pageSize; await this.cargarDestinos(); this.actualizarUrlFiltros(); }
   editarDestino(destino: DestinoCatalogoNavegable) { return this.router.navigate(['/admin/destinos/configurar-destinos/editar', destino.destinoId], { queryParams: this.obtenerQueryParamsFiltros() }); }
   administrarTiposTuristicos() { return this.router.navigate(['/admin/catalogos/tipos-turisticos']); }
@@ -86,12 +91,14 @@ export class DestinosComponent implements OnInit {
     });
   }
 
-  get tieneFiltrosActivos() { return Boolean(this.regionIds.length || this.paisIds.length || this.divisionAreaIds.length || this.busqueda.trim() || this.soloActivos); }
+  get tieneFiltrosActivos() { return Boolean(this.regionIds.length || this.paisIds.length || this.divisionAreaIds.length || this.busqueda.trim() || this.tipoTuristicoId || this.soloActivos); }
   get textoUbicacion() { return this.tipoVisible === 'NACIONAL' ? 'México por división de área' : 'Mundo por región y país'; }
 
   private async cargarFiltros() { if (this.tipoVisible === 'NACIONAL') { this.divisiones = await this.destinosService.obtenerCatalogoNacionalesDivisionAreas(); this.regiones = []; this.paises = []; return; } this.regiones = await this.destinosService.obtenerCatalogoInternacionalRegiones(); await this.cargarPaises(); this.divisiones = []; }
   private async cargarPaises() { this.paises = this.tipoVisible === 'INTERNACIONAL' ? await this.destinosService.obtenerCatalogoInternacionalPaises(this.regionIds) : []; }
-  private async cargarDestinos() { this.cargando = true; this.error = ''; try { const pagina = await this.destinosService.buscarDestinosCatalogo({ tipo: this.tipoVisible, page: this.pageIndex, pageSize: this.pageSize, regionIds: this.regionIds, paisIds: this.paisIds, divisionAreaIds: this.divisionAreaIds, busqueda: this.busqueda, soloActivos: this.soloActivos }); this.destinos = pagina.items; this.total = pagina.total; } catch (error: any) { this.error = error?.message ?? 'No se pudieron cargar los destinos del catálogo.'; this.destinos = []; this.total = 0; } finally { this.cargando = false; } }
+  private async cargarClasificaciones() { this.clasificaciones = await this.destinosService.obtenerTiposTuristicosConfigurados({ tipo: this.tipoVisible, regionIds: this.regionIds, paisIds: this.paisIds, divisionAreaIds: this.divisionAreaIds, soloActivos: this.soloActivos }); if (this.tipoTuristicoId && !this.clasificaciones.some((item) => item.id === this.tipoTuristicoId)) this.tipoTuristicoId = null; }
+  private async cargarDestinos() { this.cargando = true; this.error = ''; try { const pagina = await this.destinosService.buscarDestinosCatalogo({ tipo: this.tipoVisible, page: this.pageIndex, pageSize: this.pageSize, regionIds: this.regionIds, paisIds: this.paisIds, divisionAreaIds: this.divisionAreaIds, busqueda: this.busqueda, tipoTuristicoId: this.tipoTuristicoId, soloActivos: this.soloActivos }); this.destinos = pagina.items; this.total = pagina.total; this.actualizarEjemploBusqueda(); } catch (error: any) { this.error = error?.message ?? 'No se pudieron cargar los destinos del catálogo.'; this.destinos = []; this.total = 0; this.actualizarEjemploBusqueda(); } finally { this.cargando = false; } }
+  private actualizarEjemploBusqueda(): void { const destino = this.destinos[Math.floor(Math.random() * this.destinos.length)]?.destinoNombre; const respaldo = this.tipoVisible === 'NACIONAL' ? ['Acapulco de Juárez', 'San Miguel de Allende', 'Puerto Vallarta'] : ['París', 'Nueva York', 'Buenos Aires']; this.ejemploBusqueda = `Ej. ${destino ?? respaldo[Math.floor(Math.random() * respaldo.length)]}`; }
   private normalizarIds(ids: Array<string | number>): number[] { return ids.map((id) => Number(id)).filter((id) => Number.isFinite(id) && id > 0); }
   private restaurarEstadoDesdeUrl(): void {
     const params = this.route.snapshot.queryParamMap;
@@ -100,6 +107,7 @@ export class DestinosComponent implements OnInit {
     this.paisIds = this.parsearIds(params.get('paisIds'));
     this.divisionAreaIds = this.parsearIds(params.get('divisionAreaIds'));
     this.busqueda = params.get('busqueda') ?? '';
+    this.tipoTuristicoId = this.parsearNumero(params.get('tipoTuristicoId'), 0) || null;
     this.soloActivos = params.get('soloActivos') === 'true';
     this.pageIndex = this.parsearNumero(params.get('page'), 0);
     const pageSize = this.parsearNumero(params.get('pageSize'), 25);
@@ -116,6 +124,7 @@ export class DestinosComponent implements OnInit {
       paisIds: this.paisIds.length ? this.paisIds.join(',') : null,
       divisionAreaIds: this.divisionAreaIds.length ? this.divisionAreaIds.join(',') : null,
       busqueda: this.busqueda.trim() || null,
+      tipoTuristicoId: this.tipoTuristicoId,
       soloActivos: this.soloActivos || null,
       page: this.pageIndex || null,
       pageSize: this.pageSize === 25 ? null : this.pageSize

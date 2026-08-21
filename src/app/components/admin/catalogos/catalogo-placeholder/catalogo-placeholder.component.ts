@@ -30,6 +30,10 @@ interface IAtraccionTraduccionPreview {
   descripcion: string;
 }
 
+interface ITipoTuristicoTraduccionPreview {
+  nombre: string;
+}
+
 interface CatalogoColumna {
   key: string;
   label: string;
@@ -295,6 +299,8 @@ export class CatalogoPlaceholderComponent implements OnInit {
   traduccionesAtraccionPreview: Record<string, IAtraccionTraduccionPreview> = {};
   traduciendoAtraccion = false;
   cargandoTraduccionesAtraccion = false;
+  traduccionesTipoTuristicoPreview: Record<string, ITipoTuristicoTraduccionPreview> = {};
+  cargandoTraduccionesTipoTuristico = false;
   traduccionesTipoImagenPreview: Record<string, { descripcion: string }> = {};
   traduciendoTipoImagen = false;
   politicasDisponiblesTarifa: IPoliticaTarifaAdmin[] = [];
@@ -605,6 +611,10 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
   get tieneTraduccionesAtraccionPreview(): boolean {
     return Object.keys(this.traduccionesAtraccionPreview ?? {}).length > 0;
+  }
+
+  get tieneTraduccionesTipoTuristicoPreview(): boolean {
+    return Object.keys(this.traduccionesTipoTuristicoPreview ?? {}).length > 0;
   }
 
   get tieneTraduccionesTipoImagenPreview(): boolean {
@@ -1331,6 +1341,18 @@ export class CatalogoPlaceholderComponent implements OnInit {
       };
       this.traduccionesTipoImagenPreview = this.normalizarTraduccionesTipoImagen(item?.traducciones_preview);
       this.ultimaLlaveTraduccionTipoImagen = this.limpiarTexto(item?.descripcion);
+    } else if (this.esCatalogoTiposTuristicos) {
+      this.traduccionesTipoTuristicoPreview = {};
+      this.cargandoTraduccionesTipoTuristico = true;
+      this.modalEdicionAbierto = true;
+      try {
+        this.traduccionesTipoTuristicoPreview = await this.catalogosAdmin.obtenerTraduccionesTipoTuristicoAdmin(this.editingId);
+      } catch (error: any) {
+        this.errorModalEdicion = error?.message ?? 'No se pudieron cargar las traducciones del tipo turístico.';
+      } finally {
+        this.cargandoTraduccionesTipoTuristico = false;
+      }
+      return;
     }
 
     if (this.usaModalEdicion) {
@@ -1353,6 +1375,8 @@ export class CatalogoPlaceholderComponent implements OnInit {
     this.limpiarVistaPreviaDescuento();
     this.limpiarVistaPreviaAtraccion();
     this.limpiarVistaPreviaTipoImagen();
+    this.traduccionesTipoTuristicoPreview = {};
+    this.cargandoTraduccionesTipoTuristico = false;
     this.filtroPoliticasTarifa = '';
     this.politicasTarifaSeleccionadas.clear();
   }

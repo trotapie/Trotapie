@@ -103,6 +103,7 @@ export interface FiltrosDestinoCatalogo {
   paisIds?: number[];
   divisionAreaIds?: number[];
   busqueda?: string;
+  tipoTuristicoId?: number | null;
   soloActivos?: boolean;
   soloConfigurados?: boolean;
 }
@@ -1423,17 +1424,32 @@ export class DestinosService {
     if (error) throw error;
   }
 
-  async obtenerTiposTuristicosCatalogo(incluirInactivos = false): Promise<TipoTuristicoCatalogo[]> {
+  async obtenerTiposTuristicosCatalogo(incluirInactivos = false, idioma = getDefaultLang()): Promise<TipoTuristicoCatalogo[]> {
+    const idiomaActivo = idioma.toLowerCase();
     let query = this.client
       .from('catalogo_tipos_turisticos')
       .select('id, nombre, slug, orden, activo')
       .order('orden', { ascending: true })
       .order('nombre', { ascending: true });
     if (!incluirInactivos) query = query.eq('activo', true);
-    const { data, error } = await query;
+    const [tiposResultado, traduccionesResultado] = await Promise.all([
+      query,
+      this.client
+        .from('catalogo_tipos_turisticos_traducciones')
+        .select('tipo_turistico_id, nombre, idioma:idiomas(codigo)')
+    ]);
+    const { data, error } = tiposResultado;
     if (error) throw error;
+    if (traduccionesResultado.error) throw traduccionesResultado.error;
+
+    const traduccionesPorTipo = new Map(
+      (traduccionesResultado.data ?? [])
+        .filter((traduccion: any) => traduccion.idioma?.codigo === idiomaActivo)
+        .map((traduccion: any) => [Number(traduccion.tipo_turistico_id), String(traduccion.nombre ?? '')])
+    );
+
     return (data ?? []).map((item: any) => ({
-      id: Number(item.id), nombre: String(item.nombre ?? ''), slug: String(item.slug ?? ''),
+      id: Number(item.id), nombre: traduccionesPorTipo.get(Number(item.id)) || String(item.nombre ?? ''), slug: String(item.slug ?? ''),
       orden: Number(item.orden ?? 0), activo: Boolean(item.activo)
     }));
   }
@@ -1445,6 +1461,7 @@ export class DestinosService {
       .select('id, nombre, slug, orden, activo')
       .single();
     if (error) throw error;
+    await this.guardarTraduccionesTipoTuristico(Number(data.id), payload.nombre);
     return data;
   }
 
@@ -1456,7 +1473,40 @@ export class DestinosService {
       .select('id, nombre, slug, orden, activo')
       .single();
     if (error) throw error;
+    await this.guardarTraduccionesTipoTuristico(id, payload.nombre);
     return data;
+  }
+
+  private async guardarTraduccionesTipoTuristico(tipoTuristicoId: number, nombre: string): Promise<void> {
+    const nombreLimpio = String(nombre ?? '').trim();
+    if (!nombreLimpio) return;
+
+    const [traducciones, idiomas] = await Promise.all([
+      this.supabase.traducirDesdeEspanol({ title: nombreLimpio, description: '' }),
+      this.supabase.obtenerIdiomasPreviewAdmin()
+    ]);
+    const idiomasPorCodigo = new Map(idiomas.map((idioma) => [idioma.codigo.toLowerCase(), idioma.id]));
+    const idiomaEspanolId = idiomasPorCodigo.get('es') || ES_ID;
+    const payload = Object.entries(traducciones ?? {})
+      .map(([codigo, valor]: [string, any]) => {
+        const idiomaId = idiomasPorCodigo.get(codigo.toLowerCase());
+        if (!idiomaId) return null;
+        return {
+          tipo_turistico_id: tipoTuristicoId,
+          idioma_id: idiomaId,
+          nombre: idiomaId === idiomaEspanolId ? nombreLimpio : String(valor?.title ?? '').trim()
+        };
+      })
+      .filter((traduccion) => traduccion !== null);
+
+    if (!payload.some((traduccion) => traduccion!.idioma_id === idiomaEspanolId)) {
+      payload.push({ tipo_turistico_id: tipoTuristicoId, idioma_id: idiomaEspanolId, nombre: nombreLimpio });
+    }
+
+    const { error } = await this.client
+      .from('catalogo_tipos_turisticos_traducciones')
+      .upsert(payload, { onConflict: 'tipo_turistico_id,idioma_id' });
+    if (error) throw error;
   }
 
   async obtenerConfiguracionGeografica(tipo: ConfiguracionGeograficaTipo): Promise<RegistroGeograficoAdmin[]> {
@@ -1741,6 +1791,7 @@ export class DestinosService {
     if (regionIds.length) query = query.in('region_id', regionIds);
     if (paisIds.length) query = query.in('pais_id', paisIds);
     if (divisionAreaIds.length) query = query.in('division_area_id', divisionAreaIds);
+    if (this.esIdValido(filtros.tipoTuristicoId)) query = query.eq('tipo_turistico_id', filtros.tipoTuristicoId);
     if (filtros.soloActivos) query = query.eq('activo', true);
 
     const busqueda = (filtros.busqueda ?? '')
@@ -1767,6 +1818,35 @@ export class DestinosService {
     }
 
     return { items, total: count ?? 0, page, pageSize };
+  }
+
+  async obtenerTiposTuristicosConfigurados(filtros: Pick<FiltrosDestinoCatalogo, 'tipo' | 'regionIds' | 'paisIds' | 'divisionAreaIds' | 'soloActivos'>): Promise<TipoTuristicoCatalogo[]> {
+    const vista = filtros.tipo === 'NACIONAL'
+      ? 'v_catalogo_nacionales_destinos_admin'
+      : 'v_catalogo_internacional_destinos_admin';
+    let query = this.client
+      .from(vista)
+      .select('tipo_turistico_id, tipo_turistico_nombre')
+      .not('tipo_turistico_id', 'is', null);
+
+    const regionIds = (filtros.regionIds ?? []).filter((id) => this.esIdValido(id));
+    const paisIds = (filtros.paisIds ?? []).filter((id) => this.esIdValido(id));
+    const divisionAreaIds = (filtros.divisionAreaIds ?? []).filter((id) => this.esIdValido(id));
+    if (regionIds.length) query = query.in('region_id', regionIds);
+    if (paisIds.length) query = query.in('pais_id', paisIds);
+    if (divisionAreaIds.length) query = query.in('division_area_id', divisionAreaIds);
+    if (filtros.soloActivos) query = query.eq('activo', true);
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    const tipos = new Map<number, TipoTuristicoCatalogo>();
+    (data ?? []).forEach((item: any) => {
+      const id = Number(item.tipo_turistico_id);
+      const nombre = String(item.tipo_turistico_nombre ?? '').trim();
+      if (this.esIdValido(id) && nombre) tipos.set(id, { id, nombre, slug: '', orden: 0, activo: true });
+    });
+    return [...tipos.values()].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
   }
 
   async obtenerDestinosCatalogoPublicables(tipo: 'NACIONAL' | 'INTERNACIONAL') {

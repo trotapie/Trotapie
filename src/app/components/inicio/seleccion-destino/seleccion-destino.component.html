@@ -178,48 +178,48 @@
                     @if(overlayAnimatedOnce){
                     <section class="catalog-page catalog-overlay" aria-labelledby="catalog-title">
                         <header class="catalog-header">
-                            <button type="button" class="back-button" (click)="hideOverlay()" aria-label="Volver a tipos de viaje">
+                            <button type="button" class="back-button" (click)="hideOverlay()" [attr.aria-label]="t('volver-a-tipos-viaje')">
                                 <mat-icon aria-hidden="true">arrow_back</mat-icon>
-                                <span>Tipos de viaje</span>
+                                <span>{{ t('tipos-de-viaje') }}</span>
                             </button>
                             <div class="catalog-heading">
-                                <span class="section-kicker">{{ tipoDestino === 1 ? 'Destinos nacionales' : 'Destinos internacionales' }}</span>
-                                <h1 id="catalog-title">{{ tipoDestino === 1 ? t('conoce-mas-de-mexico') : 'Explora el mundo' }}</h1>
-                                <p>Elige una experiencia o busca el destino que tienes en mente.</p>
+                                <span class="section-kicker">{{ tipoDestino === 1 ? t('destinos-nacionales') : t('destinos-internacionales') }}</span>
+                                <h1 id="catalog-title">{{ tipoDestino === 1 ? t('conoce-mas-de-mexico') : t('explora-el-mundo') }}</h1>
+                                <p>{{ t('catalogo-destinos-descripcion') }}</p>
                             </div>
                         </header>
 
                         <div class="catalog-toolbar">
                             <form [formGroup]="filterForm" class="search-form" role="search">
-                                <label for="destination-search" class="sr-only">Buscar destinos</label>
+                                <label for="destination-search" class="sr-only">{{ t('buscar-destinos') }}</label>
                                 <mat-icon aria-hidden="true">search</mat-icon>
                                 <input id="destination-search" formControlName="busqueda" type="search" [placeholder]="t('buscar-destinos')" autocomplete="off" />
                             </form>
                             <div class="category-block" aria-labelledby="category-title">
                                 <div class="category-heading">
-                                    <span id="category-title">Explora por experiencia</span>
-                                    <span class="result-count">{{ destinosFiltrados.length }} destinos</span>
+                                    <span id="category-title">{{ t('explora-por-experiencia') }}</span>
+                                    <span class="result-count">{{ t('cantidad-destinos', { cantidad: destinosFiltrados.length }) }}</span>
                                 </div>
-                                <div class="category-list" role="tablist" aria-label="Filtrar por tipo de experiencia">
-                                    <button *ngFor="let tipo of tiposTuristicos" type="button" role="tab" [attr.aria-selected]="selectedTipoTuristicoId === tipo.id" [class.category-active]="selectedTipoTuristicoId === tipo.id" (click)="filtrarPorTipo(tipo.id)">{{ tipo.nombre }}</button>
+                                <div class="category-list" role="group" aria-labelledby="category-title">
+                                    <button *ngFor="let tipo of tiposTuristicos" type="button" [attr.aria-pressed]="selectedTipoTuristicoId === tipo.id" [class.category-active]="selectedTipoTuristicoId === tipo.id" (click)="filtrarPorTipo(tipo.id)">{{ tipo.nombre }}</button>
                                 </div>
                             </div>
                         </div>
 
                         @if (cargando) {
-                        <div class="catalog-state" aria-busy="true">Cargando destinos...</div>
+                        <div class="catalog-state" aria-busy="true">{{ t('cargando-destinos') }}</div>
                         } @else if (error) {
-                        <div class="catalog-state catalog-error" role="alert"><h2>No pudimos cargar los destinos</h2><p>Revisa tu conexión e inténtalo de nuevo.</p></div>
+                        <div class="catalog-state catalog-error" role="alert"><h2>{{ t('error-cargar-destinos') }}</h2><p>{{ t('revisa-conexion') }}</p></div>
                         } @else if (destinosFiltrados.length === 0) {
-                        <div class="catalog-state" role="status"><mat-icon aria-hidden="true">travel_explore</mat-icon><h2>No encontramos ese destino</h2><p>Prueba con otra búsqueda o explora todas las experiencias.</p></div>
+                        <div class="catalog-state" role="status"><mat-icon aria-hidden="true">travel_explore</mat-icon><h2>{{ t('destino-no-encontrado') }}</h2><p>{{ t('prueba-otra-busqueda') }}</p></div>
                         } @else {
-                        <div class="destination-list" tabindex="0" aria-label="Lista de destinos" aria-live="polite">
-                            <button *ngFor="let item of destinosFiltrados" type="button" class="destination-row" (click)="cargaInfo(item)" [attr.aria-label]="'Explorar ' + item.nombre">
+                        <div class="destination-list" tabindex="0" [attr.aria-label]="t('lista-destinos')" aria-live="polite">
+                            <button *ngFor="let item of destinosFiltrados" type="button" class="destination-row" (click)="cargaInfo(item)" [attr.aria-label]="t('explorar-destino', { destino: item.nombre })">
                                 <div class="destination-thumbnail" [class.destination-image-empty]="!item.imagen_destino">
-                                    @if (item.imagen_destino) { <img [src]="item.imagen_destino" [alt]="'Vista de ' + item.nombre" loading="lazy" /> } @else { <mat-icon aria-hidden="true">landscape</mat-icon> }
+                                    @if (item.imagen_destino) { <img [src]="item.imagen_destino" [alt]="t('vista-de-destino', { destino: item.nombre })" loading="lazy" /> } @else { <mat-icon aria-hidden="true">landscape</mat-icon> }
                                 </div>
-                                <div class="destination-row-content"><div><h2>{{ item.nombre }}</h2><p>{{ item.division_area_nombre || 'México' }}</p></div></div>
-                                <span class="destination-link">Ver destino <mat-icon aria-hidden="true">arrow_forward</mat-icon></span>
+                                <div class="destination-row-content"><div><h2>{{ item.nombre }}</h2><p>{{ item.division_area_nombre || t('mexico') }}</p></div></div>
+                                <span class="destination-link">{{ t('ver-destino') }} <mat-icon aria-hidden="true">arrow_forward</mat-icon></span>
                             </button>
                         </div>
                         }

@@ -107,6 +107,21 @@ export class CatalogosAdminService {
     }, {});
   }
 
+  async obtenerTraduccionesTipoTuristicoAdmin(tipoTuristicoId: number) {
+    const { data, error } = await this.client
+      .from('catalogo_tipos_turisticos_traducciones')
+      .select('nombre, idioma:idiomas(codigo)')
+      .eq('tipo_turistico_id', tipoTuristicoId);
+
+    if (error) throw error;
+
+    return (data ?? []).reduce((acc: Record<string, { nombre: string }>, traduccion: any) => {
+      const codigo = String(traduccion?.idioma?.codigo ?? '').toLowerCase();
+      if (codigo) acc[codigo] = { nombre: String(traduccion?.nombre ?? '') };
+      return acc;
+    }, {});
+  }
+
   async obtenerCatalogoAdmin(catalogo: CatalogoAdminKey): Promise<any[]> {
     switch (catalogo) {
       case 'actividades': {
@@ -652,7 +667,7 @@ export class CatalogosAdminService {
       case 'estatus_empleado':
       case 'estatus_cotizacion':
       case 'tipos_turisticos': {
-        const tabla = catalogo;
+        const tabla = catalogo === 'tipos_turisticos' ? 'catalogo_tipos_turisticos' : catalogo;
         const { data: ultimoRegistro, error: ultimoError } = await this.client
           .from(tabla)
           .select('orden')
@@ -670,6 +685,9 @@ export class CatalogosAdminService {
         const { data, error } = await this.client.from(tabla).insert(insertPayload).select('id, nombre, activo, orden').single();
 
         if (error) throw error;
+        if (catalogo === 'tipos_turisticos') {
+          await this.guardarTraduccionesTipoTuristico(Number(data.id), String(payload.nombre ?? ''));
+        }
         return data;
       }
       case 'origen_reservacion': {
@@ -692,8 +710,8 @@ export class CatalogosAdminService {
             estatus: payload.estatus ?? true,
             orden: siguienteOrden
           })
-          .select('id, clave, nombre_cotizador, estatus, orden')
-          .single();
+           .select('id, clave, nombre_cotizador, estatus, orden')
+           .single();
         if (error) throw error;
         return data;
       }
@@ -1082,6 +1100,7 @@ export class CatalogosAdminService {
           .select('id')
           .maybeSingle();
         if (error) throw error;
+        await this.guardarTraduccionesTipoTuristico(id, String(payload.nombre ?? ''));
         return data;
       }
       case 'conceptos': {
@@ -1461,6 +1480,48 @@ export class CatalogosAdminService {
       .from('actividades_traducciones')
       .upsert(traduccionesPayload, { onConflict: 'actividad_id,idioma_id' });
 
+    if (error) throw error;
+  }
+
+  private async guardarTraduccionesTipoTuristico(tipoTuristicoId: number, nombre: string) {
+    const nombreLimpio = String(nombre ?? '').trim();
+    if (!nombreLimpio) {
+      return;
+    }
+
+    const traducciones = await this.supabase.traducirDesdeEspanol({
+      title: nombreLimpio,
+      description: ''
+    });
+    const idiomasDisponibles = await this.supabase.obtenerIdiomasPreviewAdmin();
+    const mapaIdiomas = new Map(idiomasDisponibles.map((idioma) => [idioma.codigo.toLowerCase(), idioma.id]));
+    const idiomaEspanolId = mapaIdiomas.get('es') || ES_ID;
+    const traduccionesPayload = Object.entries(traducciones ?? {})
+      .map(([codigo, valor]: [string, any]) => {
+        const idiomaId = mapaIdiomas.get(codigo.toLowerCase());
+        if (!idiomaId) {
+          return null;
+        }
+
+        return {
+          tipo_turistico_id: tipoTuristicoId,
+          idioma_id: idiomaId,
+          nombre: idiomaId === idiomaEspanolId ? nombreLimpio : String(valor?.title ?? '').trim()
+        };
+      })
+      .filter((traduccion) => traduccion !== null);
+
+    if (!traduccionesPayload.some((traduccion) => traduccion!.idioma_id === idiomaEspanolId)) {
+      traduccionesPayload.push({
+        tipo_turistico_id: tipoTuristicoId,
+        idioma_id: idiomaEspanolId,
+        nombre: nombreLimpio
+      });
+    }
+
+    const { error } = await this.client
+      .from('catalogo_tipos_turisticos_traducciones')
+      .upsert(traduccionesPayload, { onConflict: 'tipo_turistico_id,idioma_id' });
     if (error) throw error;
   }
 

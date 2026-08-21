@@ -7,7 +7,7 @@ import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { SupabaseService } from 'app/core/supabase.service';
 import { DestinosService, TipoTuristicoCatalogo } from 'app/core/destinos.service';
 import { MaterialModule } from 'app/shared/material.module';
-import { startWith } from 'rxjs';
+import { startWith, Subscription } from 'rxjs';
 import { MatSelect, MatSelectChange } from '@angular/material/select';
 import { getDefaultLang } from 'app/lang.utils';
 import { FooterComponent } from 'app/footer/footer.component';
@@ -103,6 +103,7 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
   destinosFiltrados: any[] = [];
   tiposTuristicos: TipoTuristicoCatalogo[] = [];
   selectedTipoTuristicoId: number | null = null;
+  private languageChangesSubscription?: Subscription;
   constructor() {
   }
 
@@ -113,6 +114,11 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
     });
     this.filterForm.valueChanges.subscribe((value) => {
       this.filtrarDestinos(value.busqueda);
+    });
+    this.languageChangesSubscription = this._translocoService.langChanges$.subscribe((idioma) => {
+      if (this.overlayAnimatedOnce) {
+        this.obtenerSoloDestinos(idioma);
+      }
     });
   }
 
@@ -125,6 +131,7 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
 
   ngOnDestroy(): void {
     if (this.intervalId) clearInterval(this.intervalId);
+    this.languageChangesSubscription?.unsubscribe();
   }
 
 
@@ -182,14 +189,14 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
     img.src = url;
   }
 
-  async obtenerSoloDestinos() {
+  async obtenerSoloDestinos(idioma?: string) {
     this.cargando = true;
     this.error = '';
     try {
       const tipo = this.tipoDestino === 1 ? 'NACIONAL' : 'INTERNACIONAL';
       const [publicables, tipos] = await Promise.all([
         this.destinosService.obtenerDestinosCatalogoPublicables(tipo),
-        this.destinosService.obtenerTiposTuristicosCatalogo()
+        this.destinosService.obtenerTiposTuristicosCatalogo(false, idioma)
       ]);
 
       // Durante la vinculación manual conservamos el selector vigente como fallback.
@@ -200,9 +207,11 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
       this.agrupadosDestinos = [];
       const tiposDisponibles = new Set(this.destinos.map((destino: any) => destino.tipo_turistico_id).filter(Number.isFinite));
       this.tiposTuristicos = tipos.filter((tipo) => tiposDisponibles.has(tipo.id));
-      this.selectedTipoTuristicoId = this.tiposTuristicos.find(
-        (tipo) => tipo.nombre.toLocaleLowerCase() === 'playa'
-      )?.id ?? this.tiposTuristicos[0]?.id ?? null;
+      this.selectedTipoTuristicoId = this.tiposTuristicos.some(
+        (tipo) => tipo.id === this.selectedTipoTuristicoId
+      )
+        ? this.selectedTipoTuristicoId
+        : this.tiposTuristicos.find((tipo) => tipo.slug === 'playa')?.id ?? this.tiposTuristicos[0]?.id ?? null;
       this.filtrarDestinos(this.filterForm?.get('busqueda')?.value ?? '');
     } catch (error: any) {
       this.error = error?.message ?? 'No se pudieron cargar los destinos.';

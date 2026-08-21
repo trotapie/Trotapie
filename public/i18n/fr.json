@@ -116,5 +116,21 @@
   "opcion-sin-seguro": "Tarif non remboursable",
   "opcion-con-seguro": "Acompte de réservation",
   "opcion-a-meses": "Paiement en plusieurs fois",
-   "regresar": "Retour"
+    "regresar": "Retour",
+    "tipos-de-viaje": "Types de voyage",
+    "volver-a-tipos-viaje": "Retour aux types de voyage",
+    "explora-el-mundo": "Explorez le monde",
+    "catalogo-destinos-descripcion": "Choisissez une expérience ou recherchez la destination que vous avez en tête.",
+    "explora-por-experiencia": "Explorer par expérience",
+    "cantidad-destinos": "{{cantidad}} destinations",
+    "cargando-destinos": "Chargement des destinations...",
+    "error-cargar-destinos": "Nous n'avons pas pu charger les destinations",
+    "revisa-conexion": "Vérifiez votre connexion et réessayez.",
+    "destino-no-encontrado": "Nous n'avons pas trouvé cette destination",
+    "prueba-otra-busqueda": "Essayez une autre recherche ou explorez toutes les expériences.",
+    "lista-destinos": "Liste des destinations",
+    "explorar-destino": "Explorer {{destino}}",
+    "vista-de-destino": "Vue de {{destino}}",
+    "mexico": "Mexique",
+    "ver-destino": "Voir la destination"
 }
