@@ -16,9 +16,6 @@
         <mat-icon [svgIcon]="'heroicons_outline:magnifying-glass'"></mat-icon>
         <input #searchInput matInput type="search" [placeholder]="searchPlaceholder" [value]="busqueda"
           (input)="busqueda = $any($event.target).value" (keydown.escape)="cerrar()" aria-label="Filtrar opciones" />
-        @if (busqueda) {
-          <button type="button" mat-icon-button aria-label="Limpiar búsqueda" (click)="busqueda = ''; searchInput.focus()"><mat-icon [svgIcon]="'heroicons_outline:x-mark'"></mat-icon></button>
-        }
       </div>
       <div class="tp-select-search__options">
         @if (opcionesFiltradas.length) {

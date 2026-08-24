@@ -13,7 +13,9 @@ import { EstatusComponent } from 'app/shared/estatus/estatus.component';
 import { MaterialModule } from 'app/shared/material.module';
 import { CustomSwitchComponent } from 'app/shared/custom-switch/custom-switch.component';
 import { TpInputComponent } from 'app/shared/tp-input/tp-input.component';
+import { TpTextareaComponent } from 'app/shared/tp-textarea/tp-textarea.component';
 import { TpSelectSearchComponent } from 'app/shared/tp-select-search/tp-select-search.component';
+import { TpToastService } from 'app/shared/tp-toast/tp-toast.service';
 import { backdropFade, modalScaleFade } from 'app/shared/animations';
 
 interface IPoliticaTraduccionPreview {
@@ -49,7 +51,7 @@ interface CatalogoVistaConfig {
 @Component({
   selector: 'app-catalogo-placeholder',
   standalone: true,
-  imports: [CommonModule, FormsModule, A11yModule, MaterialModule, RouterLink, DragDropModule, EstatusComponent, CustomSwitchComponent, TpInputComponent, TpSelectSearchComponent],
+  imports: [CommonModule, FormsModule, A11yModule, MaterialModule, RouterLink, DragDropModule, EstatusComponent, CustomSwitchComponent, TpInputComponent, TpTextareaComponent, TpSelectSearchComponent],
   templateUrl: './catalogo-placeholder.component.html',
   styleUrl: './catalogo-placeholder.component.scss',
   animations: [modalScaleFade, backdropFade],
@@ -60,6 +62,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
   private readonly catalogosAdmin = inject(CatalogosAdminService);
   private readonly supabase = inject(TraduccionesService);
   private readonly sanitizer = inject(DomSanitizer);
+  private readonly toast = inject(TpToastService);
 
   private readonly configuraciones: Record<CatalogoAdminKey, CatalogoVistaConfig> = {
     actividades: {
@@ -1866,24 +1869,23 @@ export class CatalogoPlaceholderComponent implements OnInit {
             : current
         );
       } else if (this.esCatalogoAtracciones) {
-        const clave = String(this.editingDraft['clave'] ?? '').trim();
+        const nombre = this.formatearNombreAtraccion(this.editingDraft['nombre'] ?? this.editingDraft['nombre_es']);
+        const clave = this.generarClaveAtraccion(nombre);
         const icono = String(this.editingDraft['icono'] ?? '').trim();
-        const nombre = String(this.editingDraft['nombre'] ?? this.editingDraft['nombre_es'] ?? '').trim();
         const descripcion = String(this.editingDraft['descripcion'] ?? this.editingDraft['descripcion_es'] ?? '').trim();
-        const orden = this.parseNumber(this.editingDraft['orden']);
 
-        if (!clave || !nombre || !descripcion || !Number.isFinite(Number(orden))) {
-          this.errorModalEdicion = 'Clave, nombre, descripcion y orden son obligatorios para editar una atraccion.';
+        if (!clave || !nombre) {
+          this.toast.show({ title: 'Datos incompletos', message: 'El nombre es obligatorio para editar una atraccion.', variant: 'error' });
           this.guardandoEdicion = false;
           return;
         }
 
+        this.editingDraft = { ...this.editingDraft, nombre, nombre_es: nombre, clave };
         await this.actualizarVistaPreviaAtraccion(true);
 
         const payload = {
           clave,
           icono,
-          orden,
           activo: Boolean(this.editingDraft['activo']),
           nombre,
           descripcion
@@ -1896,7 +1898,6 @@ export class CatalogoPlaceholderComponent implements OnInit {
               ...current,
               clave,
               icono,
-              orden,
               activo: Boolean(this.editingDraft['activo']),
               nombre,
               descripcion,
@@ -2303,6 +2304,15 @@ export class CatalogoPlaceholderComponent implements OnInit {
     this.nuevoRegistroDraft = { ...this.nuevoRegistroDraft, [key]: value };
   }
 
+  actualizarNombreAtraccion(value: string) {
+    this.nuevoRegistroDraft = {
+      ...this.nuevoRegistroDraft,
+      nombre: value,
+      nombre_es: value,
+      clave: this.generarClaveAtraccion(value)
+    };
+  }
+
   actualizarBooleanCreacion(key: string, value: boolean) {
     this.nuevoRegistroDraft = { ...this.nuevoRegistroDraft, [key]: value };
   }
@@ -2468,24 +2478,23 @@ export class CatalogoPlaceholderComponent implements OnInit {
           icono
         });
       } else if (this.esCatalogoAtracciones) {
-        const clave = String(this.nuevoRegistroDraft['clave'] ?? '').trim();
+        const nombre = this.formatearNombreAtraccion(this.nuevoRegistroDraft['nombre'] ?? this.nuevoRegistroDraft['nombre_es']);
+        const clave = this.generarClaveAtraccion(nombre);
         const icono = String(this.nuevoRegistroDraft['icono'] ?? '').trim();
-        const nombre = String(this.nuevoRegistroDraft['nombre'] ?? this.nuevoRegistroDraft['nombre_es'] ?? '').trim();
         const descripcion = String(this.nuevoRegistroDraft['descripcion'] ?? this.nuevoRegistroDraft['descripcion_es'] ?? '').trim();
-        const orden = this.parseNumber(this.nuevoRegistroDraft['orden']);
 
-        if (!clave || !nombre || !descripcion || !Number.isFinite(Number(orden))) {
-          this.errorModalCreacion = 'Clave, nombre, descripcion y orden son obligatorios para crear una atraccion.';
+        if (!clave || !nombre) {
+          this.toast.show({ title: 'Datos incompletos', message: 'El nombre es obligatorio para crear una atraccion.', variant: 'error' });
           this.guardandoCreacion = false;
           return;
         }
 
+        this.nuevoRegistroDraft = { ...this.nuevoRegistroDraft, nombre, nombre_es: nombre, clave };
         await this.actualizarVistaPreviaAtraccion(true);
 
         await this.catalogosAdmin.crearCatalogoAdmin(this.catalogoKey, {
           clave,
           icono,
-          orden,
           activo: Boolean(this.nuevoRegistroDraft['activo']),
           nombre,
           descripcion
@@ -2641,6 +2650,15 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
   actualizarTextoDraft(key: string, value: string) {
     this.editingDraft = { ...this.editingDraft, [key]: value };
+  }
+
+  actualizarNombreAtraccionEdicion(value: string) {
+    this.editingDraft = {
+      ...this.editingDraft,
+      nombre: value,
+      nombre_es: value,
+      clave: this.generarClaveAtraccion(value)
+    };
   }
 
   actualizarBooleanDraft(key: string, value: boolean) {
@@ -3073,6 +3091,21 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
   private limpiarTexto(value: string | null | undefined): string {
     return String(value ?? '').trim();
+  }
+
+  private generarClaveAtraccion(nombre: string): string {
+    return nombre
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '');
+  }
+
+  private formatearNombreAtraccion(nombre: string | null | undefined): string {
+    const texto = String(nombre ?? '').trim().toLowerCase();
+    return texto ? `${texto.charAt(0).toUpperCase()}${texto.slice(1)}` : '';
   }
 
   private parseNumber(value: number | string | null | undefined): number | null {

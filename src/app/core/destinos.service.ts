@@ -479,7 +479,8 @@ export class DestinosService {
       const { data: actividadesData, error: actividadesError } = await this.client
         .from('atracciones_principales')
         .select(`
-          id,
+           id,
+           activo,
            catalogo_atraccion_id,
            orden,
            imagen_fondo,
@@ -686,6 +687,7 @@ export class DestinosService {
         const imagenFondoId = this.parseNumber(imagenSeleccionada?.id);
         return {
           id: actividad.id,
+          activo: actividad.activo !== false,
           orden: Number(actividad.orden ?? 0) || null,
           catalogo_atraccion_id: this.parseNumber(actividad.catalogo_atraccion_id),
           tipo_actividad:
@@ -1096,6 +1098,28 @@ export class DestinosService {
     return activo;
   }
 
+  async actualizarActivoActividadDestinoAdmin(
+    catalogoDestinoId: number,
+    actividadId: number,
+    activo: boolean
+  ): Promise<boolean> {
+    const detallesDestinoId = await this.obtenerDetalleDestinoIdAdmin(catalogoDestinoId);
+    const { data, error } = await this.client
+      .from('atracciones_principales')
+      .update({ activo })
+      .eq('id', actividadId)
+      .eq('detalles_destino_id', detallesDestinoId)
+      .select('id')
+      .limit(1);
+
+    if (error) throw error;
+    if (!data?.length) {
+      throw new Error('No se encontró la atracción solicitada.');
+    }
+
+    return activo;
+  }
+
   async eliminarDatoRapidoDestinoAdmin(catalogoDestinoId: number, detalleRapidoId: number): Promise<void> {
     const detallesDestinosId = await this.obtenerDetalleDestinoIdAdmin(catalogoDestinoId);
     const { data: detallesRapidos, error: detalleRapidoError } = await this.client
@@ -1193,6 +1217,7 @@ export class DestinosService {
         tipo_id: item.tipo_dato_rapido_id
       })),
       atracciones_principales: preview.actividades
+        .filter((actividad) => actividad.activo)
         .map((actividad) => {
           const imagenes = (actividad.imagenes ?? [])
             .filter((imagen) => imagen.activa && !!imagen.imagen_url)

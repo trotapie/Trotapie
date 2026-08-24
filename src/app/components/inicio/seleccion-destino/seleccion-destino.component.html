@@ -195,16 +195,28 @@
                                 <mat-icon aria-hidden="true">search</mat-icon>
                                 <input id="destination-search" formControlName="busqueda" type="search" [placeholder]="t('buscar-destinos')" autocomplete="off" />
                             </form>
-                            <div class="category-block" aria-labelledby="category-title">
-                                <div class="category-heading">
-                                    <span id="category-title">{{ t('explora-por-experiencia') }}</span>
-                                    <span class="result-count">{{ t('cantidad-destinos', { cantidad: destinosFiltrados.length }) }}</span>
-                                </div>
-                                <div class="category-list" role="group" aria-labelledby="category-title">
-                                    <button *ngFor="let tipo of tiposTuristicos" type="button" [attr.aria-pressed]="selectedTipoTuristicoId === tipo.id" [class.category-active]="selectedTipoTuristicoId === tipo.id" (click)="filtrarPorTipo(tipo.id)">{{ tipo.nombre }}</button>
+                             <div class="category-block" aria-labelledby="category-title">
+                                 <div class="category-heading">
+                                     <span id="category-title">{{ t('explora-por-experiencia') }}</span>
+                                 </div>
+                                 <div class="category-list" role="group" aria-labelledby="category-title">
+                                     <button *ngFor="let tipo of tiposTuristicos" type="button" [attr.aria-pressed]="selectedTipoTuristicoId === tipo.id" [class.category-active]="selectedTipoTuristicoId === tipo.id" (click)="filtrarPorTipo(tipo.id)">{{ tipo.nombre }}</button>
+                                 </div>
+                             </div>
+                            <div class="destination-view-panel">
+                                <span class="result-count">{{ t('cantidad-destinos', { cantidad: destinosFiltrados.length }) }}</span>
+                                <div class="destination-view-toggle" role="group" aria-label="Cambiar vista de destinos">
+                                    <button type="button" [class.is-active]="vistaDestinos === 'lista'" [attr.aria-pressed]="vistaDestinos === 'lista'" (click)="cambiarVistaDestinos('lista')">
+                                        <mat-icon aria-hidden="true" [svgIcon]="'heroicons_outline:list-bullet'"></mat-icon>
+                                        <span>Lista</span>
+                                    </button>
+                                    <button type="button" [class.is-active]="vistaDestinos === 'cards'" [attr.aria-pressed]="vistaDestinos === 'cards'" (click)="cambiarVistaDestinos('cards')">
+                                        <mat-icon aria-hidden="true" [svgIcon]="'heroicons_outline:squares-2x2'"></mat-icon>
+                                        <span>Cards</span>
+                                    </button>
                                 </div>
                             </div>
-                        </div>
+                         </div>
 
                         @if (cargando) {
                         <div class="catalog-state" aria-busy="true">{{ t('cargando-destinos') }}</div>
@@ -213,7 +225,7 @@
                         } @else if (destinosFiltrados.length === 0) {
                         <div class="catalog-state" role="status"><mat-icon aria-hidden="true">travel_explore</mat-icon><h2>{{ t('destino-no-encontrado') }}</h2><p>{{ t('prueba-otra-busqueda') }}</p></div>
                         } @else {
-                        <div class="destination-list" tabindex="0" [attr.aria-label]="t('lista-destinos')" aria-live="polite">
+                        <div class="destination-list" [class.destination-list--cards]="vistaDestinos === 'cards'" tabindex="0" [attr.aria-label]="t('lista-destinos')" aria-live="polite">
                             <button *ngFor="let item of destinosFiltrados" type="button" class="destination-row" (click)="cargaInfo(item)" [attr.aria-label]="t('explorar-destino', { destino: item.nombre })">
                                 <div class="destination-thumbnail" [class.destination-image-empty]="!item.imagen_destino">
                                     @if (item.imagen_destino) { <img [src]="item.imagen_destino" [alt]="t('vista-de-destino', { destino: item.nombre })" loading="lazy" /> } @else { <mat-icon aria-hidden="true">landscape</mat-icon> }

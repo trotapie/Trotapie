@@ -23,7 +23,7 @@ import { CustomSwitchComponent } from 'app/shared/custom-switch/custom-switch.co
 import { ColorPickerComponent } from 'app/shared/color-picker/color-picker.component';
 import { TpInputComponent } from 'app/shared/tp-input/tp-input.component';
 import { TpTextareaComponent } from 'app/shared/tp-textarea/tp-textarea.component';
-import { TpSelectSearchOption } from 'app/shared/tp-select-search/tp-select-search.component';
+import { TpSelectSearchComponent, TpSelectSearchOption } from 'app/shared/tp-select-search/tp-select-search.component';
 import { TpToastService } from 'app/shared/tp-toast/tp-toast.service';
 
 interface ILangConfig {
@@ -96,7 +96,7 @@ const VALORES_PREDETERMINADOS_ESTILO_IMAGEN = {
 @Component({
   selector: 'app-editar-actividad-destino',
   standalone: true,
-  imports: [CommonModule, MaterialModule, ReactiveFormsModule, FolderImageManagerComponent, BlockingLoaderComponent, CustomSwitchComponent, ColorPickerComponent, TpInputComponent, TpTextareaComponent],
+  imports: [CommonModule, MaterialModule, ReactiveFormsModule, FolderImageManagerComponent, BlockingLoaderComponent, CustomSwitchComponent, ColorPickerComponent, TpInputComponent, TpTextareaComponent, TpSelectSearchComponent],
   templateUrl: './editar-actividad-destino.component.html',
   styleUrl: './editar-actividad-destino.component.scss',
   animations: [modalScaleFade, backdropFade],
@@ -130,6 +130,8 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   actividadesNavegacion: IActividadNavegacion[] = [];
   drawerModo: 'side' | 'over' = 'side';
   mostrarConfirmacionCambioActividad = false;
+  mostrarModalNuevaActividad = false;
+  guardandoNuevaActividad = false;
   actividadDestinoPendiente: IActividadNavegacion | null = null;
   carpetaActiva = 'Todas';
   editorImagenAbierto = false;
@@ -182,15 +184,26 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
 
   idiomas: IIdiomaPreviewAdmin[] = [];
   catalogoAtracciones: Array<{ id: number; clave: string; nombre: string }> = [];
+  private catalogoAtraccionesConfiguradas = new Set<number>();
 
   get catalogoAtraccionesOpciones(): TpSelectSearchOption[] {
     return this.catalogoAtracciones.map((tipo) => ({ value: tipo.id, label: tipo.nombre }));
+  }
+
+  get opcionesNuevaActividad(): TpSelectSearchOption[] {
+    return this.catalogoAtracciones
+      .filter((tipo) => !this.catalogoAtraccionesConfiguradas.has(tipo.id))
+      .map((tipo) => ({ value: tipo.id, label: tipo.nombre }));
   }
 
   form = this.fb.group({
     catalogo_atraccion_id: [null as number | null],
     traducciones: this.fb.array([]),
     imagenes: this.fb.array([])
+  });
+
+  formNuevaActividad = this.fb.group({
+    catalogo_atraccion_id: [null as number | null, [Validators.required]]
   });
 
   get traduccionesArray(): UntypedFormArray {
@@ -514,6 +527,11 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       this.actividadNombre = this.obtenerNombreActividad(actividad, preview);
       this.idiomas = this.ordenarIdiomas(preview.idiomas);
       this.catalogoAtracciones = [...(preview.catalogo_atracciones ?? [])];
+      this.catalogoAtraccionesConfiguradas = new Set(
+        (preview.actividades ?? [])
+          .map((item) => this.parseNumber(item.catalogo_atraccion_id))
+          .filter((id): id is number => id !== null)
+      );
       const catalogoAtraccionId = this.parseNumber(actividad.catalogo_atraccion_id);
       if (catalogoAtraccionId !== null && !this.catalogoAtracciones.some((tipo) => tipo.id === catalogoAtraccionId)) {
         this.catalogoAtracciones.push({
@@ -563,6 +581,49 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     this.router.navigate(['/admin/destinos/configurar-destinos/preview/' + this.destinoId], {
       queryParams: this.route.snapshot.queryParams
     });
+  }
+
+  crearNuevaAtraccion(): void {
+    this.formNuevaActividad.reset();
+    this.mostrarModalNuevaActividad = true;
+    this.setModalLocked(true);
+  }
+
+  cerrarModalNuevaActividad(): void {
+    if (this.guardandoNuevaActividad) {
+      return;
+    }
+
+    this.mostrarModalNuevaActividad = false;
+    this.setModalLocked(false);
+  }
+
+  async guardarNuevaActividad(): Promise<void> {
+    if (this.formNuevaActividad.invalid) {
+      this.formNuevaActividad.markAllAsTouched();
+      return;
+    }
+
+    if (this.guardandoNuevaActividad) {
+      return;
+    }
+
+    this.guardandoNuevaActividad = true;
+    this.error = '';
+
+    try {
+      await this.actividadesService.guardarActividadDestinoAdmin({
+        catalogo_destino_id: this.destinoId,
+        catalogo_atraccion_id: this.parseNumber(this.formNuevaActividad.get('catalogo_atraccion_id')?.value)
+      });
+      this.mostrarModalNuevaActividad = false;
+      this.setModalLocked(false);
+      await this.cargarActividad(this.destinoId, this.actividadId);
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudo crear la atracción.';
+    } finally {
+      this.guardandoNuevaActividad = false;
+    }
   }
 
   get tieneCambiosSinGuardar(): boolean {

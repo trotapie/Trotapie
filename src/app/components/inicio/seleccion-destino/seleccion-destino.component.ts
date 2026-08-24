@@ -103,6 +103,7 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
   destinosFiltrados: any[] = [];
   tiposTuristicos: TipoTuristicoCatalogo[] = [];
   selectedTipoTuristicoId: number | null = null;
+  vistaDestinos: 'lista' | 'cards' = 'cards';
   private languageChangesSubscription?: Subscription;
   constructor() {
   }
@@ -434,6 +435,10 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
       .filter(x => x.s > 0)
       .sort((a, b) => (b.s - a.s) || ((a.d?.orden ?? 9999) - (b.d?.orden ?? 9999)))
       .map(x => x.d);
+  }
+
+  cambiarVistaDestinos(vista: 'lista' | 'cards'): void {
+    this.vistaDestinos = vista;
   }
 
   filtrarPorTipo(tipoId: number | null): void {

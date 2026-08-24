@@ -38,18 +38,19 @@
         </div>
       </div>
 
-      <nav aria-label="Secciones del preview" class="preview-section-nav mt-4 border-t border-gray-100 pt-3 dark:border-gray-800">
-        <button type="button" (click)="desplazarASeccion('ubicacion')">Ubicación</button>
-        <button type="button" (click)="desplazarASeccion('textos')">Textos <span>{{ idiomas.length }}</span></button>
-        <button type="button" (click)="desplazarASeccion('datos-rapidos')">Datos rápidos <span>{{ detallesRapidosArray.length }}</span></button>
-        <button type="button" (click)="desplazarASeccion('atracciones')">Atracciones <span>{{ actividadesArray.length }}</span></button>
+      <nav aria-label="Secciones del preview" class="preview-section-nav mt-4 border-t border-gray-100 pt-3 dark:border-gray-800" role="tablist">
+        <button type="button" role="tab" [attr.aria-selected]="seccionActiva === 'ubicacion'" [class.!text-primary]="seccionActiva === 'ubicacion'" (click)="activarSeccion('ubicacion')">Ubicación</button>
+        <button type="button" role="tab" [attr.aria-selected]="seccionActiva === 'textos'" [class.!text-primary]="seccionActiva === 'textos'" (click)="activarSeccion('textos')">Textos <span>{{ idiomas.length }}</span></button>
+        <button type="button" role="tab" [attr.aria-selected]="seccionActiva === 'datos-rapidos'" [class.!text-primary]="seccionActiva === 'datos-rapidos'" (click)="activarSeccion('datos-rapidos')">Datos rápidos <span>{{ detallesRapidosArray.length }}</span></button>
+        <button type="button" role="tab" [attr.aria-selected]="seccionActiva === 'atracciones'" [class.!text-primary]="seccionActiva === 'atracciones'" (click)="activarSeccion('atracciones')">Atracciones <span>{{ actividadesArray.length }}</span></button>
       </nav>
     </header>
 
     @if (!cargando) {
       <form id="form-editar-preview" [formGroup]="form" (ngSubmit)="guardar()" class="space-y-6">
-        <main class="min-w-0 space-y-6">
-        <section id="ubicacion" class="scroll-mt-56 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-7">
+        <main class="min-w-0">
+        @if (seccionActiva === 'ubicacion') {
+        <section id="ubicacion" class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-7">
           <div class="mb-5">
             <p class="text-xs font-semibold uppercase tracking-[0.16em] text-primary">01 · Contexto</p>
             <h2 class="mt-1 text-xl font-semibold text-gray-900 dark:text-white">Ubicación del destino</h2>
@@ -98,8 +99,10 @@
           }
           </div>
         </section>
+        }
 
-        <section id="textos" class="scroll-mt-56 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-7" formArrayName="traducciones">
+        @if (seccionActiva === 'textos') {
+        <section id="textos" class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-7" formArrayName="traducciones">
           <div class="mb-5 flex items-end justify-between gap-4">
             <div>
               <p class="text-xs font-semibold uppercase tracking-[0.16em] text-primary">02 · Narrativa</p>
@@ -150,8 +153,10 @@
             }
           </div>
         </section>
+        }
 
-        <section id="datos-rapidos" class="scroll-mt-56 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-7" formArrayName="detallesRapidos">
+        @if (seccionActiva === 'datos-rapidos') {
+        <section id="datos-rapidos" class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-7" formArrayName="detallesRapidos">
           <div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p class="text-xs font-semibold uppercase tracking-[0.16em] text-primary">03 · Esenciales</p>
@@ -237,77 +242,48 @@
             }
           </div>
         </section>
+        }
 
-        <section id="atracciones" class="scroll-mt-56 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-7" formArrayName="actividades">
-          <div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        @if (seccionActiva === 'atracciones') {
+        <section id="atracciones" class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-7" formArrayName="actividades">
+          <div class="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
             <div>
               <p class="text-xs font-semibold uppercase tracking-[0.16em] text-primary">04 · Descubrimiento</p>
-              <div class="mt-1 flex flex-wrap items-center gap-3">
+              <div class="mt-1 flex flex-wrap items-center gap-2">
                 <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Atracciones principales</h2>
                 <span class="rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">{{ actividadesArray.length }} registradas</span>
               </div>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Organiza las experiencias que verán los viajeros en este destino.</p>
             </div>
-            <div class="flex flex-wrap gap-2">
-              @if (ordenActividadesPendiente) {
-                <button mat-flat-button color="primary" type="button" [disabled]="actualizandoOrden" (click)="actualizarOrdenActividades()">
-                  {{ actualizandoOrden ? 'Actualizando...' : 'Actualizar orden' }}
-                </button>
-              }
-              <button mat-flat-button color="primary" type="button" (click)="abrirModalNuevaActividad()">
-                <mat-icon class="mr-2 icon-size-5">add</mat-icon>
-                Crear atracción
-              </button>
-            </div>
-          </div>
-
-          <div class="mb-3 rounded-xl border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800/50">
-            <div class="flex flex-col gap-3">
-            <app-tp-input
-              class="w-full sm:max-w-xs"
-              label="Buscar actividad"
-              placeholder="Busca por nombre"
-              type="search"
-              [value]="busquedaActividades"
-              (valueChange)="busquedaActividades = $event"
-            ></app-tp-input>
-
-            <div class="-mx-1 overflow-x-auto px-1" role="tablist" aria-label="Filtrar actividades por tipo">
-              <div class="flex w-max gap-2">
-                <button
-                  type="button"
-                  role="tab"
-                  aria-controls="tabla-atracciones"
-                  [attr.aria-selected]="tipoActividadActivo === null"
-                  [class]="tipoActividadActivo === null
-                    ? 'rounded-full bg-primary px-4 py-2 text-sm font-medium text-on-primary shadow-sm'
-                    : 'rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'"
-                  (click)="seleccionarTipoActividad(null)"
-                >
-                  Todas
-                </button>
-                @for (tipo of tiposConActividades; track tipo.id) {
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-controls="tabla-atracciones"
-                    [attr.aria-selected]="tipoActividadActivo === tipo.id"
-                    [class]="tipoActividadActivo === tipo.id
-                      ? 'rounded-full bg-primary px-4 py-2 text-sm font-medium text-on-primary shadow-sm'
-                      : 'rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'"
-                    (click)="seleccionarTipoActividad(tipo.id)"
-                  >
-                    {{ tipo.nombre }}
+            <div class="flex flex-wrap items-center gap-2">
+              <app-tp-input
+                class="w-full sm:w-56"
+                label="Buscar actividad"
+                placeholder="Busca por nombre"
+                type="search"
+                [value]="busquedaActividades"
+                (valueChange)="busquedaActividades = $event"
+              ></app-tp-input>
+              <div class="flex flex-wrap items-center gap-2 xl:pt-7">
+                @if (ordenActividadesPendiente) {
+                  <button mat-flat-button color="primary" type="button" [disabled]="actualizandoOrden" (click)="actualizarOrdenActividades()">
+                    {{ actualizandoOrden ? 'Actualizando...' : 'Actualizar orden' }}
                   </button>
                 }
+                <button mat-flat-button color="primary" type="button" (click)="abrirModalNuevaActividad()">
+                  <mat-icon class="mr-2 icon-size-5">add</mat-icon>
+                  Crear atracción
+                </button>
+                <button mat-stroked-button color="primary" type="button" [disabled]="!destinosImportacionDrive.length" (click)="abrirImportadorImagenesDrive()">
+                  <mat-icon class="mr-2 icon-size-5">add_photo_alternate</mat-icon>
+                  Agregar imágenes
+                </button>
               </div>
-            </div>
             </div>
           </div>
 
-          <div class="mb-4 flex flex-wrap items-center justify-between gap-2 text-sm">
+          <div class="mb-3 flex flex-wrap items-center justify-between gap-2 text-sm">
             <p class="text-gray-500 dark:text-gray-400">Mostrando <span class="font-semibold text-gray-800 dark:text-gray-200">{{ actividadesFiltradas.length }}</span> de {{ actividadesArray.length }} atracciones</p>
-            @if (busquedaActividades || tipoActividadActivo !== null) {
+            @if (busquedaActividades) {
               <button type="button" class="font-medium text-primary hover:underline" (click)="limpiarFiltrosActividades()">Limpiar filtros</button>
             }
           </div>
@@ -318,12 +294,13 @@
                 <tr>
                   <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">Tipo de actividad</th>
                   <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">Imágenes</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">Estado</th>
                   <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">Acciones</th>
                 </tr>
               </thead>
-              <tbody cdkDropList [cdkDropListData]="actividadesArray.controls" [cdkDropListDisabled]="!!busquedaActividades || tipoActividadActivo !== null" (cdkDropListDropped)="dropActividad($event)">
+              <tbody cdkDropList [cdkDropListData]="actividadesArray.controls" [cdkDropListDisabled]="!!busquedaActividades" (cdkDropListDropped)="dropActividad($event)">
                 @for (fila of actividadesFiltradas; track fila.formIndex) {
-                  <tr cdkDrag class="border-t border-gray-100 bg-white transition-colors hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-gray-800/60" [formGroupName]="fila.formIndex">
+                  <tr cdkDrag class="border-t border-gray-100 bg-white transition-colors hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-gray-800/60" [class.opacity-60]="!fila.control.get('activo')?.value" [formGroupName]="fila.formIndex">
                     <td class="px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200">
                       {{ obtenerNombreTipoActividad(fila.control) }}
                     </td>
@@ -360,12 +337,18 @@
                       }
                     </td>
                     <td class="px-4 py-3">
+                      <app-status-badge [status]="fila.control.get('activo')?.value ? 'ACTIVO' : 'INACTIVO'"></app-status-badge>
+                    </td>
+                    <td class="px-4 py-3">
                       <div class="flex items-center justify-end gap-2">
                         <button mat-icon-button type="button" cdkDragHandle aria-label="Arrastrar para reordenar" matTooltip="Arrastrar para reordenar" class="cursor-grab active:cursor-grabbing">
                           <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:bars-3'"></mat-icon>
                         </button>
                         <button mat-icon-button type="button" aria-label="Editar actividad" [matTooltip]="'Editar actividad'" (click)="abrirPantallaEditarActividad(fila.formIndex)">
                           <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
+                        </button>
+                        <button mat-icon-button type="button" [attr.aria-label]="fila.control.get('activo')?.value ? 'Desactivar atracción' : 'Activar atracción'" [matTooltip]="fila.control.get('activo')?.value ? 'Ocultar de la ficha pública' : 'Mostrar en la ficha pública'" [disabled]="cambiandoActivoActividadId !== null || eliminandoActividadIndex !== null" (click)="alternarActivoActividad(fila.formIndex)">
+                          <mat-icon class="icon-size-5" [svgIcon]="fila.control.get('activo')?.value ? 'heroicons_outline:eye-slash' : 'heroicons_outline:eye'"></mat-icon>
                         </button>
                         <button
                           mat-icon-button
@@ -382,7 +365,7 @@
                   </tr>
                 } @empty {
                   <tr class="border-t border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900">
-                    <td colspan="3" class="px-4 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
+                    <td colspan="4" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
                     @if (actividadesArray.length === 0) {
                         Aún no hay atracciones. Crea la primera para enriquecer este destino.
                       } @else {
@@ -397,7 +380,7 @@
 
           <div class="space-y-3 md:hidden">
             @for (fila of actividadesFiltradas; track fila.formIndex) {
-              <article class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
+              <article class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900" [class.opacity-60]="!fila.control.get('activo')?.value">
                 <div class="flex gap-3 p-3">
                   @if (getImagenActivaActividad(fila.formIndex); as imagen) {
                     <img [src]="imagen.imagen_url" alt="Imagen de actividad" class="h-20 w-20 shrink-0 rounded-lg object-cover" />
@@ -406,11 +389,15 @@
                   }
                   <div class="min-w-0 flex-1">
                     <p class="truncate font-semibold text-gray-800 dark:text-gray-100">{{ obtenerNombreTipoActividad(fila.control) }}</p>
-                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ getImagenesActivasActividad(fila.formIndex).length }} imágenes activas</p>
+                    <div class="mt-2 flex items-center gap-2 text-xs">
+                      <span class="text-gray-500 dark:text-gray-400">{{ getImagenesActivasActividad(fila.formIndex).length }} imágenes activas</span>
+                      <span [class]="fila.control.get('activo')?.value ? 'font-semibold text-emerald-600' : 'font-semibold text-gray-500'">{{ fila.control.get('activo')?.value ? 'Activa' : 'Inactiva' }}</span>
+                    </div>
                   </div>
                 </div>
                 <div class="flex border-t border-gray-100 dark:border-gray-800">
                   <button type="button" class="flex-1 px-4 py-3 text-sm font-semibold text-primary" (click)="abrirPantallaEditarActividad(fila.formIndex)">Editar</button>
+                  <button type="button" class="border-l border-gray-100 px-4 py-3 text-sm font-semibold text-gray-600 dark:border-gray-800 dark:text-gray-300" [disabled]="cambiandoActivoActividadId !== null || eliminandoActividadIndex !== null" (click)="alternarActivoActividad(fila.formIndex)">{{ fila.control.get('activo')?.value ? 'Ocultar' : 'Activar' }}</button>
                   <button type="button" class="border-l border-gray-100 px-4 py-3 text-sm font-semibold text-red-600 dark:border-gray-800 dark:text-red-400" [disabled]="eliminandoActividadIndex === fila.formIndex" (click)="abrirModalConfirmarEliminarActividad(fila.formIndex)">Eliminar</button>
                 </div>
               </article>
@@ -428,6 +415,7 @@
             }
           </div>
         </section>
+        }
 
         @if (error) {
           <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300" role="alert">
@@ -440,6 +428,15 @@
     }
   </div>
 </div>
+
+@if (mostrarModalImportarImagenesDrive) {
+  <app-drive-image-assignment-dialog
+    [targets]="destinosImportacionDrive"
+    [saving]="guardandoImportacionDrive"
+    (cancelled)="cerrarImportadorImagenesDrive()"
+    (confirmed)="importarImagenesDrive($event)"
+  ></app-drive-image-assignment-dialog>
+}
 
 @if (mostrarModalExito) {
   <div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">

@@ -15,6 +15,12 @@ import { MaterialModule } from 'app/shared/material.module';
 import { TpInputComponent } from 'app/shared/tp-input/tp-input.component';
 import { TpSelectSearchComponent, TpSelectSearchOption } from 'app/shared/tp-select-search/tp-select-search.component';
 import { TpToastService } from 'app/shared/tp-toast/tp-toast.service';
+import { EstatusComponent } from 'app/shared/estatus/estatus.component';
+import {
+  DriveImageAssignment,
+  DriveImageAssignmentDialogComponent,
+  DriveImageAssignmentTarget
+} from 'app/shared/drive-image-assignment-dialog/drive-image-assignment-dialog.component';
 
 interface ILangConfig {
   code: string;
@@ -24,7 +30,7 @@ interface ILangConfig {
 @Component({
   selector: 'app-editar-preview-destino',
   standalone: true,
-  imports: [MaterialModule, DragDropModule, BlockingLoaderComponent, TpInputComponent, TpSelectSearchComponent],
+  imports: [MaterialModule, DragDropModule, BlockingLoaderComponent, TpInputComponent, TpSelectSearchComponent, DriveImageAssignmentDialogComponent, EstatusComponent],
   templateUrl: './editar-preview-destino.component.html',
   styleUrl: './editar-preview-destino.component.scss'
 })
@@ -63,11 +69,14 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
   mostrarModalNuevaActividad = false;
   mostrarModalConfirmarEliminarActividad = false;
   mostrarModalConfirmarEliminarDatoRapido = false;
+  mostrarModalImportarImagenesDrive = false;
   guardandoActividad = false;
+  guardandoImportacionDrive = false;
   agregandoDatoRapido = false;
   traduciendoActividad = false;
   traduciendoTextoPreview = false;
   eliminandoActividadIndex: number | null = null;
+  cambiandoActivoActividadId: number | null = null;
   cambiandoActivoDatoRapidoId: number | null = null;
   eliminandoDatoRapidoId: number | null = null;
   indiceActividadAEliminar: number | null = null;
@@ -137,17 +146,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
 
   catalogoAtracciones: Array<{ id: number; clave: string; nombre: string }> = [];
   busquedaActividades = '';
-  tipoActividadActivo: number | null = null;
-
-  get tiposConActividades(): Array<{ id: number; clave: string; nombre: string }> {
-    const tiposCargados = new Set(
-      this.actividadesArray.controls
-        .map((actividad) => this.parseNumber(actividad.get('catalogo_atraccion_id')?.value))
-        .filter((tipoId): tipoId is number => tipoId !== null)
-    );
-
-    return this.catalogoAtracciones.filter((tipo) => tiposCargados.has(tipo.id));
-  }
+  seccionActiva: 'ubicacion' | 'textos' | 'datos-rapidos' | 'atracciones' = 'ubicacion';
 
   get opcionesCatalogoActividad(): TpSelectSearchOption[] {
     const tipoSeleccionado = this.parseNumber(this.formActividad.get('catalogo_atraccion_id')?.value);
@@ -165,21 +164,28 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
         const tipoId = this.parseNumber(control.get('catalogo_atraccion_id')?.value);
         const nombre = this.obtenerNombreTipoActividad(control);
 
-        return (
-          (this.tipoActividadActivo === null || tipoId === this.tipoActividadActivo) &&
-          (!busqueda || this.normalizarTextoFiltro(nombre).includes(busqueda))
-        );
+        return !busqueda || this.normalizarTextoFiltro(nombre).includes(busqueda);
       });
   }
 
-  seleccionarTipoActividad(tipoId: number | null): void {
-    this.tipoActividadActivo = tipoId;
-    setTimeout(() => this.desplazarASeccion('atracciones'));
+  get destinosImportacionDrive(): DriveImageAssignmentTarget[] {
+    return this.actividadesArray.controls
+      .map((control) => ({
+        id: this.parseNumber(control.get('id')?.value),
+        label: this.obtenerNombreTipoActividad(control)
+      }))
+      .filter((actividad): actividad is DriveImageAssignmentTarget => actividad.id !== null);
+  }
+
+  activarSeccion(seccion: 'ubicacion' | 'textos' | 'datos-rapidos' | 'atracciones'): void {
+    this.seccionActiva = seccion;
+    if (seccion === 'ubicacion') {
+      setTimeout(() => this.actualizarPreviewUbicacion());
+    }
   }
 
   limpiarFiltrosActividades(): void {
     this.busquedaActividades = '';
-    this.tipoActividadActivo = null;
   }
 
   obtenerNombreTipoActividad(actividad: any): string {
@@ -482,6 +488,117 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     this.ultimaLlaveTraduccionActividad = '';
     this.mostrarModalNuevaActividad = true;
     this.indiceActividadEditando = null;
+  }
+
+  abrirImportadorImagenesDrive(): void {
+    if (!this.destinosImportacionDrive.length) {
+      this.toast.show({
+        title: 'No hay atracciones disponibles',
+        message: 'Crea y guarda al menos una atracción antes de importar imágenes desde Drive.',
+        variant: 'error'
+      });
+      return;
+    }
+
+    this.error = '';
+    this.mostrarModalImportarImagenesDrive = true;
+  }
+
+  cerrarImportadorImagenesDrive(): void {
+    if (!this.guardandoImportacionDrive) {
+      this.mostrarModalImportarImagenesDrive = false;
+    }
+  }
+
+  async importarImagenesDrive(asignaciones: DriveImageAssignment[]): Promise<void> {
+    if (this.guardandoImportacionDrive) {
+      return;
+    }
+
+    this.guardandoImportacionDrive = true;
+    this.error = '';
+    let insertadas = 0;
+
+    try {
+      for (const asignacion of asignaciones) {
+        const actividad = this.actividadesArray.controls.find(
+          (control) => this.parseNumber(control.get('id')?.value) === asignacion.targetId
+        );
+        if (!actividad) {
+          continue;
+        }
+
+        const imagenes = actividad.get('imagenes') as UntypedFormArray;
+        const urlsExistentes = new Set(
+          imagenes.controls
+            .map((control) => this.limpiarTexto(control.get('imagen_url')?.value))
+            .filter((url): url is string => !!url)
+        );
+
+        for (const imagenDrive of asignacion.images) {
+          const imagenUrl = this.limpiarTexto(imagenDrive.thumbnailUrl) ?? this.limpiarTexto(imagenDrive.publicImageUrl);
+          if (!imagenUrl || urlsExistentes.has(imagenUrl)) {
+            continue;
+          }
+
+          const guardada = await this.actividadesService.guardarImagenActividadAdmin({
+            destino_id: this.destinoId,
+            actividad_id: asignacion.targetId,
+            imagen: {
+              imagen_url: imagenUrl,
+              carpeta_nombre: asignacion.folderName,
+              carpeta: asignacion.folderName,
+              nombre: this.limpiarTexto(imagenDrive.nombre),
+              extension: this.limpiarTexto(imagenDrive.extension),
+              mime_type: this.limpiarTexto(imagenDrive.mimeType),
+              size: this.parseNumber(imagenDrive.size),
+              size_formatted: this.limpiarTexto(imagenDrive.sizeFormatted),
+              activa: urlsExistentes.size === 0,
+              orden: imagenes.length + 1,
+              vigencia_desde: null,
+              vigencia_hasta: null
+            }
+          });
+
+          imagenes.push(this.fb.group({
+            id: [guardada.id],
+            imagen_url: [imagenUrl],
+            activa: [urlsExistentes.size === 0],
+            orden: [imagenes.length + 1],
+            vigencia_desde: [null],
+            vigencia_hasta: [null],
+            created_at: [null]
+          }));
+          urlsExistentes.add(imagenUrl);
+          insertadas += 1;
+        }
+      }
+
+      if (!insertadas) {
+        this.toast.show({
+          title: 'Sin imágenes nuevas',
+          message: 'Las imágenes seleccionadas ya están registradas en las atracciones asignadas.',
+          variant: 'error'
+        });
+        return;
+      }
+
+      this.mostrarModalImportarImagenesDrive = false;
+      this.toast.show({
+        title: 'Imágenes cargadas',
+        message: `${insertadas} ${insertadas === 1 ? 'imagen fue agregada' : 'imágenes fueron agregadas'} a las atracciones seleccionadas.`,
+        variant: 'success'
+      });
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudieron guardar todas las imágenes seleccionadas.';
+      this.toast.show({
+        title: 'No se pudieron cargar las imágenes',
+        message: this.error,
+        variant: 'error'
+      });
+    } finally {
+      this.guardandoImportacionDrive = false;
+    }
   }
 
   abrirModalEditarActividad(index: number) {
@@ -1032,6 +1149,40 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     }
   }
 
+  async alternarActivoActividad(index: number): Promise<void> {
+    const actividad = this.actividadesArray.at(index);
+    const actividadId = this.parseNumber(actividad?.get('id')?.value);
+    if (!actividad || !actividadId || this.cambiandoActivoActividadId !== null) {
+      return;
+    }
+
+    this.cambiandoActivoActividadId = actividadId;
+    this.error = '';
+    const activoActual = Boolean(actividad.get('activo')?.value);
+    const nombre = this.obtenerNombreTipoActividad(actividad);
+
+    try {
+      const activo = await this.destinosService.actualizarActivoActividadDestinoAdmin(
+        this.destinoId,
+        actividadId,
+        !activoActual
+      );
+      actividad.get('activo')?.setValue(activo);
+      this.toast.show({
+        title: activo ? 'Atracción activada' : 'Atracción desactivada',
+        message: activo
+          ? `${nombre} ya es visible para los viajeros.`
+          : `${nombre} dejó de mostrarse en la ficha pública.`,
+        variant: activo ? 'success' : 'warning'
+      });
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudo actualizar el estado de la atracción.';
+      this.toast.show({ title: 'No se pudo actualizar', message: this.error, variant: 'error' });
+    } finally {
+      this.cambiandoActivoActividadId = null;
+    }
+  }
+
   abrirModalConfirmarEliminarDatoRapido(index: number): void {
     this.indiceDatoRapidoAEliminar = index;
     this.mostrarModalConfirmarEliminarDatoRapido = true;
@@ -1223,6 +1374,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
 
     return this.fb.group({
       id: [this.parseNumber(item?.id)],
+      activo: [item?.activo !== false],
       orden: [this.parseNumber(item?.orden) ?? this.actividadesArray.length + 1],
       catalogo_atraccion_id: [this.parseNumber(item?.catalogo_atraccion_id)],
       tipo_actividad: [item?.tipo_actividad ?? ''],
@@ -1540,6 +1692,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
       this.mostrarModalNuevoDatoRapido ||
       this.mostrarModalEditarActividad ||
       this.mostrarModalNuevaActividad ||
+      this.mostrarModalImportarImagenesDrive ||
       this.mostrarModalConfirmarEliminarActividad ||
       this.mostrarModalConfirmarEliminarDatoRapido
     );

@@ -293,7 +293,7 @@
 
 .catalog-toolbar {
   display: grid;
-  grid-template-columns: minmax(280px, 0.75fr) minmax(0, 1.25fr);
+  grid-template-columns: minmax(280px, 0.75fr) minmax(0, 1.25fr) auto;
   gap: 1.5rem;
   align-items: end;
   margin-top: clamp(1.75rem, 4vw, 3rem);
@@ -360,6 +360,13 @@
 
 .result-count { color: #82928a; font-weight: 500; white-space: nowrap; }
 
+.destination-view-panel {
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
 .category-list {
   display: flex;
   gap: 0.4rem;
@@ -400,6 +407,35 @@
 .category-list .category-active:hover { background: #125b40; color: #fff; }
 .category-list button:active { transform: scale(0.98); }
 
+.destination-view-toggle {
+  display: none;
+  align-self: end;
+  gap: 0.2rem;
+  padding: 0.25rem;
+  border: 1px solid #b8ccc2;
+  border-radius: 0.8rem;
+  background: #fff;
+}
+
+.destination-view-toggle button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 0;
+  border-radius: 0.55rem;
+  background: transparent;
+  color: #176a4b;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.destination-view-toggle button:hover { background: #edf6f0; }
+.destination-view-toggle button.is-active { background: #176a4b; color: #fff; box-shadow: 0 2px 7px rgba(23, 106, 75, 0.18); }
+.destination-view-toggle mat-icon { width: 1.1rem; height: 1.1rem; font-size: 1.1rem; }
+.destination-view-toggle button.is-active mat-icon { color: #fff; }
+
 .destination-list {
   display: grid;
   max-height: min(38rem, calc(100dvh - 24rem));
@@ -417,7 +453,13 @@
 .destination-list:focus-visible { outline: 3px solid #f1b91b; outline-offset: 3px; }
 
 @media (min-width: 900px) {
+  .destination-view-toggle { display: flex; }
+
   .destination-list {
+    grid-template-columns: 1fr;
+  }
+
+  .destination-list--cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: 2rem;
   }
@@ -487,6 +529,7 @@
 @media (max-width: 1100px) {
   .catalog-header { display: flex; flex-direction: column; gap: 1rem; }
   .catalog-toolbar { grid-template-columns: 1fr; gap: 1.15rem; margin-top: 1.75rem; }
+  .destination-view-panel { align-items: flex-start; }
 }
 
 @media (max-width: 720px) {

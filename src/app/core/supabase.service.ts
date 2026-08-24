@@ -55,6 +55,7 @@ export interface IDetalleRapidoPreviewAdmin {
 
 export interface IActividadPreviewAdmin {
   id: number | null;
+  activo: boolean;
   orden?: number | null;
   catalogo_atraccion_id?: number | null;
   tipo_actividad?: string | null;

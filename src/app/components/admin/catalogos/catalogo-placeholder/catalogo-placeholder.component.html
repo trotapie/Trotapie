@@ -784,87 +784,56 @@
             }
 
             @if (esCatalogoAtracciones) {
-            <div class="mt-2 space-y-6">
-                <section class="space-y-4" aria-labelledby="atraccion-contenido-titulo">
-                    <div class="flex items-center justify-between gap-3">
-                        <div>
-                            <h3 id="atraccion-contenido-titulo" class="text-sm font-semibold text-gray-900 dark:text-white">Contenido visible</h3>
-                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">El texto se muestra en español y genera la vista previa de traducciones.</p>
-                        </div>
-                        <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-300">ID {{ editingId }}</span>
-                    </div>
-                    <mat-form-field appearance="outline" class="w-full">
-                        <mat-label>Nombre en español</mat-label>
-                        <input matInput required cdkFocusInitial [value]="editingDraft['nombre'] ?? editingDraft['nombre_es'] ?? ''"
-                            (input)="actualizarTextoDraft('nombre', $any($event.target).value)"
-                            (blur)="traducirAtraccionAlSalirDelCampo()" maxlength="150" />
-                        <mat-hint>Obligatorio. Máximo 150 caracteres.</mat-hint>
-                    </mat-form-field>
-                    <mat-form-field appearance="outline" class="w-full">
-                        <mat-label>Descripción en español</mat-label>
-                        <textarea matInput required rows="4" [value]="editingDraft['descripcion'] ?? editingDraft['descripcion_es'] ?? ''"
-                            (input)="actualizarTextoDraft('descripcion', $any($event.target).value)"
-                            (blur)="traducirAtraccionAlSalirDelCampo()" maxlength="500"></textarea>
-                        <mat-hint>Obligatoria. Máximo 500 caracteres.</mat-hint>
-                    </mat-form-field>
-                </section>
+            <div class="mt-2 space-y-4">
+                <app-tp-input
+                    label="Nombre en español"
+                    [required]="true"
+                    [maxLength]="150"
+                    [value]="editingDraft['nombre'] ?? editingDraft['nombre_es'] ?? ''"
+                    (valueChange)="actualizarNombreAtraccionEdicion($event)"
+                    (blur)="traducirAtraccionAlSalirDelCampo()">
+                </app-tp-input>
 
-                <section class="rounded-2xl border border-gray-200 bg-gray-50/70 p-4 dark:border-gray-700 dark:bg-gray-800/60" aria-labelledby="atraccion-configuracion-titulo">
-                    <h3 id="atraccion-configuracion-titulo" class="text-sm font-semibold text-gray-900 dark:text-white">Configuración</h3>
-                    <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_120px_auto] lg:items-center">
-                        <mat-form-field appearance="outline" class="w-full">
-                            <mat-label>Clave</mat-label>
-                            <input matInput required [value]="editingDraft['clave'] ?? ''"
-                                (input)="actualizarTextoDraft('clave', $any($event.target).value)" maxlength="120" />
-                            <mat-hint>Identificador interno.</mat-hint>
-                        </mat-form-field>
-                        <mat-form-field appearance="outline" class="w-full">
-                            <mat-label>Orden</mat-label>
-                            <input matInput required type="number" min="1" [value]="editingDraft['orden'] ?? ''"
-                                (input)="actualizarTextoDraft('orden', $any($event.target).value)" />
-                        </mat-form-field>
-                        <div class="pb-5 lg:min-w-32">
-                            <app-custom-switch [checked]="!!editingDraft['activo']"
-                                [label]="editingDraft['activo'] ? 'Activo' : 'Inactivo'"
-                                (change)="actualizarBooleanDraft('activo', $event)"></app-custom-switch>
-                        </div>
-                    </div>
-                </section>
+                <app-tp-textarea
+                    label="Descripcion en español"
+                    [rows]="4"
+                    [maxLength]="500"
+                    [value]="editingDraft['descripcion'] ?? editingDraft['descripcion_es'] ?? ''"
+                    (valueChange)="actualizarTextoDraft('descripcion', $event)"
+                    (blur)="traducirAtraccionAlSalirDelCampo()">
+                </app-tp-textarea>
 
-                <section class="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900" aria-labelledby="atraccion-icono-titulo">
-                    <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_220px]">
-                        <div>
-                            <h3 id="atraccion-icono-titulo" class="text-sm font-semibold text-gray-900 dark:text-white">Icono</h3>
-                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Usa un SVG completo o un icono registrado en la aplicación.</p>
-                            <mat-form-field appearance="outline" class="mt-4 w-full">
-                                <mat-label>SVG o nombre del icono</mat-label>
-                                <textarea matInput rows="6" [value]="editingDraft['icono'] ?? ''"
-                                    (input)="actualizarTextoDraft('icono', $any($event.target).value)" maxlength="4000"></textarea>
-                                <mat-hint align="end">{{ (editingDraft['icono'] ?? '').length }}/4000</mat-hint>
-                            </mat-form-field>
-                        </div>
-                        <div class="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-800" role="img" aria-label="Vista previa del icono">
-                            <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Vista previa</p>
-                            <div class="mt-3 flex min-h-32 items-center justify-center rounded-lg bg-white dark:bg-gray-950">
-                                @if (esSvgIcono(editingDraft['icono'])) {
-                                <span class="inline-flex [&>svg]:h-14 [&>svg]:w-14 [&>svg]:fill-current [&>svg]:text-gray-700 dark:[&>svg]:text-gray-200"
-                                    [innerHTML]="getIconoPreviewSeguro(editingDraft['icono'])"></span>
-                                } @else if (editingDraft['icono']) {
-                                <mat-icon class="icon-size-14 text-gray-700 dark:text-gray-200" [svgIcon]="editingDraft['icono']"></mat-icon>
-                                } @else {
-                                <div class="text-center text-gray-400 dark:text-gray-500">
-                                    <mat-icon class="icon-size-8">image</mat-icon>
-                                    <p class="mt-2 text-xs">Aún no hay un icono</p>
-                                </div>
-                                }
-                            </div>
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <app-tp-textarea
+                        label="Icono"
+                        [rows]="5"
+                        [maxLength]="4000"
+                        [value]="editingDraft['icono'] ?? ''"
+                        (valueChange)="actualizarTextoDraft('icono', $event)">
+                    </app-tp-textarea>
+
+                    <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/60" role="img" aria-label="Vista previa del icono">
+                        <p class="text-sm font-semibold text-gray-900 dark:text-white">Vista previa del icono</p>
+                        <div class="mt-3 flex min-h-32 items-center justify-center rounded-lg bg-white dark:bg-gray-950">
+                            @if (esSvgIcono(editingDraft['icono'])) {
+                            <span class="inline-flex [&>svg]:h-14 [&>svg]:w-14 [&>svg]:fill-current [&>svg]:text-gray-700 dark:[&>svg]:text-gray-200"
+                                [innerHTML]="getIconoPreviewSeguro(editingDraft['icono'])"></span>
+                            } @else if (editingDraft['icono']) {
+                            <mat-icon class="icon-size-14 text-gray-700 dark:text-gray-200" [svgIcon]="editingDraft['icono']"></mat-icon>
+                            } @else {
+                            <mat-icon class="icon-size-8 text-gray-400">image</mat-icon>
+                            }
                         </div>
                     </div>
-                </section>
+                </div>
+
+                <app-custom-switch class="mt-2 block" [checked]="!!editingDraft['activo']"
+                    [label]="editingDraft['activo'] ? 'Activo' : 'Inactivo'"
+                    (change)="actualizarBooleanDraft('activo', $event)"></app-custom-switch>
 
                 <section class="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900" aria-labelledby="atraccion-traducciones-titulo">
                     <h3 id="atraccion-traducciones-titulo" class="text-sm font-semibold text-gray-900 dark:text-white">Vista previa de traducciones</h3>
-                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Se actualiza al salir de Nombre o Descripción en español.</p>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Se actualiza al salir de Nombre o Descripcion en español.</p>
 
                     @if (cargandoTraduccionesAtraccion || traduciendoAtraccion) {
                     <div class="mt-4 flex items-center gap-3 rounded-xl bg-gray-50 p-4 text-sm text-gray-600 dark:bg-gray-800 dark:text-gray-300" aria-live="polite">
@@ -876,22 +845,16 @@
                         @for (idioma of idiomasVistaPolitica; track idioma.code) {
                         @if (traduccionesAtraccionPreview[idioma.code]) {
                         <div class="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
-                            <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                {{ getNombreIdiomaPolitica(idioma.code) }}
-                            </p>
-                            <p class="mt-1 text-sm font-medium text-gray-800 dark:text-gray-200">
-                                {{ traduccionesAtraccionPreview[idioma.code].nombre || '-' }}
-                            </p>
-                            <p class="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-400">
-                                {{ traduccionesAtraccionPreview[idioma.code].descripcion || '-' }}
-                            </p>
+                            <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ getNombreIdiomaPolitica(idioma.code) }}</p>
+                            <p class="mt-1 text-sm font-medium text-gray-800 dark:text-gray-200">{{ traduccionesAtraccionPreview[idioma.code].nombre || '-' }}</p>
+                            <p class="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-400">{{ traduccionesAtraccionPreview[idioma.code].descripcion || '-' }}</p>
                         </div>
                         }
                         }
                     </div>
-                } @else {
-                <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">Completa el contenido en español para generar la vista previa.</p>
-                }
+                    } @else {
+                    <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">Completa el contenido en español para generar la vista previa.</p>
+                    }
                 </section>
             </div>
             }
@@ -1967,99 +1930,48 @@
 
             @if (esCatalogoAtracciones) {
             <div class="mt-2 space-y-4">
-                <mat-form-field appearance="outline" class="w-full">
-                    <mat-label>ID</mat-label>
-                    <input matInput [value]="'Se asigna al guardar'" disabled />
-                </mat-form-field>
+                <app-tp-input
+                    label="Nombre en español"
+                    [required]="true"
+                    [maxLength]="150"
+                    [value]="nuevoRegistroDraft['nombre'] ?? nuevoRegistroDraft['nombre_es'] ?? ''"
+                    (valueChange)="actualizarNombreAtraccion($event)"
+                    (blur)="traducirAtraccionAlSalirDelCampo()">
+                </app-tp-input>
+
+                <app-tp-textarea
+                    label="Descripcion en español"
+                    [rows]="4"
+                    [maxLength]="500"
+                    [value]="nuevoRegistroDraft['descripcion'] ?? nuevoRegistroDraft['descripcion_es'] ?? ''"
+                    (valueChange)="actualizarTextoCreacion('descripcion', $event)"
+                    (blur)="traducirAtraccionAlSalirDelCampo()">
+                </app-tp-textarea>
 
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <mat-form-field appearance="outline" class="w-full">
-                        <mat-label>Clave</mat-label>
-                        <input matInput [value]="nuevoRegistroDraft['clave'] ?? ''"
-                            (input)="actualizarTextoCreacion('clave', $any($event.target).value)" maxlength="120" />
-                    </mat-form-field>
+                    <app-tp-textarea
+                        label="Icono"
+                        [rows]="5"
+                        [maxLength]="4000"
+                        [value]="nuevoRegistroDraft['icono'] ?? ''"
+                        (valueChange)="actualizarTextoCreacion('icono', $event)">
+                    </app-tp-textarea>
 
-                    <mat-form-field appearance="outline" class="w-full">
-                        <mat-label>Icono</mat-label>
-                        <textarea matInput rows="5" [value]="nuevoRegistroDraft['icono'] ?? ''"
-                            (input)="actualizarTextoCreacion('icono', $any($event.target).value)" maxlength="4000"></textarea>
-                    </mat-form-field>
-                </div>
-
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <mat-form-field appearance="outline" class="w-full">
-                        <mat-label>Orden</mat-label>
-                        <input matInput type="number" [value]="nuevoRegistroDraft['orden'] ?? ''"
-                            (input)="actualizarTextoCreacion('orden', $any($event.target).value)" />
-                    </mat-form-field>
-
-                    <app-custom-switch [checked]="!!nuevoRegistroDraft['activo']"
-                        [label]="nuevoRegistroDraft['activo'] ? 'Activo' : 'Inactivo'"
-                        (change)="actualizarBooleanCreacion('activo', $event)"></app-custom-switch>
-                </div>
-
-                <mat-form-field appearance="outline" class="w-full">
-                    <mat-label>Nombre en español</mat-label>
-                    <input matInput [value]="nuevoRegistroDraft['nombre'] ?? nuevoRegistroDraft['nombre_es'] ?? ''"
-                        (input)="actualizarTextoCreacion('nombre', $any($event.target).value)"
-                        (blur)="traducirAtraccionAlSalirDelCampo()" maxlength="150" />
-                </mat-form-field>
-
-                <mat-form-field appearance="outline" class="w-full">
-                    <mat-label>Descripcion en español</mat-label>
-                    <textarea matInput rows="4" [value]="nuevoRegistroDraft['descripcion'] ?? nuevoRegistroDraft['descripcion_es'] ?? ''"
-                        (input)="actualizarTextoCreacion('descripcion', $any($event.target).value)"
-                        (blur)="traducirAtraccionAlSalirDelCampo()" maxlength="500"></textarea>
-                </mat-form-field>
-
-                <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-                    <p class="text-sm font-semibold text-gray-900">Vista previa del icono</p>
-                    <p class="mt-1 text-xs text-gray-500">Pega aqui el SVG completo para ver como se mostrara.</p>
-                    <div class="mt-4 flex min-h-24 items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white px-4 py-4">
-                        @if (esSvgIcono(nuevoRegistroDraft['icono'])) {
-                        <span class="inline-flex [&>svg]:h-12 [&>svg]:w-12 [&>svg]:fill-current [&>svg]:text-gray-700"
-                            [innerHTML]="getIconoPreviewSeguro(nuevoRegistroDraft['icono'])"></span>
-                        } @else {
-                        <mat-icon class="icon-size-10 text-gray-400">image</mat-icon>
-                        }
-                    </div>
-                </div>
-
-                <div class="rounded-2xl border border-gray-200 bg-white p-4">
-                    <p class="text-sm font-semibold text-gray-900">Traducciones cargadas</p>
-                    <p class="mt-1 text-xs text-gray-500">
-                        Estas son las traducciones que ya existen en la base para esta atraccion.
-                    </p>
-
-                    @if (traduciendoAtraccion) {
-                    <div class="mt-4 flex items-center gap-3 text-sm text-gray-500">
-                        <mat-progress-spinner diameter="28" mode="indeterminate"></mat-progress-spinner>
-                        <span>Traduciendo...</span>
-                    </div>
-                    } @else if (tieneTraduccionesAtraccionPreview) {
-                    <div class="mt-4 grid gap-3 md:grid-cols-2">
-                        @for (idioma of idiomasVistaPolitica; track idioma.code) {
-                        @if (traduccionesAtraccionPreview[idioma.code]) {
-                        <div class="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                            <p class="text-sm font-semibold text-gray-900">
-                                {{ getNombreIdiomaPolitica(idioma.code) }}
-                            </p>
-                            <p class="mt-1 text-sm font-medium text-gray-800">
-                                {{ traduccionesAtraccionPreview[idioma.code].nombre || '-' }}
-                            </p>
-                            <p class="mt-1 text-sm leading-6 text-gray-600">
-                                {{ traduccionesAtraccionPreview[idioma.code].descripcion || '-' }}
-                            </p>
+                    <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                        <p class="text-sm font-semibold text-gray-900">Vista previa del icono</p>
+                        <p class="mt-1 text-xs text-gray-500">Pega aqui el SVG completo para ver como se mostrara.</p>
+                        <div class="mt-4 flex min-h-24 items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white px-4 py-4">
+                            @if (esSvgIcono(nuevoRegistroDraft['icono'])) {
+                            <span class="inline-flex [&>svg]:h-12 [&>svg]:w-12 [&>svg]:fill-current [&>svg]:text-gray-700"
+                                [innerHTML]="getIconoPreviewSeguro(nuevoRegistroDraft['icono'])"></span>
+                            } @else {
+                            <mat-icon class="icon-size-10 text-gray-400">image</mat-icon>
+                            }
                         </div>
-                        }
-                        }
                     </div>
-                    } @else {
-                    <p class="mt-4 text-sm text-gray-500">Aun no hay traducciones cargadas para esta atraccion.</p>
-                    }
                 </div>
 
-                <app-custom-switch [checked]="!!nuevoRegistroDraft['activo']"
+                <app-custom-switch class="mt-2 block" [checked]="!!nuevoRegistroDraft['activo']"
                     [label]="nuevoRegistroDraft['activo'] ? 'Activo' : 'Inactivo'"
                     (change)="actualizarBooleanCreacion('activo', $event)"></app-custom-switch>
 
