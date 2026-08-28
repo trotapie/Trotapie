@@ -17,9 +17,11 @@ interface CatalogoItem {
   styleUrl: './admin-actividades.component.scss'
 })
 export class AdminActividadesComponent {
+  terminoBusqueda = '';
+
   catalogos: CatalogoItem[] = [
     {
-      titulo: 'Catalogo de amenidades',
+      titulo: 'Amenidades',
       descripcion: 'Gestiona el catalogo general de amenidades disponibles.',
       icono: 'heroicons_outline:clipboard-document-list',
       imagen: 'https://images.unsplash.com/photo-1551918120-9739cb430c6d?q=80&w=774&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
@@ -110,7 +112,7 @@ export class AdminActividadesComponent {
       link: '/admin/catalogos/tipos-habitacion'
     },
     {
-      titulo: 'Catalogo de atracciones',
+      titulo: 'Atracciones',
       descripcion: 'Administra atracciones principales por destino.',
       icono: 'heroicons_outline:sparkles',
       imagen: 'https://images.unsplash.com/photo-1561174356-638d86f24f04?q=80&w=1450&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
@@ -145,4 +147,27 @@ export class AdminActividadesComponent {
       link: '/admin/catalogos/codigos-pais'
     }
   ];
+
+  get catalogosVisibles(): CatalogoItem[] {
+    const termino = this.normalizarTexto(this.terminoBusqueda);
+
+    return this.catalogos
+      .filter(({ titulo, descripcion }) =>
+        !termino ||
+        this.normalizarTexto(titulo).includes(termino) ||
+        this.normalizarTexto(descripcion).includes(termino)
+      )
+      .sort((a, b) => a.titulo.localeCompare(b.titulo, 'es', { sensitivity: 'base' }));
+  }
+
+  actualizarBusqueda(evento: Event): void {
+    this.terminoBusqueda = (evento.target as HTMLInputElement).value;
+  }
+
+  private normalizarTexto(texto: string): string {
+    return texto
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLocaleLowerCase('es');
+  }
 }

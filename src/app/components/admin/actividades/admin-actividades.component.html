@@ -11,8 +11,26 @@
     </div>
 
     <div class="mx-auto w-full max-w-screen-xl px-6 py-8 sm:px-8">
-        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
-            @for (item of catalogos; track item.titulo) {
+        <div class="mb-8 max-w-xl">
+            <label for="catalogos-search" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">
+                Buscar catálogo
+            </label>
+            <div class="relative">
+                <mat-icon class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" svgIcon="heroicons_outline:magnifying-glass"></mat-icon>
+                <input
+                    id="catalogos-search"
+                    type="search"
+                    [value]="terminoBusqueda"
+                    (input)="actualizarBusqueda($event)"
+                    placeholder="Nombre o descripción del catálogo"
+                    class="w-full rounded-xl border border-gray-300 bg-white py-3 pl-11 pr-4 text-gray-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-400"
+                />
+            </div>
+        </div>
+
+        @if (catalogosVisibles.length) {
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            @for (item of catalogosVisibles; track item.titulo) {
             <a [routerLink]="[item.link]"
                 class="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
                 <div class="relative aspect-[16/9] w-full overflow-hidden">
@@ -35,5 +53,12 @@
             </a>
             }
         </div>
+        } @else {
+        <div class="rounded-2xl border border-dashed border-gray-300 bg-white px-6 py-12 text-center dark:border-gray-600 dark:bg-gray-800">
+            <mat-icon class="mb-3 text-gray-400" svgIcon="heroicons_outline:magnifying-glass"></mat-icon>
+            <p class="text-base font-medium text-gray-900 dark:text-white">No se encontraron catálogos</p>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Prueba con otro nombre o descripción.</p>
+        </div>
+        }
     </div>
 </div>

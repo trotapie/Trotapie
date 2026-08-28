@@ -32,7 +32,7 @@ export default [
         data: {
             ...ADMIN_ONLY,
             catalogoKey: 'actividades',
-            titulo: 'Catalogo de amenidades',
+            titulo: 'Amenidades',
             descripcion: 'Gestiona el catalogo de amenidades disponible para la operacion.'
         }
     },
@@ -167,7 +167,7 @@ export default [
         data: {
             ...ADMIN_ONLY,
             catalogoKey: 'atracciones',
-            titulo: 'Catalogo de atracciones',
+            titulo: 'Atracciones',
             descripcion: 'Gestiona atracciones principales vinculadas a destinos.'
         }
     },
