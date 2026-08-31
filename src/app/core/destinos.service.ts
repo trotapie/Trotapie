@@ -1181,72 +1181,341 @@ export class DestinosService {
     return Number(detalle.id);
   }
 
-  async obtenerDetalleDestino(catalogoDestinoId: number, lang?: string) {
-    const preview = await this.obtenerPreviewDestinoAdmin(catalogoDestinoId);
+  async obtenerDetalleBasicoDestino(catalogoDestinoId: number, lang?: string) {
+    const idiomaSolicitado = (lang ?? getDefaultLang()).toLowerCase();
+    const [destinoResponse, detalleResponse, idiomasResponse] = await Promise.all([
+      this.client.from('catalogo_destinos').select('nombre').eq('id', catalogoDestinoId).maybeSingle(),
+      this.client.from('detalles_destinos').select('id, ubicacion').eq('catalogo_destino_id', catalogoDestinoId).maybeSingle(),
+      this.client.from('idiomas').select('id, codigo').in('codigo', [idiomaSolicitado, 'es'])
+    ]);
 
-    // Una ficha pública solo existe cuando hay configuración editorial. El
-    // catálogo puede contener destinos sin contenido, pero no páginas vacías.
-    if (!preview.detalles_destinos_id) {
-      return [];
-    }
+    if (destinoResponse.error) throw destinoResponse.error;
+    if (detalleResponse.error) throw detalleResponse.error;
+    if (idiomasResponse.error) throw idiomasResponse.error;
+    if (!detalleResponse.data) return [];
 
-    const idioma = preview.idiomas.find((item) => item.codigo === (lang ?? getDefaultLang())) ??
-      preview.idiomas.find((item) => item.codigo === 'es') ??
-      preview.idiomas[0];
-    const traduccion = preview.traducciones.find((item) => item.idioma_id === idioma?.id) ?? preview.traducciones[0];
+    const idioma = (idiomasResponse.data ?? []).find((item: any) => item.codigo === idiomaSolicitado) ??
+      (idiomasResponse.data ?? []).find((item: any) => item.codigo === 'es');
+    const { data: traduccion, error } = await this.client
+      .from('detalles_destinos_traducciones')
+      .select('nombre, apodo, descripcion_corta, descripcion_larga, titulo_descripcion')
+      .eq('detalles_destinos_id', detalleResponse.data.id)
+      .eq('idioma_id', Number(idioma?.id ?? 0))
+      .maybeSingle();
+    if (error) throw error;
 
+    const nombre = traduccion?.nombre || destinoResponse.data?.nombre || '';
     return [{
       catalogo_destino_id: catalogoDestinoId,
-      nombre: traduccion?.nombre || preview.destino_nombre,
-      detalle_id: preview.detalles_destinos_id,
-      ubicacion: preview.ubicacion,
+      nombre,
+      detalle_id: Number(detalleResponse.data.id),
+      ubicacion: detalleResponse.data.ubicacion ?? '',
       detalle: {
         apodo: traduccion?.apodo ?? '',
         idioma: idioma?.codigo ?? 'es',
-        nombre: traduccion?.nombre || preview.destino_nombre,
+        nombre,
+        descripcion_corta: traduccion?.descripcion_corta ?? '',
+        descripcion_larga: traduccion?.descripcion_larga ?? '',
+        titulo_descripcion: traduccion?.titulo_descripcion ?? ''
+      }
+    }];
+  }
+
+  async obtenerDatosRapidosDestino(detalleId: number, lang?: string) {
+    const idiomaSolicitado = (lang ?? getDefaultLang()).toLowerCase();
+    const [idiomasResponse, datosResponse] = await Promise.all([
+      this.client.from('idiomas').select('id, codigo').in('codigo', [idiomaSolicitado, 'es']),
+      this.client
+        .from('detalles_destinos_datos_rapidos')
+        .select(`
+          id, orden, tipo_dato_rapido_id,
+          tipo:tipo_dato_rapido_id (
+            clave, icono,
+            traducciones:tipo_dato_rapido_traducciones ( idioma_id, nombre )
+          )
+        `)
+        .eq('detalles_destinos_id', detalleId)
+        .eq('activo', true)
+        .order('orden', { ascending: true })
+    ]);
+    if (idiomasResponse.error) throw idiomasResponse.error;
+    if (datosResponse.error) throw datosResponse.error;
+
+    const idioma = (idiomasResponse.data ?? []).find((item: any) => item.codigo === idiomaSolicitado) ??
+      (idiomasResponse.data ?? []).find((item: any) => item.codigo === 'es');
+    const idiomaId = Number(idioma?.id ?? 0);
+    const datos = datosResponse.data ?? [];
+    const ids = datos.map((item: any) => Number(item.id));
+    if (!ids.length) return [];
+
+    const { data: valores, error } = await this.client
+      .from('detalles_destinos_datos_rapidos_traducciones')
+      .select('detalles_destinos_dato_rapido_id, valor')
+      .in('detalles_destinos_dato_rapido_id', ids)
+      .eq('idioma_id', idiomaId);
+    if (error) throw error;
+
+    const valoresPorDato = new Map(
+      (valores ?? []).map((item: any) => [Number(item.detalles_destinos_dato_rapido_id), item.valor ?? ''])
+    );
+    return datos.map((item: any) => ({
+      clave: item.tipo?.clave ?? '',
+      icono: item.tipo?.icono ?? '',
+      label: item.tipo?.traducciones?.find((traduccion: any) => Number(traduccion.idioma_id) === idiomaId)?.nombre ?? item.tipo?.clave ?? '',
+      orden: Number(item.orden ?? 0),
+      valor: valoresPorDato.get(Number(item.id)) ?? '',
+      tipo_id: Number(item.tipo_dato_rapido_id)
+    }));
+  }
+
+  async obtenerGaleriaDestino(detalleId: number, lang?: string) {
+    const idiomaSolicitado = (lang ?? getDefaultLang()).toLowerCase();
+    const [idiomasResponse, actividadesResponse] = await Promise.all([
+      this.client.from('idiomas').select('id, codigo').in('codigo', [idiomaSolicitado, 'es']),
+      this.client
+        .from('atracciones_principales')
+        .select('id, imagen_fondo')
+        .eq('detalles_destino_id', detalleId)
+        .eq('activo', true)
+        .order('orden', { ascending: true })
+        .order('id', { ascending: true })
+    ]);
+    if (idiomasResponse.error) throw idiomasResponse.error;
+    if (actividadesResponse.error) throw actividadesResponse.error;
+
+    const idioma = (idiomasResponse.data ?? []).find((item: any) => item.codigo === idiomaSolicitado) ??
+      (idiomasResponse.data ?? []).find((item: any) => item.codigo === 'es');
+    const idiomaId = Number(idioma?.id ?? 0);
+    const actividades = actividadesResponse.data ?? [];
+    const actividadIds = actividades.map((item: any) => Number(item.id));
+    if (!actividadIds.length) return [];
+
+    const { data: imagenes, error: imagenesError } = await this.client
+      .from('atracciones_imagenes')
+      .select('id, atraccion_id, imagen_url, nombre, oscurecer_fondo, texto_color, titulo_font_size, descripcion_font_size, overlay_color, overlay_opacidad, blur_px, efecto_destino, etiqueta_font_size, etiqueta_color')
+      .in('atraccion_id', actividadIds)
+      .eq('activa', true)
+      .order('orden', { ascending: true })
+      .order('id', { ascending: true });
+    if (imagenesError) throw imagenesError;
+
+    const imagenIds = (imagenes ?? []).map((imagen: any) => Number(imagen.id));
+    const { data: traducciones, error: traduccionesError } = imagenIds.length
+      ? await this.client
+        .from('atracciones_imagenes_traducciones')
+        .select('atraccion_imagen_id, nombre, descripcion')
+        .in('atraccion_imagen_id', imagenIds)
+        .eq('idioma_id', idiomaId)
+      : { data: [], error: null };
+    if (traduccionesError) throw traduccionesError;
+
+    const traduccionesPorImagen = new Map(
+      (traducciones ?? []).map((item: any) => [Number(item.atraccion_imagen_id), item])
+    );
+    const imagenesPorActividad = new Map<number, any[]>();
+    (imagenes ?? []).forEach((imagen: any) => {
+      const actividadId = Number(imagen.atraccion_id);
+      const imagenesActividad = imagenesPorActividad.get(actividadId) ?? [];
+      imagenesActividad.push(imagen);
+      imagenesPorActividad.set(actividadId, imagenesActividad);
+    });
+
+    return actividades.map((actividad: any) => {
+      const imagenesActividad = (imagenesPorActividad.get(Number(actividad.id)) ?? []).map((imagen: any) => {
+        const traduccion = traduccionesPorImagen.get(Number(imagen.id));
+        return {
+          imagen_url: imagen.imagen_url ?? '',
+          nombre: traduccion?.nombre ?? '',
+          descripcion: traduccion?.descripcion ?? '',
+          activa: true,
+          oscurecer_fondo: Boolean(imagen.oscurecer_fondo),
+          texto_color: imagen.texto_color ?? '#FFFFFF',
+          titulo_font_size: Number(imagen.titulo_font_size ?? 48),
+          descripcion_font_size: Number(imagen.descripcion_font_size ?? 18),
+          overlay_color: imagen.overlay_color ?? '#0F172A',
+          overlay_opacidad: Number(imagen.overlay_opacidad ?? 0),
+          blur_px: Number(imagen.blur_px ?? 0),
+          efecto_destino: imagen.efecto_destino === 'texto' || imagen.efecto_destino === 'ambos' ? imagen.efecto_destino : 'fondo',
+          etiqueta_font_size: Number(imagen.etiqueta_font_size ?? 12),
+          etiqueta_color: imagen.etiqueta_color ?? '#F9B44B'
+        };
+      });
+      return {
+        id: Number(actividad.id),
+        imagen_fondo: imagenesActividad[0]?.imagen_url ?? actividad.imagen_fondo ?? '',
+        imagenes: imagenesActividad
+      };
+    });
+  }
+
+  async obtenerDetalleDestino(catalogoDestinoId: number, lang?: string) {
+    const idiomaSolicitado = (lang ?? getDefaultLang()).toLowerCase();
+    const [destinoResponse, detalleResponse, idiomasResponse] = await Promise.all([
+      this.client
+        .from('catalogo_destinos')
+        .select('nombre')
+        .eq('id', catalogoDestinoId)
+        .maybeSingle(),
+      this.client
+        .from('detalles_destinos')
+        .select('id, ubicacion')
+        .eq('catalogo_destino_id', catalogoDestinoId)
+        .maybeSingle(),
+      this.client
+        .from('idiomas')
+        .select('id, codigo')
+        .in('codigo', [idiomaSolicitado, 'es'])
+    ]);
+
+    if (destinoResponse.error) throw destinoResponse.error;
+    if (detalleResponse.error) throw detalleResponse.error;
+    if (idiomasResponse.error) throw idiomasResponse.error;
+
+    const detalle = detalleResponse.data;
+    if (!detalle) return [];
+
+    const idioma = (idiomasResponse.data ?? []).find((item: any) => item.codigo === idiomaSolicitado) ??
+      (idiomasResponse.data ?? []).find((item: any) => item.codigo === 'es');
+    const idiomaId = Number(idioma?.id ?? 0);
+
+    const [traduccionResponse, datosRapidosResponse, actividadesResponse] = await Promise.all([
+      this.client
+        .from('detalles_destinos_traducciones')
+        .select('nombre, apodo, descripcion_corta, descripcion_larga, titulo_descripcion')
+        .eq('detalles_destinos_id', detalle.id)
+        .eq('idioma_id', idiomaId)
+        .maybeSingle(),
+      this.client
+        .from('detalles_destinos_datos_rapidos')
+        .select(`
+          id,
+          orden,
+          tipo_dato_rapido_id,
+          tipo:tipo_dato_rapido_id (
+            clave,
+            icono,
+            traducciones:tipo_dato_rapido_traducciones ( idioma_id, nombre )
+          )
+        `)
+        .eq('detalles_destinos_id', detalle.id)
+        .eq('activo', true)
+        .order('orden', { ascending: true }),
+      this.client
+        .from('atracciones_principales')
+        .select('id, imagen_fondo')
+        .eq('detalles_destino_id', detalle.id)
+        .eq('activo', true)
+        .order('orden', { ascending: true })
+        .order('id', { ascending: true })
+    ]);
+
+    if (traduccionResponse.error) throw traduccionResponse.error;
+    if (datosRapidosResponse.error) throw datosRapidosResponse.error;
+    if (actividadesResponse.error) throw actividadesResponse.error;
+
+    const datosRapidos = datosRapidosResponse.data ?? [];
+    const actividades = actividadesResponse.data ?? [];
+    const datosRapidosIds = datosRapidos.map((item: any) => Number(item.id));
+    const actividadIds = actividades.map((item: any) => Number(item.id));
+
+    const [valoresResponse, imagenesResponse] = await Promise.all([
+      datosRapidosIds.length
+        ? this.client
+          .from('detalles_destinos_datos_rapidos_traducciones')
+          .select('detalles_destinos_dato_rapido_id, valor')
+          .in('detalles_destinos_dato_rapido_id', datosRapidosIds)
+          .eq('idioma_id', idiomaId)
+        : Promise.resolve({ data: [], error: null }),
+      actividadIds.length
+        ? this.client
+          .from('atracciones_imagenes')
+          .select('id, atraccion_id, imagen_url, nombre, oscurecer_fondo, texto_color, titulo_font_size, descripcion_font_size, overlay_color, overlay_opacidad, blur_px, efecto_destino, etiqueta_font_size, etiqueta_color')
+          .in('atraccion_id', actividadIds)
+          .eq('activa', true)
+          .order('orden', { ascending: true })
+          .order('id', { ascending: true })
+        : Promise.resolve({ data: [], error: null })
+    ]);
+
+    if (valoresResponse.error) throw valoresResponse.error;
+    if (imagenesResponse.error) throw imagenesResponse.error;
+
+    const imagenes = imagenesResponse.data ?? [];
+    const imagenIds = imagenes.map((imagen: any) => Number(imagen.id));
+    const traduccionesImagenesResponse = imagenIds.length
+      ? await this.client
+        .from('atracciones_imagenes_traducciones')
+        .select('atraccion_imagen_id, nombre, descripcion')
+        .in('atraccion_imagen_id', imagenIds)
+        .eq('idioma_id', idiomaId)
+      : { data: [], error: null };
+
+    if (traduccionesImagenesResponse.error) throw traduccionesImagenesResponse.error;
+
+    const valoresPorDatoRapido = new Map(
+      (valoresResponse.data ?? []).map((item: any) => [Number(item.detalles_destinos_dato_rapido_id), item.valor ?? ''])
+    );
+    const traduccionesPorImagen = new Map(
+      (traduccionesImagenesResponse.data ?? []).map((item: any) => [Number(item.atraccion_imagen_id), item])
+    );
+    const imagenesPorActividad = new Map<number, any[]>();
+    imagenes.forEach((imagen: any) => {
+      const actividadId = Number(imagen.atraccion_id);
+      const imagenesActividad = imagenesPorActividad.get(actividadId) ?? [];
+      imagenesActividad.push(imagen);
+      imagenesPorActividad.set(actividadId, imagenesActividad);
+    });
+
+    const traduccion = traduccionResponse.data;
+    const nombreDestino = traduccion?.nombre || destinoResponse.data?.nombre || '';
+    return [{
+      catalogo_destino_id: catalogoDestinoId,
+      nombre: nombreDestino,
+      detalle_id: Number(detalle.id),
+      ubicacion: detalle.ubicacion ?? '',
+      detalle: {
+        apodo: traduccion?.apodo ?? '',
+        idioma: idioma?.codigo ?? 'es',
+        nombre: nombreDestino,
         descripcion_corta: traduccion?.descripcion_corta ?? '',
         descripcion_larga: traduccion?.descripcion_larga ?? '',
         titulo_descripcion: traduccion?.titulo_descripcion ?? ''
       },
-      datos_rapidos: preview.detalles_rapidos.filter((item) => item.activo).map((item) => ({
-        clave: item.clave,
-        icono: item.icono ?? '',
-        label: item.nombre,
-        orden: item.orden ?? 0,
-        valor: idioma ? item.valores[idioma.id] ?? '' : '',
-        tipo_id: item.tipo_dato_rapido_id
+      datos_rapidos: datosRapidos.map((item: any) => ({
+        clave: item.tipo?.clave ?? '',
+        icono: item.tipo?.icono ?? '',
+        label: item.tipo?.traducciones?.find((traduccionTipo: any) => Number(traduccionTipo.idioma_id) === idiomaId)?.nombre ?? item.tipo?.clave ?? '',
+        orden: Number(item.orden ?? 0),
+        valor: valoresPorDatoRapido.get(Number(item.id)) ?? '',
+        tipo_id: Number(item.tipo_dato_rapido_id)
       })),
-      atracciones_principales: preview.actividades
-        .filter((actividad) => actividad.activo)
-        .map((actividad) => {
-          const imagenes = (actividad.imagenes ?? [])
-            .filter((imagen) => imagen.activa && !!imagen.imagen_url)
-            .map((imagen) => ({
-              imagen_url: imagen.imagen_url,
-              nombre: idioma ? imagen.traducciones?.[idioma.id]?.nombre ?? '' : '',
-              descripcion: idioma ? imagen.traducciones?.[idioma.id]?.descripcion ?? '' : '',
-              activa: imagen.activa,
-              oscurecer_fondo: Boolean(imagen.oscurecer_fondo),
-              texto_color: imagen.texto_color ?? '#FFFFFF',
-              titulo_font_size: Number(imagen.titulo_font_size ?? 48),
-              descripcion_font_size: Number(imagen.descripcion_font_size ?? 18),
-              overlay_color: imagen.overlay_color ?? '#0F172A',
-              overlay_opacidad: Number(imagen.overlay_opacidad ?? 0),
-              blur_px: Number(imagen.blur_px ?? 0),
-              efecto_destino: imagen.efecto_destino === 'texto' || imagen.efecto_destino === 'ambos'
-                ? imagen.efecto_destino
-                : 'fondo' as 'fondo' | 'texto' | 'ambos',
-              etiqueta_font_size: Number(imagen.etiqueta_font_size ?? 12),
-              etiqueta_color: imagen.etiqueta_color ?? '#F9B44B'
-            }));
-
+      atracciones_principales: actividades.map((actividad: any) => {
+        const imagenesActividad = (imagenesPorActividad.get(Number(actividad.id)) ?? []).map((imagen: any) => {
+          const traduccionImagen = traduccionesPorImagen.get(Number(imagen.id));
           return {
-            id: Number(actividad.id),
-            imagen_fondo: imagenes[0]?.imagen_url ?? actividad.imagen_seleccionada ?? actividad.imagen_fondo,
-            imagenes
+            imagen_url: imagen.imagen_url ?? '',
+            nombre: traduccionImagen?.nombre ?? imagen.nombre ?? '',
+            descripcion: traduccionImagen?.descripcion ?? '',
+            activa: true,
+            oscurecer_fondo: Boolean(imagen.oscurecer_fondo),
+            texto_color: imagen.texto_color ?? '#FFFFFF',
+            titulo_font_size: Number(imagen.titulo_font_size ?? 48),
+            descripcion_font_size: Number(imagen.descripcion_font_size ?? 18),
+            overlay_color: imagen.overlay_color ?? '#0F172A',
+            overlay_opacidad: Number(imagen.overlay_opacidad ?? 0),
+            blur_px: Number(imagen.blur_px ?? 0),
+            efecto_destino: imagen.efecto_destino === 'texto' || imagen.efecto_destino === 'ambos' ? imagen.efecto_destino : 'fondo',
+            etiqueta_font_size: Number(imagen.etiqueta_font_size ?? 12),
+            etiqueta_color: imagen.etiqueta_color ?? '#F9B44B'
           };
-        })
-        .filter((actividad) => actividad.id > 0)
+        });
+
+        return {
+          id: Number(actividad.id),
+          imagen_fondo: imagenesActividad[0]?.imagen_url ?? actividad.imagen_fondo ?? '',
+          imagenes: imagenesActividad
+        };
+      })
     }];
 
     /*

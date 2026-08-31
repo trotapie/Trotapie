@@ -252,11 +252,18 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
     }
   }
 
-  private preloadImage(url: string): Promise<void> {
+  private preloadImage(url: string, timeoutMs = 3_000): Promise<void> {
     return new Promise((resolve) => {
       const img = new Image();
-      img.onload = () => resolve();
-      img.onerror = () => resolve(); // no bloquea si falla
+      let timeoutId: number;
+      const finalize = () => {
+        window.clearTimeout(timeoutId);
+        resolve();
+      };
+
+      timeoutId = window.setTimeout(finalize, timeoutMs);
+      img.onload = finalize;
+      img.onerror = finalize;
       img.src = url;
     });
   }

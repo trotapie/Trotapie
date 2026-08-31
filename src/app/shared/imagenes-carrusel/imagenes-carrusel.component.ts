@@ -1,7 +1,6 @@
-import { Component, ElementRef, HostListener, inject, Input, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
+import { Component, ElementRef, HostListener, inject, Input, OnChanges, OnDestroy, OnInit, QueryList, SimpleChanges, ViewChild, ViewChildren } from '@angular/core';
 import { MaterialModule } from '../material.module';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
-import { ImagenesService } from 'app/core/imagenes.service';
 import { Router } from '@angular/router';
 import { BotCotizadorComponent } from 'app/bot-cotizador/bot-cotizador.component';
 import { IDetalleHotel } from 'app/components/hoteles/hoteles.interface';
@@ -14,9 +13,8 @@ import { backdropFade, modalScaleFade } from 'app/shared/animations';
   styleUrl: './imagenes-carrusel.component.scss',
   animations: [modalScaleFade, backdropFade],
 })
-export class ImagenesCarruselComponent implements OnInit, OnDestroy {
+export class ImagenesCarruselComponent implements OnInit, OnChanges, OnDestroy {
   private _translocoService = inject(TranslocoService);
-    private supabase = inject(ImagenesService);
   private router = inject(Router)
   @Input() imagenesCargadas: any[] = [];
   @Input() hotel: IDetalleHotel;
@@ -34,6 +32,7 @@ export class ImagenesCarruselComponent implements OnInit, OnDestroy {
   esCotizacion: boolean;
   modalAbierto = false;
   mostrarBot = false;
+  trackById = (_: number, item: any) => item.id;
 
   private autoplayInterval: any = null;
 
@@ -43,7 +42,13 @@ export class ImagenesCarruselComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     const url = this.router.url;
     this.esCotizacion = url.includes('cotizacion') ? true : false
-    this.cargarImagenesConDelay()
+    this.cargarImagenes();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['imagenesCargadas'] && !changes['imagenesCargadas'].firstChange) {
+      this.cargarImagenes();
+    }
   }
 
   iniciarAutoplay(): void {
@@ -67,19 +72,26 @@ export class ImagenesCarruselComponent implements OnInit, OnDestroy {
     this.detenerAutoplay();
   }
 
-  async cargarImagenesConDelay() {
+  private cargarImagenes(): void {
     const urls: string[] = (this.imagenesCargadas ?? [])
       .map((x: any) => typeof x === 'string' ? x : this.esCotizacion ? x?.url : x?.url_imagen)
       .filter((x: string | undefined): x is string => !!x);
 
     this.imagenes = [];
+    this.imagenesFilter = [];
     for (const url of urls) {
       this.imagenes.push(url);
       this.imagenesFilter.push(url);
     }
 
-    this.obtenerTipoImagen()
-
+    this.tiposImagen = Array.from(
+      new Map(
+        (this.imagenesCargadas ?? [])
+          .map((imagen: any) => imagen?.tipo)
+          .filter((tipo: any) => tipo?.id)
+          .map((tipo: any) => [tipo.id, tipo])
+      ).values()
+    );
   }
 
   open(i: number, event: MouseEvent) {
@@ -166,20 +178,6 @@ export class ImagenesCarruselComponent implements OnInit, OnDestroy {
     return typeof imagen === 'string'
       ? imagen
       : this.esCotizacion ? imagen?.url : imagen?.url_imagen;
-  }
-
-  async obtenerTipoImagen() {
-    const data = await this.supabase.obtenerTiposImagenHotel();
-    let tipoImagenId: number[] = [];
-    this.imagenesCargadas.forEach(imagen => {
-      if (!imagen?.tipo_imagen_id) return;
-      if (tipoImagenId.length === 0) {
-        tipoImagenId.push(imagen.tipo_imagen_id);
-      } else if (!tipoImagenId.includes(imagen.tipo_imagen_id)) {
-        tipoImagenId.push(imagen.tipo_imagen_id);
-      }
-    });
-    this.tiposImagen = data.filter(tipo => tipoImagenId.includes(tipo.id));
   }
 
   getTipoLabel(tipo: any): string {

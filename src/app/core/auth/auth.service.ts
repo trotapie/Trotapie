@@ -269,6 +269,17 @@ export class AuthService {
     );
   }
 
+  clearSessionForPublicRoute(): void {
+    this._accessToken = '';
+    this._authenticated = false;
+    this._clearAccessState();
+    this._inactivitySession.stop();
+
+    // A public route only needs to forget this browser's session. Do not wait
+    // for Supabase to revoke sessions globally before rendering the page.
+    void this._supabase.getClient().auth.signOut({ scope: 'local' }).catch(() => undefined);
+  }
+
   completeFirstLoginPassword(password: string): Observable<boolean> {
     return from(this._supabase.completarPrimerLoginEmpleado(password)).pipe(
       switchMap(() => from(this._supabase.getSession())),

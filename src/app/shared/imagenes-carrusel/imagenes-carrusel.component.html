@@ -121,11 +121,13 @@
                         <button *ngIf="hotel" mat-raised-button class="rounded-full px-4 py-2 gap-1
                                               bg-[#F9B44B] dark:bg-amber-500 dark:hover:bg-amber-400 hover:bg-[#e0a13a]
                                                text-white backdrop-blur shadow-md
-                                               transition [text-shadow:_0_2px_2px_rgba(0,0,0,0.50)]"
-                            (click)="abrirModal()">
-                            <mat-icon svgIcon="mat_outline:request_quote"
-                                class="mr-1 [filter:drop-shadow(0_2px_2px_rgba(0,0,0,0.45))]"></mat-icon>
-                            {{t('cotizar')}}
+                                                transition [text-shadow:_0_2px_2px_rgba(0,0,0,0.50)]"
+                             (click)="abrirModal()">
+                            <div class="flex items-center justify-center">
+                                <img class="h-6 w-6 mr-3 [filter:drop-shadow(0_2px_2px_rgba(0,0,0,0.45))]"
+                                    src="assets/icons/concerge.svg" alt="" aria-hidden="true" />
+                                <b>{{ t('cotizar') }}</b>
+                            </div>
                         </button>
 
                         <button mat-raised-button class="rounded-full bg-white/20 hover:bg-white/30 dark:bg-slate-800/80 dark:hover:bg-slate-700/90

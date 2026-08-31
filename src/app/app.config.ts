@@ -10,7 +10,7 @@ import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/materia
 import { MAT_DIALOG_DEFAULT_OPTIONS, MatDialogConfig } from '@angular/material/dialog';
 import { MAT_SNACK_BAR_DEFAULT_OPTIONS } from '@angular/material/snack-bar';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { provideRouter, withInMemoryScrolling, withPreloading, PreloadAllModules } from '@angular/router';
+import { NoPreloading, provideRouter, withInMemoryScrolling, withPreloading } from '@angular/router';
 import { provideFuse } from '@fuse';
 import { TranslocoService, provideTransloco } from '@jsverse/transloco';
 import { appRoutes } from 'app/app.routes';
@@ -41,7 +41,8 @@ export const appConfig: ApplicationConfig = {
         provideRouter(
             appRoutes,
             withInMemoryScrolling({ scrollPositionRestoration: 'enabled' }),
-            withPreloading(PreloadAllModules)
+            // Avoid competing with the initial route's API calls and images.
+            withPreloading(NoPreloading)
         ),
 
         // Material Date Adapter
@@ -113,15 +114,16 @@ export const appConfig: ApplicationConfig = {
 
             translocoService.setActiveLang(lang);
 
-            return firstValueFrom(
+            // Let the initial screen render while translations load. Templates
+            // request the active language again if it has not arrived yet.
+            void firstValueFrom(
                 translocoService.load(lang).pipe(
-                    timeout(3_000),
+                    timeout(1_500),
                     catchError(() => {
                         translocoService.setActiveLang('es');
 
                         return translocoService.load('es').pipe(
-                            timeout(3_000),
-                            // Do not prevent Angular from bootstrapping if translations are unavailable.
+                            timeout(1_500),
                             catchError(() => of({}))
                         );
                     })

@@ -1,5 +1,6 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatosService } from 'app/components/hoteles/hoteles.service';
 import { MapaComponent } from 'app/components/hoteles/mapa/mapa.component';
 import { DestinosService } from 'app/core/destinos.service';
@@ -12,7 +13,7 @@ import { MaterialModule } from 'app/shared/material.module';
 import { IDetallesDestino } from './detalle-destino.interface';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { getDefaultLang } from 'app/lang.utils';
-import { log } from 'fabric/fabric-impl';
+import { distinctUntilChanged, filter } from 'rxjs';
 
 interface CarouselSlide {
   imagen_url: string;
@@ -44,6 +45,7 @@ export class DetalleDestinoComponent implements OnInit {
   private temperatureUnitsService = inject(TemperatureUnitsService);
   private _translocoService = inject(TranslocoService);
   private route = inject(ActivatedRoute)
+  private destroyRef = inject(DestroyRef);
 
 
 
@@ -57,6 +59,10 @@ export class DetalleDestinoComponent implements OnInit {
   currentIndex = 0;
   intervalId: any;
   slides: CarouselSlide[] = [];
+  cargandoDatosRapidos = true;
+  cargandoGaleria = true;
+  errorDatosRapidos = '';
+  errorGaleria = '';
 
   async ngOnInit() {
     const catalogoDestinoId = Number(this.route.snapshot.paramMap.get('id'));
@@ -65,13 +71,14 @@ export class DetalleDestinoComponent implements OnInit {
       return;
     }
 
-    const informacionDestino = await this.supabase.obtenerDetalleDestino(catalogoDestinoId, getDefaultLang());
-    if (!informacionDestino) {
+    const idiomaInicial = getDefaultLang();
+    const informacionDestino = await this.supabase.obtenerDetalleBasicoDestino(catalogoDestinoId, idiomaInicial);
+    if (!informacionDestino?.[0]) {
       this.cargarInfo();
       return;
     }
-    this.detallesDestino = informacionDestino[0];
-    this.construirSlidesCarrusel();
+    this.asignarDetalleBasico(informacionDestino[0]);
+    this.cargarSeccionesSecundarias(idiomaInicial);
 
     this.ipQueryService.getCurrentIpInfo().subscribe((response) => {
       this.ipPublica = response.ip;
@@ -92,10 +99,12 @@ export class DetalleDestinoComponent implements OnInit {
       vistaLejana: true,
     }
 
-    this._translocoService.langChanges$.subscribe(async (activeLang) => {
-      const informacionDestino = await this.supabase.obtenerDetalleDestino(catalogoDestinoId, activeLang);
-      this.detallesDestino = informacionDestino[0];
-      this.construirSlidesCarrusel();
+    this._translocoService.langChanges$.pipe(
+      distinctUntilChanged(),
+      filter((activeLang) => activeLang !== idiomaInicial),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((activeLang) => {
+      void this.recargarPorIdioma(catalogoDestinoId, activeLang);
     });
 
     sessionStorage.setItem('hotel', JSON.stringify(datosHotel))
@@ -179,6 +188,67 @@ export class DetalleDestinoComponent implements OnInit {
 
   ngOnDestroy() {
     clearInterval(this.intervalId);
+  }
+
+  private async recargarPorIdioma(catalogoDestinoId: number, idioma: string): Promise<void> {
+    try {
+      const informacionDestino = await this.supabase.obtenerDetalleBasicoDestino(catalogoDestinoId, idioma);
+      if (!informacionDestino?.[0]) return;
+
+      this.asignarDetalleBasico(informacionDestino[0]);
+      this.cargarSeccionesSecundarias(idioma);
+    } catch (error) {
+      console.error('No se pudo actualizar el detalle del destino.', error);
+    }
+  }
+
+  private asignarDetalleBasico(detalle: Omit<IDetallesDestino, 'datos_rapidos' | 'atracciones_principales'>): void {
+    this.detallesDestino = {
+      ...detalle,
+      datos_rapidos: [],
+      atracciones_principales: []
+    };
+    this.slides = [];
+    this.currentIndex = 0;
+  }
+
+  private cargarSeccionesSecundarias(idioma: string): void {
+    this.cargandoDatosRapidos = true;
+    this.cargandoGaleria = true;
+    this.errorDatosRapidos = '';
+    this.errorGaleria = '';
+
+    void this.cargarDatosRapidos(idioma);
+    void this.cargarGaleria(idioma);
+  }
+
+  private async cargarDatosRapidos(idioma: string): Promise<void> {
+    try {
+      this.detallesDestino.datos_rapidos = await this.supabase.obtenerDatosRapidosDestino(
+        this.detallesDestino.detalle_id,
+        idioma
+      ) as IDetallesDestino['datos_rapidos'];
+    } catch (error) {
+      this.errorDatosRapidos = 'No se pudieron cargar los datos rápidos.';
+      console.error(this.errorDatosRapidos, error);
+    } finally {
+      this.cargandoDatosRapidos = false;
+    }
+  }
+
+  private async cargarGaleria(idioma: string): Promise<void> {
+    try {
+      this.detallesDestino.atracciones_principales = await this.supabase.obtenerGaleriaDestino(
+        this.detallesDestino.detalle_id,
+        idioma
+      ) as IDetallesDestino['atracciones_principales'];
+      this.construirSlidesCarrusel();
+    } catch (error) {
+      this.errorGaleria = 'No se pudieron cargar las imágenes.';
+      console.error(this.errorGaleria, error);
+    } finally {
+      this.cargandoGaleria = false;
+    }
   }
 
   cargarInfo() {

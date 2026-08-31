@@ -1,10 +1,11 @@
 import { HttpClient } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, ElementRef, inject, ViewChild, ViewEncapsulation } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject, ViewChild, ViewEncapsulation } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormControl, FormGroup, FormsModule } from '@angular/forms';
 import { Destinos, GrupoDestino, Hotel, HotelConDestino, IHoteles } from './hoteles.interface';
 import { MaterialModule } from 'app/shared/material.module';
 import { Router } from '@angular/router';
-import { Observable, startWith, Subject, takeUntil } from 'rxjs';
+import { distinctUntilChanged, filter, Observable, startWith, Subject, takeUntil } from 'rxjs';
 import { DatosService } from './hoteles.service';
 import { FloatingSearchComponent } from './search-component/floating-search.component';
 import { SupabaseService } from 'app/core/supabase.service';
@@ -35,6 +36,7 @@ export class HotelesComponent {
     private _translocoService = inject(TranslocoService);
     private _unsubscribeAll: Subject<any> = new Subject<any>();
     private _fuseMediaWatcherService = inject(FuseMediaWatcherService)
+    private destroyRef = inject(DestroyRef);
     
     /**
      * Constructor
@@ -46,7 +48,11 @@ export class HotelesComponent {
     hotelesPorCiudad: Hotel[] = [];
     ciudadSeleccionada: boolean;
     cargando = false;
-    private cargasPendientes = 0;
+    cargandoMasHoteles = false;
+    hayMasHoteles = true;
+    private readonly hotelesPorPagina = 10;
+    private siguienteHotelOffset = 0;
+    private hotelesObserver?: IntersectionObserver;
     hotel: Hotel;
     rating: Number;
     descuentoEstilos = ['descuento-rect', 'descuento-estrella', 'descuento-circulo'];
@@ -61,6 +67,19 @@ export class HotelesComponent {
     @ViewChild('scrollContainer', { static: true }) scrollContainer!: ElementRef<HTMLElement>;
     @ViewChild('ancla', { static: false }) ancla!: ElementRef<HTMLElement>;
     @ViewChild('anclaNacionales', { static: false }) anclaNacionales!: ElementRef<HTMLElement>;
+    @ViewChild('hotelesSentinel')
+    set hotelesSentinel(element: ElementRef<HTMLElement> | undefined) {
+        this.hotelesObserver?.disconnect();
+        if (!element) return;
+
+        this.hotelesObserver = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) void this.cargarMasHoteles();
+            },
+            { root: this.scrollContainer?.nativeElement ?? null, rootMargin: '300px 0px' }
+        );
+        this.hotelesObserver.observe(element.nativeElement);
+    }
     mostrarInfo: boolean = false;
     destinos: Destinos[] = [];
     destinosNacionales: Destinos[] = [];
@@ -112,39 +131,19 @@ export class HotelesComponent {
                 hotelSeleccionado: ['']
             });
             this.hotelesForm.get('hotelSeleccionado')?.valueChanges.subscribe(valor => {
-                this.consulaHoteles();
+                void this.cargarHotelesIniciales();
                 if (valor !== null) {
                     sessionStorage.setItem('ciudad', valor.toString());
                 }
             });
             await this.obtenerDestinos();
-            // TODO: no hacer de nuevo la petición al cambiar idioma sino solo remplar los textos
-            this._translocoService.langChanges$.subscribe(async (activeLang) => {
-                this.iniciarCarga();
-                const hotelId = +this.hotelesForm.get('hotelSeleccionado')?.value
-                try {
-                    this.destinoSelected = this.destinos.find(item => item.id === +hotelId);
-                    const busqueda = this.tipoDestino === 1 ? this.supabase.listHotelesAll(hotelId, activeLang) : this.supabase.listHotelesAllPorDestinoPadre(hotelId, activeLang);
-                    const data = await busqueda;
-                    const info = (data ?? []).map((hotel: any) => ({
-                        ...hotel,
-                        conceptoIconoSeguro: hotel.concepto?.icono
-                            ? this.sanitizer.bypassSecurityTrustHtml(hotel.concepto.icono)
-                            : null,
-                        descuentoSeguro: hotel.descuento?.icono
-                            ? this.sanitizer.bypassSecurityTrustHtml(hotel.descuento.icono)
-                            : null
-                    }));
-
-                    if (this.tipoDestino === 2) {
-                        this.gruposDestinos = this.agruparHotelesPorDestino(info)
-                    }
-
-                    this.destinoSeleccionado(info);
-                    this.listaHoteles = info;
-                } finally {
-                    this.finalizarCarga();
-                }
+            const idiomaInicial = getDefaultLang();
+            this._translocoService.langChanges$.pipe(
+                distinctUntilChanged(),
+                filter((activeLang) => activeLang !== idiomaInicial),
+                takeUntilDestroyed(this.destroyRef)
+            ).subscribe((activeLang) => {
+                void this.cargarHotelesIniciales(activeLang);
             });
         }
         this._fuseMediaWatcherService.onMediaChange$
@@ -182,6 +181,9 @@ export class HotelesComponent {
 
     ngOnDestroy(): void {
         if (this.intervalId) clearInterval(this.intervalId);
+        this.hotelesObserver?.disconnect();
+        this._unsubscribeAll.next(null);
+        this._unsubscribeAll.complete();
     }
 
     get selectedDestinoNombre(): string | null {
@@ -198,7 +200,6 @@ export class HotelesComponent {
     }
 
     async obtenerDestinos(tipoDestino?: number) {
-        this.iniciarCarga();
         this.tipoDestino = tipoDestino ?? (sessionStorage.getItem('tipoDestino') !== null
             ? +sessionStorage.getItem('tipoDestino')
             : this.tipoDestino);
@@ -213,7 +214,6 @@ export class HotelesComponent {
             }
         } catch (error: any) {
             this.error = error?.message ?? 'No se pudieron cargar los destinos.';
-            this.finalizarCarga();
             return;
         }
 
@@ -223,49 +223,77 @@ export class HotelesComponent {
 
         this.hotelesForm.patchValue({ hotelSeleccionado: destinoSeleccionado?.id ?? null }, { emitEvent: false });
 
-        await this.consulaHoteles().finally(() => this.finalizarCarga());
+        await this.cargarHotelesIniciales();
     }
 
-    async consulaHoteles() {
-        this.iniciarCarga();
+    private async cargarHotelesIniciales(idioma = getDefaultLang()): Promise<void> {
+        const hotelId = Number(this.hotelesForm.get('hotelSeleccionado')?.value);
+        this.hotelesObserver?.disconnect();
+        this.cargando = true;
+        this.cargandoMasHoteles = false;
+        this.hayMasHoteles = true;
+        this.siguienteHotelOffset = 0;
+        this.hotelesPorCiudad = [];
+        this.listaHoteles = [];
+        this.error = '';
+
         try {
-        if (this.tipoDestino === 2) {
-            const mapa = new Map<string, any[]>();
-            this.destinos.forEach(dest => {
-                const padre = dest.continente.nombre;
-                if (!mapa.has(padre)) mapa.set(padre, []);
-                mapa.get(padre)!.push(dest);
-            });
+            if (!hotelId) return;
 
-            this.agrupadosDestinos = Array.from(mapa, ([nombrePadre, destinos]) => ({
-                nombrePadre,
-                destinos
-            }));
-            this.filteredAgrupadosDestinos = this.agrupadosDestinos;
+            if (this.tipoDestino === 2) {
+                const hoteles = await this.supabase.listHotelesAllPorDestinoPadre(hotelId, idioma);
+                const hotelesPreparados = this.prepararHoteles(hoteles ?? []);
+                this.gruposDestinos = this.agruparHotelesPorDestino(hotelesPreparados);
+                this.listaHoteles = hotelesPreparados;
+                this.hayMasHoteles = false;
+                this.destinoSeleccionado(hotelesPreparados);
+                this.mostrarInfo = true;
+                return;
+            }
 
-            this.destinoCtrl.valueChanges
-                .pipe(startWith(''))
-                .subscribe(value => {
-                    const filtro = (value || '').toLowerCase();
+            if (this.tipoDestino !== 1) return;
 
-                    this.filteredAgrupadosDestinos = this.agrupadosDestinos
-                        .map(grupo => ({
-                            nombrePadre: grupo.nombrePadre,
-                            destinos: grupo.destinos.filter((d: any) =>
-                                d.nombre.toLowerCase().includes(filtro)
-                            )
-                        }))
-                        .filter(grupo => grupo.destinos.length > 0);
-                });
-
+            this.destinoSelected = this.destinos.find(item => item.id === hotelId);
+            const hoteles = await this.supabase.listHotelesTarjeta(hotelId, idioma, 0, this.hotelesPorPagina);
+            this.hotelesPorCiudad = this.prepararHoteles(hoteles);
+            this.listaHoteles = this.hotelesPorCiudad;
+            this.siguienteHotelOffset = this.hotelesPorCiudad.length;
+            this.hayMasHoteles = hoteles.length === this.hotelesPorPagina;
+            this.destinoSeleccionado(this.hotelesPorCiudad);
+            this.mostrarInfo = true;
+        } catch (error: any) {
+            this.error = error?.message ?? 'No se pudieron cargar los hoteles.';
+        } finally {
+            this.cargando = false;
         }
+    }
 
-        const hotelId = +this.hotelesForm.get('hotelSeleccionado')?.value
-        this.destinoSelected = this.destinos.find(item => item.id === +hotelId);
-        const busqueda = this.tipoDestino === 1 ? this.supabase.listHotelesAll(hotelId, getDefaultLang()) : this.supabase.listHotelesAllPorDestinoPadre(hotelId, getDefaultLang());
-        const data = await busqueda;
+    private async cargarMasHoteles(): Promise<void> {
+        const hotelId = Number(this.hotelesForm.get('hotelSeleccionado')?.value);
+        if (this.cargando || this.cargandoMasHoteles || !this.hayMasHoteles || !hotelId || this.tipoDestino !== 1) return;
 
-        const info = (data ?? []).map((hotel: any) => ({
+        this.cargandoMasHoteles = true;
+        try {
+            const hoteles = await this.supabase.listHotelesTarjeta(
+                hotelId,
+                getDefaultLang(),
+                this.siguienteHotelOffset,
+                this.hotelesPorPagina
+            );
+            const nuevosHoteles = this.prepararHoteles(hoteles);
+            this.hotelesPorCiudad = [...this.hotelesPorCiudad, ...nuevosHoteles];
+            this.listaHoteles = this.hotelesPorCiudad;
+            this.siguienteHotelOffset += nuevosHoteles.length;
+            this.hayMasHoteles = nuevosHoteles.length === this.hotelesPorPagina;
+        } catch (error: any) {
+            this.error = error?.message ?? 'No se pudieron cargar más hoteles.';
+        } finally {
+            this.cargandoMasHoteles = false;
+        }
+    }
+
+    private prepararHoteles(hoteles: any[]): any[] {
+        return hoteles.map((hotel) => ({
             ...hotel,
             conceptoIconoSeguro: hotel.concepto?.icono
                 ? this.sanitizer.bypassSecurityTrustHtml(hotel.concepto.icono)
@@ -274,26 +302,6 @@ export class HotelesComponent {
                 ? this.sanitizer.bypassSecurityTrustHtml(hotel.descuento.icono)
                 : null
         }));
-
-        if (this.tipoDestino === 2) {
-            this.gruposDestinos = this.agruparHotelesPorDestino(info)
-        }
-        this.mostrarInfo = true;
-        this.destinoSeleccionado(info);
-        this.listaHoteles = info;
-        } finally {
-            this.finalizarCarga();
-        }
-    }
-
-    private iniciarCarga(): void {
-        this.cargasPendientes++;
-        this.cargando = true;
-    }
-
-    private finalizarCarga(): void {
-        this.cargasPendientes = Math.max(0, this.cargasPendientes - 1);
-        this.cargando = this.cargasPendientes > 0;
     }
 
     destinoSeleccionado(event) {

@@ -29,20 +29,136 @@ export interface IHotelAdminCatalogo {
 export class HotelesService {
   private readonly supabase = inject(SupabaseService);
   private readonly transloco = inject(TranslocoService);
+  private readonly idiomaIds = new Map<string, Promise<number>>();
 
   private get client(): SupabaseClient {
     return this.supabase.getClient();
   }
 
-  async getIdiomaId(codigo: string) {
+  async getIdiomaId(codigo = 'es') {
+    if (codigo === 'es') return ES_ID;
+
+    const idiomaPendiente = this.idiomaIds.get(codigo) ?? (async () => {
+      const { data, error } = await this.client
+        .from('idiomas')
+        .select('id')
+        .eq('codigo', codigo)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data?.id ?? ES_ID;
+    })();
+
+    this.idiomaIds.set(codigo, idiomaPendiente);
+    return idiomaPendiente;
+  }
+
+  async infoHotelPrincipal(idHotel: number, lang?: string) {
+    const idiomaId = await this.getIdiomaId(lang);
     const { data, error } = await this.client
-      .from('idiomas')
-      .select('id')
-      .eq('codigo', codigo)
+      .from('hoteles')
+      .select(`
+        id,
+        ubicacion,
+        traducciones:hotel_traducciones!hotel_traducciones_hotel_id_fkey (
+          idioma_id,
+          nombre_hotel,
+          descripcion
+        )
+      `)
+      .eq('id', idHotel)
       .maybeSingle();
 
     if (error) throw error;
-    return data?.id ?? 1;
+    if (!data) return null;
+
+    const traduccion = data.traducciones?.find((item: any) => item.idioma_id === idiomaId) ??
+      data.traducciones?.find((item: any) => item.idioma_id === ES_ID);
+
+    return {
+      ...data,
+      nombre_hotel: traduccion?.nombre_hotel ?? '',
+      descripcion: traduccion?.descripcion ?? this.transloco.translate('sin-descripcion'),
+      imagenes: [],
+      actividades: [],
+      regimenes: []
+    };
+  }
+
+  async infoHotelGaleria(idHotel: number) {
+    const { data, error } = await this.client
+      .from('imagenes_hoteles')
+      .select(`
+        id,
+        url_imagen,
+        tipo_imagen_id,
+        tipo:tipos_imagen!imagenes_hoteles_tipo_imagen_id_fkey (
+          id,
+          clave,
+          traducciones:tipos_imagen_traducciones!fk_tipo_imagen (
+            lang,
+            descripcion
+          )
+        )
+      `)
+      .eq('hotel_id', idHotel)
+      .order('id', { ascending: true });
+
+    if (error) throw error;
+    return data ?? [];
+  }
+
+  async infoHotelAmenidades(idHotel: number, lang?: string) {
+    const idiomaId = await this.getIdiomaId(lang);
+    const { data, error } = await this.client
+      .from('actividades_hotel')
+      .select(`
+        actividad:actividades!actividades_hotel_actividad_id_fkey (
+          id,
+          traducciones:actividades_traducciones (
+            idioma_id,
+            descripcion
+          )
+        )
+      `)
+      .eq('hotel_id', idHotel);
+
+    if (error) throw error;
+
+    return (data ?? []).flatMap((item: any) => {
+      const actividad = item.actividad;
+      const traduccion = actividad?.traducciones?.find((t: any) => t.idioma_id === idiomaId) ??
+        actividad?.traducciones?.find((t: any) => t.idioma_id === ES_ID);
+      return traduccion?.descripcion ? [{ id: actividad.id, descripcion: traduccion.descripcion }] : [];
+    });
+  }
+
+  async infoHotelRegimenes(idHotel: number, lang?: string) {
+    const idiomaId = await this.getIdiomaId(lang);
+    const { data, error } = await this.client
+      .from('regimen_hotel')
+      .select(`
+        regimen:regimen!regimen_hotel_regimen_id_fkey (
+          id,
+          traducciones:regimen_traducciones (
+            idioma_id,
+            descripcion
+          )
+        )
+      `)
+      .eq('hotel_id', idHotel);
+
+    if (error) throw error;
+
+    return (data ?? []).flatMap((item: any) => {
+      const regimen = item.regimen;
+      const traduccion = regimen?.traducciones?.find((t: any) => t.idioma_id === idiomaId) ??
+        regimen?.traducciones?.find((t: any) => t.idioma_id === ES_ID);
+      const traduccionEs = regimen?.traducciones?.find((t: any) => t.idioma_id === ES_ID);
+      return traduccion?.descripcion
+        ? [{ id: regimen.id, descripcion: traduccion.descripcion, es: traduccionEs?.descripcion }]
+        : [];
+    });
   }
 
   async listHotelesAll(destinoId: number, lang?: string) {

@@ -783,6 +783,46 @@ export class SupabaseService {
 
   // ===== DB (PostgREST) =====
 
+  async listHotelesTarjeta(destinoId: number, lang?: string, offset = 0, limit = 10) {
+    const idiomaId = await this.getIdiomaId(lang);
+    const { data, error } = await this.client
+      .from('hoteles')
+      .select(`
+        id, estrellas, fondo, orden,
+        traducciones:hotel_traducciones ( idioma_id, nombre_hotel ),
+        descuento:descuento_id (
+          icono,
+          traducciones:descuentos_traducciones ( idioma_id, descripcion )
+        ),
+        concepto:concepto_id ( descripcion, icono ),
+        regimen:regimen_id (
+          traducciones:regimen_traducciones ( idioma_id, descripcion )
+        )
+      `)
+      .eq('catalogo_destino_id', destinoId)
+      .order('orden', { ascending: true })
+      .order('id', { ascending: true })
+      .range(offset, offset + limit - 1);
+
+    if (error) throw error;
+
+    return (data ?? []).map((hotel: any) => {
+      const traduccion = hotel.traducciones?.find((item: any) => item.idioma_id === idiomaId) ??
+        hotel.traducciones?.find((item: any) => item.idioma_id === ES_ID);
+      const regimen = hotel.regimen?.traducciones?.find((item: any) => item.idioma_id === idiomaId) ??
+        hotel.regimen?.traducciones?.find((item: any) => item.idioma_id === ES_ID);
+      const descuento = hotel.descuento?.traducciones?.find((item: any) => item.idioma_id === idiomaId) ??
+        hotel.descuento?.traducciones?.find((item: any) => item.idioma_id === ES_ID);
+
+      return {
+        ...hotel,
+        nombre_hotel: traduccion?.nombre_hotel ?? '',
+        regimen: hotel.regimen ? { ...hotel.regimen, descripcion: regimen?.descripcion ?? '' } : null,
+        descuento: hotel.descuento ? { ...hotel.descuento, tipo_descuento: descuento?.descripcion ?? '' } : null
+      };
+    });
+  }
+
   async listHotelesAll(destinoId: number, lang?: string) {
     const idiomaId = await this.getIdiomaId(lang);
 

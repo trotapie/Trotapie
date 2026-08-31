@@ -188,13 +188,13 @@
                         <div class="max-w-[1200px] mx-auto">
                             <div class="relative h-[500px] w-full overflow-hidden rounded-xl shadow-2xl">
                                 <div class="relative w-full h-[500px] overflow-hidden">
-                                    <div *ngFor="let slide of slides; let i = index"
-                                        class="absolute inset-0 transition-opacity duration-1000 ease-in-out"
-                                        [class.opacity-100]="i === currentIndex" [class.opacity-0]="i !== currentIndex">
+                                    <ng-container *ngIf="!cargandoGaleria; else gallerySkeleton">
+                                    <ng-container *ngIf="slides[currentIndex] as slide; else galleryUnavailable">
+                                    <div class="absolute inset-0 transition-opacity duration-1000 ease-in-out">
                                         <img [src]="slide.imagen_url" class="w-full h-full object-cover"
                                             [style.filter]="slide.efecto_destino !== 'texto' ? 'blur(' + slide.blur_px + 'px)' : null"
                                             [style.transform]="slide.efecto_destino !== 'texto' && slide.blur_px ? 'scale(1.05)' : null"
-                                            alt="carousel image" />
+                                            alt="carousel image" fetchpriority="high" />
                                         @if (slide.efecto_destino !== 'texto') {
                                             <div class="absolute inset-0" [style.background-color]="colorConOpacidad(slide.overlay_color, slide.overlay_opacidad)"></div>
                                         }
@@ -214,17 +214,31 @@
                                                     class="carousel-slide__label mb-4 inline-block w-fit rounded-full px-4 py-1 font-bold uppercase tracking-widest text-white"
                                                     [style.--font-size.px]="slide.etiqueta_font_size"
                                                     [style.background-color]="slide.etiqueta_color">{{detallesDestino?.nombre}}</span>
-                                                <h1 class="carousel-slide__title font-black leading-tight mb-4" [style.color]="slide.texto_color"
-                                                    [style.--font-size.px]="slide.titulo_font_size">
-                                                    {{slide.nombre}}
-                                                </h1>
-                                                <p class="carousel-slide__description font-medium opacity-90" [style.color]="slide.texto_color"
-                                                    [style.--font-size.px]="slide.descripcion_font_size">{{slide.descripcion}}
-                                                </p>
+                                                @if (slide.nombre) {
+                                                    <h1 class="carousel-slide__title font-black leading-tight mb-4" [style.color]="slide.texto_color"
+                                                        [style.--font-size.px]="slide.titulo_font_size">
+                                                        {{slide.nombre}}
+                                                    </h1>
+                                                }
+                                                @if (slide.descripcion) {
+                                                    <p class="carousel-slide__description font-medium opacity-90" [style.color]="slide.texto_color"
+                                                        [style.--font-size.px]="slide.descripcion_font_size">{{slide.descripcion}}
+                                                    </p>
+                                                }
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+                                    </ng-container>
+                                    <ng-template #galleryUnavailable>
+                                        <div class="flex h-full items-center justify-center bg-gray-100 px-6 text-center text-gray-500 dark:bg-white/10 dark:text-gray-300">
+                                            {{ errorGaleria || 'No hay imágenes disponibles para este destino.' }}
+                                        </div>
+                                    </ng-template>
+                                    </ng-container>
+                                    <ng-template #gallerySkeleton>
+                                        <div class="w-full h-full bg-gray-200/70 dark:bg-white/10 animate-pulse"></div>
+                                    </ng-template>
 
                                 </div>
                             </div>
@@ -261,19 +275,33 @@
                                             <p class="font-bold">{{ temperaturaDisplay?.valor }}{{ temperaturaDisplay?.simbolo }}</p>
                                         </div>
                                     </li>
-                                    <li *ngFor="let item of detallesDestino?.datos_rapidos"
-                                        class="flex items-center gap-4">
-                                        <div
-                                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white dark:bg-background-dark shadow-sm">
-                                            <span class="material-symbols-outlined text-[#147052]">{{ item.icono
-                                                }}</span>
-                                        </div>
-                                        <div>
-                                            <p class="text-xs font-bold uppercase text-[#147052]/60">{{ item.label }}
-                                            </p>
-                                            <p class="font-bold">{{ item.valor }}</p>
-                                        </div>
-                                    </li>
+                                    <ng-container *ngIf="cargandoDatosRapidos; else datosRapidosDisponibles">
+                                        <li *ngFor="let _ of [1, 2, 3, 4]" class="flex items-center gap-4">
+                                            <div class="h-10 w-10 rounded-full bg-gray-200/70 dark:bg-white/10 animate-pulse"></div>
+                                            <div class="space-y-2">
+                                                <div class="h-3 w-20 rounded bg-[#147052]/20 animate-pulse"></div>
+                                                <div class="h-5 w-32 rounded bg-gray-200/70 dark:bg-white/10 animate-pulse"></div>
+                                            </div>
+                                        </li>
+                                    </ng-container>
+                                    <ng-template #datosRapidosDisponibles>
+                                        <li *ngFor="let item of detallesDestino?.datos_rapidos"
+                                            class="flex items-center gap-4">
+                                            <div
+                                                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white dark:bg-background-dark shadow-sm">
+                                                <span class="material-symbols-outlined text-[#147052]">{{ item.icono
+                                                    }}</span>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs font-bold uppercase text-[#147052]/60">{{ item.label }}
+                                                </p>
+                                                <p class="font-bold">{{ item.valor }}</p>
+                                            </div>
+                                        </li>
+                                        <li *ngIf="errorDatosRapidos" class="text-sm text-red-600 dark:text-red-300">
+                                            {{ errorDatosRapidos }}
+                                        </li>
+                                    </ng-template>
                                 </ul>
                             </div>
                         </div>

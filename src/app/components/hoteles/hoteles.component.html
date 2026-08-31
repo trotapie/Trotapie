@@ -240,6 +240,12 @@
                                     </fuse-card>
                                 </div>
                             </div>
+                            <div *ngIf="!cargando && hotelesPorCiudad.length > 0" class="grid grid-cols-1 gap-6 px-6 pb-6 sm:grid-cols-2 md:grid-cols-3" aria-live="polite">
+                                <div *ngIf="cargandoMasHoteles" class="h-48 animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-700"></div>
+                                <div *ngIf="cargandoMasHoteles" class="h-48 animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-700"></div>
+                                <div *ngIf="cargandoMasHoteles" class="h-48 animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-700"></div>
+                            </div>
+                            <div #hotelesSentinel *ngIf="!cargando && hayMasHoteles && hotelesPorCiudad.length > 0" class="h-px" aria-hidden="true"></div>
                         </div>
                     </div>
                     <div *ngIf="tipoDestino === 2" class="space-y-4 m-4">
