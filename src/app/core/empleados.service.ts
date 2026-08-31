@@ -62,7 +62,7 @@ export class EmpleadosService {
     const { data, error } = await this.client
       .from('estatus_empleado')
       .select('id')
-      .eq('clave', clave)
+      .ilike('clave', clave.trim())
       .eq('activo', true)
       .maybeSingle();
 

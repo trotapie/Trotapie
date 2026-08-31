@@ -1,5 +1,7 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, Injector } from '@angular/core';
+import { Router } from '@angular/router';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { AuthService } from './auth/auth.service';
 import { environment } from '../../environments/environment';
 import { getDefaultLang } from 'app/lang.utils';
 import { TranslocoService } from '@jsverse/transloco';
@@ -138,19 +140,82 @@ export class SupabaseService {
     'https://script.google.com/macros/s/AKfycbyJwRo6g4aDbB2Va0739BAMzF2QCUcMu1t4ss9cG2GsbbGC3cK_wpnfD_pOD6x3PTlm/exec';
   private client: SupabaseClient;
   private transloco = inject(TranslocoService);
+  private injector = inject(Injector);
+  private readonly adminSessionValidationInterval = 60_000;
+  private adminSessionValidation: Promise<void> | null = null;
+  private lastAdminSessionValidationAt = 0;
 
   constructor() {
     this.client = createClient(environment.supabaseUrl, environment.supabaseAnonKey, {
       auth: { persistSession: true, autoRefreshToken: true },
       global: {
-        fetch: (url, init) => {
+        fetch: async (url, init) => {
+          await this.ensureActiveAdminSession(url);
+
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 30_000);
-          return fetch(url, { ...init, signal: controller.signal })
+          const response = await fetch(url, { ...init, signal: controller.signal })
             .finally(() => clearTimeout(timeoutId));
+
+          if (response.status === 401 && this.isAdminSupabaseRequest(url)) {
+            this.lastAdminSessionValidationAt = 0;
+            this.showMissingSessionDialog();
+          }
+
+          return response;
         },
       },
     });
+  }
+
+  private isAdminSupabaseRequest(url: RequestInfo | URL): boolean {
+    const requestUrl = typeof url === 'string'
+      ? url
+      : url instanceof URL
+        ? url.href
+        : url.url;
+
+    return this.injector.get(Router).url.startsWith('/admin') && !requestUrl.includes('/auth/v1/');
+  }
+
+  private async ensureActiveAdminSession(url: RequestInfo | URL): Promise<void> {
+    if (!this.isAdminSupabaseRequest(url)) {
+      return;
+    }
+
+    const { data: sessionData, error: sessionError } = await this.client.auth.getSession();
+    if (sessionError || !sessionData.session?.access_token) {
+      this.showMissingSessionDialog();
+      throw sessionError ?? new Error('Sesion no disponible.');
+    }
+
+    if (Date.now() - this.lastAdminSessionValidationAt < this.adminSessionValidationInterval) {
+      return;
+    }
+
+    if (!this.adminSessionValidation) {
+      this.adminSessionValidation = this.validateAdminSession();
+    }
+
+    try {
+      await this.adminSessionValidation;
+    } finally {
+      this.adminSessionValidation = null;
+    }
+  }
+
+  private async validateAdminSession(): Promise<void> {
+    const { data: userData, error: userError } = await this.client.auth.getUser();
+    if (userError || !userData.user) {
+      this.showMissingSessionDialog();
+      throw userError ?? new Error('Sesion no disponible.');
+    }
+
+    this.lastAdminSessionValidationAt = Date.now();
+  }
+
+  private showMissingSessionDialog(): void {
+    this.injector.get(AuthService).showMissingTokenDialog();
   }
 
   // ✅ agrega esto dentro de SupabaseService

@@ -91,7 +91,7 @@ export class InactivitySessionService {
                 confirm: {
                     show: true,
                     label: 'Aceptar',
-                    color: 'primary',
+                    color: 'teal',
                 },
                 cancel: {
                     show: false,

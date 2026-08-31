@@ -70,6 +70,9 @@
     @if (data.actions.confirm.show || data.actions.cancel.show) {
         <div
             class="flex items-center justify-center space-x-3 bg-gray-50 px-6 py-4 dark:bg-black dark:bg-opacity-10 sm:justify-end"
+            [ngClass]="{
+                '!px-8 !py-6': data.actions.confirm.fullWidth
+            }"
         >
             <!-- Cancel -->
             @if (data.actions.cancel.show) {
@@ -86,12 +89,14 @@
             @if (data.actions.confirm.show) {
                 <button
                     mat-flat-button
-                    class="!rounded-xl !px-5 shadow-sm font-medium"
+                    class="!rounded-xl !px-6 !h-10 shadow-sm font-medium transition-all"
                     [ngClass]="{
-                        '!bg-primary !text-white hover:!bg-primary-600': data.actions.confirm.color === 'primary',
-                        '!bg-accent !text-white hover:!bg-accent-600': data.actions.confirm.color === 'accent',
-                        '!bg-red-600 !text-white hover:!bg-red-700': data.actions.confirm.color === 'warn' || data.actions.confirm.color === 'error',
-                        '!bg-gray-800 !text-white hover:!bg-gray-900 dark:!bg-gray-200 dark:!text-gray-900': data.actions.confirm.color === 'basic'
+                        '!h-12 !w-full !rounded-full !px-6 !bg-[#139d92] hover:!bg-[#0f897f] !text-white shadow-md': data.actions.confirm.fullWidth,
+                        '!bg-[#147052] hover:!bg-[#0f5c43] !text-white': data.actions.confirm.color === 'primary' || !data.actions.confirm.color,
+                        '!bg-red-600 hover:!bg-red-700 !text-white': data.actions.confirm.color === 'warn' || data.actions.confirm.color === 'error',
+                        '!bg-accent hover:!bg-accent-600 !text-white': data.actions.confirm.color === 'accent',
+                        'confirmation-confirm-button-teal !bg-[#139d92] hover:!bg-[#0f897f] !text-white': data.actions.confirm.color === 'teal',
+                        '!bg-gray-800 hover:!bg-gray-900 !text-white dark:!bg-gray-200 dark:!text-gray-900': data.actions.confirm.color === 'basic'
                     }"
                     [matDialogClose]="'confirmed'"
                 >

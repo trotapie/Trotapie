@@ -8,8 +8,11 @@ export const AuthGuard: CanActivateFn | CanActivateChildFn = (route, state) => {
     const authService = inject(AuthService);
 
     // Check the authentication status
-    return authService
-        .check()
+    const authenticationCheck$ = authService.authenticated
+        ? authService.validateActiveSession()
+        : authService.check();
+
+    return authenticationCheck$
         .pipe(
             switchMap((authenticated) => {
                 // If the user is not authenticated...

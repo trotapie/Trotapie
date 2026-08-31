@@ -353,6 +353,31 @@ export class AuthService {
   // ---------------------------------------------
   // Check (AuthGuard / initialDataResolver)
   // ---------------------------------------------
+  validateActiveSession(): Observable<boolean> {
+    return from(this._supabase.getSession()).pipe(
+      map(({ data, error }) => {
+        const session = data?.session;
+
+        if (error || !session) {
+          this._authenticated = false;
+          this._clearAccessState();
+          this._inactivitySession.stop();
+          return false;
+        }
+
+        this.accessToken = session.access_token;
+        return true;
+      }),
+      catchError(() => {
+        this._accessToken = '';
+        this._authenticated = false;
+        this._clearAccessState();
+        this._inactivitySession.stop();
+        return of(false);
+      })
+    );
+  }
+
   check(): Observable<boolean> {
     return from(this._supabase.getSession()).pipe(
       switchMap(({ data, error }) => {
