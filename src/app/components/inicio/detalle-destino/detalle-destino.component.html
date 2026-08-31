@@ -27,8 +27,7 @@
 <ng-container *transloco="let t">
 
     <body
-        class="bg-background-light dark:bg-background-dark text-[#1b0e0e] dark:text-white transition-colors duration-300">
-        <div *ngIf="!detallesDestino; else contenidoReal">
+        class="bg-background-light dark:bg-background-dark text-[#1b0e0e] dark:text-white transition-colors duration-300">        <div *ngIf="!detallesDestino; else contenidoReal">
 
             <!-- HEADER -->
             <header
@@ -58,17 +57,17 @@
                     </div>
                 </section>
 
-                <!-- CAROUSEL -->
+                <!-- CAROUSEL SKELETON -->
                 <section class="px-6 md:px-20 py-8">
                     <div class="max-w-[1200px] mx-auto">
-                        <div class="relative h-[500px] w-full overflow-hidden rounded-xl shadow-2xl">
+                        <div class="relative w-full aspect-[12/5] overflow-hidden rounded-xl shadow-2xl">
                             <div class="w-full h-full bg-gray-200/70 dark:bg-white/10 animate-pulse"></div>
 
                             <!-- overlay hint -->
                             <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent">
                             </div>
 
-                            <div class="absolute bottom-0 left-0 right-0 p-8 md:p-16">
+                            <div class="absolute bottom-0 left-0 right-0 p-4 sm:p-8 md:p-16">
                                 <div class="h-6 w-40 rounded-full bg-white/20 animate-pulse"></div>
                                 <div class="mt-4 h-10 md:h-14 w-80 md:w-[520px] rounded-xl bg-white/20 animate-pulse">
                                 </div>
@@ -186,8 +185,8 @@
                     </section>
                     <section class="px-6 md:px-20">
                         <div class="max-w-[1200px] mx-auto">
-                            <div class="relative h-[500px] w-full overflow-hidden rounded-xl shadow-2xl">
-                                <div class="relative w-full h-[500px] overflow-hidden">
+                            <div class="carousel-container relative w-full aspect-[12/5] overflow-hidden rounded-xl shadow-2xl">
+                                <div class="relative w-full h-full overflow-hidden">
                                     <ng-container *ngIf="!cargandoGaleria; else gallerySkeleton">
                                     <ng-container *ngIf="slides[currentIndex] as slide; else galleryUnavailable">
                                     <div class="absolute inset-0 transition-opacity duration-1000 ease-in-out">
@@ -204,15 +203,15 @@
                                                 class="absolute z-20 w-max max-w-full"
                                             >
                                                 <span
-                                                    class="carousel-slide__label inline-block w-fit rounded-full px-4 py-1 font-bold uppercase tracking-widest text-white"
+                                                    class="carousel-slide__label inline-block w-fit rounded-full font-bold uppercase tracking-widest text-white shadow-md"
                                                     [style.--font-size.px]="slide.etiqueta_font_size"
                                                     [style.background-color]="slide.etiqueta_color">{{ slide.etiqueta_texto || detallesDestino?.nombre }}</span>
                                             </div>
                                         }
-                                        <div class="absolute inset-0 flex flex-col justify-end p-8 md:p-16 z-10">
+                                        <div class="absolute inset-0 flex flex-col justify-end p-4 sm:p-8 md:p-14 z-10">
                                             <div
                                                 [class]="'relative max-w-3xl overflow-hidden' +
-                                                    (slide.oscurecer_fondo || slide.efecto_destino !== 'fondo' ? ' rounded-2xl p-6 md:p-8' : '') +
+                                                    (slide.oscurecer_fondo || slide.efecto_destino !== 'fondo' ? ' rounded-2xl p-3 sm:p-5 md:p-8' : '') +
                                                     (slide.oscurecer_fondo ? ' border border-white/20 shadow-[0_24px_80px_rgba(15,23,42,0.18)]' : '')">
                                                 @if (slide.efecto_destino !== 'fondo') {
                                                     <div class="carousel-text-effect absolute inset-0" [style.background-color]="colorConOpacidad(slide.overlay_color, slide.overlay_opacidad)"
@@ -223,12 +222,12 @@
                                                 <div class="relative">
                                                 @if (!etiquetaEstaPosicionada(slide)) {
                                                     <span
-                                                        class="carousel-slide__label mb-4 inline-block w-fit rounded-full px-4 py-1 font-bold uppercase tracking-widest text-white"
+                                                        class="carousel-slide__label mb-3 inline-block w-fit rounded-full font-bold uppercase tracking-widest text-white shadow-md"
                                                         [style.--font-size.px]="slide.etiqueta_font_size"
                                                         [style.background-color]="slide.etiqueta_color">{{ slide.etiqueta_texto || detallesDestino?.nombre }}</span>
                                                 }
                                                 @if (slide.nombre) {
-                                                    <h1 class="carousel-slide__title font-black leading-tight mb-4" [style.color]="slide.texto_color"
+                                                    <h1 class="carousel-slide__title font-black leading-tight mb-2" [style.color]="slide.texto_color"
                                                         [style.--font-size.px]="slide.titulo_font_size">
                                                         {{slide.nombre}}
                                                     </h1>

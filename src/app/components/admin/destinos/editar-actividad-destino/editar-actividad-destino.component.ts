@@ -205,10 +205,17 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   previewMediaStyle: Record<string, string> = { inset: '0' };
   readonly posicionesOverlay = OVERLAY_POSITIONS;
   readonly dispositivosPrevisualizacion = [
-    { clave: 'desktop', nombre: 'Escritorio', medida: '1280 px', icono: 'desktop_windows' },
+    { clave: 'desktop', nombre: 'Escritorio', medida: '1200 px', icono: 'desktop_windows' },
     { clave: 'tablet', nombre: 'Tablet', medida: '768 px', icono: 'tablet_mac' },
     { clave: 'phone', nombre: 'Teléfono', medida: '390 px', icono: 'smartphone' }
   ];
+  dispositivoSeleccionado: 'desktop' | 'tablet' | 'phone' = 'desktop';
+
+  seleccionarDispositivo(clave: string): void {
+    if (clave === 'desktop' || clave === 'tablet' || clave === 'phone') {
+      this.dispositivoSeleccionado = clave;
+    }
+  }
   carpetasActividad: Array<{
     id: number;
     nombre: string;
