@@ -1,12 +1,13 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, computed, ElementRef, inject, QueryList, signal, ViewChild, ViewChildren, ViewEncapsulation } from '@angular/core';
+import { Component, DestroyRef, ElementRef, inject, QueryList, signal, ViewChild, ViewChildren, ViewEncapsulation } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MaterialModule } from 'app/shared/material.module';
 import { JsonpClientBackend, HttpClientJsonpModule } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Hotel, IActividades, IAsesores, IDetalleHotel, IHoteles } from '../hoteles.interface';
 import { FuseMediaWatcherService } from '@fuse/services/media-watcher';
-import { firstValueFrom, Subject, takeUntil } from 'rxjs';
+import { distinctUntilChanged, Subject, takeUntil } from 'rxjs';
 import { MapaComponent } from '../mapa/mapa.component';
 import { QRCodeComponent } from 'angularx-qrcode';
 import { TextTypewriterComponent } from 'app/text-typewriter.component';
@@ -35,12 +36,13 @@ export class DetalleHotelComponent {
     private supabase = inject(HotelesService);
     private route = inject(ActivatedRoute)
     private _translocoService = inject(TranslocoService);
+    private destroyRef = inject(DestroyRef);
 
 
     //  urlQR = 'https://trotapie.github.io/Trotapie/hoteles';
     hotel: IDetalleHotel;
     descripcionParrafo: string = '';
-    descripcionLista: IActividades[] = [];
+    descripcionLista: Array<{ id: number; descripcion: string }> = [];
     imagenes: string[] = [];
     imagenesFilter: string[] = [];
     scrolled = false;
@@ -60,6 +62,7 @@ export class DetalleHotelComponent {
     intervalId: any;
     mesActual = new Date();
     verMasDescripcion = false;
+    informacionEstanciaExpandida = true;
     dateFilter = (date: Date | null): boolean => {
         if (!date) return false;
 
@@ -101,6 +104,14 @@ export class DetalleHotelComponent {
 
     ubicacion: string;
     mostrarInfo: boolean = false;
+    cargandoPrincipal = true;
+    cargandoGaleria = true;
+    cargandoAmenidades = true;
+    cargandoRegimenes = true;
+    errorGaleria = '';
+    private cargaVersion = 0;
+    private galeriaCargada = false;
+    private cargaRegimenesPendiente?: Promise<void>;
     otroId: number;
     tiposImagen: any[] = [];
     selectedTipoId: number = 0;
@@ -120,34 +131,12 @@ export class DetalleHotelComponent {
             });
 
         const id = Number(this.route.snapshot.paramMap.get('id'));
-        const data = await this.supabase.infoHotel(id, getDefaultLang());
+        await this.cargarDetalle(id, getDefaultLang());
 
-        this.hotel = data;
-        const actividades: string[] =
-            (data?.actividades ?? []).flatMap((row: any) => {
-                const a = row?.actividad;
-                if (Array.isArray(a)) {
-                    return a.map(z => z?.descripcion).filter(Boolean);
-                }
-                return a?.descripcion ? [a.descripcion] : [];
-            });
-
-        this.descripcionParrafo = this.hotel.descripcion;
-        this.descripcionLista = this.hotel.actividades;
-        this.ubicacion = this.hotel.ubicacion;
-
-        this.mostrarInfo = true;
-
-        this._translocoService.langChanges$.subscribe(async (activeLang) => {
-            const data = await this.supabase.infoHotel(id, activeLang);
-
-            this.hotel = data;
-            this.descripcionParrafo = this.hotel.descripcion;
-            this.descripcionLista = this.hotel.actividades;
-            this.ubicacion = this.hotel.ubicacion;
-
-
-        });
+        this._translocoService.langChanges$.pipe(
+            distinctUntilChanged(),
+            takeUntilDestroyed(this.destroyRef)
+        ).subscribe((activeLang) => void this.cargarDetalle(id, activeLang));
     }
 
 
@@ -158,6 +147,81 @@ export class DetalleHotelComponent {
 
     ngOnDestroy() {
         clearInterval(this.intervalId);
+        this._unsubscribeAll.next(null);
+        this._unsubscribeAll.complete();
+    }
+
+    private async cargarDetalle(id: number, idioma: string): Promise<void> {
+        const version = ++this.cargaVersion;
+        const debeCargarGaleria = !this.galeriaCargada;
+        this.cargandoPrincipal = true;
+        this.cargandoAmenidades = true;
+        this.cargandoRegimenes = true;
+        this.cargandoGaleria = debeCargarGaleria;
+
+        try {
+            const principal = await this.supabase.infoHotelPrincipal(id, idioma);
+            if (version !== this.cargaVersion || !principal) return;
+
+            this.hotel = {
+                ...principal,
+                imagenes: this.hotel?.imagenes ?? [],
+                actividades: [],
+                regimenes: [],
+                destino: null
+            };
+            this.descripcionParrafo = principal.descripcion;
+            this.descripcionLista = [];
+            this.ubicacion = principal.ubicacion;
+            this.mostrarInfo = true;
+
+            void this.cargarAmenidades(id, idioma, version);
+            this.cargaRegimenesPendiente = this.cargarRegimenes(id, idioma, version);
+            if (debeCargarGaleria) void this.cargarGaleria(id, version);
+        } finally {
+            if (version === this.cargaVersion) this.cargandoPrincipal = false;
+        }
+    }
+
+    private async cargarAmenidades(id: number, idioma: string, version: number): Promise<void> {
+        try {
+            const actividades = await this.supabase.infoHotelAmenidades(id, idioma);
+            if (version !== this.cargaVersion || !this.hotel) return;
+            this.hotel.actividades = actividades;
+            this.descripcionLista = actividades;
+        } catch {
+            if (version === this.cargaVersion) this.descripcionLista = [];
+        } finally {
+            if (version === this.cargaVersion) this.cargandoAmenidades = false;
+        }
+    }
+
+    private async cargarRegimenes(id: number, idioma: string, version: number): Promise<void> {
+        try {
+            const regimenes = await this.supabase.infoHotelRegimenes(id, idioma);
+            if (version !== this.cargaVersion || !this.hotel) return;
+            this.hotel.regimenes = regimenes;
+        } catch {
+            if (version === this.cargaVersion && this.hotel) this.hotel.regimenes = [];
+        } finally {
+            if (version === this.cargaVersion) this.cargandoRegimenes = false;
+        }
+    }
+
+    private async cargarGaleria(id: number, version: number): Promise<void> {
+        this.errorGaleria = '';
+        try {
+            const imagenes = await this.supabase.infoHotelGaleria(id);
+            if (version !== this.cargaVersion || !this.hotel) return;
+            this.hotel = { ...this.hotel, imagenes };
+            this.galeriaCargada = true;
+        } catch (error: any) {
+            if (version !== this.cargaVersion || !this.hotel) return;
+            this.hotel = { ...this.hotel, imagenes: [] };
+            this.errorGaleria = error?.message ?? 'No se pudo cargar la galería.';
+        } finally {
+            if (version === this.cargaVersion) this.cargandoGaleria = false;
+        }
     }
 
     regresar() {
@@ -165,7 +229,8 @@ export class DetalleHotelComponent {
     }
 
 
-    abrirModal() {
+    async abrirModal() {
+        await this.cargaRegimenesPendiente;
         this.mostrarBot = true;
     }
 

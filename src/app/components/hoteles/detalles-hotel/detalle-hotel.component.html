@@ -1,6 +1,7 @@
 <ng-container *transloco="let t">
-    <div *ngIf="hotel" #scrollContainer class="absolute inset-0 flex flex-col min-w-0 overflow-y-auto" cdkScrollable>
+    <div #scrollContainer class="absolute inset-0 flex flex-col min-w-0 overflow-y-auto" cdkScrollable>
 
+        <ng-container *ngIf="hotel; else detalleSkeleton">
         <div *ngIf="mostrarInfo" class="flex min-w-0 flex-auto flex-col m-6">
             <div class="sticky top-0 z-50  md:flex md:items-center md:justify-between w-full py-2 px-2 md:px-4 transition-all duration-300 backdrop-blur-md"
                 [ngClass]="{'bg-transparent': !scrolled, 'bg-white dark:bg-gray-900 shadow-md': scrolled }">
@@ -27,8 +28,21 @@
                 [errorCorrectionLevel]="'M'">
                 </qrcode> -->
             <fuse-card class="filter-article flex w-full flex-col p-1">
-                @if(!isScreenSmall){
-                <mat-tab-group class="sm:px-2" mat-stretch-tabs="false" [animationDuration]="'0'">
+                <div class="flex items-start justify-between gap-4 px-4 pt-5 sm:px-6">
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">{{ t('detalles-hotel') }}</h2>
+                        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{{ t('detalles-hotel-descripcion') }}</p>
+                    </div>
+                    <button mat-icon-button type="button" class="mt-0.5 shrink-0" (click)="informacionEstanciaExpandida = !informacionEstanciaExpandida"
+                        [attr.aria-expanded]="informacionEstanciaExpandida" aria-controls="informacion-estancia"
+                        [attr.aria-label]="informacionEstanciaExpandida ? t('ocultar-detalles-hotel') : t('mostrar-detalles-hotel')">
+                        <mat-icon [svgIcon]="informacionEstanciaExpandida ? 'heroicons_outline:chevron-up' : 'heroicons_outline:chevron-down'"></mat-icon>
+                    </button>
+                </div>
+
+                @if (informacionEstanciaExpandida) {
+                <div id="informacion-estancia" class="mt-3 min-w-0 overflow-hidden">
+                <mat-tab-group class="hotel-tabs sm:px-2" mat-stretch-tabs="false" [animationDuration]="'0'">
                     <mat-tab [label]="t('descripcion')">
                         <div class="mt-4 text-base leading-relaxed whitespace-pre-line">
                             <div [class.line-clamp-6]="!verMasDescripcion" class="transition-all duration-300">
@@ -49,6 +63,13 @@
 
 
                     <mat-tab [label]="t('amenidades')">
+                        <ng-container *ngIf="cargandoAmenidades; else amenidadesCargadas">
+                            <div class="grid grid-cols-1 gap-4 p-2 sm:grid-cols-2 md:grid-cols-3" aria-label="Cargando amenidades" aria-busy="true">
+                                <div *ngFor="let item of [1, 2, 3, 4, 5, 6]" class="h-5 animate-pulse rounded bg-slate-200 dark:bg-slate-700"></div>
+                            </div>
+                        </ng-container>
+
+                        <ng-template #amenidadesCargadas>
                         <ng-container *ngIf="descripcionLista?.length; else sinAmenidades">
 
                             <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-2">
@@ -65,6 +86,7 @@
                             </div>
 
                         </ng-container>
+                        </ng-template>
 
                         <ng-template #sinAmenidades>
                             <p class="text-md text-gray-500 italic  py-4">
@@ -75,86 +97,71 @@
                     </mat-tab>
 
                 </mat-tab-group>
+                </div>
                 }
-
-                @if (isScreenSmall) {
-                <mat-accordion class="mb-5 p-3">
-                    <mat-expansion-panel #panel1="matExpansionPanel" [hideToggle]="true">
-                        <mat-expansion-panel-header>
-                            <mat-panel-title
-                                [ngClass]="{ 'text-primary': panel1.expanded, 'text-gray-700': !panel1.expanded }"
-                                class="font-medium transition-colors duration-200"> {{t('descripcion')}}
-                            </mat-panel-title>
-                            <mat-icon class="ml-auto transition-transform duration-200"
-                                [svgIcon]="panel1.expanded ? 'heroicons_outline:x-mark' : 'heroicons_outline:chevron-down'">
-                            </mat-icon>
-                        </mat-expansion-panel-header>
-                        <div class="mt-4 text-base leading-relaxed whitespace-pre-line">
-                            {{ descripcionParrafo }}
-                        </div>
-                    </mat-expansion-panel>
-
-                    <mat-expansion-panel #panel2="matExpansionPanel" [hideToggle]="true">
-                        <mat-expansion-panel-header>
-                            <mat-panel-title
-                                [ngClass]="{ 'text-primary': panel2.expanded, 'text-gray-700': !panel2.expanded }"
-                                class="font-medium transition-colors duration-200"> {{t('amenidades')}}
-                            </mat-panel-title>
-                            <mat-icon class="transition-transform duration-200"
-                                [svgIcon]="panel2.expanded ? 'heroicons_outline:x-mark' : 'heroicons_outline:chevron-down'">
-                            </mat-icon>
-                        </mat-expansion-panel-header>
-                        <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-2">
-                            <li *ngFor="let punto of descripcionLista" class="flex gap-2">
-                                <mat-icon class="icon-size-5 text-green-600"
-                                    [svgIcon]="'heroicons_outline:check-badge'"></mat-icon>
-                                <span>{{ punto.descripcion }}</span>
-                            </li>
-                        </ul>
-                        <div class="mt-5">
-                            <span><b> {{t('nota')}}:</b> {{t('descripcion-nota')}}</span>
-                        </div>
-                    </mat-expansion-panel>
-                </mat-accordion>
-                }
-                <div class="flex ml-2 gap-2">
-                    <button mat-raised-button color="primary" class=" w-30 text-white" (click)="abrirUbicacion()">
+                <div class="flex flex-col gap-2 px-4 pb-2 pt-5 sm:flex-row sm:flex-wrap sm:px-6">
+                    <button mat-raised-button color="primary" class="w-full text-white sm:w-auto" (click)="abrirUbicacion()">
                         <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:map-pin'"></mat-icon>
                         {{t('ubicacion')}}
                     </button>
-                    <button id="shareBtn" mat-raised-button color="accent" class=" w-40 text-white"
+                    <button id="shareBtn" mat-raised-button color="accent" class="w-full text-white sm:w-auto"
                         (click)="compartirHotel()">
                         <mat-icon class="icon-size-5 pr-1" [svgIcon]="'heroicons_outline:share'"></mat-icon>
                         {{t('compartir-hotel')}}
                     </button>
+                    <button mat-raised-button type="button" class="w-full bg-[#F9B44B] text-white hover:bg-[#e0a13a] sm:w-auto"
+                        (click)="abrirModal()">
+                        <div class="flex items-center justify-center">
+                            <img class="h-6 w-6 mr-3 [filter:drop-shadow(0_2px_2px_rgba(0,0,0,0.45))]"
+                                src="assets/icons/concerge.svg" alt="" aria-hidden="true" />
+                            <b>{{ t('cotizar') }}</b>
+                        </div>
+                    </button>
                 </div>
-                <app-imagenes-carrusel [imagenesCargadas]="hotel.imagenes" [hotel]="hotel" />
+                <div *ngIf="cargandoGaleria; else galeriaHotel" class="mt-10" aria-label="Cargando galería" aria-busy="true">
+                    <div class="mx-auto mb-4 h-7 w-40 animate-pulse rounded bg-slate-200 dark:bg-slate-700"></div>
+                    <div class="grid grid-cols-3 gap-3 auto-rows-[80px] sm:auto-rows-[110px] md:auto-rows-[180px]">
+                        <div class="col-span-2 row-span-2 animate-pulse rounded-xl bg-slate-200 dark:bg-slate-700"></div>
+                        <div class="animate-pulse rounded-xl bg-slate-200 dark:bg-slate-700"></div>
+                        <div class="animate-pulse rounded-xl bg-slate-200 dark:bg-slate-700"></div>
+                        <div class="col-span-2 row-span-2 animate-pulse rounded-xl bg-slate-200 dark:bg-slate-700"></div>
+                    </div>
+                </div>
+                <ng-template #galeriaHotel>
+                    <div *ngIf="errorGaleria; else contenidoGaleria" class="mt-10 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/70 dark:bg-red-950/30 dark:text-red-300" role="alert">
+                        No se pudo cargar la galería. Intenta recargar la página.
+                    </div>
+                    <ng-template #contenidoGaleria>
+                        <app-imagenes-carrusel [imagenesCargadas]="hotel.imagenes" [hotel]="hotel" />
+                    </ng-template>
+                </ng-template>
             </fuse-card>
         </div>
-        <div *ngIf="!isOpen" class="sticky bottom-4 w-full z-50">
-            <div class="relative flex justify-end pr-4">
-                <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
-
-                    <button type="button" (click)="abrirModal()" class="flex items-center gap-2 rounded-full px-4 py-2
-         bg-[#F9B44B] hover:bg-[#e0a13a]
-         text-white font-semibold shadow-lg
-         transition active:scale-[0.98]
-         focus:outline-none focus:ring-2 focus:ring-offset-2
-         focus:ring-[#F9B44B] animate-bounce
-         [text-shadow:_0_2px_2px_rgba(0,0,0,0.45)]" aria-label="Cotizar">
-                        <mat-icon svgIcon="mat_outline:request_quote" class="text-white
-           [filter:drop-shadow(0_2px_2px_rgba(0,0,0,0.45))]">
-                        </mat-icon>
-
-                        {{ t('cotizar') }}
-                    </button>
-
-                    <img class="w-16 h-16 p-2 bg-white rounded-full shadow cursor-pointer" (click)="abrirModal()"
-                        src="assets/images/logos/trotapie-iso.png" alt="Trotapie" draggable="false" />
+        </ng-container>
+        <ng-template #detalleSkeleton>
+            <div class="m-6 flex min-w-0 flex-auto flex-col" aria-label="Cargando hotel" aria-busy="true">
+                <div class="mb-5 flex items-center justify-between gap-4">
+                    <div class="h-9 w-64 animate-pulse rounded bg-slate-200 dark:bg-slate-700"></div>
+                    <div class="h-10 w-28 animate-pulse rounded bg-slate-200 dark:bg-slate-700"></div>
                 </div>
+                <fuse-card class="flex w-full flex-col p-5">
+                    <div class="mb-5 h-6 w-36 animate-pulse rounded bg-slate-200 dark:bg-slate-700"></div>
+                    <div class="space-y-3">
+                        <div class="h-4 w-full animate-pulse rounded bg-slate-200 dark:bg-slate-700"></div>
+                        <div class="h-4 w-11/12 animate-pulse rounded bg-slate-200 dark:bg-slate-700"></div>
+                        <div class="h-4 w-4/5 animate-pulse rounded bg-slate-200 dark:bg-slate-700"></div>
+                    </div>
+                    <div class="mt-10">
+                        <div class="mx-auto mb-4 h-7 w-40 animate-pulse rounded bg-slate-200 dark:bg-slate-700"></div>
+                        <div class="grid grid-cols-3 gap-3 auto-rows-[80px] sm:auto-rows-[110px] md:auto-rows-[180px]">
+                            <div class="col-span-2 row-span-2 animate-pulse rounded-xl bg-slate-200 dark:bg-slate-700"></div>
+                            <div class="animate-pulse rounded-xl bg-slate-200 dark:bg-slate-700"></div>
+                            <div class="animate-pulse rounded-xl bg-slate-200 dark:bg-slate-700"></div>
+                        </div>
+                    </div>
+                </fuse-card>
             </div>
-
-        </div>
+        </ng-template>
         <app-footer />
     </div>
 
