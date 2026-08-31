@@ -113,8 +113,13 @@
   }
 
   .modal-blocker {
-    // The compact admin header occupies 4rem above the routed content.
-    top: -4rem;
+    position: fixed;
+    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 3000;
   }
 
   .image-edit-modal {
@@ -131,7 +136,7 @@
   .image-edit-modal__workspace {
     display: grid;
     min-height: 0;
-    grid-template-columns: minmax(22rem, 0.9fr) minmax(28rem, 1.1fr);
+    grid-template-columns: minmax(26rem, 1.25fr) minmax(22rem, 0.75fr);
   }
 
   .image-edit-modal__content {
@@ -141,9 +146,33 @@
 
   .image-edit-modal__preview {
     flex-shrink: 0;
-    min-height: 30rem;
+    min-height: 0;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 1.5rem;
     border-right: 1px solid var(--fuse-border);
     border-bottom: 0;
+    background: transparent;
+  }
+
+  .image-edit-modal__canvas {
+    width: 100%;
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+    container-type: inline-size;
+    background: #f1f5f9;
+  }
+
+  .image-edit-modal__media-stage {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
   }
 
   .image-edit-modal__content {
@@ -187,15 +216,65 @@
   }
 
   .image-edit-modal__preview-label {
-    font-size: clamp(0.625rem, 1.1vw, var(--font-size));
+    font-size: clamp(0.625rem, 1.7cqw, var(--font-size));
   }
 
   .image-edit-modal__preview-title {
-    font-size: clamp(2rem, 5vw, var(--font-size));
+    font-size: clamp(1.5rem, 5cqw, var(--font-size));
   }
 
   .image-edit-modal__preview-description {
-    font-size: clamp(1rem, 2vw, var(--font-size));
+    font-size: clamp(0.875rem, 2.1cqw, var(--font-size));
+  }
+
+  .image-edit-modal__overlay {
+    width: max-content;
+  }
+
+  .image-edit-modal__overlay--draggable {
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .image-edit-modal__overlay--draggable:active {
+    cursor: grabbing;
+  }
+
+  .image-overlay-position {
+    display: grid;
+    width: 3.25rem;
+    height: 2.5rem;
+    place-items: center;
+    border: 1px solid var(--fuse-border);
+    border-radius: 0.625rem;
+    background: var(--fuse-bg-default);
+    transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
+  }
+
+  .image-overlay-position:hover {
+    border-color: var(--primary, #00a67c);
+    transform: translateY(-1px);
+  }
+
+  .image-overlay-position:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--primary, #00a67c) 35%, transparent);
+    outline-offset: 2px;
+  }
+
+  .image-overlay-position span {
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--fuse-text-default) 44%, transparent);
+  }
+
+  .image-overlay-position--selected {
+    border-color: var(--primary, #00a67c);
+    background: color-mix(in srgb, var(--primary, #00a67c) 10%, transparent);
+  }
+
+  .image-overlay-position--selected span {
+    background: var(--primary, #00a67c);
   }
 
   .image-style-reset {
@@ -203,6 +282,173 @@
     width: 1.75rem;
     height: 1.75rem;
     padding: 0.125rem;
+  }
+
+  .device-preview-modal__dialog {
+    max-height: min(92vh, 1000px);
+  }
+
+  .device-preview-modal__devices {
+    display: grid;
+    grid-template-columns: minmax(28rem, 1fr) minmax(12rem, 0.44fr) minmax(10rem, 0.34fr);
+    align-items: end;
+    gap: clamp(1rem, 3vw, 3rem);
+    background:
+      radial-gradient(circle at 50% 0%, rgb(16 185 129 / 12%), transparent 35%),
+      linear-gradient(135deg, #172033, #0f172a);
+  }
+
+  .device-preview-card {
+    min-width: 0;
+  }
+
+  .device-preview-card__frame {
+    overflow: hidden;
+    border: 0.5rem solid #111827;
+    border-radius: 1.25rem;
+    background: #111827;
+    box-shadow: 0 1.5rem 3.5rem rgb(0 0 0 / 38%);
+  }
+
+  .device-preview-card--desktop .device-preview-card__frame {
+    border-radius: 1rem 1rem 0.5rem 0.5rem;
+  }
+
+  .device-preview-card--tablet .device-preview-card__frame {
+    max-width: 19rem;
+    margin-inline: auto;
+    border-radius: 1.45rem;
+  }
+
+  .device-preview-card--phone .device-preview-card__frame {
+    max-width: 13rem;
+    margin-inline: auto;
+    border-width: 0.4rem;
+    border-radius: 1.9rem;
+  }
+
+  .device-preview-card__chrome {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    height: 1.35rem;
+    padding-inline: 0.5rem;
+    background: #dbe5f1;
+  }
+
+  .device-preview-card__chrome span {
+    width: 0.42rem;
+    height: 0.42rem;
+    border-radius: 999px;
+    background: #fb7185;
+  }
+
+  .device-preview-card__chrome span:nth-child(2) { background: #fbbf24; }
+  .device-preview-card__chrome span:nth-child(3) { background: #34d399; }
+
+  .device-preview-card__chrome i {
+    height: 0.55rem;
+    flex: 1;
+    margin-left: 0.35rem;
+    border-radius: 999px;
+    background: white;
+  }
+
+  .device-preview-card--phone .device-preview-card__chrome,
+  .device-preview-card--tablet .device-preview-card__chrome {
+    height: 1.05rem;
+    justify-content: center;
+    background: #101827;
+  }
+
+  .device-preview-card--phone .device-preview-card__chrome::after {
+    width: 4rem;
+    height: 0.6rem;
+    border-radius: 0 0 0.5rem 0.5rem;
+    background: #05070c;
+    content: '';
+  }
+
+  .device-preview-card--phone .device-preview-card__chrome span,
+  .device-preview-card--phone .device-preview-card__chrome i,
+  .device-preview-card--tablet .device-preview-card__chrome span,
+  .device-preview-card--tablet .device-preview-card__chrome i {
+    display: none;
+  }
+
+  .device-preview-card__page {
+    overflow: hidden;
+    background: #f1f5f9;
+  }
+
+  .device-preview-card--desktop .device-preview-card__page { aspect-ratio: 16 / 10; }
+  .device-preview-card--tablet .device-preview-card__page { aspect-ratio: 3 / 4; }
+  .device-preview-card--phone .device-preview-card__page { aspect-ratio: 390 / 844; }
+
+  .device-preview-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 14%;
+    padding-inline: 6%;
+    background: white;
+    color: #00a67c;
+  }
+
+  .device-preview-card__header strong {
+    font-size: clamp(0.52rem, 1.7vw, 1.25rem);
+    letter-spacing: -0.06em;
+  }
+
+  .device-preview-card__header span {
+    width: 10%;
+    height: 22%;
+    border: 1px solid #cbd5e1;
+    border-radius: 999px;
+  }
+
+  .device-preview-card__content { padding: 5%; }
+  .device-preview-card__actions { display: flex; gap: 0.4rem; margin-bottom: 5%; }
+  .device-preview-card__actions i { width: 22%; height: 0.7rem; border-radius: 999px; background: #167d68; }
+  .device-preview-card__actions i:first-child { background: #1e293b; }
+
+  .device-preview-card__content h4 {
+    margin: 0 0 4%;
+    color: #334155;
+    font-size: clamp(0.7rem, 2.6vw, 2rem);
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .device-preview-card__carousel { height: 62%; }
+  .device-preview-card--phone .device-preview-card__carousel { height: 45%; }
+
+  .device-preview-card__label {
+    display: inline-block;
+    width: fit-content;
+    max-width: 100%;
+    border-radius: 999px;
+    padding: 0.28em 0.75em;
+    color: white;
+    font-size: clamp(0.32rem, 1.15vw, 0.72rem);
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    line-height: 1.1;
+    text-transform: uppercase;
+  }
+
+  .device-preview-card__title {
+    margin: 0;
+    font-size: clamp(0.68rem, 2.8vw, 2.25rem);
+    font-weight: 900;
+    line-height: 1.05;
+  }
+
+  .device-preview-card__description {
+    margin: 0.45em 0 0;
+    font-size: clamp(0.42rem, 1.25vw, 0.95rem);
+    font-weight: 600;
+    line-height: 1.3;
   }
 
   .drive-import-modal__dialog {
@@ -345,22 +591,22 @@
     }
 
     .image-edit-modal__preview {
-      height: 11rem;
-      min-height: 11rem;
+      height: auto;
+      min-height: 0;
       border-right: 0;
       border-bottom: 1px solid var(--fuse-border);
     }
 
     .image-edit-modal__preview-label {
-      font-size: clamp(0.625rem, 3.3vw, min(var(--font-size), 0.9rem));
+      font-size: clamp(0.625rem, 3.3cqw, min(var(--font-size), 0.9rem));
     }
 
     .image-edit-modal__preview-title {
-      font-size: clamp(1.6rem, 6.5vw, min(var(--font-size), 2.25rem));
+      font-size: clamp(1.6rem, 6.5cqw, min(var(--font-size), 2.25rem));
     }
 
     .image-edit-modal__preview-description {
-      font-size: clamp(0.9rem, 4vw, min(var(--font-size), 1.15rem));
+      font-size: clamp(0.9rem, 4cqw, min(var(--font-size), 1.15rem));
     }
 
     .image-edit-modal__content {
@@ -376,6 +622,22 @@
     .image-edit-modal__reset-all {
       padding-inline: 0.65rem;
     }
+
+    .device-preview-modal__dialog {
+      max-height: calc(100vh - 1rem);
+      border-radius: 1.25rem;
+    }
+
+    .device-preview-modal__devices {
+      display: flex;
+      min-width: max-content;
+      align-items: end;
+      gap: 1.25rem;
+    }
+
+    .device-preview-card--desktop { width: 24rem; }
+    .device-preview-card--tablet { width: 12rem; }
+    .device-preview-card--phone { width: 8.5rem; }
 
     .drive-import-modal__content {
       gap: 0.875rem;

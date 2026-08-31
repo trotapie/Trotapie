@@ -73,6 +73,10 @@ type ImagenActividadForm = {
   efecto_destino: 'fondo' | 'texto' | 'ambos';
   etiqueta_font_size: number;
   etiqueta_color: string;
+  etiqueta_texto: string | null;
+  overlay_posicion: string;
+  overlay_x: number | null;
+  overlay_y: number | null;
   orden: number | null;
   vigencia_desde: string | null;
   vigencia_hasta: string | null;
@@ -90,8 +94,29 @@ const VALORES_PREDETERMINADOS_ESTILO_IMAGEN = {
   blur_px: 0,
   efecto_destino: 'fondo',
   etiqueta_font_size: 12,
-  etiqueta_color: '#F9B44B'
+  etiqueta_color: '#F9B44B',
+  overlay_posicion: 'bottom-left',
+  overlay_x: null,
+  overlay_y: null
 } as const;
+
+type OverlayPosition =
+  | 'top-left' | 'top-center' | 'top-right'
+  | 'center-left' | 'center' | 'center-right'
+  | 'bottom-left' | 'bottom-center' | 'bottom-right'
+  | 'custom';
+
+const OVERLAY_POSITIONS: Array<{ value: OverlayPosition; label: string; x: number; y: number }> = [
+  { value: 'top-left', label: 'Arriba a la izquierda', x: 0, y: 0 },
+  { value: 'top-center', label: 'Arriba al centro', x: 50, y: 0 },
+  { value: 'top-right', label: 'Arriba a la derecha', x: 100, y: 0 },
+  { value: 'center-left', label: 'Centro a la izquierda', x: 0, y: 50 },
+  { value: 'center', label: 'Al centro', x: 50, y: 50 },
+  { value: 'center-right', label: 'Centro a la derecha', x: 100, y: 50 },
+  { value: 'bottom-left', label: 'Abajo a la izquierda', x: 0, y: 100 },
+  { value: 'bottom-center', label: 'Abajo al centro', x: 50, y: 100 },
+  { value: 'bottom-right', label: 'Abajo a la derecha', x: 100, y: 100 }
+];
 
 @Component({
   selector: 'app-editar-actividad-destino',
@@ -135,6 +160,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   actividadDestinoPendiente: IActividadNavegacion | null = null;
   carpetaActiva = 'Todas';
   editorImagenAbierto = false;
+  mostrarVistaPreviaDispositivos = false;
   imagenEditandoIndex: number | null = null;
   imagenSeleccionadaIndex: number | null = null;
   traduciendoActividad = false;
@@ -174,6 +200,15 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   private pendientesImagenesCarpeta = new Map<string, { carpeta_id: number | null; carpeta_nombre: string; carpeta: string }>();
   private imagenesClaveSecuencia = 0;
   private carpetasTemporalesSecuencia = -1;
+  private overlayDragActivo = false;
+  previewImageRatio: number | null = null;
+  previewMediaStyle: Record<string, string> = { inset: '0' };
+  readonly posicionesOverlay = OVERLAY_POSITIONS;
+  readonly dispositivosPrevisualizacion = [
+    { clave: 'desktop', nombre: 'Escritorio', medida: '1280 px', icono: 'desktop_windows' },
+    { clave: 'tablet', nombre: 'Tablet', medida: '768 px', icono: 'tablet_mac' },
+    { clave: 'phone', nombre: 'Teléfono', medida: '390 px', icono: 'smartphone' }
+  ];
   carpetasActividad: Array<{
     id: number;
     nombre: string;
@@ -575,6 +610,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   @HostListener('window:resize')
   onWindowResize(): void {
     this.actualizarModoDrawer();
+    requestAnimationFrame(() => this.actualizarMarcoImagenPreview());
   }
 
   regresar() {
@@ -1443,8 +1479,12 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
               size: [this.parseNumber(imagen.size)],
               size_formatted: [this.limpiarTexto(imagen.sizeFormatted) ?? this.formatearTamanoArchivo(this.parseNumber(imagen.size))],
               activa: [false],
-              oscurecer_fondo: [false],
-              orden: [this.imagenesArray.length + 1],
+               oscurecer_fondo: [false],
+               etiqueta_texto: [null],
+               overlay_posicion: ['bottom-left'],
+               overlay_x: [null],
+               overlay_y: [null],
+               orden: [this.imagenesArray.length + 1],
               vigencia_desde: [null],
               vigencia_hasta: [null],
                created_at: [null],
@@ -1534,6 +1574,10 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
         size_formatted: [null],
         activa: [false],
         oscurecer_fondo: [false],
+        etiqueta_texto: [null],
+        overlay_posicion: ['bottom-left'],
+        overlay_x: [null],
+        overlay_y: [null],
         orden: [this.imagenesArray.length + 1],
         vigencia_desde: [null],
         vigencia_hasta: [null],
@@ -1880,6 +1924,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   }
 
   cerrarEditorImagen() {
+    this.mostrarVistaPreviaDispositivos = false;
     this.editorImagenAbierto = false;
     this.imagenEditandoIndex = null;
     this.cerrarModalMoverImagen();
@@ -2224,8 +2269,12 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
           overlay_opacidad: [this.normalizarNumeroEnRango(imagen?.overlay_opacidad, 0, 1, 0)],
           blur_px: [this.normalizarNumeroEnRango(imagen?.blur_px, 0, 24, 0)],
           efecto_destino: [this.normalizarDestinoEfecto(imagen?.efecto_destino)],
-          etiqueta_font_size: [this.normalizarNumeroEnRango(imagen?.etiqueta_font_size, 8, 32, 12)],
-          etiqueta_color: [this.normalizarColorHex(imagen?.etiqueta_color, '#F9B44B')],
+           etiqueta_font_size: [this.normalizarNumeroEnRango(imagen?.etiqueta_font_size, 8, 32, 12)],
+           etiqueta_color: [this.normalizarColorHex(imagen?.etiqueta_color, '#F9B44B')],
+           etiqueta_texto: [this.limpiarTexto(imagen?.etiqueta_texto)],
+           overlay_posicion: [this.normalizarPosicionOverlay(imagen?.overlay_posicion)],
+           overlay_x: [this.normalizarCoordenadaOverlay(imagen?.overlay_x)],
+           overlay_y: [this.normalizarCoordenadaOverlay(imagen?.overlay_y)],
           orden: [Number.isFinite(Number(imagen?.orden)) ? Number(imagen.orden) : index + 1],
           vigencia_desde: [this.parseDateValue(imagen?.vigencia_desde)],
           vigencia_hasta: [this.parseDateValue(imagen?.vigencia_hasta)],
@@ -2274,8 +2323,12 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
           overlay_opacidad: this.normalizarNumeroEnRango(imagen?.overlay_opacidad, 0, 1, 0),
           blur_px: this.normalizarNumeroEnRango(imagen?.blur_px, 0, 24, 0),
           efecto_destino: this.normalizarDestinoEfecto(imagen?.efecto_destino),
-          etiqueta_font_size: this.normalizarNumeroEnRango(imagen?.etiqueta_font_size, 8, 32, 12),
-          etiqueta_color: this.normalizarColorHex(imagen?.etiqueta_color, '#F9B44B'),
+           etiqueta_font_size: this.normalizarNumeroEnRango(imagen?.etiqueta_font_size, 8, 32, 12),
+           etiqueta_color: this.normalizarColorHex(imagen?.etiqueta_color, '#F9B44B'),
+           etiqueta_texto: this.limpiarTexto(imagen?.etiqueta_texto),
+           overlay_posicion: this.normalizarPosicionOverlay(imagen?.overlay_posicion),
+           overlay_x: this.normalizarCoordenadaOverlay(imagen?.overlay_x),
+           overlay_y: this.normalizarCoordenadaOverlay(imagen?.overlay_y),
           orden: this.parseNumber(imagen?.orden) ?? index + 1,
           vigencia_desde: this.normalizarFechaYYYYMMDD(imagen?.vigencia_desde),
            vigencia_hasta: this.normalizarFechaYYYYMMDD(imagen?.vigencia_hasta),
@@ -2689,6 +2742,99 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     this.imagenEditandoControl?.get(campo)?.setValue(VALORES_PREDETERMINADOS_ESTILO_IMAGEN[campo]);
   }
 
+  abrirVistaPreviaDispositivos(): void {
+    this.mostrarVistaPreviaDispositivos = true;
+    this.setModalLocked(true);
+  }
+
+  cerrarVistaPreviaDispositivos(): void {
+    this.mostrarVistaPreviaDispositivos = false;
+    this.setModalLocked(this.editorImagenAbierto);
+  }
+
+  seleccionarPosicionOverlay(posicion: OverlayPosition): void {
+    const control = this.imagenEditandoControl;
+    if (!control) return;
+
+    const preset = OVERLAY_POSITIONS.find((item) => item.value === posicion);
+    control.patchValue({
+      overlay_posicion: posicion,
+      overlay_x: preset?.x ?? control.get('overlay_x')?.value ?? 50,
+      overlay_y: preset?.y ?? control.get('overlay_y')?.value ?? 50
+    });
+  }
+
+  getOverlayPreviewStyle(): Record<string, string> {
+    const control = this.imagenEditandoControl;
+    const posicion = this.normalizarPosicionOverlay(control?.get('overlay_posicion')?.value);
+    const preset = OVERLAY_POSITIONS.find((item) => item.value === posicion);
+    const x = posicion === 'custom'
+      ? this.normalizarCoordenadaOverlay(control?.get('overlay_x')?.value) ?? 50
+      : preset?.x ?? 0;
+    const y = posicion === 'custom'
+      ? this.normalizarCoordenadaOverlay(control?.get('overlay_y')?.value) ?? 100
+      : preset?.y ?? 100;
+    const translateX = posicion === 'top-left' || posicion === 'center-left' || posicion === 'bottom-left'
+      ? '0%'
+      : posicion === 'top-right' || posicion === 'center-right' || posicion === 'bottom-right'
+        ? '-100%'
+        : '-50%';
+    const translateY = posicion === 'top-left' || posicion === 'top-center' || posicion === 'top-right'
+      ? '0%'
+      : posicion === 'bottom-left' || posicion === 'bottom-center' || posicion === 'bottom-right'
+        ? '-100%'
+        : '-50%';
+
+    return { left: `${x}%`, top: `${y}%`, transform: `translate(${translateX}, ${translateY})` };
+  }
+
+  etiquetaEstaPosicionadaPreview(): boolean {
+    const control = this.imagenEditandoControl;
+    return control?.get('overlay_posicion')?.value !== 'bottom-left'
+      || control?.get('overlay_x')?.value !== null
+      || control?.get('overlay_y')?.value !== null;
+  }
+
+  iniciarArrastreOverlay(event: PointerEvent): void {
+    if (this.imagenEditandoControl?.get('overlay_posicion')?.value !== 'custom') return;
+    this.overlayDragActivo = true;
+    (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
+    event.preventDefault();
+  }
+
+  @HostListener('document:pointermove', ['$event'])
+  moverOverlayPersonalizado(event: PointerEvent): void {
+    if (!this.overlayDragActivo || !this.imagenEditandoControl) return;
+    const preview = document.querySelector('.image-edit-modal__media-stage') as HTMLElement | null;
+    if (!preview) return;
+    const rect = preview.getBoundingClientRect();
+    const x = Math.min(100, Math.max(0, ((event.clientX - rect.left) / rect.width) * 100));
+    const y = Math.min(100, Math.max(0, ((event.clientY - rect.top) / rect.height) * 100));
+    this.imagenEditandoControl.patchValue({ overlay_x: Number(x.toFixed(2)), overlay_y: Number(y.toFixed(2)) });
+  }
+
+  actualizarMarcoImagenPreview(event?: Event): void {
+    const image = event?.target as HTMLImageElement | undefined;
+    const ratio = image?.naturalWidth && image?.naturalHeight
+      ? image.naturalWidth / image.naturalHeight
+      : this.previewImageRatio;
+    if (ratio) {
+      this.previewImageRatio = ratio;
+    }
+
+    this.previewMediaStyle = {
+      width: '100%',
+      height: '100%',
+      left: '0',
+      top: '0'
+    };
+  }
+
+  @HostListener('document:pointerup')
+  terminarArrastreOverlay(): void {
+    this.overlayDragActivo = false;
+  }
+
   private normalizarColorHex(value: string | null | undefined, predeterminado: string): string {
     const color = String(value ?? '').trim();
     return /^#[0-9a-fA-F]{6}$/.test(color) ? color.toUpperCase() : predeterminado;
@@ -2707,6 +2853,18 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   private normalizarDestinoEfecto(value: string | null | undefined): 'fondo' | 'texto' | 'ambos' {
     const destino = String(value ?? '').trim().toLowerCase();
     return destino === 'texto' || destino === 'ambos' ? destino : 'fondo';
+  }
+
+  private normalizarPosicionOverlay(value: string | null | undefined): OverlayPosition {
+    const posicion = String(value ?? '').trim().toLowerCase() as OverlayPosition;
+    return [...OVERLAY_POSITIONS.map((item) => item.value), 'custom'].includes(posicion)
+      ? posicion
+      : 'bottom-left';
+  }
+
+  private normalizarCoordenadaOverlay(value: number | string | null | undefined): number | null {
+    const numero = this.parseNumber(value);
+    return numero === null ? null : Math.min(100, Math.max(0, numero));
   }
 
   private ordenarIdiomas(idiomas: IIdiomaPreviewAdmin[]): IIdiomaPreviewAdmin[] {

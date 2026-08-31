@@ -93,6 +93,10 @@ export interface IActividadPreviewAdmin {
     efecto_destino?: 'fondo' | 'texto' | 'ambos';
     etiqueta_font_size?: number;
     etiqueta_color?: string;
+    etiqueta_texto?: string | null;
+    overlay_posicion?: string;
+    overlay_x?: number | null;
+    overlay_y?: number | null;
     orden: number | null;
     vigencia_desde: string | null;
     vigencia_hasta: string | null;

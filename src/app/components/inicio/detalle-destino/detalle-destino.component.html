@@ -198,6 +198,17 @@
                                         @if (slide.efecto_destino !== 'texto') {
                                             <div class="absolute inset-0" [style.background-color]="colorConOpacidad(slide.overlay_color, slide.overlay_opacidad)"></div>
                                         }
+                                        @if (etiquetaEstaPosicionada(slide)) {
+                                            <div
+                                                [ngStyle]="getOverlayStyle(slide)"
+                                                class="absolute z-20 w-max max-w-full"
+                                            >
+                                                <span
+                                                    class="carousel-slide__label inline-block w-fit rounded-full px-4 py-1 font-bold uppercase tracking-widest text-white"
+                                                    [style.--font-size.px]="slide.etiqueta_font_size"
+                                                    [style.background-color]="slide.etiqueta_color">{{ slide.etiqueta_texto || detallesDestino?.nombre }}</span>
+                                            </div>
+                                        }
                                         <div class="absolute inset-0 flex flex-col justify-end p-8 md:p-16 z-10">
                                             <div
                                                 [class]="'relative max-w-3xl overflow-hidden' +
@@ -210,10 +221,12 @@
                                                     <div class="absolute inset-0 bg-white/12 backdrop-blur-xl backdrop-saturate-150"></div>
                                                 }
                                                 <div class="relative">
-                                                <span
-                                                    class="carousel-slide__label mb-4 inline-block w-fit rounded-full px-4 py-1 font-bold uppercase tracking-widest text-white"
-                                                    [style.--font-size.px]="slide.etiqueta_font_size"
-                                                    [style.background-color]="slide.etiqueta_color">{{detallesDestino?.nombre}}</span>
+                                                @if (!etiquetaEstaPosicionada(slide)) {
+                                                    <span
+                                                        class="carousel-slide__label mb-4 inline-block w-fit rounded-full px-4 py-1 font-bold uppercase tracking-widest text-white"
+                                                        [style.--font-size.px]="slide.etiqueta_font_size"
+                                                        [style.background-color]="slide.etiqueta_color">{{ slide.etiqueta_texto || detallesDestino?.nombre }}</span>
+                                                }
                                                 @if (slide.nombre) {
                                                     <h1 class="carousel-slide__title font-black leading-tight mb-4" [style.color]="slide.texto_color"
                                                         [style.--font-size.px]="slide.titulo_font_size">

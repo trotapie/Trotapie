@@ -29,6 +29,10 @@ interface CarouselSlide {
   efecto_destino: 'fondo' | 'texto' | 'ambos';
   etiqueta_font_size: number;
   etiqueta_color: string;
+  etiqueta_texto: string | null;
+  overlay_posicion: string;
+  overlay_x: number | null;
+  overlay_y: number | null;
 }
 
 @Component({
@@ -179,7 +183,11 @@ export class DetalleDestinoComponent implements OnInit {
             ? imagen.efecto_destino
             : 'fondo',
           etiqueta_font_size: Number(imagen.etiqueta_font_size ?? 12),
-          etiqueta_color: imagen.etiqueta_color ?? '#F9B44B'
+          etiqueta_color: imagen.etiqueta_color ?? '#F9B44B',
+          etiqueta_texto: imagen.etiqueta_texto ?? null,
+          overlay_posicion: imagen.overlay_posicion ?? 'bottom-left',
+          overlay_x: imagen.overlay_x === null || imagen.overlay_x === undefined ? null : Number(imagen.overlay_x),
+          overlay_y: imagen.overlay_y === null || imagen.overlay_y === undefined ? null : Number(imagen.overlay_y)
         }));
     });
 
@@ -188,6 +196,38 @@ export class DetalleDestinoComponent implements OnInit {
 
   ngOnDestroy() {
     clearInterval(this.intervalId);
+  }
+
+  getOverlayStyle(slide: CarouselSlide): Record<string, string> {
+    const positions: Record<string, { x: number; y: number; translateX: string; translateY: string }> = {
+      'top-left': { x: 0, y: 0, translateX: '0%', translateY: '0%' },
+      'top-center': { x: 50, y: 0, translateX: '-50%', translateY: '0%' },
+      'top-right': { x: 100, y: 0, translateX: '-100%', translateY: '0%' },
+      'center-left': { x: 0, y: 50, translateX: '0%', translateY: '-50%' },
+      center: { x: 50, y: 50, translateX: '-50%', translateY: '-50%' },
+      'center-right': { x: 100, y: 50, translateX: '-100%', translateY: '-50%' },
+      'bottom-left': { x: 0, y: 100, translateX: '0%', translateY: '-100%' },
+      'bottom-center': { x: 50, y: 100, translateX: '-50%', translateY: '-100%' },
+      'bottom-right': { x: 100, y: 100, translateX: '-100%', translateY: '-100%' }
+    };
+    const position = slide.overlay_posicion === 'custom'
+      ? {
+          x: Number.isFinite(slide.overlay_x) ? Number(slide.overlay_x) : 0,
+          y: Number.isFinite(slide.overlay_y) ? Number(slide.overlay_y) : 100,
+          translateX: '-50%',
+          translateY: '-50%'
+        }
+      : positions[slide.overlay_posicion] ?? positions['bottom-left'];
+
+    return {
+      left: `${position.x}%`,
+      top: `${position.y}%`,
+      transform: `translate(${position.translateX}, ${position.translateY})`
+    };
+  }
+
+  etiquetaEstaPosicionada(slide: CarouselSlide): boolean {
+    return slide.overlay_posicion !== 'bottom-left' || slide.overlay_x !== null || slide.overlay_y !== null;
   }
 
   private async recargarPorIdioma(catalogoDestinoId: number, idioma: string): Promise<void> {

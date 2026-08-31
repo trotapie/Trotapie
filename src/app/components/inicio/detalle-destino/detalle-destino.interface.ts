@@ -26,6 +26,10 @@ export interface AtraccionesPrincipale {
     efecto_destino?: 'fondo' | 'texto' | 'ambos';
     etiqueta_font_size?: number;
     etiqueta_color?: string;
+    etiqueta_texto?: string | null;
+    overlay_posicion?: string;
+    overlay_x?: number | null;
+    overlay_y?: number | null;
   }>;
 }
 

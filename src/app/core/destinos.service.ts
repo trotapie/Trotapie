@@ -512,10 +512,14 @@ export class DestinosService {
               overlay_color,
               overlay_opacidad,
               blur_px,
-              efecto_destino,
-              etiqueta_font_size,
-              etiqueta_color,
-              orden,
+               efecto_destino,
+               etiqueta_font_size,
+               etiqueta_color,
+               etiqueta_texto,
+               overlay_posicion,
+               overlay_x,
+               overlay_y,
+               orden,
               vigencia_desde,
               vigencia_hasta,
               created_at,
@@ -671,10 +675,14 @@ export class DestinosService {
                overlay_color: imagen.overlay_color ?? '#0F172A',
                overlay_opacidad: Number(imagen.overlay_opacidad ?? 0),
                blur_px: Number(imagen.blur_px ?? 0),
-               efecto_destino: imagen.efecto_destino ?? 'fondo',
-               etiqueta_font_size: Number(imagen.etiqueta_font_size ?? 12),
-               etiqueta_color: imagen.etiqueta_color ?? '#F9B44B',
-              orden: imagen.orden ?? null,
+                efecto_destino: imagen.efecto_destino ?? 'fondo',
+                etiqueta_font_size: Number(imagen.etiqueta_font_size ?? 12),
+                etiqueta_color: imagen.etiqueta_color ?? '#F9B44B',
+                etiqueta_texto: imagen.etiqueta_texto ?? null,
+                overlay_posicion: imagen.overlay_posicion ?? 'bottom-left',
+                overlay_x: this.parseNumber(imagen.overlay_x),
+                overlay_y: this.parseNumber(imagen.overlay_y),
+                orden: imagen.orden ?? null,
               vigencia_desde: imagen.vigencia_desde ?? null,
               vigencia_hasta: imagen.vigencia_hasta ?? null,
               created_at: imagen.created_at ?? null,
@@ -719,6 +727,10 @@ export class DestinosService {
             efecto_destino: imagen.efecto_destino ?? 'fondo',
             etiqueta_font_size: Number(imagen.etiqueta_font_size ?? 12),
             etiqueta_color: imagen.etiqueta_color ?? '#F9B44B',
+            etiqueta_texto: imagen.etiqueta_texto ?? null,
+            overlay_posicion: imagen.overlay_posicion ?? 'bottom-left',
+            overlay_x: this.parseNumber(imagen.overlay_x),
+            overlay_y: this.parseNumber(imagen.overlay_y),
             orden: imagen.orden ?? null,
             vigencia_desde: imagen.vigencia_desde ?? null,
             vigencia_hasta: imagen.vigencia_hasta ?? null,
@@ -1292,7 +1304,7 @@ export class DestinosService {
 
     const { data: imagenes, error: imagenesError } = await this.client
       .from('atracciones_imagenes')
-      .select('id, atraccion_id, imagen_url, nombre, oscurecer_fondo, texto_color, titulo_font_size, descripcion_font_size, overlay_color, overlay_opacidad, blur_px, efecto_destino, etiqueta_font_size, etiqueta_color')
+      .select('id, atraccion_id, imagen_url, nombre, oscurecer_fondo, texto_color, titulo_font_size, descripcion_font_size, overlay_color, overlay_opacidad, blur_px, efecto_destino, etiqueta_font_size, etiqueta_color, etiqueta_texto, overlay_posicion, overlay_x, overlay_y')
       .in('atraccion_id', actividadIds)
       .eq('activa', true)
       .order('orden', { ascending: true })
@@ -1337,7 +1349,11 @@ export class DestinosService {
           blur_px: Number(imagen.blur_px ?? 0),
           efecto_destino: imagen.efecto_destino === 'texto' || imagen.efecto_destino === 'ambos' ? imagen.efecto_destino : 'fondo',
           etiqueta_font_size: Number(imagen.etiqueta_font_size ?? 12),
-          etiqueta_color: imagen.etiqueta_color ?? '#F9B44B'
+          etiqueta_color: imagen.etiqueta_color ?? '#F9B44B',
+          etiqueta_texto: imagen.etiqueta_texto ?? null,
+          overlay_posicion: imagen.overlay_posicion ?? 'bottom-left',
+          overlay_x: this.parseNumber(imagen.overlay_x),
+          overlay_y: this.parseNumber(imagen.overlay_y)
         };
       });
       return {
@@ -1429,7 +1445,7 @@ export class DestinosService {
       actividadIds.length
         ? this.client
           .from('atracciones_imagenes')
-          .select('id, atraccion_id, imagen_url, nombre, oscurecer_fondo, texto_color, titulo_font_size, descripcion_font_size, overlay_color, overlay_opacidad, blur_px, efecto_destino, etiqueta_font_size, etiqueta_color')
+          .select('id, atraccion_id, imagen_url, nombre, oscurecer_fondo, texto_color, titulo_font_size, descripcion_font_size, overlay_color, overlay_opacidad, blur_px, efecto_destino, etiqueta_font_size, etiqueta_color, etiqueta_texto, overlay_posicion, overlay_x, overlay_y')
           .in('atraccion_id', actividadIds)
           .eq('activa', true)
           .order('orden', { ascending: true })
@@ -1506,7 +1522,11 @@ export class DestinosService {
             blur_px: Number(imagen.blur_px ?? 0),
             efecto_destino: imagen.efecto_destino === 'texto' || imagen.efecto_destino === 'ambos' ? imagen.efecto_destino : 'fondo',
             etiqueta_font_size: Number(imagen.etiqueta_font_size ?? 12),
-            etiqueta_color: imagen.etiqueta_color ?? '#F9B44B'
+            etiqueta_color: imagen.etiqueta_color ?? '#F9B44B',
+            etiqueta_texto: imagen.etiqueta_texto ?? null,
+            overlay_posicion: imagen.overlay_posicion ?? 'bottom-left',
+            overlay_x: this.parseNumber(imagen.overlay_x),
+            overlay_y: this.parseNumber(imagen.overlay_y)
           };
         });
 

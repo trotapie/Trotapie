@@ -2,61 +2,54 @@
   <app-blocking-loader
     [open]="cargando || consultandoDriveActividad || aplicandoCargaDriveActividad || guardandoImagenes || guardandoTraducciones || traduciendoActividad"
     [title]="cargando ? 'Cargando actividad' : consultandoDriveActividad ? 'Consultando Drive' : aplicandoCargaDriveActividad ? 'Cargando imágenes' : guardandoImagenes ? 'Guardando imágenes' : guardandoTraducciones ? 'Guardando actividad' : 'Traduciendo actividad'"
-    [message]="cargando ? 'Estamos cargando los datos para que puedas editarlos.' : consultandoDriveActividad ? 'Estamos consultando las carpetas e imágenes disponibles.' : aplicandoCargaDriveActividad ? 'Estamos preparando y guardando las imágenes seleccionadas.' : guardandoImagenes ? 'No cierres la pantalla mientras guardamos las imágenes.' : guardandoTraducciones ? 'No cierres la pantalla mientras guardamos los cambios.' : 'Estamos generando las traducciones automaticamente.'"
-  />
+    [message]="cargando ? 'Estamos cargando los datos para que puedas editarlos.' : consultandoDriveActividad ? 'Estamos consultando las carpetas e imágenes disponibles.' : aplicandoCargaDriveActividad ? 'Estamos preparando y guardando las imágenes seleccionadas.' : guardandoImagenes ? 'No cierres la pantalla mientras guardamos las imágenes.' : guardandoTraducciones ? 'No cierres la pantalla mientras guardamos los cambios.' : 'Estamos generando las traducciones automaticamente.'" />
 
-  <mat-drawer-container
-    class="activity-editor-drawer-container"
-    [class.activity-editor-drawer-container--modal-open]="editorImagenAbierto || mostrarModalNuevaActividad || mostrarModalConfirmarEliminarGaleria || mostrarModalConfirmarEliminarImagen || mostrarModalConfirmarEliminarCarpeta || mostrarModalCargaDriveImagenes || mostrarModalConfirmarMoverImagen"
-    [autosize]="true"
-  >
-    <mat-drawer
-      class="activity-editor-drawer"
-      [mode]="drawerModo"
-      [opened]="true"
-      [disableClose]="true"
-    >
-      <aside class="activity-editor-drawer__content flex flex-col bg-white dark:bg-gray-900" aria-label="Atracciones del destino">
+  <mat-drawer-container class="activity-editor-drawer-container"
+    [class.activity-editor-drawer-container--modal-open]="editorImagenAbierto || mostrarVistaPreviaDispositivos || mostrarModalNuevaActividad || mostrarModalConfirmarEliminarGaleria || mostrarModalConfirmarEliminarImagen || mostrarModalConfirmarEliminarCarpeta || mostrarModalCargaDriveImagenes || mostrarModalConfirmarMoverImagen"
+    [autosize]="true">
+    <mat-drawer class="activity-editor-drawer" [mode]="drawerModo" [opened]="true" [disableClose]="true">
+      <aside class="activity-editor-drawer__content flex flex-col bg-white dark:bg-gray-900"
+        aria-label="Atracciones del destino">
         <div class="border-b border-gray-100 px-4 py-4 dark:border-gray-800">
           <div class="flex items-start justify-between gap-3">
             <div>
               <p class="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Navegación rápida</p>
               <h2 class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">Atracciones</h2>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ actividadesNavegacion.length }} registradas en {{ destinoNombre }}</p>
+              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ actividadesNavegacion.length }} registradas en
+                {{ destinoNombre }}</p>
             </div>
           </div>
         </div>
 
         <nav class="min-h-0 flex-1 space-y-1 overflow-y-auto p-3" aria-label="Cambiar de atracción">
           @for (actividad of actividadesNavegacion; track actividad.id) {
-            <button
-              type="button"
-              class="activity-nav-item w-full text-left"
-              [class.activity-nav-item--active]="actividad.id === actividadId"
-              [attr.aria-current]="actividad.id === actividadId ? 'page' : null"
-              (click)="seleccionarActividadNavegacion(actividad)"
-            >
-              @if (actividad.imagenUrl) {
-                <img [src]="actividad.imagenUrl" [alt]="''" class="activity-nav-item__image" />
-              } @else {
-                <span class="activity-nav-item__image activity-nav-item__image--empty" aria-hidden="true">
-                  <mat-icon class="icon-size-5">image</mat-icon>
-                </span>
-              }
-              <span class="min-w-0 flex-1">
-                <span class="block truncate text-base font-semibold leading-tight">{{ actividad.nombre }}</span>
-                <span class="mt-1 flex items-center gap-1.5 text-sm leading-tight text-gray-500 dark:text-gray-400">
-                  <span class="truncate">{{ actividad.tipo }}</span>
-                  <span aria-hidden="true">·</span>
-                  <span>{{ actividad.totalImagenes }} img.</span>
-                </span>
+          <button type="button" class="activity-nav-item w-full text-left"
+            [class.activity-nav-item--active]="actividad.id === actividadId"
+            [attr.aria-current]="actividad.id === actividadId ? 'page' : null"
+            (click)="seleccionarActividadNavegacion(actividad)">
+            @if (actividad.imagenUrl) {
+            <img [src]="actividad.imagenUrl" [alt]="''" class="activity-nav-item__image" />
+            } @else {
+            <span class="activity-nav-item__image activity-nav-item__image--empty" aria-hidden="true">
+              <mat-icon class="icon-size-5">image</mat-icon>
+            </span>
+            }
+            <span class="min-w-0 flex-1">
+              <span class="block truncate text-base font-semibold leading-tight">{{ actividad.nombre }}</span>
+              <span class="mt-1 flex items-center gap-1.5 text-sm leading-tight text-gray-500 dark:text-gray-400">
+                <span class="truncate">{{ actividad.tipo }}</span>
+                <span aria-hidden="true">·</span>
+                <span>{{ actividad.totalImagenes }} img.</span>
               </span>
-              @if (actividad.id === actividadId) {
-                <mat-icon class="activity-nav-item__check icon-size-4" [svgIcon]="'heroicons_solid:check-circle'"></mat-icon>
-              }
-            </button>
+            </span>
+            @if (actividad.id === actividadId) {
+            <mat-icon class="activity-nav-item__check icon-size-4"
+              [svgIcon]="'heroicons_solid:check-circle'"></mat-icon>
+            }
+          </button>
           } @empty {
-            <p class="px-3 py-6 text-center text-sm text-gray-500 dark:text-gray-400">No hay más atracciones para navegar.</p>
+          <p class="px-3 py-6 text-center text-sm text-gray-500 dark:text-gray-400">No hay más atracciones para navegar.
+          </p>
           }
         </nav>
         <div class="activity-editor-drawer__footer border-t border-gray-100 p-3 dark:border-gray-800">
@@ -70,776 +63,956 @@
 
     <mat-drawer-content class="min-w-0">
       <div class="activity-editor-main mx-auto flex w-full max-w-screen-xl flex-col px-6 py-6 sm:px-8">
-    <div class="activity-editor-header sticky top-0 z-[100] mb-4 w-full rounded-xl border border-transparent bg-transparent px-2 py-2 backdrop-blur-md transition-all duration-300 md:px-4">
-      <div class="w-full md:flex md:items-center md:justify-between">
-        <div>
-          <h1 class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">Galería de {{ actividadNombre }}</h1>
-          <p class="mt-1 text-sm text-gray-500">{{ destinoNombre }} · {{ actividadNombre }}</p>
+        <div
+          class="activity-editor-header sticky top-0 z-[100] mb-4 w-full rounded-xl border border-transparent bg-transparent px-2 py-2 backdrop-blur-md transition-all duration-300 md:px-4">
+          <div class="w-full md:flex md:items-center md:justify-between">
+            <div>
+              <h1 class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">Galería de {{
+                actividadNombre }}</h1>
+              <p class="mt-1 text-sm text-gray-500">{{ destinoNombre }} · {{ actividadNombre }}</p>
+            </div>
+
+            <div class="my-2 flex items-center gap-3 md:my-0">
+              <button mat-raised-button color="warn" class="text-white" type="button" (click)="regresar()">
+                <mat-icon class="mr-2 icon-size-5" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
+                Regresar
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div class="my-2 flex items-center gap-3 md:my-0">
-          <button mat-raised-button color="warn" class="text-white" type="button" (click)="regresar()">
-            <mat-icon class="mr-2 icon-size-5" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
-            Regresar
-          </button>
-        </div>
-      </div>
-    </div>
+        @if (!cargando) {
+        <form [formGroup]="form" class="space-y-6">
+          <section class="rounded-2xl border border-gray-200 bg-white shadow-sm">
+            <app-folder-image-manager [title]="'Galería de Imágenes'"
+              [subtitle]="'Administre y organice sus archivos visuales.'" [folders]="galeriaCarpetas"
+              [selectedImageId]="imagenSeleccionadaGestorId" [activeImageIds]="imagenesActivasIds"
+              [showDetailPanel]="true" [isSaving]="guardandoImagenes" [isSavingFolder]="procesandoCrearCarpeta"
+              [showDeleteAllImages]="imagenesArray.length > 0 || carpetasActividad.length > 0"
+              [isDeletingAllImages]="guardandoImagenes || eliminandoGaleria" [showUpdateOrder]="ordenImagenesPendiente"
+              [isUpdatingOrder]="guardandoImagenes" (addImage)="agregarImagen()"
+              (deleteAllImages)="abrirModalConfirmarEliminarGaleria()" (updateOrder)="actualizarOrdenImagenes()"
+              (folderSelected)="seleccionarCarpeta($event?.name ?? 'Todas')"
+              (createFolder)="crearCarpetaActividad($event)"
+              (renameFolder)="renombrarCarpetaActividad($event.folder, $event.name)"
+              (deleteFolder)="eliminarCarpetaActividad($event)"
+              (imageSelected)="seleccionarImagenPrincipalDesdeGestor($event)"
+              (editImage)="editarImagenDesdeGestor($event)"
+              (toggleImageActive)="alternarImagenActivaDesdeGestor($event)"
+              (toggleImageDarken)="alternarOscurecerFondoDesdeGestor($event)"
+              (deleteImage)="eliminarImagenDesdeGestor($event)"
+              (deleteSelectedImages)="eliminarImagenesSeleccionadasDesdeGestor($event)"
+              (toggleFolderActive)="alternarCarpetaActivaDesdeGestor($event)"
+              (toggleSelectedImagesActive)="activarImagenesSeleccionadasDesdeGestor($event)"
+              (imageDroppedOnFolder)="solicitarMoverImagenDesdeGestor($event)"
+              (imageReorderPreview)="previsualizarReordenImagenDesdeGestor($event)" />
+          </section>
 
-    @if (!cargando) {
-      <form [formGroup]="form" class="space-y-6">
-        <section class="rounded-2xl border border-gray-200 bg-white shadow-sm">
-          <app-folder-image-manager
-            [title]="'Galería de Imágenes'"
-            [subtitle]="'Administre y organice sus archivos visuales.'"
-            [folders]="galeriaCarpetas"
-            [selectedImageId]="imagenSeleccionadaGestorId"
-            [activeImageIds]="imagenesActivasIds"
-            [showDetailPanel]="true"
-            [isSaving]="guardandoImagenes"
-            [isSavingFolder]="procesandoCrearCarpeta"
-            [showDeleteAllImages]="imagenesArray.length > 0 || carpetasActividad.length > 0"
-            [isDeletingAllImages]="guardandoImagenes || eliminandoGaleria"
-            [showUpdateOrder]="ordenImagenesPendiente"
-            [isUpdatingOrder]="guardandoImagenes"
-            (addImage)="agregarImagen()"
-            (deleteAllImages)="abrirModalConfirmarEliminarGaleria()"
-            (updateOrder)="actualizarOrdenImagenes()"
-            (folderSelected)="seleccionarCarpeta($event?.name ?? 'Todas')"
-            (createFolder)="crearCarpetaActividad($event)"
-            (renameFolder)="renombrarCarpetaActividad($event.folder, $event.name)"
-            (deleteFolder)="eliminarCarpetaActividad($event)"
-            (imageSelected)="seleccionarImagenPrincipalDesdeGestor($event)"
-            (editImage)="editarImagenDesdeGestor($event)"
-            (toggleImageActive)="alternarImagenActivaDesdeGestor($event)"
-            (toggleImageDarken)="alternarOscurecerFondoDesdeGestor($event)"
-            (deleteImage)="eliminarImagenDesdeGestor($event)"
-            (deleteSelectedImages)="eliminarImagenesSeleccionadasDesdeGestor($event)"
-            (toggleFolderActive)="alternarCarpetaActivaDesdeGestor($event)"
-            (toggleSelectedImagesActive)="activarImagenesSeleccionadasDesdeGestor($event)"
-            (imageDroppedOnFolder)="solicitarMoverImagenDesdeGestor($event)"
-            (imageReorderPreview)="previsualizarReordenImagenDesdeGestor($event)"
-          />
-        </section>
-
-        @if (mostrarModalConfirmarEliminarGaleria) {
-          <div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center px-4">
-            <div class="absolute inset-0 bg-black/50" @backdropFade></div>
-            <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" @modalScaleFade>
-              <h3 class="text-xl font-semibold text-gray-900">Eliminar toda la galeria</h3>
-              <p class="mt-2 text-sm text-gray-600">
-                Se eliminaran permanentemente las {{ imagenesArray.length }} imagen{{ imagenesArray.length === 1 ? '' : 'es' }}
-                y las {{ carpetasActividad.length }} carpeta{{ carpetasActividad.length === 1 ? '' : 's' }} de esta actividad.
-              </p>
-              <p class="mt-2 text-sm font-medium text-red-700">Esta accion no se puede deshacer.</p>
-
-              <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                <button mat-stroked-button type="button" (click)="cerrarModalConfirmarEliminarGaleria()" [disabled]="eliminandoGaleria">
-                  Cancelar
-                </button>
-                <button mat-flat-button color="warn" type="button" (click)="eliminarGaleriaActividad()" [disabled]="eliminandoGaleria">
-                  @if (eliminandoGaleria) {
-                    Eliminando...
-                  } @else {
-                    Eliminar definitivamente
-                  }
-                </button>
-              </div>
-            </div>
-          </div>
-        }
-
-        @if (mostrarModalConfirmarEliminarImagen && (imagenAEliminar || imagenesSeleccionadasAEliminar.length)) {
-          <div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center px-4">
-            <div class="absolute inset-0 bg-black/50" @backdropFade></div>
-            <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="eliminar-imagen-title" @modalScaleFade>
-              <h3 id="eliminar-imagen-title" class="text-xl font-semibold text-gray-900">Eliminar {{ imagenesSeleccionadasAEliminar.length ? 'imágenes seleccionadas' : 'imagen' }}</h3>
-              <p class="mt-2 text-sm text-gray-600">
-                @if (imagenesSeleccionadasAEliminar.length) {
-                  Quieres eliminar permanentemente las {{ imagenesSeleccionadasAEliminar.length }} imágenes seleccionadas?
-                } @else {
-                  Quieres eliminar <span class="font-semibold text-gray-900">{{ imagenAEliminar?.name || 'esta imagen' }}</span>?
-                }
-              </p>
-              <p class="mt-2 text-sm font-medium text-red-700">Esta accion no se puede deshacer.</p>
-
-              <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                <button mat-stroked-button type="button" (click)="cerrarModalConfirmarEliminarImagen()" [disabled]="guardandoImagenes">
-                  Cancelar
-                </button>
-                <button mat-flat-button color="warn" type="button" (click)="confirmarEliminarImagenDesdeGestor()" [disabled]="guardandoImagenes">
-                  {{ guardandoImagenes ? 'Eliminando...' : 'Eliminar definitivamente' }}
-                </button>
-              </div>
-            </div>
-          </div>
-        }
-
-        @if (editorImagenAbierto && imagenEditandoControl) {
-          <div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center px-4 py-4">
-            <div class="absolute inset-0 bg-black/50" @backdropFade></div>
-            <div class="image-edit-modal relative z-10 w-full max-w-6xl rounded-3xl bg-white shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="editar-imagen-title" aria-describedby="editar-imagen-description" @modalScaleFade>
-              <div class="image-edit-modal__header flex items-start justify-between gap-4 border-b border-gray-100 px-6 py-5">
-                <div>
-                  <p class="mb-1 text-[0.68rem] font-bold uppercase tracking-[0.2em] text-primary">Editor visual</p>
-                  <h3 id="editar-imagen-title" class="text-2xl font-semibold text-gray-900">Editar imagen</h3>
-                  <p id="editar-imagen-description" class="mt-1 text-sm text-gray-500">Configura la imagen y sus efectos para el carrusel.</p>
-                </div>
-
-                <button mat-icon-button type="button" aria-label="Cerrar editor de imagen" (click)="cerrarEditorImagen()">
-                  <mat-icon [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
-                </button>
-              </div>
-
-              <div class="image-edit-modal__workspace">
-              <div class="image-edit-modal__preview relative overflow-hidden border-b border-gray-100 bg-gray-50">
-                <img
-                  class="h-full w-full object-cover"
-                  [src]="imagenEditandoControl.get('imagen_url')?.value"
-                  [alt]="imagenEditandoTitulo"
-                  [style.filter]="imagenEditandoControl.get('efecto_destino')?.value !== 'texto' ? 'blur(' + imagenEditandoControl.get('blur_px')?.value + 'px)' : null"
-                  [style.transform]="imagenEditandoControl.get('efecto_destino')?.value !== 'texto' && imagenEditandoControl.get('blur_px')?.value ? 'scale(1.05)' : null"
-                />
-                @if (imagenEditandoControl.get('efecto_destino')?.value !== 'texto') {
-                  <div
-                    class="absolute inset-0"
-                    [style.background-color]="colorConOpacidad(imagenEditandoControl.get('overlay_color')?.value, imagenEditandoControl.get('overlay_opacidad')?.value)"
-                  ></div>
-                }
-                <div class="absolute inset-x-0 bottom-0 p-5">
-                  <div
-                    [class]="'relative max-w-3xl overflow-hidden' +
-                      (imagenEditandoControl.get('oscurecer_fondo')?.value || imagenEditandoControl.get('efecto_destino')?.value !== 'fondo' ? ' rounded-2xl p-5' : '') +
-                      (imagenEditandoControl.get('oscurecer_fondo')?.value ? ' border border-white/20 shadow-lg' : '')"
-                  >
-                    @if (imagenEditandoControl.get('efecto_destino')?.value !== 'fondo') {
-                      <div
-                        class="image-edit-modal__text-effect absolute inset-0"
-                        [style.background-color]="colorConOpacidad(imagenEditandoControl.get('overlay_color')?.value, imagenEditandoControl.get('overlay_opacidad')?.value)"
-                        [style.--effect-blur]="imagenEditandoControl.get('blur_px')?.value + 'px'"
-                      ></div>
-                    } @else if (imagenEditandoControl.get('oscurecer_fondo')?.value) {
-                      <div class="absolute inset-0 bg-white/12 backdrop-blur-xl backdrop-saturate-150"></div>
-                    }
-                    <div class="relative" [style.color]="imagenEditandoControl.get('texto_color')?.value">
-                      <span
-                        class="image-edit-modal__preview-label inline-block rounded-full px-4 py-1 font-bold uppercase tracking-widest text-white"
-                        [style.--font-size.px]="imagenEditandoControl.get('etiqueta_font_size')?.value"
-                        [style.background-color]="imagenEditandoControl.get('etiqueta_color')?.value"
-                       >{{ destinoNombre }}</span>
-                       <p class="image-edit-modal__preview-title mt-2 font-black leading-tight" [style.--font-size.px]="imagenEditandoControl.get('titulo_font_size')?.value">{{ imagenEditandoControl.get(['traducciones', 'es', 'nombre'])?.value || 'Título de la imagen' }}</p>
-                       <p class="image-edit-modal__preview-description mt-2 font-medium opacity-90" [style.--font-size.px]="imagenEditandoControl.get('descripcion_font_size')?.value">{{ imagenEditandoControl.get(['traducciones', 'es', 'descripcion'])?.value || 'Descripción de la imagen' }}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-                <div class="image-edit-modal__content space-y-5 px-6 py-5" [formGroup]="imagenEditandoControl">
-                <section class="image-edit-modal__section rounded-2xl border border-gray-100 bg-white p-4" aria-labelledby="imagen-section-title">
-                  <div class="mb-4 flex items-start gap-3">
-                    <span class="image-edit-modal__section-index">01</span>
-                    <div>
-                      <h4 id="imagen-section-title" class="text-sm font-bold uppercase tracking-[0.16em] text-gray-800">Imagen</h4>
-                      <p class="mt-1 text-xs text-gray-500">Datos básicos y organización del archivo.</p>
-                    </div>
-                  </div>
-
-                  <div class="grid gap-4">
-                    <mat-form-field class="w-full">
-                      <mat-label>URL de imagen</mat-label>
-                      <input matInput [formControl]="imagenEditandoControl.get('imagen_url')" />
-                    </mat-form-field>
-
-                    <div>
-                      <label id="carpeta-imagen-label" class="mb-1 block text-sm font-medium text-gray-700">Carpeta</label>
-                      <mat-form-field appearance="outline" class="w-full">
-                      <mat-select
-                        tpSelect
-                        aria-labelledby="carpeta-imagen-label"
-                        [value]="carpetaEditandoSeleccionadaId"
-                        (selectionChange)="onCarpetaImagenChange($event.value)"
-                      >
-                        @for (carpeta of carpetasParaSelector; track carpeta.id) {
-                          <mat-option [value]="carpeta.id">{{ carpeta.nombre }}</mat-option>
-                        }
-                       </mat-select>
-                       </mat-form-field>
-                     </div>
-                   </div>
-                 </section>
-
-                 <section class="image-edit-modal__section rounded-2xl border border-gray-100 bg-white p-4" aria-labelledby="contenido-imagen-section-title" formGroupName="traducciones">
-                   <div class="mb-4 flex items-start gap-3">
-                     <span class="image-edit-modal__section-index">02</span>
-                     <div>
-                       <h4 id="contenido-imagen-section-title" class="text-sm font-bold uppercase tracking-[0.16em] text-gray-800">Contenido del carrusel</h4>
-                       <p class="mt-1 text-xs text-gray-500">Este texto se mostrará únicamente con esta imagen en el sitio público.</p>
-                     </div>
-                   </div>
-                   <div formGroupName="es" class="grid gap-4">
-                      <app-tp-input label="Nombre" placeholder="Título de esta imagen" formControlName="nombre" [required]="true"></app-tp-input>
-                      <app-tp-textarea label="Descripción" placeholder="Describe esta imagen" formControlName="descripcion" [rows]="3"></app-tp-textarea>
-                   </div>
-                   <div class="mt-4 grid gap-3 md:grid-cols-2">
-                     @for (idioma of idiomas; track idioma.id) {
-                       @if (idioma.codigo !== 'es') {
-                         <div class="rounded-lg border border-gray-200 bg-gray-50 p-3" [formGroupName]="idioma.codigo">
-                           <p class="text-sm font-semibold text-gray-700">{{ getNombreIdioma(idioma.codigo) }}</p>
-                           <p class="mt-1 text-sm text-gray-900">{{ imagenEditandoControl.get(['traducciones', idioma.codigo, 'nombre'])?.value || 'Sin nombre' }}</p>
-                           <p class="mt-1 text-sm text-gray-600">{{ imagenEditandoControl.get(['traducciones', idioma.codigo, 'descripcion'])?.value || 'Sin descripción' }}</p>
-                         </div>
-                       }
-                     }
-                   </div>
-                 </section>
-
-                     <section class="image-edit-modal__section rounded-2xl border border-gray-100 bg-white p-4" aria-labelledby="presentacion-section-title">
-                    <div class="mb-4 flex items-start justify-between gap-3">
-                      <div class="flex items-start gap-3">
-                         <span class="image-edit-modal__section-index">03</span>
-                        <div>
-                          <h4 id="presentacion-section-title" class="text-sm font-bold uppercase tracking-[0.16em] text-gray-800">Presentación</h4>
-                          <p class="mt-1 text-xs text-gray-500">Define cómo se verá la imagen detrás del contenido.</p>
-                        </div>
-                      </div>
-                      <button mat-stroked-button class="image-edit-modal__reset-all" type="button" (click)="restablecerEstilosImagenEditando()">
-                        <mat-icon svgIcon="heroicons_outline:arrow-path"></mat-icon>
-                        Restablecer
-                      </button>
-                    </div>
-
-                    <div class="flex items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3">
-                       <div>
-                         <p class="text-sm font-semibold text-gray-900">Oscurecer fondo</p>
-                         <p class="text-xs text-gray-500">Mantiene el panel translúcido detrás del contenido en el carrusel público.</p>
-                        </div>
-                        <div class="flex items-center gap-1">
-                          <app-custom-switch
-                            [formControl]="imagenEditandoControl.get('oscurecer_fondo')"
-                          ></app-custom-switch>
-                        </div>
-                    </div>
-
-                        <div class="mt-4">
-                         <label id="efecto-destino-label" class="mb-1 block text-sm font-medium text-gray-700">Aplicar velo y difuminado a</label>
-                         <div class="flex items-center gap-2">
-                           <mat-form-field appearance="outline" class="min-w-0 flex-1">
-                            <mat-select tpSelect aria-labelledby="efecto-destino-label" [formControl]="imagenEditandoControl.get('efecto_destino')">
-                              <mat-option value="fondo">Fondo de la imagen</mat-option>
-                              <mat-option value="texto">Panel detrás del texto</mat-option>
-                              <mat-option value="ambos">Fondo y panel de texto</mat-option>
-                            </mat-select>
-                           </mat-form-field>
-                           <button mat-icon-button class="image-style-reset" type="button" aria-label="Restablecer destino del efecto" matTooltip="Restablecer" (click)="restablecerEstiloImagen('efecto_destino')"><mat-icon svgIcon="heroicons_outline:arrow-path"></mat-icon></button>
-                         </div>
-                       </div>
-
-                       <div class="grid gap-4 sm:grid-cols-2">
-                         <label class="block text-sm font-medium text-gray-700">
-                            Color del velo
-                             <span class="mt-2 flex items-center gap-2"><app-color-picker class="min-w-0 flex-1" label="Color del velo" [formControl]="imagenEditandoControl.get('overlay_color')"></app-color-picker><button mat-icon-button class="image-style-reset" type="button" aria-label="Restablecer color del velo" matTooltip="Restablecer" (click)="restablecerEstiloImagen('overlay_color')"><mat-icon svgIcon="heroicons_outline:arrow-path"></mat-icon></button></span>
-                         </label>
-                       </div>
-
-                       <div class="mt-5 grid gap-5 sm:grid-cols-2">
-                         <label class="block text-sm font-medium text-gray-700">
-                            Oscurecimiento: {{ (imagenEditandoControl.get('overlay_opacidad')?.value * 100) | number:'1.0-0' }}%
-                            <span class="mt-2 flex items-center gap-2"><input class="min-w-0 flex-1 accent-primary" type="range" min="0" max="1" step="0.05" [formControl]="imagenEditandoControl.get('overlay_opacidad')" /><button mat-icon-button class="image-style-reset" type="button" aria-label="Restablecer oscurecimiento" matTooltip="Restablecer" (click)="restablecerEstiloImagen('overlay_opacidad')"><mat-icon svgIcon="heroicons_outline:arrow-path"></mat-icon></button></span>
-                        </label>
-                        <label class="block text-sm font-medium text-gray-700">
-                           Difuminado: {{ imagenEditandoControl.get('blur_px')?.value }} px
-                            <span class="mt-2 flex items-center gap-2"><input class="min-w-0 flex-1 accent-primary" type="range" min="0" max="24" step="1" [formControl]="imagenEditandoControl.get('blur_px')" /><button mat-icon-button class="image-style-reset" type="button" aria-label="Restablecer difuminado" matTooltip="Restablecer" (click)="restablecerEstiloImagen('blur_px')"><mat-icon svgIcon="heroicons_outline:arrow-path"></mat-icon></button></span>
-                        </label>
-                      </div>
-                    </section>
-
-                    <section class="image-edit-modal__section rounded-2xl border border-gray-100 bg-white p-4" aria-labelledby="tipografia-section-title">
-                      <div class="mb-4 flex items-start gap-3">
-                        <span class="image-edit-modal__section-index">04</span>
-                        <div>
-                          <h4 id="tipografia-section-title" class="text-sm font-bold uppercase tracking-[0.16em] text-gray-800">Tipografía</h4>
-                          <p class="mt-1 text-xs text-gray-500">Ajusta color y escala del texto del carrusel.</p>
-                        </div>
-                      </div>
-                      <div class="grid gap-4 sm:grid-cols-2">
-                        <label class="block text-sm font-medium text-gray-700">Color del texto
-                           <span class="mt-2 flex items-center gap-2"><app-color-picker class="min-w-0 flex-1" label="Color del texto" [formControl]="imagenEditandoControl.get('texto_color')"></app-color-picker><button mat-icon-button class="image-style-reset" type="button" aria-label="Restablecer color del texto" matTooltip="Restablecer" (click)="restablecerEstiloImagen('texto_color')"><mat-icon svgIcon="heroicons_outline:arrow-path"></mat-icon></button></span>
-                        </label>
-                        <label class="block text-sm font-medium text-gray-700">Color de etiqueta
-                           <span class="mt-2 flex items-center gap-2"><app-color-picker class="min-w-0 flex-1" label="Color de etiqueta" [formControl]="imagenEditandoControl.get('etiqueta_color')"></app-color-picker><button mat-icon-button class="image-style-reset" type="button" aria-label="Restablecer color de etiqueta" matTooltip="Restablecer" (click)="restablecerEstiloImagen('etiqueta_color')"><mat-icon svgIcon="heroicons_outline:arrow-path"></mat-icon></button></span>
-                        </label>
-                      </div>
-                      <div class="mt-5 grid gap-5 sm:grid-cols-2">
-                        <label class="block text-sm font-medium text-gray-700">Tamaño del título: {{ imagenEditandoControl.get('titulo_font_size')?.value }} px
-                          <span class="mt-2 flex items-center gap-2"><input class="min-w-0 flex-1 accent-primary" type="range" min="24" max="72" step="1" [formControl]="imagenEditandoControl.get('titulo_font_size')" /><button mat-icon-button class="image-style-reset" type="button" aria-label="Restablecer tamaño del título" matTooltip="Restablecer" (click)="restablecerEstiloImagen('titulo_font_size')"><mat-icon svgIcon="heroicons_outline:arrow-path"></mat-icon></button></span>
-                        </label>
-                        <label class="block text-sm font-medium text-gray-700">Tamaño de descripción: {{ imagenEditandoControl.get('descripcion_font_size')?.value }} px
-                          <span class="mt-2 flex items-center gap-2"><input class="min-w-0 flex-1 accent-primary" type="range" min="14" max="32" step="1" [formControl]="imagenEditandoControl.get('descripcion_font_size')" /><button mat-icon-button class="image-style-reset" type="button" aria-label="Restablecer tamaño de descripción" matTooltip="Restablecer" (click)="restablecerEstiloImagen('descripcion_font_size')"><mat-icon svgIcon="heroicons_outline:arrow-path"></mat-icon></button></span>
-                        </label>
-                        <label class="block text-sm font-medium text-gray-700">Tamaño de etiqueta: {{ imagenEditandoControl.get('etiqueta_font_size')?.value }} px
-                          <span class="mt-2 flex items-center gap-2"><input class="min-w-0 flex-1 accent-primary" type="range" min="8" max="32" step="1" [formControl]="imagenEditandoControl.get('etiqueta_font_size')" /><button mat-icon-button class="image-style-reset" type="button" aria-label="Restablecer tamaño de etiqueta" matTooltip="Restablecer" (click)="restablecerEstiloImagen('etiqueta_font_size')"><mat-icon svgIcon="heroicons_outline:arrow-path"></mat-icon></button></span>
-                        </label>
-                      </div>
-                    </section>
-                  </div>
-                </div>
-
-              <div class="image-edit-modal__footer flex flex-col gap-3 border-t border-gray-100 px-6 py-5 sm:flex-row sm:items-center sm:justify-end">
-                <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">
-                <button mat-stroked-button type="button" (click)="cerrarEditorImagen()">
-                  <mat-icon class="mr-2 icon-size-5" svgIcon="heroicons_outline:x-mark"></mat-icon>
-                  Cancelar
-                </button>
-                <button
-                  mat-flat-button
-                  color="primary"
-                  type="button"
-                  (click)="guardarImagenEditando()"
-                  [disabled]="guardandoImagenes"
-                >
-                  <mat-icon class="mr-2 icon-size-5" svgIcon="heroicons_outline:check"></mat-icon>
-                  {{ guardandoImagenes ? 'Guardando...' : 'Guardar' }}
-                </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        }
-
-        @if (mostrarModalConfirmarEliminarCarpeta && carpetaAEliminar) {
-          <div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center px-4">
-            <div class="absolute inset-0 bg-black/50" @backdropFade></div>
-            <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" @modalScaleFade>
-              <h3 class="text-xl font-semibold text-gray-900">Confirmar eliminacion</h3>
-              <p class="mt-2 text-sm text-gray-600">
-                Seguro que quieres eliminar la carpeta
-                <span class="font-semibold text-gray-900">{{ carpetaAEliminar.name }}</span>?
-              </p>
-
-              @if (carpetaAEliminar.images.length) {
-                @if (modalEliminarCarpetaPaso === 'inicio') {
-                  <p class="mt-2 text-sm text-gray-600">
-                    Esta carpeta tiene {{ carpetaAEliminar.images.length }} imagen{{ carpetaAEliminar.images.length === 1 ? '' : 'es' }}.
-                    Todas esas imagenes se moveran solo desde esta carpeta.
-                  </p>
-
-                  <div class="mt-6 grid gap-2">
-                    <button mat-flat-button color="warn" type="button" (click)="ejecutarAccionEliminarCarpeta('delete_images')">
-                      Eliminar imagenes y carpeta
-                    </button>
-                    @if (carpetasParaMoverEliminar.length) {
-                      <button mat-stroked-button type="button" (click)="mostrarPasoMoverCarpeta()">
-                        Mover solo estas imagenes a otra carpeta
-                      </button>
-                    }
-                    <button mat-stroked-button type="button" (click)="mostrarPasoCrearCarpeta()">
-                      Crear nueva carpeta y mover solo estas imagenes
-                    </button>
-                    <button mat-stroked-button type="button" (click)="cerrarModalConfirmarEliminarCarpeta()">
-                      Cancelar
-                    </button>
-                  </div>
-                } @else if (modalEliminarCarpetaPaso === 'mover') {
-                  <p class="mt-2 text-sm text-gray-600">
-                    Selecciona una carpeta destino para mover solo las imagenes de esta carpeta antes de borrar la carpeta actual.
-                  </p>
-
-                  <mat-form-field class="mt-4 w-full">
-                    <mat-label>Carpeta destino</mat-label>
-                    <mat-select [(value)]="carpetaDestinoEliminarId">
-                      @for (carpeta of carpetasParaMoverEliminar; track carpeta.id) {
-                        <mat-option [value]="carpeta.id">{{ carpeta.nombre }}</mat-option>
-                      }
-                    </mat-select>
-                  </mat-form-field>
-
-                  <div class="mt-6 flex justify-end gap-2">
-                    <button mat-stroked-button type="button" (click)="volverPasoEliminarCarpeta()">
-                      Volver
-                    </button>
-                    <button mat-stroked-button type="button" (click)="cerrarModalConfirmarEliminarCarpeta()">
-                      Cancelar
-                    </button>
-                    <button mat-flat-button color="warn" type="button" (click)="ejecutarAccionEliminarCarpeta('move_existing')" [disabled]="procesandoEliminarCarpeta">
-                      @if (procesandoEliminarCarpeta) {
-                        Moviendo...
-                      } @else {
-                        Mover imagenes y eliminar carpeta
-                      }
-                    </button>
-                  </div>
-                } @else if (modalEliminarCarpetaPaso === 'crear') {
-                  <p class="mt-2 text-sm text-gray-600">
-                    Escribe el nombre de la nueva carpeta para mover solo las imagenes de esta carpeta antes de borrarla.
-                  </p>
-
-                  <mat-form-field class="mt-4 w-full">
-                    <mat-label>Nueva carpeta</mat-label>
-                    <input
-                      matInput
-                      [value]="nuevaCarpetaEliminarNombre"
-                      (input)="nuevaCarpetaEliminarNombre = $any($event.target).value"
-                    />
-                  </mat-form-field>
-
-                  <div class="mt-6 flex justify-end gap-2">
-                    <button mat-stroked-button type="button" (click)="volverPasoEliminarCarpeta()">
-                      Volver
-                    </button>
-                    <button mat-stroked-button type="button" (click)="cerrarModalConfirmarEliminarCarpeta()">
-                      Cancelar
-                    </button>
-                    <button mat-flat-button color="warn" type="button" (click)="ejecutarAccionEliminarCarpeta('create_and_move')" [disabled]="procesandoEliminarCarpeta">
-                      @if (procesandoEliminarCarpeta) {
-                        Creando...
-                      } @else {
-                        Crear carpeta y mover
-                      }
-                    </button>
-                  </div>
-                }
-              } @else {
-                <p class="mt-2 text-sm text-gray-600">
-                  Esta carpeta esta vacia. Si la eliminas, desaparecera definitivamente.
-                </p>
-
-                <div class="mt-6 flex justify-end gap-2">
-                  <button mat-stroked-button type="button" (click)="cerrarModalConfirmarEliminarCarpeta()">
-                    Cancelar
-                  </button>
-                  <button mat-flat-button color="warn" type="button" (click)="ejecutarAccionEliminarCarpeta('delete_empty')" [disabled]="procesandoEliminarCarpeta">
-                    @if (procesandoEliminarCarpeta) {
-                      Eliminando...
-                    } @else {
-                      Eliminar
-                    }
-                  </button>
-                </div>
-              }
-            </div>
-          </div>
-        }
-
-        @if (mostrarModalTipoAgregarImagen) {
-          <div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center px-4">
-            <div class="absolute inset-0 bg-black/50" @backdropFade></div>
-            <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" @modalScaleFade>
-              <h3 class="text-xl font-semibold text-gray-900">Agregar imagen</h3>
-              <p class="mt-2 text-sm text-gray-600">
-                Quieres agregar la imagen manualmente o cargar varias desde una carpeta de Drive?
-              </p>
-
-              <div class="mt-6 grid gap-2">
-                <button mat-flat-button color="primary" type="button" (click)="seleccionarAgregarImagenManual()">
-                  Si, agregar manualmente
-                </button>
-                <button mat-stroked-button type="button" (click)="seleccionarAgregarImagenDesdeDrive()">
-                  No, cargar desde Drive
-                </button>
-                <button mat-stroked-button type="button" (click)="cerrarModalTipoAgregarImagen()">
-                  Cancelar
-                </button>
-              </div>
-            </div>
-          </div>
-        }
-
-        @if (mostrarModalCargaDriveImagenes) {
-          <div class="modal-blocker drive-import-modal fixed inset-0 z-[3000] flex items-center justify-center px-4 py-4">
-            <div class="absolute inset-0 bg-black/50" @backdropFade></div>
-            <div class="drive-import-modal__dialog relative z-10 w-full max-w-3xl rounded-2xl bg-white p-6 shadow-2xl" @modalScaleFade>
-              <div class="flex items-start justify-between gap-3">
-                <div>
-                  <h3 class="text-xl font-semibold text-gray-900">Cargar imagenes desde Drive</h3>
-                  <p class="mt-2 text-sm text-gray-600">
-                    Pega la URL o el ID de una carpeta de Drive, consulta sus carpetas y elige cuales quieres preparar para guardar.
-                  </p>
-                </div>
-
-                <button mat-icon-button type="button" aria-label="Cerrar modal de Drive" (click)="cerrarModalCargaDriveImagenes()">
-                  <mat-icon [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
-                </button>
-              </div>
-
-              <div class="drive-import-modal__content mt-5 grid gap-4">
-                <mat-form-field class="w-full">
-                  <mat-label>URL o ID de carpeta Drive</mat-label>
-                  <input
-                    matInput
-                    [value]="driveActividadUrl"
-                    (input)="driveActividadUrl = $any($event.target).value"
-                    placeholder="https://drive.google.com/drive/folders/ID_CARPETA"
-                  />
-                  <mat-hint>Puedes pegar la URL completa o solo el ID.</mat-hint>
-                </mat-form-field>
-
-                <div class="flex justify-end">
-                  <button
-                    mat-raised-button
-                    color="accent"
-                    type="button"
-                    (click)="consultarCarpetasDriveActividad()"
-                    [disabled]="consultandoDriveActividad || !driveActividadUrl?.trim()"
-                  >
-                    <mat-icon class="mr-2 icon-size-5">search</mat-icon>
-                    @if (consultandoDriveActividad) {
-                      Consultando...
-                    } @else {
-                      Consultar carpetas
-                    }
-                  </button>
-                </div>
-
-                @if (hayCarpetasDriveActividad) {
-                  <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-                    <div class="flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                          <p class="text-sm font-semibold text-gray-900">Contenido encontrado</p>
-                          <p class="text-sm text-gray-500">
-                           Elige carpetas completas o imagenes individuales. Las carpetas nuevas se prepararan con el mismo nombre.
-                        </p>
-                      </div>
-
-                      <div class="flex flex-wrap gap-2">
-                        <button mat-stroked-button type="button" (click)="toggleSeleccionTodasCarpetasDrive(true)">
-                          Cargar todas
-                        </button>
-                        <button mat-stroked-button type="button" (click)="toggleSeleccionTodasCarpetasDrive(false)">
-                          Quitar seleccion
-                        </button>
-                      </div>
-                    </div>
-
-                    @if (carpetasDriveActividadConNombre.length) {
-                      <div class="drive-import-modal__folders mt-4 grid gap-3 sm:grid-cols-2">
-                      @for (carpeta of carpetasDriveActividadConNombre; track trackByDriveFolder($index, carpeta)) {
-                        <div class="drive-import-modal__folder-card rounded-2xl border border-gray-200 bg-white p-4">
-                          <div class="flex items-start gap-3">
-                            <input
-                              type="checkbox"
-                              class="mt-1 h-4 w-4 rounded border-gray-300"
-                              [checked]="carpeta.seleccionado"
-                              (change)="carpeta.seleccionado = $any($event.target).checked"
-                            />
-
-                            <div class="min-w-0 flex-1">
-                              <p class="font-semibold text-gray-900">{{ carpeta.nombre || 'Imagenes sin carpeta' }}</p>
-                              <p class="text-sm text-gray-500">
-                                {{ carpeta.imagenes.length }} imagen{{ carpeta.imagenes.length === 1 ? '' : 'es' }}
-                              </p>
-                            </div>
-                          </div>
-
-                          @if (carpeta.requiereNombreCarpeta) {
-                            <mat-form-field class="mt-3 w-full">
-                              <mat-label>Usar carpeta existente</mat-label>
-                              <mat-select
-                                [value]="carpeta.carpetaDestinoId"
-                                (selectionChange)="actualizarCarpetaDestinoDrive(carpeta.id, $event.value)"
-                              >
-                                @for (destino of carpetasParaSelector; track destino.id) {
-                                  <mat-option [value]="destino.id">
-                                    {{ destino.nombre }}
-                                  </mat-option>
-                                }
-                              </mat-select>
-                              <mat-hint>Selecciona una carpeta ya creada o escribe un nombre nuevo abajo.</mat-hint>
-                            </mat-form-field>
-                            <mat-form-field class="mt-3 w-full">
-                              <mat-label>O crea una carpeta nueva</mat-label>
-                              <input
-                                matInput
-                                [value]="carpeta.carpetaDestinoNombre"
-                                (input)="actualizarNombreCarpetaDrive(carpeta.id, $any($event.target).value)"
-                                placeholder="Ej. Galeria principal"
-                              />
-                              <mat-hint>Al escribir aquí se creará una carpeta nueva con ese nombre.</mat-hint>
-                            </mat-form-field>
-                          } @else {
-                            <mat-form-field class="mt-3 w-full">
-                              <mat-label>Carpeta</mat-label>
-                              <mat-select
-                                [value]="carpeta.carpetaDestinoId"
-                                (selectionChange)="actualizarCarpetaDestinoDrive(carpeta.id, $event.value)"
-                              >
-                                @for (destino of carpetasParaSelector; track destino.id) {
-                                  <mat-option [value]="destino.id">
-                                    {{ destino.nombre }}
-                                  </mat-option>
-                                }
-                              </mat-select>
-                            </mat-form-field>
-                          }
-                        </div>
-                      }
-                      </div>
-                    }
-
-                    @if (imagenesRaizDriveActividad; as imagenesRaiz) {
-                      <section class="drive-import-modal__root-images mt-4" aria-labelledby="drive-root-images-title">
-                        <div class="flex flex-wrap items-center justify-between gap-3">
-                          <div>
-                            <p id="drive-root-images-title" class="font-semibold text-gray-900">Imagenes de esta carpeta</p>
-                            <p class="text-sm text-gray-500">Selecciona solo las que quieras cargar.</p>
-                          </div>
-                          <div class="flex items-center gap-3">
-                            <span class="text-sm font-medium text-gray-600">
-                              {{ imagenesRaiz.imagenesSeleccionadas.length }} de {{ imagenesRaiz.imagenes.length }}
-                            </span>
-                            <button
-                              mat-stroked-button
-                              type="button"
-                              (click)="toggleSeleccionTodasImagenesRaizDrive()"
-                            >
-                              {{ todasLasImagenesRaizDriveSeleccionadas ? 'Quitar seleccion' : 'Seleccionar todas' }}
-                            </button>
-                          </div>
-                        </div>
-
-                        <div class="drive-import-modal__image-grid mt-3">
-                          @for (imagen of imagenesRaiz.imagenes; track trackByDriveImage($index, imagen)) {
-                            <label class="drive-import-modal__image-card" [class.drive-import-modal__image-card--selected]="imagenesRaiz.imagenesSeleccionadas.includes(imagen.publicImageUrl)">
-                              <input
-                                type="checkbox"
-                                class="sr-only"
-                                [checked]="imagenesRaiz.imagenesSeleccionadas.includes(imagen.publicImageUrl)"
-                                (change)="actualizarSeleccionImagenRaizDrive(imagen.publicImageUrl, $any($event.target).checked)"
-                              />
-                              <img [src]="imagen.thumbnailUrl || imagen.publicImageUrl" [alt]="imagen.nombre || 'Imagen de Drive'" />
-                              <span class="drive-import-modal__image-check" aria-hidden="true">
-                                <mat-icon>check</mat-icon>
-                              </span>
-                              <span class="drive-import-modal__image-name">{{ imagen.nombre || 'Imagen sin nombre' }}</span>
-                            </label>
-                          }
-                        </div>
-
-                        <div class="mt-4 grid gap-3 sm:grid-cols-2">
-                          <mat-form-field class="w-full">
-                            <mat-label>Usar carpeta existente</mat-label>
-                            <mat-select
-                              [value]="imagenesRaiz.carpetaDestinoId"
-                              (selectionChange)="actualizarCarpetaDestinoDrive(imagenesRaiz.id, $event.value)"
-                            >
-                              @for (destino of carpetasParaSelector; track destino.id) {
-                                <mat-option [value]="destino.id">{{ destino.nombre }}</mat-option>
-                              }
-                            </mat-select>
-                          </mat-form-field>
-                          <mat-form-field class="w-full">
-                            <mat-label>O crea una carpeta nueva</mat-label>
-                            <input matInput [value]="imagenesRaiz.carpetaDestinoNombre" (input)="actualizarNombreCarpetaDrive(imagenesRaiz.id, $any($event.target).value)" placeholder="Ej. Galeria principal" />
-                          </mat-form-field>
-                        </div>
-                      </section>
-                    }
-                  </div>
-                }
-              </div>
-
-              <div class="drive-import-modal__actions mt-6 flex justify-end gap-2">
-                <button mat-stroked-button type="button" (click)="cerrarModalCargaDriveImagenes()">
-                  Cancelar
-                </button>
-                <button
-                  mat-flat-button
-                  color="primary"
-                  type="button"
-                  (click)="cargarImagenesSeleccionadasDesdeDrive()"
-                  [disabled]="!totalImagenesDriveActividadSeleccionadas || aplicandoCargaDriveActividad || consultandoDriveActividad"
-                >
-                  @if (aplicandoCargaDriveActividad) {
-                    Preparando imagenes...
-                  } @else {
-                    Cargar seleccionadas
-                  }
-                </button>
-              </div>
-            </div>
-          </div>
-        }
-
-        @if (mostrarModalConfirmarMoverImagen && imagenAReubicar) {
-          <div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center px-4">
-            <div class="absolute inset-0 bg-black/50" @backdropFade></div>
-            <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" @modalScaleFade>
-              <h3 class="text-xl font-semibold text-gray-900">Mover imagen</h3>
-              <p class="mt-2 text-sm text-gray-600">
-                La imagen quedara preparada para moverse a
-                <span class="font-semibold text-gray-900">{{ imagenAReubicar.carpeta_destino_nombre }}</span>.
-              </p>
-
-              <div class="mt-6 flex justify-end gap-2">
-                <button mat-stroked-button type="button" (click)="cancelarMoverImagenPendiente()">
-                  Cancelar
-                </button>
-                <button mat-flat-button color="primary" type="button" (click)="aceptarMoverImagenPendiente()" [disabled]="guardandoImagenes">
-                  @if (guardandoImagenes) {
-                    Moviendo...
-                  } @else {
-                    Mover ahora
-                  }
-                </button>
-              </div>
-            </div>
-          </div>
-        }
-
-        @if (error) {
+          @if (error) {
           <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {{ error }}
           </div>
+          }
+        </form>
         }
-      </form>
-    }
       </div>
     </mat-drawer-content>
   </mat-drawer-container>
-  </div>
+</div>
 
-@if (mostrarModalNuevaActividad) {
-  <div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
-    <div role="dialog" aria-modal="true" aria-labelledby="crear-actividad-title" class="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900">
-      <h3 id="crear-actividad-title" class="text-xl font-semibold text-gray-900 dark:text-white">Crear actividad</h3>
+@if (mostrarModalConfirmarEliminarGaleria) {
+<div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center px-4">
+  <div class="absolute inset-0 bg-black/50" @backdropFade></div>
+  <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" @modalScaleFade>
+    <h3 class="text-xl font-semibold text-gray-900">Eliminar toda la galeria</h3>
+    <p class="mt-2 text-sm text-gray-600">
+      Se eliminaran permanentemente las {{ imagenesArray.length }} imagen{{ imagenesArray.length === 1 ? '' : 'es' }}
+      y las {{ carpetasActividad.length }} carpeta{{ carpetasActividad.length === 1 ? '' : 's' }} de esta actividad.
+    </p>
+    <p class="mt-2 text-sm font-medium text-red-700">Esta accion no se puede deshacer.</p>
 
-      <form [formGroup]="formNuevaActividad" class="mt-4">
-        <app-tp-select-search
-          class="w-full"
-          label="Tipo de actividad"
-          placeholder="Selecciona un tipo"
-          searchPlaceholder="Buscar tipo de actividad"
-          emptyMessage="Todos los tipos de actividad ya están configurados."
-          [options]="opcionesNuevaActividad"
-          [required]="true"
-          [disabled]="guardandoNuevaActividad"
-          formControlName="catalogo_atraccion_id"
-        ></app-tp-select-search>
-        @if (formNuevaActividad.get('catalogo_atraccion_id')?.invalid && formNuevaActividad.get('catalogo_atraccion_id')?.touched) {
-          <p class="mt-2 text-sm text-red-600">Selecciona un tipo de actividad.</p>
+    <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+      <button mat-stroked-button type="button" (click)="cerrarModalConfirmarEliminarGaleria()"
+        [disabled]="eliminandoGaleria">
+        Cancelar
+      </button>
+      <button mat-flat-button color="warn" type="button" (click)="eliminarGaleriaActividad()"
+        [disabled]="eliminandoGaleria">
+        @if (eliminandoGaleria) {
+        Eliminando...
+        } @else {
+        Eliminar definitivamente
         }
-      </form>
+      </button>
+    </div>
+  </div>
+</div>
+}
 
-      <div class="mt-4 flex justify-end gap-2 border-t border-gray-200 pt-4 dark:border-gray-700">
-        <button mat-stroked-button type="button" [disabled]="guardandoNuevaActividad" (click)="cerrarModalNuevaActividad()">Cancelar</button>
-        <button mat-flat-button color="primary" type="button" [disabled]="guardandoNuevaActividad" (click)="guardarNuevaActividad()">
-          {{ guardandoNuevaActividad ? 'Agregando...' : 'Agregar' }}
+@if (mostrarModalConfirmarEliminarImagen && (imagenAEliminar || imagenesSeleccionadasAEliminar.length)) {
+<div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center px-4">
+  <div class="absolute inset-0 bg-black/50" @backdropFade></div>
+  <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" role="dialog" aria-modal="true"
+    aria-labelledby="eliminar-imagen-title" @modalScaleFade>
+    <h3 id="eliminar-imagen-title" class="text-xl font-semibold text-gray-900">Eliminar {{
+      imagenesSeleccionadasAEliminar.length ? 'imágenes seleccionadas' : 'imagen' }}</h3>
+    <p class="mt-2 text-sm text-gray-600">
+      @if (imagenesSeleccionadasAEliminar.length) {
+      Quieres eliminar permanentemente las {{ imagenesSeleccionadasAEliminar.length }} imágenes seleccionadas?
+      } @else {
+      Quieres eliminar <span class="font-semibold text-gray-900">{{ imagenAEliminar?.name || 'esta imagen' }}</span>?
+      }
+    </p>
+    <p class="mt-2 text-sm font-medium text-red-700">Esta accion no se puede deshacer.</p>
+
+    <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+      <button mat-stroked-button type="button" (click)="cerrarModalConfirmarEliminarImagen()"
+        [disabled]="guardandoImagenes">
+        Cancelar
+      </button>
+      <button mat-flat-button color="warn" type="button" (click)="confirmarEliminarImagenDesdeGestor()"
+        [disabled]="guardandoImagenes">
+        {{ guardandoImagenes ? 'Eliminando...' : 'Eliminar definitivamente' }}
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+@if (editorImagenAbierto && imagenEditandoControl) {
+<div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center px-4 py-4">
+  <div class="absolute inset-0 bg-black/50" @backdropFade></div>
+  <div class="image-edit-modal relative z-10 w-full max-w-6xl rounded-3xl bg-white shadow-2xl" role="dialog"
+    aria-modal="true" aria-labelledby="editar-imagen-title" aria-describedby="editar-imagen-description"
+    @modalScaleFade>
+    <div class="image-edit-modal__header flex items-start justify-between gap-4 border-b border-gray-100 px-6 py-5">
+      <div>
+        <p class="mb-1 text-[0.68rem] font-bold uppercase tracking-[0.2em] text-primary">Editor visual</p>
+        <h3 id="editar-imagen-title" class="text-2xl font-semibold text-gray-900">Editar imagen</h3>
+        <p id="editar-imagen-description" class="mt-1 text-sm text-gray-500">Configura la imagen y sus efectos para el
+          carrusel.</p>
+      </div>
+
+      <button mat-icon-button type="button" aria-label="Cerrar editor de imagen" (click)="cerrarEditorImagen()">
+        <mat-icon [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
+      </button>
+    </div>
+
+    <div class="image-edit-modal__workspace">
+      <div class="image-edit-modal__preview">
+        <div class="image-edit-modal__canvas relative overflow-hidden"
+          [style.aspect-ratio]="previewImageRatio || '16 / 9'">
+          <div class="image-edit-modal__media-stage absolute inset-0 overflow-hidden" [ngStyle]="previewMediaStyle">
+            <img class="h-full w-full object-cover" [src]="imagenEditandoControl.get('imagen_url')?.value"
+              [alt]="imagenEditandoTitulo" (load)="actualizarMarcoImagenPreview($event)"
+              [style.filter]="imagenEditandoControl.get('efecto_destino')?.value !== 'texto' ? 'blur(' + imagenEditandoControl.get('blur_px')?.value + 'px)' : null"
+              [style.transform]="imagenEditandoControl.get('efecto_destino')?.value !== 'texto' && imagenEditandoControl.get('blur_px')?.value ? 'scale(1.05)' : null" />
+            @if (imagenEditandoControl.get('efecto_destino')?.value !== 'texto') {
+            <div class="absolute inset-0"
+              [style.background-color]="colorConOpacidad(imagenEditandoControl.get('overlay_color')?.value, imagenEditandoControl.get('overlay_opacidad')?.value)">
+            </div>
+            }
+            @if (etiquetaEstaPosicionadaPreview()) {
+            <div [ngStyle]="getOverlayPreviewStyle()"
+              [class]="'image-edit-modal__overlay absolute z-20 max-w-[calc(100%-2.5rem)]' +
+                      (imagenEditandoControl.get('overlay_posicion')?.value === 'custom' ? ' image-edit-modal__overlay--draggable' : '')"
+              (pointerdown)="iniciarArrastreOverlay($event)">
+              <span
+                class="image-edit-modal__preview-label inline-block rounded-full px-4 py-1 font-bold uppercase tracking-widest text-white"
+                [style.--font-size.px]="imagenEditandoControl.get('etiqueta_font_size')?.value"
+                [style.background-color]="imagenEditandoControl.get('etiqueta_color')?.value">{{
+                imagenEditandoControl.get('etiqueta_texto')?.value || destinoNombre }}</span>
+            </div>
+            }
+            <div class="absolute inset-x-0 bottom-0 p-5">
+              <div
+                [class]="'relative max-w-3xl overflow-hidden' +
+                      (imagenEditandoControl.get('oscurecer_fondo')?.value || imagenEditandoControl.get('efecto_destino')?.value !== 'fondo' ? ' rounded-2xl p-5' : '') +
+                      (imagenEditandoControl.get('oscurecer_fondo')?.value ? ' border border-white/20 shadow-lg' : '')">
+                @if (imagenEditandoControl.get('efecto_destino')?.value !== 'fondo') {
+                <div class="image-edit-modal__text-effect absolute inset-0"
+                  [style.background-color]="colorConOpacidad(imagenEditandoControl.get('overlay_color')?.value, imagenEditandoControl.get('overlay_opacidad')?.value)"
+                  [style.--effect-blur]="imagenEditandoControl.get('blur_px')?.value + 'px'"></div>
+                } @else if (imagenEditandoControl.get('oscurecer_fondo')?.value) {
+                <div class="absolute inset-0 bg-white/12 backdrop-blur-xl backdrop-saturate-150"></div>
+                }
+                <div class="relative" [style.color]="imagenEditandoControl.get('texto_color')?.value">
+                  @if (!etiquetaEstaPosicionadaPreview()) {
+                  <span
+                    class="image-edit-modal__preview-label inline-block rounded-full px-4 py-1 font-bold uppercase tracking-widest text-white"
+                    [style.--font-size.px]="imagenEditandoControl.get('etiqueta_font_size')?.value"
+                    [style.background-color]="imagenEditandoControl.get('etiqueta_color')?.value">{{
+                    imagenEditandoControl.get('etiqueta_texto')?.value || destinoNombre }}</span>
+                  }
+                  <p class="image-edit-modal__preview-title mt-2 font-black leading-tight"
+                    [style.--font-size.px]="imagenEditandoControl.get('titulo_font_size')?.value">{{
+                    imagenEditandoControl.get(['traducciones', 'es', 'nombre'])?.value || 'Título de la imagen' }}</p>
+                  <p class="image-edit-modal__preview-description mt-2 font-medium opacity-90"
+                    [style.--font-size.px]="imagenEditandoControl.get('descripcion_font_size')?.value">{{
+                    imagenEditandoControl.get(['traducciones', 'es', 'descripcion'])?.value || 'Descripción de la
+                    imagen' }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="image-edit-modal__content space-y-5 px-6 py-5" [formGroup]="imagenEditandoControl">
+        <section class="image-edit-modal__section rounded-2xl border border-gray-100 bg-white p-4"
+          aria-labelledby="imagen-section-title">
+          <div class="mb-4 flex items-start gap-3">
+            <span class="image-edit-modal__section-index">01</span>
+            <div>
+              <h4 id="imagen-section-title" class="text-sm font-bold uppercase tracking-[0.16em] text-gray-800">Imagen
+              </h4>
+              <p class="mt-1 text-xs text-gray-500">Datos básicos y organización del archivo.</p>
+            </div>
+          </div>
+
+          <div class="grid gap-4">
+            <mat-form-field class="w-full">
+              <mat-label>URL de imagen</mat-label>
+              <input matInput [formControl]="imagenEditandoControl.get('imagen_url')" />
+            </mat-form-field>
+
+            <div>
+              <label id="carpeta-imagen-label" class="mb-1 block text-sm font-medium text-gray-700">Carpeta</label>
+              <mat-form-field appearance="outline" class="w-full">
+                <mat-select tpSelect aria-labelledby="carpeta-imagen-label" [value]="carpetaEditandoSeleccionadaId"
+                  (selectionChange)="onCarpetaImagenChange($event.value)">
+                  @for (carpeta of carpetasParaSelector; track carpeta.id) {
+                  <mat-option [value]="carpeta.id">{{ carpeta.nombre }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
+        </section>
+
+        <section class="image-edit-modal__section rounded-2xl border border-gray-100 bg-white p-4"
+          aria-labelledby="contenido-imagen-section-title" formGroupName="traducciones">
+          <div class="mb-4 flex items-start gap-3">
+            <span class="image-edit-modal__section-index">02</span>
+            <div>
+              <h4 id="contenido-imagen-section-title"
+                class="text-sm font-bold uppercase tracking-[0.16em] text-gray-800">Contenido del carrusel</h4>
+              <p class="mt-1 text-xs text-gray-500">Este texto se mostrará únicamente con esta imagen en el sitio
+                público.</p>
+            </div>
+          </div>
+          <div formGroupName="es" class="grid gap-4">
+            <app-tp-input label="Nombre" placeholder="Título de esta imagen" formControlName="nombre"
+              [required]="true"></app-tp-input>
+            <app-tp-textarea label="Descripción" placeholder="Describe esta imagen" formControlName="descripcion"
+              [rows]="3"></app-tp-textarea>
+          </div>
+          <div class="mt-4">
+            <app-tp-input label="Texto de etiqueta" placeholder="Usa el nombre del destino si lo dejas vacío"
+              [formControl]="imagenEditandoControl.get('etiqueta_texto')"></app-tp-input>
+          </div>
+          <div class="mt-4 grid gap-3 md:grid-cols-2">
+            @for (idioma of idiomas; track idioma.id) {
+            @if (idioma.codigo !== 'es') {
+            <div class="rounded-lg border border-gray-200 bg-gray-50 p-3" [formGroupName]="idioma.codigo">
+              <p class="text-sm font-semibold text-gray-700">{{ getNombreIdioma(idioma.codigo) }}</p>
+              <p class="mt-1 text-sm text-gray-900">{{ imagenEditandoControl.get(['traducciones', idioma.codigo,
+                'nombre'])?.value || 'Sin nombre' }}</p>
+              <p class="mt-1 text-sm text-gray-600">{{ imagenEditandoControl.get(['traducciones', idioma.codigo,
+                'descripcion'])?.value || 'Sin descripción' }}</p>
+            </div>
+            }
+            }
+          </div>
+        </section>
+
+        <section class="image-edit-modal__section rounded-2xl border border-gray-100 bg-white p-4"
+          aria-labelledby="posicion-section-title">
+          <div class="mb-4 flex items-start gap-3">
+            <span class="image-edit-modal__section-index">03</span>
+            <div>
+              <h4 id="posicion-section-title" class="text-sm font-bold uppercase tracking-[0.16em] text-gray-800">
+                Posición de la etiqueta</h4>
+              <p class="mt-1 text-xs text-gray-500">Elige un anclaje o ajusta únicamente la etiqueta sobre la vista
+                previa.</p>
+            </div>
+          </div>
+
+          <div class="grid max-w-52 grid-cols-3 gap-2" role="group" aria-label="Posiciones predefinidas del contenido">
+            @for (posicion of posicionesOverlay; track posicion.value) {
+            <button type="button" class="image-overlay-position"
+              [class.image-overlay-position--selected]="imagenEditandoControl.get('overlay_posicion')?.value === posicion.value"
+              [attr.aria-label]="posicion.label"
+              [attr.aria-pressed]="imagenEditandoControl.get('overlay_posicion')?.value === posicion.value"
+              (click)="seleccionarPosicionOverlay(posicion.value)"><span aria-hidden="true"></span></button>
+            }
+          </div>
+
+          <div class="mt-4 flex flex-wrap items-center gap-3">
+            <button mat-stroked-button type="button"
+              [class.border-primary]="imagenEditandoControl.get('overlay_posicion')?.value === 'custom'"
+              [attr.aria-pressed]="imagenEditandoControl.get('overlay_posicion')?.value === 'custom'"
+              (click)="seleccionarPosicionOverlay('custom')">
+              <mat-icon class="mr-1 icon-size-4">open_with</mat-icon>
+              Personalizada
+            </button>
+            @if (imagenEditandoControl.get('overlay_posicion')?.value === 'custom') {
+            <span class="text-xs text-gray-500">Arrastra el bloque en la vista previa o ingresa coordenadas.</span>
+            }
+          </div>
+
+          @if (imagenEditandoControl.get('overlay_posicion')?.value === 'custom') {
+          <div class="mt-4 grid gap-3 sm:grid-cols-2">
+            <app-tp-input class="w-full" label="Horizontal (X %)" type="number" inputMode="decimal" [min]="0"
+              [max]="100" [step]="0.01" [formControl]="imagenEditandoControl.get('overlay_x')"></app-tp-input>
+            <app-tp-input class="w-full" label="Vertical (Y %)" type="number" inputMode="decimal" [min]="0" [max]="100"
+              [step]="0.01" [formControl]="imagenEditandoControl.get('overlay_y')"></app-tp-input>
+          </div>
+          }
+        </section>
+
+        <section class="image-edit-modal__section rounded-2xl border border-gray-100 bg-white p-4"
+          aria-labelledby="presentacion-section-title">
+          <div class="mb-4 flex items-start justify-between gap-3">
+            <div class="flex items-start gap-3">
+              <span class="image-edit-modal__section-index">04</span>
+              <div>
+                <h4 id="presentacion-section-title" class="text-sm font-bold uppercase tracking-[0.16em] text-gray-800">
+                  Presentación</h4>
+                <p class="mt-1 text-xs text-gray-500">Define cómo se verá la imagen detrás del contenido.</p>
+              </div>
+            </div>
+            <button mat-stroked-button class="image-edit-modal__reset-all" type="button"
+              (click)="restablecerEstilosImagenEditando()">
+              <mat-icon svgIcon="heroicons_outline:arrow-path"></mat-icon>
+              Restablecer
+            </button>
+          </div>
+
+          <div class="flex items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3">
+            <div>
+              <p class="text-sm font-semibold text-gray-900">Oscurecer fondo</p>
+              <p class="text-xs text-gray-500">Mantiene el panel translúcido detrás del contenido en el carrusel
+                público.</p>
+            </div>
+            <div class="flex items-center gap-1">
+              <app-custom-switch [formControl]="imagenEditandoControl.get('oscurecer_fondo')"></app-custom-switch>
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <label id="efecto-destino-label" class="mb-1 block text-sm font-medium text-gray-700">Aplicar velo y
+              difuminado a</label>
+            <div class="flex items-center gap-2">
+              <mat-form-field appearance="outline" class="min-w-0 flex-1">
+                <mat-select tpSelect aria-labelledby="efecto-destino-label"
+                  [formControl]="imagenEditandoControl.get('efecto_destino')">
+                  <mat-option value="fondo">Fondo de la imagen</mat-option>
+                  <mat-option value="texto">Panel detrás del texto</mat-option>
+                  <mat-option value="ambos">Fondo y panel de texto</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <button mat-icon-button class="image-style-reset" type="button"
+                aria-label="Restablecer destino del efecto" matTooltip="Restablecer"
+                (click)="restablecerEstiloImagen('efecto_destino')"><mat-icon
+                  svgIcon="heroicons_outline:arrow-path"></mat-icon></button>
+            </div>
+          </div>
+
+          <div class="grid gap-4 sm:grid-cols-2">
+            <label class="block text-sm font-medium text-gray-700">
+              Color del velo
+              <span class="mt-2 flex items-center gap-2"><app-color-picker class="min-w-0 flex-1" label="Color del velo"
+                  [formControl]="imagenEditandoControl.get('overlay_color')"></app-color-picker><button mat-icon-button
+                  class="image-style-reset" type="button" aria-label="Restablecer color del velo"
+                  matTooltip="Restablecer" (click)="restablecerEstiloImagen('overlay_color')"><mat-icon
+                    svgIcon="heroicons_outline:arrow-path"></mat-icon></button></span>
+            </label>
+          </div>
+
+          <div class="mt-5 grid gap-5 sm:grid-cols-2">
+            <label class="block text-sm font-medium text-gray-700">
+              Oscurecimiento: {{ (imagenEditandoControl.get('overlay_opacidad')?.value * 100) | number:'1.0-0' }}%
+              <span class="mt-2 flex items-center gap-2"><input class="min-w-0 flex-1 accent-primary" type="range"
+                  min="0" max="1" step="0.05" [formControl]="imagenEditandoControl.get('overlay_opacidad')" /><button
+                  mat-icon-button class="image-style-reset" type="button" aria-label="Restablecer oscurecimiento"
+                  matTooltip="Restablecer" (click)="restablecerEstiloImagen('overlay_opacidad')"><mat-icon
+                    svgIcon="heroicons_outline:arrow-path"></mat-icon></button></span>
+            </label>
+            <label class="block text-sm font-medium text-gray-700">
+              Difuminado: {{ imagenEditandoControl.get('blur_px')?.value }} px
+              <span class="mt-2 flex items-center gap-2"><input class="min-w-0 flex-1 accent-primary" type="range"
+                  min="0" max="24" step="1" [formControl]="imagenEditandoControl.get('blur_px')" /><button
+                  mat-icon-button class="image-style-reset" type="button" aria-label="Restablecer difuminado"
+                  matTooltip="Restablecer" (click)="restablecerEstiloImagen('blur_px')"><mat-icon
+                    svgIcon="heroicons_outline:arrow-path"></mat-icon></button></span>
+            </label>
+          </div>
+        </section>
+
+        <section class="image-edit-modal__section rounded-2xl border border-gray-100 bg-white p-4"
+          aria-labelledby="tipografia-section-title">
+          <div class="mb-4 flex items-start gap-3">
+            <span class="image-edit-modal__section-index">05</span>
+            <div>
+              <h4 id="tipografia-section-title" class="text-sm font-bold uppercase tracking-[0.16em] text-gray-800">
+                Tipografía</h4>
+              <p class="mt-1 text-xs text-gray-500">Ajusta color y escala del texto del carrusel.</p>
+            </div>
+          </div>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <label class="block text-sm font-medium text-gray-700">Color del texto
+              <span class="mt-2 flex items-center gap-2"><app-color-picker class="min-w-0 flex-1"
+                  label="Color del texto"
+                  [formControl]="imagenEditandoControl.get('texto_color')"></app-color-picker><button mat-icon-button
+                  class="image-style-reset" type="button" aria-label="Restablecer color del texto"
+                  matTooltip="Restablecer" (click)="restablecerEstiloImagen('texto_color')"><mat-icon
+                    svgIcon="heroicons_outline:arrow-path"></mat-icon></button></span>
+            </label>
+            <label class="block text-sm font-medium text-gray-700">Color de etiqueta
+              <span class="mt-2 flex items-center gap-2"><app-color-picker class="min-w-0 flex-1"
+                  label="Color de etiqueta"
+                  [formControl]="imagenEditandoControl.get('etiqueta_color')"></app-color-picker><button mat-icon-button
+                  class="image-style-reset" type="button" aria-label="Restablecer color de etiqueta"
+                  matTooltip="Restablecer" (click)="restablecerEstiloImagen('etiqueta_color')"><mat-icon
+                    svgIcon="heroicons_outline:arrow-path"></mat-icon></button></span>
+            </label>
+          </div>
+          <div class="mt-5 grid gap-5 sm:grid-cols-2">
+            <label class="block text-sm font-medium text-gray-700">Tamaño del título: {{
+              imagenEditandoControl.get('titulo_font_size')?.value }} px
+              <span class="mt-2 flex items-center gap-2"><input class="min-w-0 flex-1 accent-primary" type="range"
+                  min="24" max="72" step="1" [formControl]="imagenEditandoControl.get('titulo_font_size')" /><button
+                  mat-icon-button class="image-style-reset" type="button" aria-label="Restablecer tamaño del título"
+                  matTooltip="Restablecer" (click)="restablecerEstiloImagen('titulo_font_size')"><mat-icon
+                    svgIcon="heroicons_outline:arrow-path"></mat-icon></button></span>
+            </label>
+            <label class="block text-sm font-medium text-gray-700">Tamaño de descripción: {{
+              imagenEditandoControl.get('descripcion_font_size')?.value }} px
+              <span class="mt-2 flex items-center gap-2"><input class="min-w-0 flex-1 accent-primary" type="range"
+                  min="14" max="32" step="1"
+                  [formControl]="imagenEditandoControl.get('descripcion_font_size')" /><button mat-icon-button
+                  class="image-style-reset" type="button" aria-label="Restablecer tamaño de descripción"
+                  matTooltip="Restablecer" (click)="restablecerEstiloImagen('descripcion_font_size')"><mat-icon
+                    svgIcon="heroicons_outline:arrow-path"></mat-icon></button></span>
+            </label>
+            <label class="block text-sm font-medium text-gray-700">Tamaño de etiqueta: {{
+              imagenEditandoControl.get('etiqueta_font_size')?.value }} px
+              <span class="mt-2 flex items-center gap-2"><input class="min-w-0 flex-1 accent-primary" type="range"
+                  min="8" max="32" step="1" [formControl]="imagenEditandoControl.get('etiqueta_font_size')" /><button
+                  mat-icon-button class="image-style-reset" type="button" aria-label="Restablecer tamaño de etiqueta"
+                  matTooltip="Restablecer" (click)="restablecerEstiloImagen('etiqueta_font_size')"><mat-icon
+                    svgIcon="heroicons_outline:arrow-path"></mat-icon></button></span>
+            </label>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <div
+      class="image-edit-modal__footer flex flex-col gap-3 border-t border-gray-100 px-6 py-5 sm:flex-row sm:items-center sm:justify-end">
+      <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">
+        <!-- <button mat-stroked-button type="button" (click)="abrirVistaPreviaDispositivos()">
+                  <mat-icon class="mr-2 icon-size-5">devices</mat-icon>
+                  Ver en dispositivos
+                </button> -->
+        <button mat-stroked-button type="button" (click)="cerrarEditorImagen()">
+          <mat-icon class="mr-2 icon-size-5" svgIcon="heroicons_outline:x-mark"></mat-icon>
+          Cancelar
+        </button>
+        <button mat-flat-button color="primary" type="button" (click)="guardarImagenEditando()"
+          [disabled]="guardandoImagenes">
+          <mat-icon class="mr-2 icon-size-5" svgIcon="heroicons_outline:check"></mat-icon>
+          {{ guardandoImagenes ? 'Guardando...' : 'Guardar' }}
         </button>
       </div>
     </div>
   </div>
+</div>
+}
+
+@if (mostrarVistaPreviaDispositivos && imagenEditandoControl) {
+<div class="modal-blocker device-preview-modal fixed inset-0 z-[3200] flex items-center justify-center p-4 sm:p-6">
+  <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" @backdropFade></div>
+  <section
+    class="device-preview-modal__dialog relative z-10 flex w-full max-w-[1500px] flex-col overflow-hidden rounded-3xl bg-slate-900 shadow-2xl"
+    role="dialog" aria-modal="true" aria-labelledby="vista-dispositivos-title" @modalScaleFade>
+    <header class="flex items-start justify-between gap-4 border-b border-white/10 px-5 py-4 sm:px-7">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-[0.18em] text-emerald-300">Vista previa responsiva</p>
+        <h3 id="vista-dispositivos-title" class="mt-1 text-xl font-semibold text-white sm:text-2xl">Así se verá el
+          carrusel</h3>
+        <p class="mt-1 text-sm text-slate-300">Los cambios sin guardar se reflejan inmediatamente en cada dispositivo.
+        </p>
+      </div>
+      <button mat-icon-button type="button" class="!text-white" aria-label="Cerrar vista previa de dispositivos"
+        (click)="cerrarVistaPreviaDispositivos()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </header>
+
+    <div class="device-preview-modal__devices min-h-0 flex-1 overflow-auto p-5 sm:p-7">
+      @for (dispositivo of dispositivosPrevisualizacion; track dispositivo.clave) {
+      <article class="device-preview-card" [class]="'device-preview-card device-preview-card--' + dispositivo.clave">
+        <div class="mb-3 flex items-center justify-between gap-3 px-1">
+          <span class="flex items-center gap-2 text-sm font-semibold text-white">
+            <mat-icon class="icon-size-4 text-emerald-300">{{ dispositivo.icono }}</mat-icon>
+            {{ dispositivo.nombre }}
+          </span>
+          <span class="text-xs font-medium text-slate-400">{{ dispositivo.medida }}</span>
+        </div>
+        <div class="device-preview-card__frame">
+          <div class="device-preview-card__chrome" aria-hidden="true">
+            <span></span><span></span><span></span>
+            <i></i>
+          </div>
+          <div class="device-preview-card__page">
+            <div class="device-preview-card__header">
+              <strong>trotapie</strong>
+              <span></span>
+            </div>
+            <div class="device-preview-card__content">
+              <div class="device-preview-card__actions"><i></i><i></i></div>
+              <h4>{{ destinoNombre }}</h4>
+              <div class="device-preview-card__carousel relative overflow-hidden rounded-lg">
+                <img class="h-full w-full object-cover" [src]="imagenEditandoControl.get('imagen_url')?.value"
+                  [alt]="imagenEditandoTitulo"
+                  [style.filter]="imagenEditandoControl.get('efecto_destino')?.value !== 'texto' ? 'blur(' + imagenEditandoControl.get('blur_px')?.value + 'px)' : null"
+                  [style.transform]="imagenEditandoControl.get('efecto_destino')?.value !== 'texto' && imagenEditandoControl.get('blur_px')?.value ? 'scale(1.05)' : null" />
+                @if (imagenEditandoControl.get('efecto_destino')?.value !== 'texto') {
+                <div class="absolute inset-0"
+                  [style.background-color]="colorConOpacidad(imagenEditandoControl.get('overlay_color')?.value, imagenEditandoControl.get('overlay_opacidad')?.value)">
+                </div>
+                }
+                @if (etiquetaEstaPosicionadaPreview()) {
+                <div class="absolute z-20" [ngStyle]="getOverlayPreviewStyle()">
+                  <span class="device-preview-card__label"
+                    [style.background-color]="imagenEditandoControl.get('etiqueta_color')?.value">{{
+                    imagenEditandoControl.get('etiqueta_texto')?.value || destinoNombre }}</span>
+                </div>
+                }
+                <div class="absolute inset-0 flex flex-col justify-end p-[7%]">
+                  <div class="relative max-w-[78%]" [style.color]="imagenEditandoControl.get('texto_color')?.value">
+                    @if (!etiquetaEstaPosicionadaPreview()) {
+                    <span class="device-preview-card__label mb-2"
+                      [style.background-color]="imagenEditandoControl.get('etiqueta_color')?.value">{{
+                      imagenEditandoControl.get('etiqueta_texto')?.value || destinoNombre }}</span>
+                    }
+                    <p class="device-preview-card__title">{{ imagenEditandoControl.get(['traducciones', 'es',
+                      'nombre'])?.value || 'Título de la imagen' }}</p>
+                    <p class="device-preview-card__description">{{ imagenEditandoControl.get(['traducciones', 'es',
+                      'descripcion'])?.value || 'Descripción de la imagen' }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+      }
+    </div>
+  </section>
+</div>
+}
+
+@if (mostrarModalConfirmarEliminarCarpeta && carpetaAEliminar) {
+<div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center px-4">
+  <div class="absolute inset-0 bg-black/50" @backdropFade></div>
+  <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" @modalScaleFade>
+    <h3 class="text-xl font-semibold text-gray-900">Confirmar eliminacion</h3>
+    <p class="mt-2 text-sm text-gray-600">
+      Seguro que quieres eliminar la carpeta
+      <span class="font-semibold text-gray-900">{{ carpetaAEliminar.name }}</span>?
+    </p>
+
+    @if (carpetaAEliminar.images.length) {
+    @if (modalEliminarCarpetaPaso === 'inicio') {
+    <p class="mt-2 text-sm text-gray-600">
+      Esta carpeta tiene {{ carpetaAEliminar.images.length }} imagen{{ carpetaAEliminar.images.length === 1 ? '' : 'es'
+      }}.
+      Todas esas imagenes se moveran solo desde esta carpeta.
+    </p>
+
+    <div class="mt-6 grid gap-2">
+      <button mat-flat-button color="warn" type="button" (click)="ejecutarAccionEliminarCarpeta('delete_images')">
+        Eliminar imagenes y carpeta
+      </button>
+      @if (carpetasParaMoverEliminar.length) {
+      <button mat-stroked-button type="button" (click)="mostrarPasoMoverCarpeta()">
+        Mover solo estas imagenes a otra carpeta
+      </button>
+      }
+      <button mat-stroked-button type="button" (click)="mostrarPasoCrearCarpeta()">
+        Crear nueva carpeta y mover solo estas imagenes
+      </button>
+      <button mat-stroked-button type="button" (click)="cerrarModalConfirmarEliminarCarpeta()">
+        Cancelar
+      </button>
+    </div>
+    } @else if (modalEliminarCarpetaPaso === 'mover') {
+    <p class="mt-2 text-sm text-gray-600">
+      Selecciona una carpeta destino para mover solo las imagenes de esta carpeta antes de borrar la carpeta actual.
+    </p>
+
+    <mat-form-field class="mt-4 w-full">
+      <mat-label>Carpeta destino</mat-label>
+      <mat-select [(value)]="carpetaDestinoEliminarId">
+        @for (carpeta of carpetasParaMoverEliminar; track carpeta.id) {
+        <mat-option [value]="carpeta.id">{{ carpeta.nombre }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <div class="mt-6 flex justify-end gap-2">
+      <button mat-stroked-button type="button" (click)="volverPasoEliminarCarpeta()">
+        Volver
+      </button>
+      <button mat-stroked-button type="button" (click)="cerrarModalConfirmarEliminarCarpeta()">
+        Cancelar
+      </button>
+      <button mat-flat-button color="warn" type="button" (click)="ejecutarAccionEliminarCarpeta('move_existing')"
+        [disabled]="procesandoEliminarCarpeta">
+        @if (procesandoEliminarCarpeta) {
+        Moviendo...
+        } @else {
+        Mover imagenes y eliminar carpeta
+        }
+      </button>
+    </div>
+    } @else if (modalEliminarCarpetaPaso === 'crear') {
+    <p class="mt-2 text-sm text-gray-600">
+      Escribe el nombre de la nueva carpeta para mover solo las imagenes de esta carpeta antes de borrarla.
+    </p>
+
+    <mat-form-field class="mt-4 w-full">
+      <mat-label>Nueva carpeta</mat-label>
+      <input matInput [value]="nuevaCarpetaEliminarNombre"
+        (input)="nuevaCarpetaEliminarNombre = $any($event.target).value" />
+    </mat-form-field>
+
+    <div class="mt-6 flex justify-end gap-2">
+      <button mat-stroked-button type="button" (click)="volverPasoEliminarCarpeta()">
+        Volver
+      </button>
+      <button mat-stroked-button type="button" (click)="cerrarModalConfirmarEliminarCarpeta()">
+        Cancelar
+      </button>
+      <button mat-flat-button color="warn" type="button" (click)="ejecutarAccionEliminarCarpeta('create_and_move')"
+        [disabled]="procesandoEliminarCarpeta">
+        @if (procesandoEliminarCarpeta) {
+        Creando...
+        } @else {
+        Crear carpeta y mover
+        }
+      </button>
+    </div>
+    }
+    } @else {
+    <p class="mt-2 text-sm text-gray-600">
+      Esta carpeta esta vacia. Si la eliminas, desaparecera definitivamente.
+    </p>
+
+    <div class="mt-6 flex justify-end gap-2">
+      <button mat-stroked-button type="button" (click)="cerrarModalConfirmarEliminarCarpeta()">
+        Cancelar
+      </button>
+      <button mat-flat-button color="warn" type="button" (click)="ejecutarAccionEliminarCarpeta('delete_empty')"
+        [disabled]="procesandoEliminarCarpeta">
+        @if (procesandoEliminarCarpeta) {
+        Eliminando...
+        } @else {
+        Eliminar
+        }
+      </button>
+    </div>
+    }
+  </div>
+</div>
+}
+
+@if (mostrarModalTipoAgregarImagen) {
+<div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center px-4">
+  <div class="absolute inset-0 bg-black/50" @backdropFade></div>
+  <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" @modalScaleFade>
+    <h3 class="text-xl font-semibold text-gray-900">Agregar imagen</h3>
+    <p class="mt-2 text-sm text-gray-600">
+      Quieres agregar la imagen manualmente o cargar varias desde una carpeta de Drive?
+    </p>
+
+    <div class="mt-6 grid gap-2">
+      <button mat-flat-button color="primary" type="button" (click)="seleccionarAgregarImagenManual()">
+        Si, agregar manualmente
+      </button>
+      <button mat-stroked-button type="button" (click)="seleccionarAgregarImagenDesdeDrive()">
+        No, cargar desde Drive
+      </button>
+      <button mat-stroked-button type="button" (click)="cerrarModalTipoAgregarImagen()">
+        Cancelar
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+@if (mostrarModalCargaDriveImagenes) {
+<div class="modal-blocker drive-import-modal fixed inset-0 z-[3000] flex items-center justify-center px-4 py-4">
+  <div class="absolute inset-0 bg-black/50" @backdropFade></div>
+  <div class="drive-import-modal__dialog relative z-10 w-full max-w-3xl rounded-2xl bg-white p-6 shadow-2xl"
+    @modalScaleFade>
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <h3 class="text-xl font-semibold text-gray-900">Cargar imagenes desde Drive</h3>
+        <p class="mt-2 text-sm text-gray-600">
+          Pega la URL o el ID de una carpeta de Drive, consulta sus carpetas y elige cuales quieres preparar para
+          guardar.
+        </p>
+      </div>
+
+      <button mat-icon-button type="button" aria-label="Cerrar modal de Drive"
+        (click)="cerrarModalCargaDriveImagenes()">
+        <mat-icon [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
+      </button>
+    </div>
+
+    <div class="drive-import-modal__content mt-5 grid gap-4">
+      <mat-form-field class="w-full">
+        <mat-label>URL o ID de carpeta Drive</mat-label>
+        <input matInput [value]="driveActividadUrl" (input)="driveActividadUrl = $any($event.target).value"
+          placeholder="https://drive.google.com/drive/folders/ID_CARPETA" />
+        <mat-hint>Puedes pegar la URL completa o solo el ID.</mat-hint>
+      </mat-form-field>
+
+      <div class="flex justify-end">
+        <button mat-raised-button color="accent" type="button" (click)="consultarCarpetasDriveActividad()"
+          [disabled]="consultandoDriveActividad || !driveActividadUrl?.trim()">
+          <mat-icon class="mr-2 icon-size-5">search</mat-icon>
+          @if (consultandoDriveActividad) {
+          Consultando...
+          } @else {
+          Consultar carpetas
+          }
+        </button>
+      </div>
+
+      @if (hayCarpetasDriveActividad) {
+      <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p class="text-sm font-semibold text-gray-900">Contenido encontrado</p>
+            <p class="text-sm text-gray-500">
+              Elige carpetas completas o imagenes individuales. Las carpetas nuevas se prepararan con el mismo nombre.
+            </p>
+          </div>
+
+          <div class="flex flex-wrap gap-2">
+            <button mat-stroked-button type="button" (click)="toggleSeleccionTodasCarpetasDrive(true)">
+              Cargar todas
+            </button>
+            <button mat-stroked-button type="button" (click)="toggleSeleccionTodasCarpetasDrive(false)">
+              Quitar seleccion
+            </button>
+          </div>
+        </div>
+
+        @if (carpetasDriveActividadConNombre.length) {
+        <div class="drive-import-modal__folders mt-4 grid gap-3 sm:grid-cols-2">
+          @for (carpeta of carpetasDriveActividadConNombre; track trackByDriveFolder($index, carpeta)) {
+          <div class="drive-import-modal__folder-card rounded-2xl border border-gray-200 bg-white p-4">
+            <div class="flex items-start gap-3">
+              <input type="checkbox" class="mt-1 h-4 w-4 rounded border-gray-300" [checked]="carpeta.seleccionado"
+                (change)="carpeta.seleccionado = $any($event.target).checked" />
+
+              <div class="min-w-0 flex-1">
+                <p class="font-semibold text-gray-900">{{ carpeta.nombre || 'Imagenes sin carpeta' }}</p>
+                <p class="text-sm text-gray-500">
+                  {{ carpeta.imagenes.length }} imagen{{ carpeta.imagenes.length === 1 ? '' : 'es' }}
+                </p>
+              </div>
+            </div>
+
+            @if (carpeta.requiereNombreCarpeta) {
+            <mat-form-field class="mt-3 w-full">
+              <mat-label>Usar carpeta existente</mat-label>
+              <mat-select [value]="carpeta.carpetaDestinoId"
+                (selectionChange)="actualizarCarpetaDestinoDrive(carpeta.id, $event.value)">
+                @for (destino of carpetasParaSelector; track destino.id) {
+                <mat-option [value]="destino.id">
+                  {{ destino.nombre }}
+                </mat-option>
+                }
+              </mat-select>
+              <mat-hint>Selecciona una carpeta ya creada o escribe un nombre nuevo abajo.</mat-hint>
+            </mat-form-field>
+            <mat-form-field class="mt-3 w-full">
+              <mat-label>O crea una carpeta nueva</mat-label>
+              <input matInput [value]="carpeta.carpetaDestinoNombre"
+                (input)="actualizarNombreCarpetaDrive(carpeta.id, $any($event.target).value)"
+                placeholder="Ej. Galeria principal" />
+              <mat-hint>Al escribir aquí se creará una carpeta nueva con ese nombre.</mat-hint>
+            </mat-form-field>
+            } @else {
+            <mat-form-field class="mt-3 w-full">
+              <mat-label>Carpeta</mat-label>
+              <mat-select [value]="carpeta.carpetaDestinoId"
+                (selectionChange)="actualizarCarpetaDestinoDrive(carpeta.id, $event.value)">
+                @for (destino of carpetasParaSelector; track destino.id) {
+                <mat-option [value]="destino.id">
+                  {{ destino.nombre }}
+                </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            }
+          </div>
+          }
+        </div>
+        }
+
+        @if (imagenesRaizDriveActividad; as imagenesRaiz) {
+        <section class="drive-import-modal__root-images mt-4" aria-labelledby="drive-root-images-title">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p id="drive-root-images-title" class="font-semibold text-gray-900">Imagenes de esta carpeta</p>
+              <p class="text-sm text-gray-500">Selecciona solo las que quieras cargar.</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-sm font-medium text-gray-600">
+                {{ imagenesRaiz.imagenesSeleccionadas.length }} de {{ imagenesRaiz.imagenes.length }}
+              </span>
+              <button mat-stroked-button type="button" (click)="toggleSeleccionTodasImagenesRaizDrive()">
+                {{ todasLasImagenesRaizDriveSeleccionadas ? 'Quitar seleccion' : 'Seleccionar todas' }}
+              </button>
+            </div>
+          </div>
+
+          <div class="drive-import-modal__image-grid mt-3">
+            @for (imagen of imagenesRaiz.imagenes; track trackByDriveImage($index, imagen)) {
+            <label class="drive-import-modal__image-card"
+              [class.drive-import-modal__image-card--selected]="imagenesRaiz.imagenesSeleccionadas.includes(imagen.publicImageUrl)">
+              <input type="checkbox" class="sr-only"
+                [checked]="imagenesRaiz.imagenesSeleccionadas.includes(imagen.publicImageUrl)"
+                (change)="actualizarSeleccionImagenRaizDrive(imagen.publicImageUrl, $any($event.target).checked)" />
+              <img [src]="imagen.thumbnailUrl || imagen.publicImageUrl" [alt]="imagen.nombre || 'Imagen de Drive'" />
+              <span class="drive-import-modal__image-check" aria-hidden="true">
+                <mat-icon>check</mat-icon>
+              </span>
+              <span class="drive-import-modal__image-name">{{ imagen.nombre || 'Imagen sin nombre' }}</span>
+            </label>
+            }
+          </div>
+
+          <div class="mt-4 grid gap-3 sm:grid-cols-2">
+            <mat-form-field class="w-full">
+              <mat-label>Usar carpeta existente</mat-label>
+              <mat-select [value]="imagenesRaiz.carpetaDestinoId"
+                (selectionChange)="actualizarCarpetaDestinoDrive(imagenesRaiz.id, $event.value)">
+                @for (destino of carpetasParaSelector; track destino.id) {
+                <mat-option [value]="destino.id">{{ destino.nombre }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field class="w-full">
+              <mat-label>O crea una carpeta nueva</mat-label>
+              <input matInput [value]="imagenesRaiz.carpetaDestinoNombre"
+                (input)="actualizarNombreCarpetaDrive(imagenesRaiz.id, $any($event.target).value)"
+                placeholder="Ej. Galeria principal" />
+            </mat-form-field>
+          </div>
+        </section>
+        }
+      </div>
+      }
+    </div>
+
+    <div class="drive-import-modal__actions mt-6 flex justify-end gap-2">
+      <button mat-stroked-button type="button" (click)="cerrarModalCargaDriveImagenes()">
+        Cancelar
+      </button>
+      <button mat-flat-button color="primary" type="button" (click)="cargarImagenesSeleccionadasDesdeDrive()"
+        [disabled]="!totalImagenesDriveActividadSeleccionadas || aplicandoCargaDriveActividad || consultandoDriveActividad">
+        @if (aplicandoCargaDriveActividad) {
+        Preparando imagenes...
+        } @else {
+        Cargar seleccionadas
+        }
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+@if (mostrarModalConfirmarMoverImagen && imagenAReubicar) {
+<div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center px-4">
+  <div class="absolute inset-0 bg-black/50" @backdropFade></div>
+  <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" @modalScaleFade>
+    <h3 class="text-xl font-semibold text-gray-900">Mover imagen</h3>
+    <p class="mt-2 text-sm text-gray-600">
+      La imagen quedara preparada para moverse a
+      <span class="font-semibold text-gray-900">{{ imagenAReubicar.carpeta_destino_nombre }}</span>.
+    </p>
+
+    <div class="mt-6 flex justify-end gap-2">
+      <button mat-stroked-button type="button" (click)="cancelarMoverImagenPendiente()">
+        Cancelar
+      </button>
+      <button mat-flat-button color="primary" type="button" (click)="aceptarMoverImagenPendiente()"
+        [disabled]="guardandoImagenes">
+        @if (guardandoImagenes) {
+        Moviendo...
+        } @else {
+        Mover ahora
+        }
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+
+@if (mostrarModalNuevaActividad) {
+<div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
+  <div role="dialog" aria-modal="true" aria-labelledby="crear-actividad-title"
+    class="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900">
+    <h3 id="crear-actividad-title" class="text-xl font-semibold text-gray-900 dark:text-white">Crear actividad</h3>
+
+    <form [formGroup]="formNuevaActividad" class="mt-4">
+      <app-tp-select-search class="w-full" label="Tipo de actividad" placeholder="Selecciona un tipo"
+        searchPlaceholder="Buscar tipo de actividad" emptyMessage="Todos los tipos de actividad ya están configurados."
+        [options]="opcionesNuevaActividad" [required]="true" [disabled]="guardandoNuevaActividad"
+        formControlName="catalogo_atraccion_id"></app-tp-select-search>
+      @if (formNuevaActividad.get('catalogo_atraccion_id')?.invalid &&
+      formNuevaActividad.get('catalogo_atraccion_id')?.touched) {
+      <p class="mt-2 text-sm text-red-600">Selecciona un tipo de actividad.</p>
+      }
+    </form>
+
+    <div class="mt-4 flex justify-end gap-2 border-t border-gray-200 pt-4 dark:border-gray-700">
+      <button mat-stroked-button type="button" [disabled]="guardandoNuevaActividad"
+        (click)="cerrarModalNuevaActividad()">Cancelar</button>
+      <button mat-flat-button color="primary" type="button" [disabled]="guardandoNuevaActividad"
+        (click)="guardarNuevaActividad()">
+        {{ guardandoNuevaActividad ? 'Agregando...' : 'Agregar' }}
+      </button>
+    </div>
+  </div>
+</div>
 }
 
 @if (mostrarConfirmacionCambioActividad && actividadDestinoPendiente) {
-  <div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center px-4">
-    <div class="absolute inset-0 bg-black/50" @backdropFade></div>
-    <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900" @modalScaleFade role="dialog" aria-modal="true" aria-labelledby="cambiar-actividad-title">
-      <p class="text-xs font-semibold uppercase tracking-[0.14em] text-amber-600">Cambios sin guardar</p>
-      <h3 id="cambiar-actividad-title" class="mt-1 text-xl font-semibold text-gray-900 dark:text-white">¿Cambiar de atracción?</h3>
-      <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Los cambios de contenido y tipo de esta atracción se descartarán. Irás a {{ actividadDestinoPendiente.nombre }}.</p>
-      <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        <button mat-stroked-button type="button" (click)="cancelarCambioActividad()">Seguir editando</button>
-        <button mat-flat-button color="warn" type="button" (click)="descartarYCambiarActividad()">Descartar y cambiar</button>
-      </div>
+<div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center px-4">
+  <div class="absolute inset-0 bg-black/50" @backdropFade></div>
+  <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900" @modalScaleFade
+    role="dialog" aria-modal="true" aria-labelledby="cambiar-actividad-title">
+    <p class="text-xs font-semibold uppercase tracking-[0.14em] text-amber-600">Cambios sin guardar</p>
+    <h3 id="cambiar-actividad-title" class="mt-1 text-xl font-semibold text-gray-900 dark:text-white">¿Cambiar de
+      atracción?</h3>
+    <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Los cambios de contenido y tipo de esta atracción se
+      descartarán. Irás a {{ actividadDestinoPendiente.nombre }}.</p>
+    <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+      <button mat-stroked-button type="button" (click)="cancelarCambioActividad()">Seguir editando</button>
+      <button mat-flat-button color="warn" type="button" (click)="descartarYCambiarActividad()">Descartar y
+        cambiar</button>
     </div>
   </div>
+</div>
 }

@@ -66,6 +66,22 @@ export class ActividadesService {
     return destino === 'texto' || destino === 'ambos' ? destino : 'fondo';
   }
 
+  private normalizarPosicionOverlay(valor: string | null | undefined): string {
+    const posiciones = new Set([
+      'top-left', 'top-center', 'top-right',
+      'center-left', 'center', 'center-right',
+      'bottom-left', 'bottom-center', 'bottom-right',
+      'custom'
+    ]);
+    const posicion = String(valor ?? '').trim().toLowerCase();
+    return posiciones.has(posicion) ? posicion : 'bottom-left';
+  }
+
+  private normalizarCoordenadaOverlay(valor: number | string | null | undefined): number | null {
+    const coordenada = this.parseNumber(valor);
+    return coordenada === null ? null : Math.min(100, Math.max(0, coordenada));
+  }
+
   private extraerIdCarpetaDrive(value: string): string {
     const limpio = String(value ?? '').trim();
     if (!limpio) {
@@ -425,6 +441,10 @@ export class ActividadesService {
        efecto_destino?: string;
        etiqueta_font_size?: number;
        etiqueta_color?: string;
+       etiqueta_texto?: string | null;
+       overlay_posicion?: string;
+       overlay_x?: number | null;
+       overlay_y?: number | null;
       orden?: number | null;
       vigencia_desde?: string | null;
        vigencia_hasta?: string | null;
@@ -462,6 +482,10 @@ export class ActividadesService {
         efecto_destino: this.normalizarDestinoEfecto(imagen?.efecto_destino),
         etiqueta_font_size: this.normalizarNumeroEnRango(imagen?.etiqueta_font_size, 8, 32, 12),
         etiqueta_color: this.normalizarColorHex(imagen?.etiqueta_color, '#F9B44B'),
+        etiqueta_texto: String(imagen?.etiqueta_texto ?? '').trim() || null,
+        overlay_posicion: this.normalizarPosicionOverlay(imagen?.overlay_posicion),
+        overlay_x: this.normalizarCoordenadaOverlay(imagen?.overlay_x),
+        overlay_y: this.normalizarCoordenadaOverlay(imagen?.overlay_y),
         orden: Number.isFinite(Number(imagen?.orden)) ? Number(imagen?.orden) : index + 1,
         vigencia_desde: this.normalizarFecha(imagen?.vigencia_desde),
         vigencia_hasta: this.normalizarFecha(imagen?.vigencia_hasta),
@@ -545,6 +569,10 @@ export class ActividadesService {
             efecto_destino: imagen.efecto_destino,
             etiqueta_font_size: imagen.etiqueta_font_size,
             etiqueta_color: imagen.etiqueta_color,
+            etiqueta_texto: imagen.etiqueta_texto,
+            overlay_posicion: imagen.overlay_posicion,
+            overlay_x: imagen.overlay_x,
+            overlay_y: imagen.overlay_y,
             orden: imagen.orden,
             vigencia_desde: imagen.vigencia_desde,
             vigencia_hasta: imagen.vigencia_hasta
@@ -581,6 +609,10 @@ export class ActividadesService {
           efecto_destino: imagen.efecto_destino,
           etiqueta_font_size: imagen.etiqueta_font_size,
           etiqueta_color: imagen.etiqueta_color,
+          etiqueta_texto: imagen.etiqueta_texto,
+          overlay_posicion: imagen.overlay_posicion,
+          overlay_x: imagen.overlay_x,
+          overlay_y: imagen.overlay_y,
           orden: imagen.orden,
           vigencia_desde: imagen.vigencia_desde,
           vigencia_hasta: imagen.vigencia_hasta
