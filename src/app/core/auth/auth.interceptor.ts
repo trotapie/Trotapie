@@ -28,6 +28,14 @@ export const authInterceptor = (
         switchMap(({ data }) => {
             const token = data?.session?.access_token ?? authService.accessToken;
 
+            if (!token && authService.hasPreviousSession()) {
+                authService.showMissingTokenDialog();
+                return throwError(() => new HttpErrorResponse({
+                    status: 401,
+                    statusText: 'Sesion no disponible',
+                }));
+            }
+
             let newReq = req.clone();
             if (token) {
                 newReq = req.clone({
@@ -38,6 +46,11 @@ export const authInterceptor = (
             return next(newReq).pipe(
                 catchError((error) => {
                     if (error instanceof HttpErrorResponse && error.status === 401) {
+                        if (authService.hasPreviousSession()) {
+                            authService.showMissingTokenDialog();
+                            return throwError(() => error);
+                        }
+
                         return authService.signOut().pipe(
                             timeout(3_000),
                             catchError(() => of(true)),

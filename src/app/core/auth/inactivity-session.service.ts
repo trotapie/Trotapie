@@ -13,6 +13,7 @@ export class InactivitySessionService {
     private readonly _confirmationService = inject(FuseConfirmationService);
     private _timerId: ReturnType<typeof setTimeout> | null = null;
     private _monitoring = false;
+    private _sessionEndDialogOpen = false;
 
     initialize(): void {
         for (const eventName of ['pointerdown', 'keydown', 'touchstart', 'scroll']) {
@@ -53,16 +54,37 @@ export class InactivitySessionService {
             return;
         }
 
+        this._showSessionEndDialog(
+            'Tu sesion ha expirado',
+            'Por seguridad, debes iniciar sesion nuevamente.',
+            'heroicons_outline:clock'
+        );
+    }
+
+    showMissingTokenDialog(): void {
+        this._showSessionEndDialog(
+            'Tu sesion ya no esta disponible',
+            'Debes iniciar sesion nuevamente.',
+            'heroicons_outline:exclamation-triangle'
+        );
+    }
+
+    private _showSessionEndDialog(title: string, message: string, iconName: string): void {
+        if (this._sessionEndDialogOpen) {
+            return;
+        }
+
         this.stop();
+        this._sessionEndDialogOpen = true;
         const authService = this._injector.get(AuthService);
         const router = this._injector.get(Router);
 
         const dialogRef = this._confirmationService.open({
-            title: 'Tu sesion ha expirado',
-            message: 'Por seguridad, debes iniciar sesion nuevamente.',
+            title,
+            message,
             icon: {
                 show: true,
-                name: 'heroicons_outline:clock',
+                name: iconName,
                 color: 'warning',
             },
             actions: {
@@ -80,6 +102,7 @@ export class InactivitySessionService {
 
         dialogRef.afterClosed().subscribe(() => {
             authService.signOut().subscribe(() => {
+                this._sessionEndDialogOpen = false;
                 void router.navigate(['/sign-in'], { replaceUrl: true });
             });
         });

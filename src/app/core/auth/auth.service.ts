@@ -6,6 +6,7 @@ import { InactivitySessionService } from './inactivity-session.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+  private readonly _sessionMarkerKey = 'trotapie-auth-session';
   private _authenticated = false;
   private _role = '';
   private _roles = new Set<string>();
@@ -67,6 +68,34 @@ export class AuthService {
 
   hasAnyPermission(permissions: string[]): boolean {
     return this.isAdmin || permissions.some((permission) => this._permissions.has(permission));
+  }
+
+  hasPreviousSession(): boolean {
+    try {
+      return localStorage.getItem(this._sessionMarkerKey) === 'true';
+    } catch {
+      return false;
+    }
+  }
+
+  showMissingTokenDialog(): void {
+    this._inactivitySession.showMissingTokenDialog();
+  }
+
+  private _rememberSession(): void {
+    try {
+      localStorage.setItem(this._sessionMarkerKey, 'true');
+    } catch {
+      // Authentication remains functional when browser storage is unavailable.
+    }
+  }
+
+  private _forgetSession(): void {
+    try {
+      localStorage.removeItem(this._sessionMarkerKey);
+    } catch {
+      // Authentication remains functional when browser storage is unavailable.
+    }
   }
 
   private _clearAccessState(): void {
@@ -227,6 +256,7 @@ export class AuthService {
             };
 
             this._userService.user = enrichedUser as any;
+            this._rememberSession();
             this._inactivitySession.start();
 
             return { user: enrichedUser, session: data.session };
@@ -236,6 +266,7 @@ export class AuthService {
       catchError((err) => {
         return from(this._supabase.signOut()).pipe(
           switchMap(() => {
+            this._forgetSession();
             this._authenticated = false;
             this._accessToken = '';
             this._clearAccessState();
@@ -253,6 +284,7 @@ export class AuthService {
   signOut(): Observable<any> {
     return from(this._supabase.signOut()).pipe(
       map(() => {
+        this._forgetSession();
         this._accessToken = '';
         this._authenticated = false;
         this._clearAccessState();
@@ -260,6 +292,7 @@ export class AuthService {
         return true;
       }),
       catchError(() => {
+        this._forgetSession();
         this._accessToken = '';
         this._authenticated = false;
         this._clearAccessState();
@@ -270,6 +303,7 @@ export class AuthService {
   }
 
   clearSessionForPublicRoute(): void {
+    this._forgetSession();
     this._accessToken = '';
     this._authenticated = false;
     this._clearAccessState();
@@ -333,6 +367,7 @@ export class AuthService {
 
         this.accessToken = session.access_token; // opcional, por compatibilidad
         this._authenticated = true;
+        this._rememberSession();
 
         const u = session.user;
         const baseUser = {

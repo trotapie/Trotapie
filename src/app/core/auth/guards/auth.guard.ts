@@ -14,6 +14,11 @@ export const AuthGuard: CanActivateFn | CanActivateChildFn = (route, state) => {
             switchMap((authenticated) => {
                 // If the user is not authenticated...
                 if (!authenticated) {
+                    if (authService.hasPreviousSession()) {
+                        authService.showMissingTokenDialog();
+                        return of(false);
+                    }
+
                     // Redirect to the sign-in page with a redirectUrl param
                     const redirectURL =
                         state.url === '/sign-out'
