@@ -1,173 +1,372 @@
-<div class="flex min-w-0 flex-auto flex-col">
-    <div class="sticky top-0 z-[100] mx-6 mt-2 rounded-xl border border-transparent bg-transparent px-2 py-2 backdrop-blur-md transition-all duration-300 md:px-4">
-        <div class="w-full md:flex md:items-center md:justify-between">
+<div class="roles-page flex min-w-0 flex-auto flex-col" [class.roles-page--with-changes]="hayCambios">
+    <!-- Header Sticky -->
+    <header class="roles-header sticky top-0 z-[100] mx-3 mt-2 rounded-2xl px-3 py-3 backdrop-blur-md transition-all duration-300 sm:mx-6 md:px-5">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-                <div class="text-3xl font-semibold leading-tight text-gray-900">
-                    Roles
+                <div class="flex items-center gap-2">
+                    <span class="roles-eyebrow">Configuración</span>
+                    <span class="text-xs text-gray-400">/</span>
+                    <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">Accesos & Seguridad</span>
                 </div>
-                <p class="mt-1 text-sm text-gray-500">
-                    Agrupa permisos por rol para definir que puede ver y operar cada tipo de usuario.
+                <h1 class="mt-0.5 text-2xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-3xl">
+                    Gestión de Roles y Permisos
+                </h1>
+                <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400 sm:text-sm">
+                    Define qué puede consultar, crear y operar cada tipo de usuario en la plataforma.
                 </p>
             </div>
-
-            <div class="my-2 flex gap-2 md:my-0">
-                <button mat-stroked-button [routerLink]="['/admin/configuracion']">
-                    <mat-icon class="mr-2 icon-size-5">arrow_back</mat-icon>
+            <div class="flex flex-wrap items-center gap-2">
+                <button mat-stroked-button [routerLink]="['/admin/configuracion']" class="roles-action-btn">
+                    <mat-icon class="mr-1.5 icon-size-4">arrow_back</mat-icon>
                     Regresar
                 </button>
-                <button mat-raised-button color="primary" class="text-white" (click)="abrirModalNuevo()">
-                    <mat-icon class="mr-2 icon-size-5 text-white">add</mat-icon>
+                <button mat-flat-button color="primary" class="roles-action-btn roles-action-btn--primary" (click)="abrirModalNuevo()">
+                    <mat-icon class="mr-1.5 icon-size-4">add</mat-icon>
                     Nuevo rol
                 </button>
             </div>
         </div>
-    </div>
+    </header>
 
-    <section class="m-3">
-        <article class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <h2 class="text-lg font-semibold text-gray-900">Concentrado</h2>
-                <mat-form-field appearance="outline" class="w-full sm:w-80">
-                    <mat-label>Buscar rol</mat-label>
-                    <input matInput (input)="aplicarFiltro($event)" placeholder="ID, clave o nombre" />
-                </mat-form-field>
+    <main class="m-3 space-y-4 sm:m-6">
+        <!-- Quick Stats Strip -->
+        <section class="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4" @fadeSlideIn>
+            <div class="roles-stat-card">
+                <div class="roles-stat-card__icon roles-stat-card__icon--primary">
+                    <mat-icon svgIcon="heroicons_outline:shield-check"></mat-icon>
+                </div>
+                <div>
+                    <span class="roles-stat-card__label">Roles Activos</span>
+                    <div class="roles-stat-card__value">
+                        {{ roles.length }}
+                        <span class="roles-stat-card__pill">1 protegido</span>
+                    </div>
+                </div>
             </div>
 
-            @if (error && !modalAbierto && !modalEliminarAbierto) {
-            <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                {{ error }}
+            <div class="roles-stat-card">
+                <div class="roles-stat-card__icon roles-stat-card__icon--indigo">
+                    <mat-icon svgIcon="heroicons_outline:key"></mat-icon>
+                </div>
+                <div>
+                    <span class="roles-stat-card__label">Total Permisos</span>
+                    <div class="roles-stat-card__value">{{ totalPermisos }}</div>
+                </div>
+            </div>
+
+            <div class="roles-stat-card">
+                <div class="roles-stat-card__icon roles-stat-card__icon--emerald">
+                    <mat-icon svgIcon="heroicons_outline:squares-2x2"></mat-icon>
+                </div>
+                <div>
+                    <span class="roles-stat-card__label">Módulos</span>
+                    <div class="roles-stat-card__value">{{ modulosDisponibles.length }}</div>
+                </div>
+            </div>
+
+            <div class="roles-stat-card">
+                <div class="roles-stat-card__icon" [class.roles-stat-card__icon--amber]="hayCambios" [class.roles-stat-card__icon--gray]="!hayCambios">
+                    <mat-icon [svgIcon]="hayCambios ? 'heroicons_outline:arrow-path' : 'heroicons_outline:check-circle'"></mat-icon>
+                </div>
+                <div>
+                    <span class="roles-stat-card__label">Estado</span>
+                    <div class="roles-stat-card__value text-sm sm:text-base">
+                        @if (hayCambios) {
+                        <span class="text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1.5">
+                            <span class="roles-pulse-dot"></span>
+                            {{ rolesConCambios.size }} con cambios
+                        </span>
+                        } @else {
+                        <span class="text-emerald-600 dark:text-emerald-400 font-medium">Al día</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Roles Matrix Panel -->
+        <section class="roles-panel">
+            <!-- Toolbar & Filter Area -->
+            <div class="roles-panel__toolbar">
+                <div class="roles-panel__toolbar-info">
+                    <h2>Matriz de Accesos</h2>
+                    <p>Marca las casillas para conceder o revocar permisos. Usa los botones de módulo para asignar en lote.</p>
+                </div>
+
+                <div class="roles-panel__toolbar-search">
+                    <app-tp-search-input
+                        [placeholder]="'Buscar por módulo, clave o descripción...'"
+                        [searchAriaLabel]="'Buscar permisos'"
+                        [searchDelay]="200"
+                        (search)="onSearch($event)">
+                    </app-tp-search-input>
+                </div>
+            </div>
+
+            <!-- Module Filter Pills Bar -->
+            <div class="roles-modules-bar">
+                <div class="roles-modules-bar__scroll">
+                    <button
+                        type="button"
+                        class="roles-module-pill"
+                        [class.roles-module-pill--active]="moduloSeleccionado === 'todos'"
+                        (click)="seleccionarModulo('todos')">
+                        <span>Todos los módulos</span>
+                        <span class="roles-module-pill__badge">{{ totalPermisos }}</span>
+                    </button>
+
+                    @for (mod of modulosDisponibles; track mod.name) {
+                    <button
+                        type="button"
+                        class="roles-module-pill"
+                        [class.roles-module-pill--active]="moduloSeleccionado === mod.name"
+                        (click)="seleccionarModulo(mod.name)">
+                        <span>{{ mod.name }}</span>
+                        <span class="roles-module-pill__badge">{{ mod.count }}</span>
+                    </button>
+                    }
+                </div>
+            </div>
+
+            @if (error && !modalRolAbierto && !modalEliminarAbierto) {
+            <div class="roles-message roles-message--error mx-4 mt-3" role="alert">
+                <mat-icon class="mr-2 icon-size-5">error_outline</mat-icon>
+                <span>{{ error }}</span>
             </div>
             }
 
-            <div class="overflow-hidden rounded-2xl border border-gray-200">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">ID</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Clave</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Nombre</th>
-                                <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">Acciones</th>
+            <!-- Matrix Table -->
+            <div class="roles-matrix" [class.roles-matrix--loading]="cargando">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="permission-col" scope="col">
+                                <div class="flex items-center justify-between">
+                                    <span>Permiso y Módulo</span>
+                                    <span class="text-[0.65rem] font-normal lowercase tracking-normal text-gray-400">
+                                        {{ permisosFiltrados.length }} visibles
+                                    </span>
+                                </div>
+                            </th>
+                            @for (rol of roles; track rol.id) {
+                            <th scope="col" class="role-col" [class.role-col--protected]="esAdministrador(rol)">
+                                <div class="role-head">
+                                    <div class="role-head__title">
+                                        <span class="role-head__name">{{ rol.name }}</span>
+                                        @if (esAdministrador(rol)) {
+                                        <span class="role-head__protected-badge" matTooltip="Acceso total protegido por el sistema">
+                                            <mat-icon svgIcon="heroicons_outline:shield-check"></mat-icon>
+                                            Protegido
+                                        </span>
+                                        } @else {
+                                        <span class="role-head__actions">
+                                            <button
+                                                type="button"
+                                                (click)="abrirModalEditar(rol)"
+                                                [attr.aria-label]="'Editar rol ' + rol.name"
+                                                matTooltip="Editar rol">
+                                                <mat-icon svgIcon="heroicons_outline:pencil-square"></mat-icon>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                class="role-head__actions-delete"
+                                                (click)="abrirModalEliminar(rol)"
+                                                [attr.aria-label]="'Eliminar rol ' + rol.name"
+                                                matTooltip="Eliminar rol">
+                                                <mat-icon svgIcon="heroicons_outline:trash"></mat-icon>
+                                            </button>
+                                        </span>
+                                        }
+                                    </div>
+                                    <div class="role-head__meta">
+                                        <code class="role-head__key">{{ rol.key }}</code>
+                                        <span class="role-head__count" [class.role-head__count--modified]="rolesConCambios.has(rol.id)">
+                                            {{ esAdministrador(rol) ? 'Todos' : (conteoPermisosRol(rol.id) + ' / ' + totalPermisos) }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (cargando) {
+                            @for (i of [1, 2, 3, 4, 5]; track i) {
+                            <tr class="roles-skeleton-row">
+                                <td class="permission-cell">
+                                    <div class="roles-skeleton-line w-24 mb-1"></div>
+                                    <div class="roles-skeleton-line w-40 mb-1"></div>
+                                    <div class="roles-skeleton-line w-64"></div>
+                                </td>
+                                @for (rol of roles; track rol.id) {
+                                <td class="permission-toggle">
+                                    <div class="roles-skeleton-box mx-auto"></div>
+                                </td>
+                                }
                             </tr>
-                        </thead>
+                            }
+                        } @else {
+                            @for (grupo of gruposPermisos; track grupo.modulo) {
+                            <!-- Module Group Header Row -->
+                            <tr class="module-group-row">
+                                <th scope="row" class="module-group-cell">
+                                    <div class="flex items-center gap-2">
+                                        <mat-icon class="icon-size-4 text-primary" svgIcon="heroicons_outline:folder"></mat-icon>
+                                        <span class="font-bold uppercase tracking-wider text-xs text-gray-800 dark:text-gray-200">{{ grupo.modulo }}</span>
+                                        <span class="rounded-full bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-[0.65rem] font-medium text-gray-600 dark:text-gray-400">
+                                            {{ grupo.permisos.length }}
+                                        </span>
+                                    </div>
+                                </th>
+                                @for (rol of roles; track rol.id) {
+                                <td class="module-group-role-cell">
+                                    @if (esAdministrador(rol)) {
+                                    <span class="text-[0.65rem] font-semibold text-emerald-600 dark:text-emerald-400">Total</span>
+                                    } @else {
+                                    <button
+                                        type="button"
+                                        class="module-bulk-toggle"
+                                        [class.module-bulk-toggle--all]="todosConcedidosEnModulo(grupo.modulo, rol.id)"
+                                        [class.module-bulk-toggle--some]="algunoConcedidoEnModulo(grupo.modulo, rol.id) && !todosConcedidosEnModulo(grupo.modulo, rol.id)"
+                                        (click)="alternarTodosModulo(grupo.modulo, rol.id)"
+                                        [matTooltip]="todosConcedidosEnModulo(grupo.modulo, rol.id) ? 'Desmarcar todos en ' + grupo.modulo : 'Seleccionar todos en ' + grupo.modulo">
+                                        <mat-icon class="icon-size-3.5" [svgIcon]="todosConcedidosEnModulo(grupo.modulo, rol.id) ? 'heroicons_outline:check' : 'heroicons_outline:plus'"></mat-icon>
+                                        <span>{{ todosConcedidosEnModulo(grupo.modulo, rol.id) ? 'Desmarcar todos' : 'Seleccionar todos' }}</span>
+                                    </button>
+                                    }
+                                </td>
+                                }
+                            </tr>
 
-                        <tbody class="divide-y divide-gray-100 bg-white" [@listAnimation]="rolesFiltrados.length">
-                            @for (rol of rolesFiltrados; track rol.id) {
+                            <!-- Permission Items Rows -->
+                            @for (permiso of grupo.permisos; track permiso.id) {
+                            <tr class="permission-item-row">
+                                <th scope="row" class="permission-cell">
+                                    <div class="permission-cell__content">
+                                        <span class="permission-description">{{ permiso.description || 'Sin descripción disponible.' }}</span>
+                                    </div>
+                                </th>
+                                @for (rol of roles; track rol.id) {
+                                <td class="permission-toggle" [class.permission-toggle--protected]="esAdministrador(rol)">
+                                    @if (esAdministrador(rol)) {
+                                    <div class="permission-toggle__admin-check" matTooltip="El administrador tiene acceso total permanente">
+                                        <mat-icon>check</mat-icon>
+                                    </div>
+                                    } @else {
+                                    <button
+                                        type="button"
+                                        role="checkbox"
+                                        class="custom-matrix-checkbox"
+                                        [class.custom-matrix-checkbox--checked]="tienePermiso(rol.id, permiso.id)"
+                                        [attr.aria-checked]="tienePermiso(rol.id, permiso.id)"
+                                        (click)="alternarPermiso(rol.id, permiso.id, !tienePermiso(rol.id, permiso.id))"
+                                        [attr.aria-label]="(tienePermiso(rol.id, permiso.id) ? 'Revocar ' : 'Conceder ') + (permiso.description || 'permiso') + ' al rol ' + rol.name">
+                                        <mat-icon class="custom-matrix-checkbox__icon">check</mat-icon>
+                                    </button>
+                                    }
+                                </td>
+                                }
+                            </tr>
+                            }
+                            } @empty {
                             <tr>
-                                <td class="px-4 py-3 text-sm text-gray-700">{{ rol.id }}</td>
-                                <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ rol.key }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-600">{{ rol.name }}</td>
-                                <td class="px-4 py-3">
-                                    <div class="flex justify-end gap-1">
-                                        <button mat-icon-button matTooltip="Editar rol" (click)="editarRol(rol)">
-                                            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
-                                        </button>
-                                        <button mat-icon-button matTooltip="Eliminar rol" (click)="abrirModalEliminar(rol)">
-                                            <mat-icon class="icon-size-5 text-red-600" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                                <td class="roles-empty" [attr.colspan]="roles.length + 1">
+                                    <div class="roles-empty__box">
+                                        <mat-icon svgIcon="heroicons_outline:magnifying-glass"></mat-icon>
+                                        <h3>No se encontraron permisos</h3>
+                                        <p>No hay permisos que coincidan con el filtro "{{ filtro }}" en el módulo seleccionado.</p>
+                                        <button mat-stroked-button (click)="limpiarFiltros()" class="mt-3">
+                                            Limpiar filtros de búsqueda
                                         </button>
                                     </div>
                                 </td>
                             </tr>
                             }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
 
-                            @if (!rolesFiltrados.length) {
-                            <tr>
-                                <td colspan="4" class="px-4 py-8 text-center text-sm text-gray-500">
-                                    {{ cargando ? 'Cargando roles...' : 'No hay roles para mostrar.' }}
-                                </td>
-                            </tr>
-                            }
-                        </tbody>
-                    </table>
+    <!-- Floating Batch Save Bar -->
+    @if (hayCambios) {
+    <div class="roles-savebar" role="status" @fadeSlideIn>
+        <div class="roles-savebar__info">
+            <span class="roles-savebar__beacon"></span>
+            <div>
+                <p class="roles-savebar__title">
+                    <strong>{{ rolesConCambios.size }}</strong> {{ rolesConCambios.size === 1 ? 'rol tiene cambios pendientes' : 'roles tienen cambios pendientes' }}
+                </p>
+                <div class="roles-savebar__roles-list">
+                    @for (r of rolesConCambiosList; track r.id) {
+                    <span class="roles-savebar__role-chip">{{ r.name }}</span>
+                    }
                 </div>
             </div>
-        </article>
-    </section>
+        </div>
+        <div class="roles-savebar__actions">
+            <button mat-stroked-button (click)="descartarCambios()" [disabled]="guardando" class="roles-savebar__btn-discard">
+                <mat-icon class="mr-1 icon-size-4">undo</mat-icon>
+                Descartar
+            </button>
+            <button mat-flat-button color="primary" class="roles-savebar__btn-save text-white" (click)="guardarCambios()" [disabled]="guardando">
+                <mat-icon class="mr-1.5 icon-size-4">{{ guardando ? 'sync' : 'save' }}</mat-icon>
+                {{ guardando ? 'Guardando cambios...' : 'Guardar cambios' }}
+            </button>
+        </div>
+    </div>
+    }
 </div>
 
-@if (modalAbierto) {
+<!-- Modal Crear / Editar Rol -->
+@if (modalRolAbierto) {
 <div class="fixed inset-0 z-[3000] flex items-center justify-center p-4">
-    <div class="absolute inset-0 bg-black/50" @backdropFade></div>
-    <div class="relative z-10 w-full max-w-3xl rounded-2xl bg-white p-6 shadow-2xl" @modalScaleFade>
-        <h2 class="text-xl font-semibold text-gray-900">
-            {{ estaEditando ? 'Editar rol' : 'Nuevo rol' }}
-        </h2>
-        <p class="mt-1 text-sm text-gray-500">
-            Define el rol y selecciona los permisos que podra heredar cualquier usuario asociado a el.
-        </p>
-
-        <form class="mt-4 space-y-4" [formGroup]="form" (ngSubmit)="guardarRol()">
-            <div class="grid gap-4 md:grid-cols-2">
-                <mat-form-field appearance="outline" class="w-full">
-                    <mat-label>Clave</mat-label>
-                    <input matInput formControlName="key" maxlength="120" />
-                    @if (form.get('key')?.hasError('required') && form.get('key')?.touched) {
-                    <mat-error>La clave es obligatoria.</mat-error>
-                    }
-                </mat-form-field>
-
-                <mat-form-field appearance="outline" class="w-full">
-                    <mat-label>Nombre</mat-label>
-                    <input matInput formControlName="name" maxlength="120" />
-                    @if (form.get('name')?.hasError('required') && form.get('name')?.touched) {
-                    <mat-error>El nombre es obligatorio.</mat-error>
-                    }
-                </mat-form-field>
-            </div>
-
-            <div class="rounded-2xl border border-gray-200 bg-slate-50 p-4">
-                <div class="flex items-start justify-between gap-3">
-                    <div>
-                        <h3 class="text-sm font-semibold text-gray-900">Permisos del rol</h3>
-                        <p class="mt-1 text-xs text-gray-500">
-                            Al guardar, estos permisos quedaran vinculados al rol seleccionado.
-                        </p>
-                    </div>
-                    @if (cargandoPermisos) {
-                    <span class="text-xs text-gray-500">Cargando...</span>
-                    }
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @backdropFade (click)="cerrarModalRol()"></div>
+    <div class="relative z-10 w-full max-w-lg rounded-2xl bg-white dark:bg-gray-900 p-6 shadow-2xl border border-gray-100 dark:border-gray-800" @modalScaleFade>
+        <div class="flex items-start justify-between pb-3 border-b border-gray-100 dark:border-gray-800">
+            <div class="flex items-center gap-3">
+                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <mat-icon [svgIcon]="estaEditando ? 'heroicons_outline:pencil-square' : 'heroicons_outline:shield-check'"></mat-icon>
                 </div>
-
-                <div class="mt-4 grid max-h-80 gap-3 overflow-y-auto pr-1 md:grid-cols-2">
-                    @for (permiso of permisosDisponibles; track permiso.id) {
-                    <label class="flex cursor-pointer items-start gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3 transition hover:border-teal-300 hover:shadow-sm">
-                        <mat-checkbox
-                            class="mt-0.5"
-                            [checked]="permisoSeleccionado(permiso.id)"
-                            (change)="alternarPermiso(permiso.id, $event.checked)">
-                        </mat-checkbox>
-
-                        <span class="min-w-0">
-                            <span class="block text-sm font-semibold text-gray-900">
-                                {{ permiso.key }}
-                            </span>
-                            <span class="mt-1 block text-xs leading-5 text-gray-500">
-                                {{ permiso.description }}
-                            </span>
-                        </span>
-                    </label>
-                    }
-
-                    @if (!permisosDisponibles.length && !cargandoPermisos) {
-                    <div class="rounded-2xl border border-dashed border-gray-300 px-4 py-6 text-sm text-gray-500 md:col-span-2">
-                        No hay permisos disponibles. Primero crea permisos en la seccion de permisos.
-                    </div>
-                    }
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white">
+                        {{ estaEditando ? 'Editar Rol' : 'Crear Nuevo Rol' }}
+                    </h2>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                        {{ estaEditando ? 'Actualiza el nombre visible de este rol.' : 'Indica el nombre que verá el equipo.' }}
+                    </p>
                 </div>
             </div>
+            <button mat-icon-button type="button" (click)="cerrarModalRol()" [disabled]="guardando" aria-label="Cerrar modal">
+                <mat-icon>close</mat-icon>
+            </button>
+        </div>
 
-            @if (error) {
-            <div class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                {{ error }}
+        <form class="mt-5 space-y-4" [formGroup]="form" (ngSubmit)="guardarRol()">
+            <div>
+                <app-tp-input
+                    label="Nombre del rol"
+                    placeholder="ej. Supervisor de Ventas"
+                    [required]="true"
+                    [maxLength]="120"
+                    [error]="form.get('name')?.invalid && form.get('name')?.touched ? 'El nombre visible es obligatorio.' : ''"
+                    formControlName="name">
+                </app-tp-input>
+                @if (!estaEditando) {
+                <p class="mt-1 text-[0.72rem] text-gray-500 dark:text-gray-400">
+                    La clave técnica se genera automáticamente a partir del nombre.
+                </p>
+                }
             </div>
-            }
 
-            <div class="flex flex-wrap justify-end gap-2">
-                <button type="button" mat-stroked-button (click)="cerrarModal()" [disabled]="guardando">
+            <div class="flex items-center justify-end gap-2 pt-3 border-t border-gray-100 dark:border-gray-800">
+                <button type="button" mat-stroked-button (click)="cerrarModalRol()" [disabled]="guardando">
                     Cancelar
                 </button>
-                <button mat-raised-button color="primary" class="text-white" [disabled]="guardando">
-                    {{ guardando ? 'Guardando...' : (estaEditando ? 'Actualizar' : 'Crear rol') }}
+                <button mat-flat-button color="primary" class="text-white" [disabled]="guardando">
+                    <mat-icon class="mr-1.5 icon-size-4">{{ guardando ? 'sync' : 'check' }}</mat-icon>
+                    {{ guardando ? 'Guardando...' : (estaEditando ? 'Guardar cambios' : 'Crear rol') }}
                 </button>
             </div>
         </form>
@@ -175,34 +374,42 @@
 </div>
 }
 
+<!-- Modal Confirmar Eliminar Rol -->
 @if (modalEliminarAbierto && rolPendienteEliminar) {
 <div class="fixed inset-0 z-[3025] flex items-center justify-center p-4">
-    <div class="absolute inset-0 bg-black/60" @backdropFade></div>
-    <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" @modalScaleFade>
-        <h3 class="text-xl font-semibold text-gray-900">
-            Eliminar rol
-        </h3>
-        <p class="mt-2 text-sm text-gray-600">
-            Vas a eliminar el rol <strong>{{ rolPendienteEliminar.name }}</strong>.
-        </p>
-        <p class="mt-1 text-xs text-gray-500">
-            Antes de borrarlo, valida que no siga asignado en perfiles existentes para evitar inconsistencias.
-        </p>
+    <div class="absolute inset-0 bg-black/65 backdrop-blur-sm" @backdropFade (click)="cerrarModalEliminar()"></div>
+    <div class="relative z-10 w-full max-w-md rounded-2xl bg-white dark:bg-gray-900 p-6 shadow-2xl border border-red-100 dark:border-red-950/40" @modalScaleFade>
+        <div class="flex items-center gap-3 text-red-600 dark:text-red-400">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-red-100 dark:bg-red-950/50">
+                <mat-icon svgIcon="heroicons_outline:trash"></mat-icon>
+            </div>
+            <div>
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white">Eliminar Rol</h2>
+                <span class="text-xs text-red-600 dark:text-red-400 font-medium">Acción irreversible</span>
+            </div>
+        </div>
+
+        <div class="mt-4 rounded-xl bg-gray-50 dark:bg-gray-800/60 p-3.5 text-sm text-gray-700 dark:text-gray-300">
+            <p>¿Estás seguro de que deseas eliminar el rol <strong>{{ rolPendienteEliminar.name }}</strong> (<code>{{ rolPendienteEliminar.key }}</code>)?</p>
+            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                Se revocarán todas sus asignaciones de permisos. No se puede eliminar si hay usuarios asignados a este rol.
+            </p>
+        </div>
 
         @if (error) {
-        <div class="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {{ error }}
+        <div class="roles-message roles-message--error mt-3" role="alert">
+            <mat-icon class="mr-2 icon-size-4">error_outline</mat-icon>
+            <span>{{ error }}</span>
         </div>
         }
 
         <div class="mt-6 flex justify-end gap-2">
-            <button mat-stroked-button type="button" (click)="cerrarModalEliminar()" [disabled]="eliminandoId !== null">
+            <button mat-stroked-button (click)="cerrarModalEliminar()" [disabled]="eliminandoId !== null">
                 Cancelar
             </button>
-            <button mat-raised-button color="warn" class="text-white" type="button"
-                (click)="confirmarEliminar()"
-                [disabled]="eliminandoId !== null">
-                {{ eliminandoId === rolPendienteEliminar.id ? 'Eliminando...' : 'Eliminar' }}
+            <button mat-flat-button color="warn" class="text-white" (click)="confirmarEliminar()" [disabled]="eliminandoId !== null">
+                <mat-icon class="mr-1.5 icon-size-4">{{ eliminandoId ? 'sync' : 'delete' }}</mat-icon>
+                {{ eliminandoId ? 'Eliminando...' : 'Eliminar rol' }}
             </button>
         </div>
     </div>
