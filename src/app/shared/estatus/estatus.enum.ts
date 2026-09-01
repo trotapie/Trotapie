@@ -24,4 +24,7 @@ export type Estatus =
   | 'APLICADO'
   | 'CONSIGNADA'
   | 'ASIGNADA'
-  | 'ACTIVO';
+  | 'ACTIVO'
+  | 'Primer ingreso'
+  | 'Sin usuario'
+  | 'Sin estatus';

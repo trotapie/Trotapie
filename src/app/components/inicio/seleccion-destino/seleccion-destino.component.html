@@ -190,16 +190,12 @@
                         </header>
 
                         <div class="catalog-toolbar">
-                            <form [formGroup]="filterForm" class="search-form" role="search">
-                                <label for="destination-search" class="sr-only">{{ t('buscar-destinos') }}</label>
-                                <mat-icon aria-hidden="true">search</mat-icon>
-                                <input id="destination-search" formControlName="busqueda" type="search" [placeholder]="t('buscar-destinos')" autocomplete="off" />
-                            </form>
-                             <div class="category-block" aria-labelledby="category-title">
+                            <div class="category-block" aria-labelledby="category-title">
                                  <div class="category-heading">
                                      <span id="category-title">{{ t('explora-por-experiencia') }}</span>
                                  </div>
                                  <div class="category-list" role="group" aria-labelledby="category-title">
+                                     <button type="button" [attr.aria-pressed]="selectedTipoTuristicoId === null" [class.category-active]="selectedTipoTuristicoId === null" (click)="filtrarPorTipo(null)">{{ t('todos') }}</button>
                                      <button *ngFor="let tipo of tiposTuristicos" type="button" [attr.aria-pressed]="selectedTipoTuristicoId === tipo.id" [class.category-active]="selectedTipoTuristicoId === tipo.id" (click)="filtrarPorTipo(tipo.id)">{{ tipo.nombre }}</button>
                                  </div>
                              </div>

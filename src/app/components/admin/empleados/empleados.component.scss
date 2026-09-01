@@ -8,10 +8,78 @@ table {
   width: 100%;
 }
 
+/* Mantiene la misma familia y métrica en todas las celdas, incluso las que
+   contienen texto directo y las que usan un span con utilidades Tailwind. */
+.empleados-table {
+  .mat-column-id,
+  .mat-column-nombre,
+  .mat-column-cargo,
+  .mat-column-email,
+  .mat-column-rol {
+    color: var(--fuse-text-default);
+    font-family: inherit;
+    font-size: .875rem;
+    font-weight: 400;
+    line-height: 1.25rem;
+    letter-spacing: normal;
+  }
+
+  .mat-mdc-header-cell {
+    color: var(--fuse-text-secondary);
+    font-family: inherit;
+    font-size: .75rem;
+    font-weight: 700;
+    line-height: 1rem;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+}
+
 .actions-col {
-  width: 260px;
-  min-width: 260px;
+  width: 76px;
+  min-width: 76px;
   text-align: center;
+}
+
+.filters-card {
+  padding: 1.125rem 1.25rem 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--fuse-border) 78%, transparent);
+  border-radius: 1rem;
+  background: var(--fuse-bg-card, #fff);
+}
+
+.filters-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+
+  h2 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  mat-icon { color: var(--fuse-text-secondary); }
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: .75rem;
+}
+
+.empleados-paginator {
+  margin-top: .5rem;
+  border-top: 1px solid var(--fuse-border);
+}
+
+@media (min-width: 640px) {
+  .filters-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1024px) {
+  .filters-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 }
 
 .status-pill {
@@ -30,9 +98,101 @@ table {
   color: #92400e;
 }
 
-.fixed .max-w-lg {
-  max-height: 90vh;
-  overflow: auto;
+.empleado-modal {
+  display: flex;
+  flex-direction: column;
+  max-height: min(90vh, 52rem);
+}
+
+.empleado-modal__header {
+  border-bottom: 1px solid color-mix(in srgb, var(--fuse-border) 70%, transparent);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 8%, var(--fuse-bg-card)), var(--fuse-bg-card) 58%);
+}
+
+.empleado-modal__icon {
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 13%, transparent);
+}
+
+.empleado-modal__icon mat-icon { width: 1.35rem; height: 1.35rem; }
+
+.empleado-modal__form {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.empleado-modal__body {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem 1.25rem;
+}
+
+.empleado-modal__footer {
+  flex: 0 0 auto;
+  padding: 1rem 1.25rem 1.25rem;
+  background: var(--fuse-bg-card);
+  box-shadow: 0 -.6rem 1.2rem rgb(15 23 42 / 4%);
+}
+
+.empleado-modal__section-icon {
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+}
+
+.empleado-modal__section-icon mat-icon { width: 1.05rem; height: 1.05rem; }
+
+.empleado-modal__section-icon--access {
+  color: #2563eb;
+  background: rgb(37 99 235 / 10%);
+}
+
+.empleado-modal__access {
+  padding: 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--fuse-border) 85%, transparent);
+  border-radius: 1.25rem;
+  background: color-mix(in srgb, var(--fuse-bg-card) 92%, var(--primary));
+}
+
+.empleado-modal__hint {
+  margin: .45rem .15rem 0;
+  color: var(--fuse-text-secondary);
+  font-size: .72rem;
+  line-height: 1.1rem;
+}
+
+.empleado-modal__notice,
+.empleado-modal__error {
+  display: flex;
+  align-items: flex-start;
+  gap: .55rem;
+  padding: .75rem .85rem;
+  border-radius: .85rem;
+  font-size: .75rem;
+  line-height: 1.2rem;
+}
+
+.empleado-modal__notice {
+  color: var(--fuse-text-secondary);
+  background: color-mix(in srgb, var(--fuse-text-secondary) 7%, transparent);
+}
+
+.empleado-modal__notice mat-icon,
+.empleado-modal__error mat-icon { flex: 0 0 auto; width: 1rem; height: 1rem; margin-top: .1rem; }
+
+.empleado-modal__error {
+  color: #b91c1c;
+  border: 1px solid rgb(248 113 113 / 35%);
+  background: rgb(254 242 242);
+}
+
+:host-context(.dark) .empleado-modal__error { color: #fca5a5; background: rgb(127 29 29 / 24%); }
+
+@media (min-width: 640px) {
+  .empleado-modal__body { padding: 1.75rem; }
+  .empleado-modal__footer { padding: 1rem 1.75rem 1.5rem; }
 }
 
 .firma-modal {

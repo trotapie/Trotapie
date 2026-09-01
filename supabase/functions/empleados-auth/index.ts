@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-type Action = 'upsert' | 'remove' | 'complete-first-login';
+type Action = 'upsert' | 'remove' | 'get-role' | 'get-roles' | 'complete-first-login';
 
 type Payload = {
   action?: Action;
@@ -15,6 +15,7 @@ type Payload = {
   password?: string;
   nombre?: string;
   roleId?: number;
+  empleadoIds?: number[];
 };
 
 Deno.serve(async (req) => {
@@ -63,6 +64,10 @@ Deno.serve(async (req) => {
       return json({ ok: false, message: 'No tienes permisos para administrar usuarios.' }, 403);
     }
 
+    if (body.action === 'get-roles') {
+      return await getEmployeesRoles(adminClient, body.empleadoIds ?? []);
+    }
+
     const empleadoId = Number(body.empleadoId);
     if (!Number.isFinite(empleadoId) || empleadoId <= 0) {
       return json({ ok: false, message: 'Empleado invalido.' }, 400);
@@ -70,6 +75,10 @@ Deno.serve(async (req) => {
 
     if (body.action === 'remove') {
       return await removeAccess(adminClient, empleadoId);
+    }
+
+    if (body.action === 'get-role') {
+      return await getEmployeeRole(adminClient, empleadoId);
     }
 
     return await upsertAccess(adminClient, empleadoId, body);
@@ -224,6 +233,82 @@ async function resolveRoleKey(adminClient: any, roleId: number | null): Promise<
   if (error) throw error;
 
   return data?.key ? String(data.key) : null;
+}
+
+async function getEmployeeRole(adminClient: any, empleadoId: number): Promise<Response> {
+  const { data: empleado, error: empleadoError } = await adminClient
+    .from('empleados')
+    .select('auth_user_id')
+    .eq('id', empleadoId)
+    .maybeSingle();
+  if (empleadoError) throw empleadoError;
+
+  const userId = String(empleado?.auth_user_id ?? '').trim();
+  if (!userId) {
+    return json({ ok: true, roleId: null });
+  }
+
+  const { data: profile, error: profileError } = await adminClient
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .maybeSingle();
+  if (profileError) throw profileError;
+
+  const roleKey = String(profile?.role ?? '').trim();
+  if (!roleKey) {
+    return json({ ok: true, roleId: null });
+  }
+
+  const { data: role, error: roleError } = await adminClient
+    .from('roles')
+    .select('id')
+    .eq('key', roleKey)
+    .maybeSingle();
+  if (roleError) throw roleError;
+
+  return json({ ok: true, roleId: role?.id ?? null });
+}
+
+async function getEmployeesRoles(adminClient: any, empleadoIds: number[]): Promise<Response> {
+  const ids = [...new Set(empleadoIds.map(Number).filter((id) => Number.isFinite(id) && id > 0))];
+  if (!ids.length) {
+    return json({ ok: true, roleIds: {} });
+  }
+
+  const { data: empleados, error: empleadosError } = await adminClient
+    .from('empleados')
+    .select('id, auth_user_id')
+    .in('id', ids);
+  if (empleadosError) throw empleadosError;
+
+  const userIds = (empleados ?? [])
+    .map((empleado: { auth_user_id?: string | null }) => String(empleado.auth_user_id ?? '').trim())
+    .filter(Boolean);
+  if (!userIds.length) {
+    return json({ ok: true, roleIds: {} });
+  }
+
+  const { data: profiles, error: profilesError } = await adminClient
+    .from('profiles')
+    .select('id, role')
+    .in('id', userIds);
+  if (profilesError) throw profilesError;
+
+  const roleKeys = [...new Set((profiles ?? []).map((profile: { role?: string | null }) => String(profile.role ?? '').trim()).filter(Boolean))];
+  const { data: roles, error: rolesError } = roleKeys.length
+    ? await adminClient.from('roles').select('id, key').in('key', roleKeys)
+    : { data: [], error: null };
+  if (rolesError) throw rolesError;
+
+  const roleIdByKey = new Map((roles ?? []).map((role: { id: number; key: string }) => [role.key, role.id]));
+  const roleKeyByUserId = new Map((profiles ?? []).map((profile: { id: string; role: string | null }) => [profile.id, profile.role]));
+  const roleIds = Object.fromEntries((empleados ?? []).map((empleado: { id: number; auth_user_id: string | null }) => [
+    empleado.id,
+    roleIdByKey.get(String(roleKeyByUserId.get(empleado.auth_user_id ?? '') ?? '')) ?? null,
+  ]));
+
+  return json({ ok: true, roleIds });
 }
 
 async function removeAccess(adminClient: any, empleadoId: number): Promise<Response> {

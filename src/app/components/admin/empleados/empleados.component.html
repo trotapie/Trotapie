@@ -4,10 +4,14 @@
             <div class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">
                 Empleados
             </div>
-            <div class="my-2 md:my-0">
+            <div class="my-2 flex flex-col gap-2 sm:flex-row md:my-0">
                 <button mat-raised-button color="primary" class="text-white" (click)="abrirModalNuevoEmpleado()">
                     <mat-icon class="mr-2 icon-size-5 text-white">add</mat-icon>
                     Nuevo empleado
+                </button>
+                <button mat-raised-button color="accent" class="text-white" type="button" (click)="alternarFiltros()">
+                    <mat-icon class="mr-2 icon-size-5 text-white">{{ mostrarFiltros ? 'filter_alt_off' : 'filter_alt' }}</mat-icon>
+                    {{ mostrarFiltros ? 'Ocultar filtros' : 'Filtros' }}
                 </button>
             </div>
         </div>
@@ -26,17 +30,31 @@
         </div>
         } -->
 
-        <article class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-900">
-            <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Listado</h2>
-                <mat-form-field appearance="outline" class="w-full sm:w-80">
-                    <mat-label>Buscar empleado</mat-label>
-                    <input matInput (input)="aplicarFiltro($event)" placeholder="ID o nombre" />
-                </mat-form-field>
+        @if (mostrarFiltros) {
+        <section class="filters-card mb-3" aria-labelledby="empleados-filtros-title" @fadeSlideIn>
+            <div class="filters-card__header">
+                <h2 id="empleados-filtros-title">Filtros</h2>
+                <mat-icon aria-hidden="true">filter_alt</mat-icon>
             </div>
+            <div class="filters-grid">
+                <app-tp-input label="Nombre" placeholder="Filtrar nombre" [(ngModel)]="filtros.nombre" (valueChange)="aplicarFiltros()"></app-tp-input>
+                <app-tp-select-search label="Cargo" placeholder="Todos los cargos" [options]="opcionesCargoFiltro" [(ngModel)]="filtros.cargo" (selectionChange)="aplicarFiltros()"></app-tp-select-search>
+                <app-tp-input label="Email" type="email" placeholder="Filtrar email" [(ngModel)]="filtros.email" (valueChange)="aplicarFiltros()"></app-tp-input>
+                <app-tp-select-search label="Estatus" placeholder="Todos los estatus" [options]="opcionesEstatusFiltro" [(ngModel)]="filtros.estatus" (selectionChange)="aplicarFiltros()"></app-tp-select-search>
+                <app-tp-select-search label="Acceso" placeholder="Todos los accesos" [options]="opcionesAccesoFiltro" [(ngModel)]="filtros.acceso" (selectionChange)="aplicarFiltros()"></app-tp-select-search>
+            </div>
+            <div class="mt-3 flex justify-end">
+                <button mat-stroked-button type="button" (click)="limpiarFiltros()">
+                    <mat-icon class="mr-1.5 icon-size-4">clear</mat-icon>
+                    Limpiar filtros
+                </button>
+            </div>
+        </section>
+        }
 
+        <article class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-900">
             <div class="table-wrapper" @fadeSlideIn>
-                <table mat-table [dataSource]="dataSource" matSort>
+                <table mat-table [dataSource]="dataSource" matSort class="empleados-table">
                     <ng-container matColumnDef="id">
                         <th mat-header-cell *matHeaderCellDef mat-sort-header> ID </th>
                         <td mat-cell *matCellDef="let row"> {{ row.id }} </td>
@@ -76,17 +94,11 @@
                         <th mat-header-cell *matHeaderCellDef mat-sort-header> Acceso </th>
                         <td mat-cell *matCellDef="let row">
                             @if (row.primera_vez_login) {
-                            <span class="rounded-full bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700">
-                                Primer ingreso
-                            </span>
+                            <app-status-badge status="Primer ingreso"></app-status-badge>
                             } @else if (row.auth_user_id) {
-                            <span class="rounded-full bg-green-50 px-2 py-1 text-xs font-semibold text-green-700">
-                                Activo
-                            </span>
+                            <app-status-badge status="ACTIVO"></app-status-badge>
                             } @else {
-                            <span class="rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-500">
-                                Sin usuario
-                            </span>
+                            <app-status-badge status="Sin usuario"></app-status-badge>
                             }
                         </td>
                     </ng-container>
@@ -94,41 +106,20 @@
                     <ng-container matColumnDef="acciones">
                         <th mat-header-cell *matHeaderCellDef class="actions-col"> Acciones </th>
                         <td mat-cell *matCellDef="let row" class="actions-col">
-                            <div class="flex flex-nowrap items-center justify-end gap-1 whitespace-nowrap">
                             @if (!esEmpleadoProtegido(row)) {
-                            <button mat-stroked-button type="button" class="!h-9 !min-w-0 !px-2" (click)="abrirFirma(row)">
-                                <mat-icon class="mr-1 icon-size-4" [svgIcon]="'heroicons_outline:eye'"></mat-icon>
-                                Ver firma
-                            </button>
+                            <app-tp-actions-menu
+                                [actions]="accionesEmpleado(row)"
+                                ariaLabel="Abrir acciones del empleado"
+                                (actionSelected)="ejecutarAccionEmpleado($event, row)">
+                            </app-tp-actions-menu>
                             }
-                            <button mat-icon-button [matTooltip]="'Editar'"[disabled]="esEmpleadoProtegido(row)" (click)="editarEmpleado(row)">
-                                <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
-                            </button>
+                        </td>
+                    </ng-container>
 
-                            <button mat-icon-button
-                                [matTooltip]="!row.auth_user_id ? 'Sin acceso asignado' : 'Quitar acceso'"
-                                [disabled]="eliminandoEmpleadoId === row.id || !row.auth_user_id || esEmpleadoProtegido(row)"
-                                (click)="abrirModalQuitarAcceso(row)">
-                                <mat-icon class="icon-size-5 text-amber-600" [svgIcon]="'heroicons_outline:key'"></mat-icon>
-                            </button>
-
-                            <button mat-icon-button
-                                [matTooltip]="esEmpleadoProtegido(row) ? 'No se puede eliminar' : 'Eliminar'"
-                                [disabled]="eliminandoEmpleadoId === row.id || esEmpleadoProtegido(row)"
-                                (click)="abrirModalEliminar(row)">
-                                <mat-icon class="icon-size-5 text-red-600" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
-                            </button>
-
-                            <button mat-icon-button
-                                [matTooltip]="esEmpleadoProtegido(row) ? 'No se puede inhabilitar' : (estaInhabilitado(row) ? 'Habilitar' : 'Inhabilitar')"
-                                [disabled]="actualizandoEstatusId === row.id || esEmpleadoProtegido(row)"
-                                (click)="cambiarEstatusEmpleado(row)">
-                                <mat-icon class="icon-size-5"
-                                    [ngClass]="estaInhabilitado(row) ? 'text-green-600' : 'text-amber-600'">
-                                    {{ estaInhabilitado(row) ? 'check_circle' : 'block' }}
-                                </mat-icon>
-                            </button>
-                            </div>
+                    <ng-container matColumnDef="rol">
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header> Rol </th>
+                        <td mat-cell *matCellDef="let row">
+                            <span class="text-sm text-gray-700 dark:text-gray-200">{{ getRolLabel(row) }}</span>
                         </td>
                     </ng-container>
 
@@ -147,7 +138,7 @@
                 </table>
             </div>
 
-            <mat-paginator class="mt-2" [pageSize]="10" [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+            <mat-paginator class="empleados-paginator" [pageSize]="20" [pageSizeOptions]="[10, 20, 50]" showFirstLastButtons></mat-paginator>
         </article>
     </section>
 </div>
@@ -171,113 +162,96 @@
 }
 
 @if (modalEmpleadoAbierto) {
-<div class="fixed inset-0 z-[3000] flex items-center justify-center p-4">
+<div class="fixed inset-0 z-[3000] flex items-center justify-center p-3 sm:p-5" role="dialog" aria-modal="true" aria-labelledby="empleado-modal-title" (keydown.escape)="!guardando && cerrarModalEmpleado()">
     <div class="absolute inset-0 bg-black/50" @backdropFade></div>
-    <div class="relative z-10 w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900" @modalScaleFade>
-        <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
-            {{ estaEditando ? 'Editar empleado' : 'Nuevo empleado' }}
-        </h2>
-        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Agrega los datos que se mostraran en la firma de las cotizaciones. Si agregas un correo, se creara o vinculara un usuario para iniciar sesion.
-        </p>
+    <div class="empleado-modal relative z-10 w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-gray-900" @modalScaleFade tabindex="-1">
+        <header class="empleado-modal__header flex items-start gap-4 px-5 py-5 sm:px-7 sm:py-6">
+            <div class="empleado-modal__icon flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl">
+                <mat-icon svgIcon="heroicons_outline:user-plus"></mat-icon>
+            </div>
+            <div class="min-w-0 flex-1">
+                <p class="text-xs font-bold uppercase tracking-[0.14em] text-primary">Equipo</p>
+                <h2 id="empleado-modal-title" class="mt-1 text-xl font-semibold text-gray-900 dark:text-white sm:text-2xl">
+                    {{ estaEditando ? 'Editar empleado' : 'Nuevo empleado' }}
+                </h2>
+                <p class="mt-2 max-w-xl text-sm leading-6 text-gray-600 dark:text-gray-300">
+                    Define los datos que aparecerán en sus cotizaciones y, si lo necesitas, habilita su acceso al sistema.
+                </p>
+            </div>
+            <button mat-icon-button type="button" aria-label="Cerrar formulario de empleado" (click)="cerrarModalEmpleado()" [disabled]="guardando">
+                <mat-icon>close</mat-icon>
+            </button>
+        </header>
 
-        <form class="mt-4 space-y-4" [formGroup]="form" (ngSubmit)="guardarEmpleado()">
-            <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Nombre</mat-label>
-                <input matInput formControlName="nombre" maxlength="120" />
-                @if (form.get('nombre')?.hasError('required') && form.get('nombre')?.touched) {
-                <mat-error>El nombre es obligatorio.</mat-error>
-                }
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Cargo</mat-label>
-                <mat-select formControlName="cargo_id" [compareWith]="compareById">
-                    <mat-option [value]="null">Sin cargo</mat-option>
-                    @for (cargo of cargosDisponibles; track cargo.id) {
-                    <mat-option [value]="cargo.id">
-                        {{ cargo.rol }}
-                        @if (!cargo.estatus) {
-                        <span class="text-xs text-gray-500"> (Inactivo)</span>
-                        }
-                    </mat-option>
-                    }
-                </mat-select>
-                <mat-hint>Este cargo se usa en la firma y en las cotizaciones públicas.</mat-hint>
-                @if (cargandoCargos) {
-                <mat-hint>Cargando cargos...</mat-hint>
-                }
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Telefono / WhatsApp</mat-label>
-                <input matInput formControlName="telefono" inputmode="tel" maxlength="20" placeholder="669 195 7651" />
-                <mat-hint>Se mostrara en la firma y abrira WhatsApp.</mat-hint>
-                @if (form.get('telefono')?.hasError('pattern') && form.get('telefono')?.touched) {
-                <mat-error>Usa solo numeros, espacios, parentesis, guiones o +.</mat-error>
-                }
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Email de acceso y contacto</mat-label>
-                <input matInput formControlName="email" type="email" maxlength="180" />
-                @if (form.get('email')?.hasError('email') && form.get('email')?.touched) {
-                <mat-error>Ingresa un correo valido.</mat-error>
-                }
-            </mat-form-field>
-
-            <p class="text-xs text-gray-500">
-                Si agregas un email y no existe en Authentication, se generara una contrasena temporal automaticamente.
-            </p>
-
-            <div class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900/80">
-                <div class="flex items-start justify-between gap-3">
-                    <div>
-                        <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Rol del usuario</h3>
-                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                            Solo puedes asignar un rol por empleado.
-                        </p>
+        <form class="empleado-modal__form" [formGroup]="form" (ngSubmit)="guardarEmpleado()">
+            <div class="empleado-modal__body">
+            <section aria-labelledby="datos-firma-title">
+                <div class="mb-5 flex items-start gap-3">
+                    <div class="empleado-modal__section-icon flex h-8 w-8 shrink-0 items-center justify-center rounded-xl">
+                        <mat-icon svgIcon="heroicons_outline:identification"></mat-icon>
                     </div>
-                    @if (cargandoRoles) {
-                    <span class="text-xs text-gray-500">Cargando...</span>
-                    }
+                    <div>
+                        <h3 id="datos-firma-title" class="text-sm font-semibold text-gray-900 dark:text-white">Datos de firma</h3>
+                        <p class="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">Información visible para clientes en cotizaciones y contacto.</p>
+                    </div>
                 </div>
 
-                <mat-form-field appearance="outline" class="mt-4 w-full">
-                    <mat-label>Rol</mat-label>
-                    <mat-select
-                        panelClass="empleados-roles-panel"
-                        [value]="rolesSeleccionados"
-                        (selectionChange)="rolesSeleccionados = $event.value ?? null">
-                        @for (rol of rolesDisponibles; track rol.id) {
-                        <mat-option [value]="rol.id">
-                            {{ rol.name }}
-                        </mat-option>
-                        }
-                    </mat-select>
-                </mat-form-field>
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <app-tp-input class="sm:col-span-2" label="Nombre" placeholder="Nombre completo" [required]="true" [maxLength]="120" [error]="form.get('nombre')?.hasError('required') && form.get('nombre')?.touched ? 'El nombre es obligatorio.' : ''" formControlName="nombre" />
+
+                    <div>
+                        <app-tp-select-search label="Cargo" placeholder="Sin cargo" searchPlaceholder="Buscar cargo" [options]="opcionesCargo" [disabled]="cargandoCargos" formControlName="cargo_id" />
+                        <p class="empleado-modal__hint">{{ cargandoCargos ? 'Cargando cargos...' : 'Se usa en la firma y cotizaciones públicas.' }}</p>
+                    </div>
+
+                    <div>
+                        <app-tp-input label="Teléfono / WhatsApp" placeholder="669 195 7651" inputMode="tel" [maxLength]="20" [error]="form.get('telefono')?.hasError('pattern') && form.get('telefono')?.touched ? 'Usa solo números, espacios, paréntesis, guiones o +.' : ''" formControlName="telefono" />
+                        <p class="empleado-modal__hint">Se mostrará en la firma y abrirá WhatsApp.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="empleado-modal__access mt-7" aria-labelledby="acceso-title">
+                <div class="mb-5 flex items-start gap-3">
+                    <div class="empleado-modal__section-icon empleado-modal__section-icon--access flex h-8 w-8 shrink-0 items-center justify-center rounded-xl">
+                        <mat-icon svgIcon="heroicons_outline:key"></mat-icon>
+                    </div>
+                    <div>
+                        <h3 id="acceso-title" class="text-sm font-semibold text-gray-900 dark:text-white">Acceso al sistema</h3>
+                        <p class="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">Opcional. El correo crea o vincula la cuenta del empleado.</p>
+                    </div>
+                </div>
+
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <app-tp-input label="Correo de acceso y contacto" placeholder="nombre@empresa.com" type="email" [maxLength]="180" [error]="form.get('email')?.hasError('email') && form.get('email')?.touched ? 'Ingresa un correo válido.' : ''" formControlName="email" />
+
+                    <div>
+                        <app-tp-select-search label="Rol del usuario" placeholder="Sin rol asignado" searchPlaceholder="Buscar rol" [options]="opcionesRol" [disabled]="cargandoRoles" [(ngModel)]="rolesSeleccionados" [ngModelOptions]="{ standalone: true }" />
+                        <p class="empleado-modal__hint">{{ cargandoRoles ? 'Cargando roles...' : 'Solo puedes asignar un rol por empleado.' }}</p>
+                    </div>
+                </div>
+                <p class="empleado-modal__notice mt-4">
+                    <mat-icon svgIcon="heroicons_outline:information-circle"></mat-icon>
+                    Si el correo no existe en Authentication, se generará una contraseña temporal automáticamente.
+                </p>
+            </section>
+
             </div>
 
-            @if (error) {
-            <div class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                {{ error }}
-            </div>
-            }
-
-            <div class="flex flex-wrap justify-end gap-2">
+            <footer class="empleado-modal__footer flex flex-col-reverse gap-3 border-t border-gray-100 dark:border-gray-800 sm:flex-row sm:items-center sm:justify-end">
                 <button type="button" mat-stroked-button (click)="cerrarModalEmpleado()" [disabled]="guardando">
                     Cancelar
                 </button>
-                <button mat-raised-button color="primary" class="text-white" [disabled]="guardando">
+                <button mat-flat-button color="primary" class="min-w-40 text-white" [disabled]="guardando">
                     @if (guardando) {
                     Guardando...
                     } @else if (estaEditando) {
-                    Actualizar
+                    Guardar cambios
                     } @else {
                     Crear empleado
                     }
                 </button>
-            </div>
+            </footer>
         </form>
     </div>
 </div>

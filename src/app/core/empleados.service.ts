@@ -302,6 +302,29 @@ export class EmpleadosService {
   }
 
   async actualizarRolAdmin(id: number, payload: { key: string; name: string }) {
+    const { data: currentRole, error: currentRoleError } = await this.client
+      .from('roles')
+      .select('key')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (currentRoleError) throw currentRoleError;
+    if (String(currentRole?.key ?? '').toLowerCase() === 'admin') {
+      throw new Error('El rol administrador esta protegido y no se puede editar.');
+    }
+
+    if (currentRole?.key && currentRole.key !== payload.key) {
+      const { count, error: profilesError } = await this.client
+        .from('profiles')
+        .select('id', { count: 'exact', head: true })
+        .eq('role', currentRole.key);
+
+      if (profilesError) throw profilesError;
+      if ((count ?? 0) > 0) {
+        throw new Error('No se puede cambiar la clave de un rol asignado a usuarios.');
+      }
+    }
+
     const { data, error } = await this.client
       .from('roles')
       .update({
@@ -317,6 +340,27 @@ export class EmpleadosService {
   }
 
   async eliminarRolAdmin(id: number) {
+    const { data: role, error: roleError } = await this.client
+      .from('roles')
+      .select('key')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (roleError) throw roleError;
+    if (String(role?.key ?? '').toLowerCase() === 'admin') {
+      throw new Error('El rol administrador esta protegido y no se puede eliminar.');
+    }
+
+    const { count, error: profilesError } = await this.client
+      .from('profiles')
+      .select('id', { count: 'exact', head: true })
+      .eq('role', role?.key ?? '');
+
+    if (profilesError) throw profilesError;
+    if ((count ?? 0) > 0) {
+      throw new Error('No se puede eliminar un rol que sigue asignado a usuarios. Reasignalos antes de continuar.');
+    }
+
     const { error: rolePermissionsError } = await this.client
       .from('role_permissions')
       .delete()
@@ -344,6 +388,21 @@ export class EmpleadosService {
     return (data ?? [])
       .map((item: any) => Number(item.permission_id))
       .filter((id) => Number.isFinite(id));
+  }
+
+  async relacionesPermisosRolAdmin(): Promise<Array<{ role_id: number; permission_id: number }>> {
+    const { data, error } = await this.client
+      .from('role_permissions')
+      .select('role_id, permission_id');
+
+    if (error) throw error;
+
+    return (data ?? [])
+      .map((item: any) => ({
+        role_id: Number(item.role_id),
+        permission_id: Number(item.permission_id),
+      }))
+      .filter((item) => Number.isFinite(item.role_id) && Number.isFinite(item.permission_id));
   }
 
   async guardarPermisosRolAdmin(roleId: number, permissionIds: number[]) {
@@ -377,41 +436,25 @@ export class EmpleadosService {
   }
 
   async rolesEmpleadoAdmin(empleadoId: number): Promise<number[]> {
-    const { data: empleado, error: empleadoError } = await this.client
-      .from('empleados')
-      .select('auth_user_id')
-      .eq('id', empleadoId)
-      .maybeSingle();
+    const { data, error } = await this.client.functions.invoke('empleados-auth', {
+      body: { action: 'get-role', empleadoId }
+    });
 
-    if (empleadoError) throw empleadoError;
+    if (error) throw error;
+    if (data?.ok === false) throw new Error(data.message ?? 'No se pudo consultar el rol del empleado.');
 
-    const userId = String(empleado?.auth_user_id ?? '').trim();
-    if (!userId) {
-      return [];
-    }
+    const roleId = Number(data?.roleId);
+    return Number.isFinite(roleId) && roleId > 0 ? [roleId] : [];
+  }
 
-    const { data: profile, error: profileError } = await this.client
-      .from('profiles')
-      .select('role')
-      .eq('id', userId)
-      .maybeSingle();
+  async rolesEmpleadosAdmin(empleadoIds: number[]): Promise<Record<number, number | null>> {
+    const { data, error } = await this.client.functions.invoke('empleados-auth', {
+      body: { action: 'get-roles', empleadoIds }
+    });
 
-    if (profileError) throw profileError;
-
-    const roleKey = String(profile?.role ?? '').trim();
-    if (!roleKey) {
-      return [];
-    }
-
-    const { data: role, error: roleError } = await this.client
-      .from('roles')
-      .select('id')
-      .eq('key', roleKey)
-      .maybeSingle();
-
-    if (roleError) throw roleError;
-
-    return role?.id ? [Number(role.id)] : [];
+    if (error) throw error;
+    if (data?.ok === false) throw new Error(data.message ?? 'No se pudieron consultar los roles de los empleados.');
+    return data?.roleIds ?? {};
   }
 
   async permisosEmpleadoAdmin(empleadoId: number): Promise<number[]> {

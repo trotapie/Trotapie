@@ -6,7 +6,8 @@
       'bg-orange-400/40': estatusOrange.includes(normalizedStatus),
       'bg-red-400/40': estatusRed.includes(normalizedStatus),
       'bg-amber-700': estatusBrown.includes(normalizedStatus),
-      'bg-purple-400/40': estatusPurple.includes(normalizedStatus),
+       'bg-purple-400/40': estatusPurple.includes(normalizedStatus),
+       'bg-gray-400/40': estatusGray.includes(normalizedStatus),
     }"></div>
     <span
         class="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium shadow-inner border border-white/10 backdrop-blur-sm"
@@ -17,7 +18,8 @@
       'bg-orange-500/10 text-orange-600': estatusOrange.includes(normalizedStatus),
       'bg-red-500/10 text-red-600': estatusRed.includes(normalizedStatus),
       'bg-amber-700/10 text-amber-700': estatusBrown.includes(normalizedStatus),
-      'bg-purple-500/10 text-purple-600': estatusPurple.includes(normalizedStatus),
+       'bg-purple-500/10 text-purple-600': estatusPurple.includes(normalizedStatus),
+       'bg-gray-500/10 text-gray-600': estatusGray.includes(normalizedStatus),
     }">
 
         <ng-container [ngSwitch]="normalizedStatus">
@@ -27,6 +29,12 @@
                 [svgIcon]="'heroicons_outline:clock'"></mat-icon>
             <mat-icon *ngSwitchCase="'Nuevo'" class="w-5 h-5 text-yellow-600 slow-spin"
                 [svgIcon]="'heroicons_outline:clock'"></mat-icon>
+            <mat-icon *ngSwitchCase="'Primer ingreso'" class="w-5 h-5 text-yellow-600"
+                [svgIcon]="'heroicons_outline:key'"></mat-icon>
+            <mat-icon *ngSwitchCase="'Sin usuario'" class="w-5 h-5 text-gray-600"
+                [svgIcon]="'heroicons_outline:user-minus'"></mat-icon>
+            <mat-icon *ngSwitchCase="'Sin estatus'" class="w-5 h-5 text-gray-600"
+                [svgIcon]="'heroicons_outline:information-circle'"></mat-icon>
             <svg *ngSwitchCase="'EN PROCESO'" xmlns="http://www.w3.org/2000/svg" height="24px"
                 class="w-5 h-5 text-sky-400 slow-spin" viewBox="0 -960 960 960" width="24px" fill="currentColor">
                 <path
