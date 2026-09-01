@@ -28,6 +28,10 @@ Cuando se pidan mejoras de UI/UX, debes mantener la logica existente y aplicar u
 - Los nuevos switches deben seguir el patron aprobado del control `Oscurecer fondo` en el modal de editar imagen: contenedor con titulo y descripcion breve a la izquierda, switch alineado a la derecha y accion auxiliar compacta junto al switch cuando aplique.
 - No reemplaces switches existentes solo para aplicar este patron, salvo que se solicite expresamente.
 
+### Botones
+- Todos los botones del sistema deben incluir obligatoriamente un icono (`mat-icon`) contextual a la izquierda del texto (`mr-1.5 icon-size-4` o `mr-2 icon-size-5`), o estar acompañados de `matTooltip` y `aria-label` si son botones puramente icónicos (`mat-icon-button`).
+- En estados de carga asíncrona, el icono debe alternar a estado de sincronización (`sync` / spinner) junto al texto.
+
 ### Diseno UI/UX
 - Busca claridad, jerarquia visual y accion principal evidente.
 - Evita interfaces genericas o sobradas de elementos.

@@ -6,7 +6,7 @@ import { Component, HostListener, inject, OnInit } from '@angular/core';
 import { PageEvent } from '@angular/material/paginator';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { sanitizeSvg } from 'app/shared/utils/svg-sanitizer';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CatalogoAdminKey, CatalogosAdminService, IPoliticaTarifaAdmin } from 'app/core/catalogos-admin.service';
 import { TraduccionesService } from 'app/core/traducciones.service';
 import { EstatusComponent } from 'app/shared/estatus/estatus.component';
@@ -51,7 +51,7 @@ interface CatalogoVistaConfig {
 @Component({
   selector: 'app-catalogo-placeholder',
   standalone: true,
-  imports: [CommonModule, FormsModule, A11yModule, MaterialModule, RouterLink, DragDropModule, EstatusComponent, CustomSwitchComponent, TpInputComponent, TpTextareaComponent, TpSelectSearchComponent],
+  imports: [CommonModule, FormsModule, A11yModule, MaterialModule, DragDropModule, EstatusComponent, CustomSwitchComponent, TpInputComponent, TpTextareaComponent, TpSelectSearchComponent],
   templateUrl: './catalogo-placeholder.component.html',
   styleUrl: './catalogo-placeholder.component.scss',
   animations: [modalScaleFade, backdropFade],
@@ -63,6 +63,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
   private readonly supabase = inject(TraduccionesService);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly toast = inject(TpToastService);
+  private returnUrl: string | null = null;
 
   private readonly configuraciones: Record<CatalogoAdminKey, CatalogoVistaConfig> = {
     actividades: {
@@ -1184,12 +1185,31 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   async ngOnInit() {
+    this.returnUrl = this.obtenerUrlRetorno();
     const configuracion = this.configuraciones[this.catalogoKey];
     this.columnas = configuracion?.columnas ?? [];
     this.displayedColumns = this.tieneOrden
       ? [...this.columnas.map((x) => x.key), 'acciones']
       : [...this.columnas.map((x) => x.key), 'acciones'];
     await this.cargar();
+  }
+
+  private obtenerUrlRetorno(): string | null {
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    const rutaActividadDestino = /^\/admin\/destinos\/configurar-destinos\/preview\/\d+\/actividad\/\d+(?:[?#].*)?$/;
+
+    return this.esCatalogoAtracciones && returnUrl && rutaActividadDestino.test(returnUrl)
+      ? returnUrl
+      : null;
+  }
+
+  regresar(): void {
+    if (this.returnUrl) {
+      void this.router.navigateByUrl(this.returnUrl);
+      return;
+    }
+
+    void this.router.navigate(['/admin/catalogos']);
   }
 
   async cargar() {
@@ -2327,6 +2347,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
     this.errorModalCreacion = '';
 
     try {
+      let atraccionCreadaId: number | null = null;
       if (this.esCatalogoEstatus) {
         const clave = String(this.nuevoRegistroDraft['clave'] ?? '').trim().toLowerCase();
         const nombre = String(this.nuevoRegistroDraft['nombre'] ?? '').trim();
@@ -2492,13 +2513,14 @@ export class CatalogoPlaceholderComponent implements OnInit {
         this.nuevoRegistroDraft = { ...this.nuevoRegistroDraft, nombre, nombre_es: nombre, clave };
         await this.actualizarVistaPreviaAtraccion(true);
 
-        await this.catalogosAdmin.crearCatalogoAdmin(this.catalogoKey, {
+        const atraccionCreada = await this.catalogosAdmin.crearCatalogoAdmin(this.catalogoKey, {
           clave,
           icono,
           activo: Boolean(this.nuevoRegistroDraft['activo']),
           nombre,
           descripcion
         });
+        atraccionCreadaId = this.parseNumber((atraccionCreada as any)?.id);
       } else if (this.esCatalogoTipoImagen) {
         const clave = String(this.nuevoRegistroDraft['clave'] ?? '').trim();
         const descripcionEs = String(this.nuevoRegistroDraft['descripcion_es'] ?? '').trim();
@@ -2595,6 +2617,15 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
       this.cerrarModalCrear();
       await this.cargar();
+      if (atraccionCreadaId !== null && this.returnUrl) {
+        const urlRetorno = this.router.parseUrl(this.returnUrl);
+        urlRetorno.queryParams = {
+          ...urlRetorno.queryParams,
+          catalogoAtraccionCreada: atraccionCreadaId
+        };
+        await this.router.navigateByUrl(urlRetorno);
+        return;
+      }
       this.mostrarModalExitoConMensaje(this.mensajeExitoCreacion);
     } catch (error: any) {
       this.errorModalCreacion = error?.message ?? 'No se pudo crear el registro.';

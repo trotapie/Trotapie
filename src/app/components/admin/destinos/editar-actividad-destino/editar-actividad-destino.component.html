@@ -1035,22 +1035,25 @@
 
 @if (mostrarModalNuevaActividad) {
 <div class="modal-blocker fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
-  <div role="dialog" aria-modal="true" aria-labelledby="crear-actividad-title"
+  <div role="dialog" aria-modal="true" aria-labelledby="agregar-atraccion-title"
     class="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900">
-    <h3 id="crear-actividad-title" class="text-xl font-semibold text-gray-900 dark:text-white">Crear actividad</h3>
+    <h3 id="agregar-atraccion-title" class="text-xl font-semibold text-gray-900 dark:text-white">Agregar atracción al destino</h3>
+    <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">Selecciona una atracción del catálogo o crea una nueva.</p>
 
     <form [formGroup]="formNuevaActividad" class="mt-4">
-      <app-tp-select-search class="w-full" label="Tipo de actividad" placeholder="Selecciona un tipo"
-        searchPlaceholder="Buscar tipo de actividad" emptyMessage="Todos los tipos de actividad ya están configurados."
+      <app-tp-select-search class="w-full" label="Atracción" placeholder="Selecciona una atracción"
+        searchPlaceholder="Buscar atracción" emptyMessage="Todas las atracciones ya están configuradas."
         [options]="opcionesNuevaActividad" [required]="true" [disabled]="guardandoNuevaActividad"
         formControlName="catalogo_atraccion_id"></app-tp-select-search>
       @if (formNuevaActividad.get('catalogo_atraccion_id')?.invalid &&
       formNuevaActividad.get('catalogo_atraccion_id')?.touched) {
-      <p class="mt-2 text-sm text-red-600">Selecciona un tipo de actividad.</p>
+      <p class="mt-2 text-sm text-red-600">Selecciona una atracción.</p>
       }
     </form>
 
-    <div class="mt-4 flex justify-end gap-2 border-t border-gray-200 pt-4 dark:border-gray-700">
+    <div class="mt-4 flex flex-col-reverse gap-2 border-t border-gray-200 pt-4 sm:flex-row sm:justify-end dark:border-gray-700">
+      <button mat-stroked-button type="button" [disabled]="guardandoNuevaActividad"
+        (click)="irACrearAtraccion()">Crear nueva atracción</button>
       <button mat-stroked-button type="button" [disabled]="guardandoNuevaActividad"
         (click)="cerrarModalNuevaActividad()">Cancelar</button>
       <button mat-flat-button color="primary" type="button" [disabled]="guardandoNuevaActividad"

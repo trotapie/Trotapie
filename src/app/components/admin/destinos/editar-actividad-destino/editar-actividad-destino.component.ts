@@ -549,6 +549,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     }
 
     await this.cargarActividad(destinoId, actividadId);
+    await this.restaurarAtraccionCreada();
   }
 
   private async cargarActividad(destinoId: number, actividadId: number): Promise<void> {
@@ -632,6 +633,16 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     this.setModalLocked(true);
   }
 
+  irACrearAtraccion(): void {
+    if (this.guardandoNuevaActividad) {
+      return;
+    }
+
+    void this.router.navigate(['/admin/catalogos/atracciones'], {
+      queryParams: { returnUrl: this.router.url }
+    });
+  }
+
   cerrarModalNuevaActividad(): void {
     if (this.guardandoNuevaActividad) {
       return;
@@ -667,6 +678,22 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     } finally {
       this.guardandoNuevaActividad = false;
     }
+  }
+
+  private async restaurarAtraccionCreada(): Promise<void> {
+    const atraccionId = this.parseNumber(this.route.snapshot.queryParamMap.get('catalogoAtraccionCreada'));
+    if (atraccionId === null || !this.catalogoAtracciones.some((atraccion) => atraccion.id === atraccionId)) {
+      return;
+    }
+
+    this.crearNuevaAtraccion();
+    this.formNuevaActividad.get('catalogo_atraccion_id')?.setValue(atraccionId);
+    await this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { catalogoAtraccionCreada: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
   }
 
   get tieneCambiosSinGuardar(): boolean {

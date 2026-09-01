@@ -67,10 +67,10 @@ export default [
         path: 'condiciones',
         loadChildren: () => import('./condiciones/condiciones.routes'),
     },
-    // {
-    //     path: 'configuracion',
-    //     loadChildren: () => import('./configuracion/configuracion.routes'),
-    // },
+    {
+        path: 'configuracion',
+        loadChildren: () => import('./configuracion/configuracion.routes'),
+    },
     {
         path: 'destinos',
         loadChildren: () => import('./destinos/destinos.routes'),
