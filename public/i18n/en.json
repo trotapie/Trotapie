@@ -142,5 +142,13 @@
    "explorar-destino": "Explore {{destino}}",
    "vista-de-destino": "View of {{destino}}",
    "mexico": "Mexico",
-   "ver-destino": "View destination"
+    "ver-destino": "View destination",
+    "error-404-home-aria": "Go to the Trotapie home page",
+    "error-404-status": "Location not found",
+    "error-404-title": "This route is outside our map!",
+    "error-404-description": "The destination, tour, or page you are looking for does not exist, has moved, or is no longer available among our current departures.",
+    "error-404-explore": "Explore destinations",
+    "error-404-dashboard": "Control panel",
+    "error-404-copyright": "© {{year}} Trotapie Mexico. All rights reserved.",
+    "error-404-tagline": "\"The journey continues with every step.\""
 }

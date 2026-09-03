@@ -1,0 +1,40 @@
+@keyframes compass-sway {
+    0% {
+        transform: rotate(-18deg);
+    }
+    50% {
+        transform: rotate(24deg);
+    }
+    75% {
+        transform: rotate(-8deg);
+    }
+    100% {
+        transform: rotate(-18deg);
+    }
+}
+
+@keyframes spin-slow {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.compass-needle {
+    transform-origin: center center;
+    animation: compass-sway 6s ease-in-out infinite;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.15));
+}
+
+.animate-spin-slow {
+    animation: spin-slow 45s linear infinite;
+}
+
+:host {
+    display: block;
+    width: 100%;
+    min-height: 100vh;
+}
+

@@ -142,6 +142,14 @@
    "explorar-destino": "Explorar {{destino}}",
    "vista-de-destino": "Vista de {{destino}}",
    "mexico": "México",
-   "ver-destino": "Ver destino"
+    "ver-destino": "Ver destino",
+    "error-404-home-aria": "Ir a la página principal de Trotapie",
+    "error-404-status": "Coordenada no encontrada",
+    "error-404-title": "¡Esta ruta se encuentra fuera de nuestro mapa!",
+    "error-404-description": "El destino, circuito o página que intentas consultar no existe, fue reubicado o ya no está disponible en nuestras salidas actuales.",
+    "error-404-explore": "Explorar destinos",
+    "error-404-dashboard": "Panel de control",
+    "error-404-copyright": "© {{year}} Trotapie México. Todos los derechos reservados.",
+    "error-404-tagline": "\"El viaje continúa en cada paso.\""
 
 }

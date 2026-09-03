@@ -142,5 +142,13 @@
    "explorar-destino": "{{destino}} entdecken",
    "vista-de-destino": "Ansicht von {{destino}}",
    "mexico": "Mexiko",
-   "ver-destino": "Reiseziel ansehen"
+    "ver-destino": "Reiseziel ansehen",
+    "error-404-home-aria": "Zur Startseite von Trotapie",
+    "error-404-status": "Standort nicht gefunden",
+    "error-404-title": "Diese Route liegt außerhalb unserer Karte!",
+    "error-404-description": "Das gesuchte Reiseziel, die Rundreise oder Seite existiert nicht, wurde verschoben oder ist bei unseren aktuellen Abreisen nicht mehr verfügbar.",
+    "error-404-explore": "Reiseziele entdecken",
+    "error-404-dashboard": "Kontrollbereich",
+    "error-404-copyright": "© {{year}} Trotapie Mexiko. Alle Rechte vorbehalten.",
+    "error-404-tagline": "\"Die Reise geht mit jedem Schritt weiter.\""
 }

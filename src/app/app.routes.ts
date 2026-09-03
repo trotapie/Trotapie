@@ -119,5 +119,38 @@ export const appRoutes: Route[] = [
                     import('app/components/admin/admin.routes').then(m => m.default)
             }
         ]
+    },
+
+    // 404 & Catch-all
+    {
+        path: '404-not-found',
+        pathMatch: 'full',
+        redirectTo: '404'
+    },
+    {
+        path: '404',
+        component: LayoutComponent,
+        data: {
+            layout: 'empty'
+        },
+        children: [
+            {
+                path: '',
+                loadChildren: () => import('app/modules/error/error-404/error-404.routes')
+            }
+        ]
+    },
+    {
+        path: '**',
+        component: LayoutComponent,
+        data: {
+            layout: 'empty'
+        },
+        children: [
+            {
+                path: '',
+                loadChildren: () => import('app/modules/error/error-404/error-404.routes')
+            }
+        ]
     }
 ];
