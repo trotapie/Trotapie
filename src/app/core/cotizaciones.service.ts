@@ -60,6 +60,66 @@ export class CotizacionesService {
     return data; // { id, public_id }
   }
 
+  async eliminarSolicitudCotizacion(solicitudId: number | string): Promise<void> {
+    const id = Number(solicitudId);
+    if (!Number.isFinite(id) || id <= 0) {
+      throw new Error('Cotizacion invalida para eliminar.');
+    }
+
+    const { data: estatus, error: errorEstatus } = await this.client
+      .from('estatus_cotizacion')
+      .select('id')
+      .ilike('clave', 'eliminado')
+      .maybeSingle();
+
+    if (errorEstatus) throw errorEstatus;
+    if (!estatus?.id) {
+      throw new Error('No existe el estatus eliminado para las cotizaciones.');
+    }
+
+    const { data, error } = await this.client
+      .from('solicitudes_cotizacion')
+      .update({ estatus_id: estatus.id })
+      .eq('id', id)
+      .select('id, estatus_id');
+
+    if (error) throw error;
+    if (!data?.length) {
+      throw new Error('No se pudo actualizar el estatus de la cotización.');
+    }
+  }
+
+  async marcarSolicitudComoPendiente(solicitudId: number | string): Promise<void> {
+    const id = Number(solicitudId);
+    if (!Number.isFinite(id) || id <= 0) {
+      throw new Error('Cotizacion invalida para actualizar.');
+    }
+
+    const { data: estatus, error: errorEstatus } = await this.client
+      .from('estatus_cotizacion')
+      .select('id')
+      .or('clave.ilike.pendiente,nombre.ilike.pendiente')
+      .order('activo', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (errorEstatus) throw errorEstatus;
+    if (!estatus?.id) {
+      throw new Error('No se encontró el estatus pendiente para las cotizaciones.');
+    }
+
+    const { data, error } = await this.client
+      .from('solicitudes_cotizacion')
+      .update({ estatus_id: estatus.id })
+      .eq('id', id)
+      .select('id, estatus_id');
+
+    if (error) throw error;
+    if (!data?.length) {
+      throw new Error('No se pudo actualizar el estatus de la cotización.');
+    }
+  }
+
   async guardarHotelesComparativaSolicitud(payload: Array<{
     solicitud_id: number;
     hotel_id: number;

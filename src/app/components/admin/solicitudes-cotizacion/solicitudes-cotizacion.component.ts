@@ -1,6 +1,5 @@
 import { AfterViewInit, Component, inject, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from 'app/core/auth/auth.service';
@@ -13,7 +12,14 @@ import { MaterialModule } from 'app/shared/material.module';
 import { DateRangeFilterComponent } from 'app/shared/date-range-filter/date-range-filter.component';
 import { DateRangeFilterValue, EMPTY_DATE_RANGE } from 'app/shared/date-range-filter/date-range-filter.model';
 import { TpActionMenuItem, TpActionsMenuComponent } from 'app/shared/tp-actions-menu/tp-actions-menu.component';
+import { TpToastService } from 'app/shared/tp-toast/tp-toast.service';
+import { FuseConfirmationService } from '@fuse/services/confirmation';
 import * as XLSX from 'xlsx';
+
+type CotizacionTreeRow = ISolicitudCotizacionListado & {
+  tipoFila: 'individual' | 'comparativa' | 'alternativa';
+  parentId?: number | string;
+};
 
 type ColumnFilterKey =
   | 'id'
@@ -37,6 +43,8 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
   private cotizacionesService = inject(CotizacionesService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private toast = inject(TpToastService);
+  private confirmationService = inject(FuseConfirmationService);
   readonly fechaMaximaFiltro = new Date();
 
   displayedColumns: string[] = [
@@ -52,7 +60,9 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
     'acciones',
   ];
 
-  dataSource = new MatTableDataSource<ISolicitudCotizacionListado>([]);
+  dataSource = new MatTableDataSource<CotizacionTreeRow>([]);
+  cotizacionesRaiz: CotizacionTreeRow[] = [];
+  expandedComparativas = new Set<number | string>();
   estatusOptions: string[] = [];
   empleadoOptions: string[] = [];
 
@@ -73,21 +83,54 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
   estatusSeleccionados: string[] = [];
 
   readonly accionesCotizacion: TpActionMenuItem[] = [
-    { id: 'editar', label: 'Editar cotización', icon: 'heroicons_outline:pencil-square' }
+    { id: 'editar', label: 'Editar cotización', icon: 'heroicons_outline:pencil-square' },
+    { id: 'eliminar', label: 'Eliminar cotización', icon: 'heroicons_outline:trash', danger: true },
+  ];
+
+  readonly accionesComparativa: TpActionMenuItem[] = [
+    { id: 'editar', label: 'Editar comparativa', icon: 'heroicons_outline:pencil-square' },
+    { id: 'eliminar', label: 'Eliminar comparativa', icon: 'heroicons_outline:trash', danger: true },
   ];
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
 
   async ngOnInit() {
+    await this.cargarCotizaciones();
+  }
+
+  private async cargarCotizaciones(): Promise<void> {
     try {
-      const data = await this.cotizacionesService.obtenerSolicitudesCotizacion();
-      this.dataSource.data = await this.filtrarSolicitudesPorUsuario(data ?? []);
-      this.estatusOptions = this.obtenerOpcionesEstatus(this.dataSource.data);
-      this.empleadoOptions = this.obtenerOpcionesEmpleados(this.dataSource.data);
+      const [solicitudes, comparativas] = await Promise.all([
+        this.cotizacionesService.obtenerSolicitudesCotizacion(),
+        this.supabaseClient.obtenerCotizacionesMultiples(),
+      ]);
+      const [solicitudesVisibles, comparativasVisibles] = await Promise.all([
+        this.filtrarSolicitudesPorUsuario(solicitudes ?? []),
+        this.filtrarSolicitudesPorUsuario(comparativas ?? []),
+      ]);
+      const alternativasIds = new Set(
+        comparativasVisibles.flatMap((comparativa) =>
+          (comparativa.solicitudes ?? []).map((solicitud) => String(solicitud.public_id ?? solicitud.id))
+        )
+      );
+      const individuales = solicitudesVisibles
+        .filter((solicitud) => !alternativasIds.has(String(solicitud.public_id ?? solicitud.id)))
+        .map((solicitud) => ({ ...solicitud, tipoFila: 'individual' as const }));
+      const padres = comparativasVisibles.map((comparativa) => ({
+        ...comparativa,
+        hotel_nombre: this.resumenHoteles(comparativa.solicitudes ?? []),
+        destino_nombre: this.resumenDestinos(comparativa.solicitudes ?? []),
+        tipo_destino: this.resumenTiposDestino(comparativa.solicitudes ?? []),
+        tipoFila: 'comparativa' as const,
+      }));
+
+      this.cotizacionesRaiz = [...individuales, ...padres]
+        .sort((a, b) => (this._obtenerFechaSolicitud(b)?.getTime() ?? 0) - (this._obtenerFechaSolicitud(a)?.getTime() ?? 0));
+      this.estatusOptions = this.obtenerOpcionesEstatus(this.cotizacionesRaiz);
+      this.empleadoOptions = this.obtenerOpcionesEmpleados(this.cotizacionesRaiz);
+      this.rebuildRows();
 
       if (this.paginator) this.dataSource.paginator = this.paginator;
-      if (this.sort) this.dataSource.sort = this.sort;
     } catch {
       // handled by material table
     }
@@ -99,6 +142,8 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
     if (this.authService.isAdmin) {
       return solicitudes;
     }
+
+    const solicitudesActivas = solicitudes.filter((solicitud) => !this.estaEliminada(solicitud));
 
     const { data, error } = await this.supabaseClient.getClient().auth.getUser();
     if (error || !data?.user?.id) {
@@ -121,43 +166,22 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
       return [];
     }
 
-    return solicitudes.filter((solicitud) => Number(solicitud.empleado_id) === empleadoId);
+    return solicitudesActivas
+      .filter((solicitud) => Number(solicitud.empleado_id) === empleadoId)
+      .map((solicitud) => ({
+        ...solicitud,
+        solicitudes: solicitud.solicitudes?.filter((alternativa) => !this.estaEliminada(alternativa)),
+      }));
+  }
+
+  private estaEliminada(solicitud: ISolicitudCotizacionListado): boolean {
+    return String(solicitud.estatus_nombre ?? '').trim().toLowerCase() === 'eliminado';
   }
 
   ngAfterViewInit(): void {
     this.dataSource.paginator = this.paginator;
-    this.dataSource.sort = this.sort;
-
-    this.dataSource.sortingDataAccessor = (
-      data: ISolicitudCotizacionListado,
-      sortHeaderId: string
-    ) => {
-      switch (sortHeaderId) {
-        case 'id':
-          return Number(data.id) || 0;
-        case 'fecha':
-          return this._obtenerFechaSolicitud(data)?.getTime() ?? 0;
-        case 'cliente':
-          return data.cliente_nombre ?? '';
-        case 'hotel':
-          return data.hotel_nombre ?? '';
-        case 'habitaciones':
-          return this.obtenerResumenHabitaciones(data);
-        case 'destino':
-          return data.destino_nombre ?? '';
-        case 'tipoDestino':
-          return data.tipo_destino ?? '';
-        case 'empleado':
-          return data.empleado_nombre ?? '';
-        case 'estatus':
-          return data.estatus_nombre ?? '';
-        default:
-          return '';
-      }
-    };
-
     this.dataSource.filterPredicate = (
-      data: ISolicitudCotizacionListado,
+      data: CotizacionTreeRow,
       filter: string
     ) => {
       const normalized = this.parseFilter(filter);
@@ -215,12 +239,213 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
       return byColumn;
     };
 
+    this.rebuildRows();
     this.aplicarFiltroInicialDesdeRuta();
   }
 
-  ejecutarAccionCotizacion(actionId: string, solicitud: ISolicitudCotizacionListado): void {
+  ejecutarAccionCotizacion(actionId: string, solicitud: CotizacionTreeRow): void {
     if (actionId === 'editar') {
       void this.router.navigate(['/admin/edicion-cotizacion', solicitud.public_id]);
+      return;
+    }
+
+    if (actionId === 'eliminar') {
+      this.solicitarEliminacionCotizacion(solicitud);
+      return;
+    }
+
+    if (actionId === 'volver-pendiente') {
+      this.solicitarCambioAPendiente(solicitud);
+    }
+  }
+
+  accionesParaCotizacion(solicitud: ISolicitudCotizacionListado): TpActionMenuItem[] {
+    if (!this.authService.isAdmin || !this.estaEliminada(solicitud)) {
+      return this.accionesCotizacion;
+    }
+
+    return [
+      this.accionesCotizacion[0],
+      { id: 'volver-pendiente', label: 'Restaurar', icon: 'heroicons_outline:arrow-path' },
+      this.accionesCotizacion[1],
+    ];
+  }
+
+  ejecutarAccionComparativa(actionId: string, comparativa: CotizacionTreeRow): void {
+    if (actionId === 'editar') {
+      this.verComparativa(comparativa);
+      return;
+    }
+
+    if (actionId === 'eliminar') {
+      this.solicitarEliminacionComparativa(comparativa);
+      return;
+    }
+
+    if (actionId === 'volver-pendiente') {
+      this.solicitarRestauracionComparativa(comparativa);
+    }
+  }
+
+  accionesParaComparativa(comparativa: CotizacionTreeRow): TpActionMenuItem[] {
+    if (!this.authService.isAdmin || !this.estaEliminada(comparativa)) {
+      return this.accionesComparativa;
+    }
+
+    return [
+      this.accionesComparativa[0],
+      { id: 'volver-pendiente', label: 'Restaurar comparativa', icon: 'heroicons_outline:arrow-path' },
+      this.accionesComparativa[1],
+    ];
+  }
+
+  private solicitarEliminacionCotizacion(solicitud: CotizacionTreeRow): void {
+    const folio = this.folioCotizacionVisual(solicitud);
+    this.confirmationService.open({
+      title: 'Eliminar cotización',
+      message: `¿Estás seguro de eliminar la cotización <strong>${folio}</strong>?`,
+      icon: { show: true, name: 'heroicons_outline:trash', color: 'warn' },
+      actions: {
+        confirm: { show: true, label: 'Eliminar cotización', color: 'warn' },
+        cancel: { show: true, label: 'Cancelar' },
+      },
+      dismissible: true,
+    }).afterClosed().subscribe((resultado) => {
+      if (resultado === 'confirmed') void this.eliminarCotizacion(solicitud);
+    });
+  }
+
+  private solicitarCambioAPendiente(solicitud: CotizacionTreeRow): void {
+    if (!this.authService.isAdmin || !this.estaEliminada(solicitud)) return;
+
+    const folio = this.folioCotizacionVisual(solicitud);
+    this.confirmationService.open({
+      title: 'Restaurar cotización',
+      message: `¿Deseas restaurar la cotización <strong>${folio}</strong> al estatus pendiente?`,
+      icon: { show: true, name: 'heroicons_outline:arrow-path', color: 'primary' },
+      actions: {
+        confirm: { show: true, label: 'Restaurar', color: 'teal' },
+        cancel: { show: true, label: 'Cancelar' },
+      },
+      dismissible: true,
+    }).afterClosed().subscribe((resultado) => {
+      if (resultado === 'confirmed') void this.marcarCotizacionComoPendiente(solicitud);
+    });
+  }
+
+  private solicitarEliminacionComparativa(comparativa: CotizacionTreeRow): void {
+    const folio = this.folioCotizacionVisual(comparativa);
+    this.confirmationService.open({
+      title: 'Eliminar comparativa',
+      message: `¿Estás seguro de eliminar la comparativa <strong>${folio}</strong>?`,
+      icon: { show: true, name: 'heroicons_outline:trash', color: 'warn' },
+      actions: {
+        confirm: { show: true, label: 'Eliminar comparativa', color: 'warn' },
+        cancel: { show: true, label: 'Cancelar' },
+      },
+      dismissible: true,
+    }).afterClosed().subscribe((resultado) => {
+      if (resultado === 'confirmed') void this.eliminarComparativa(comparativa);
+    });
+  }
+
+  private solicitarRestauracionComparativa(comparativa: CotizacionTreeRow): void {
+    if (!this.authService.isAdmin || !this.estaEliminada(comparativa)) return;
+
+    const folio = this.folioCotizacionVisual(comparativa);
+    this.confirmationService.open({
+      title: 'Restaurar comparativa',
+      message: `¿Deseas restaurar la comparativa <strong>${folio}</strong> y todas sus cotizaciones al estatus pendiente?`,
+      icon: { show: true, name: 'heroicons_outline:arrow-path', color: 'primary' },
+      actions: {
+        confirm: { show: true, label: 'Restaurar', color: 'teal' },
+        cancel: { show: true, label: 'Cancelar' },
+      },
+      dismissible: true,
+    }).afterClosed().subscribe((resultado) => {
+      if (resultado === 'confirmed') void this.restaurarComparativa(comparativa);
+    });
+  }
+
+  private async eliminarCotizacion(solicitud: CotizacionTreeRow): Promise<void> {
+    try {
+      await this.cotizacionesService.eliminarSolicitudCotizacion(solicitud.id);
+      if (solicitud.parentId) {
+        await this.supabaseClient.sincronizarEstatusCotizacionMultiple(solicitud.parentId);
+      }
+      await this.cargarCotizaciones();
+      this.toast.show({
+        title: 'Cotización eliminada',
+        message: 'Se eliminó correctamente.',
+        variant: 'success',
+      });
+    } catch (error: any) {
+      this.toast.show({
+        title: 'No se pudo eliminar la cotización',
+        message: error?.message ?? 'Inténtalo de nuevo.',
+        variant: 'error',
+      });
+    }
+  }
+
+  private async marcarCotizacionComoPendiente(solicitud: CotizacionTreeRow): Promise<void> {
+    try {
+      await this.cotizacionesService.marcarSolicitudComoPendiente(solicitud.id);
+      if (solicitud.parentId) {
+        await this.supabaseClient.marcarCotizacionMultipleComoPendiente(solicitud.parentId);
+      }
+      await this.cargarCotizaciones();
+      this.toast.show({
+        title: 'Cotización pendiente',
+        message: 'La cotización volvió al estatus pendiente.',
+        variant: 'success',
+      });
+    } catch (error: any) {
+      this.toast.show({
+        title: 'No se pudo actualizar la cotización',
+        message: error?.message ?? 'Inténtalo de nuevo.',
+        variant: 'error',
+      });
+    }
+  }
+
+  private async eliminarComparativa(comparativa: CotizacionTreeRow): Promise<void> {
+    try {
+      await this.supabaseClient.eliminarCotizacionMultiple(
+        comparativa.id,
+        (comparativa.solicitudes ?? []).map((solicitud) => solicitud.id)
+      );
+      this.expandedComparativas.delete(comparativa.id);
+      await this.cargarCotizaciones();
+      this.toast.show({
+        title: 'Comparativa eliminada',
+        message: 'La comparativa y sus cotizaciones se marcaron como eliminadas.',
+        variant: 'success',
+      });
+    } catch (error: any) {
+      this.toast.show({
+        title: 'No se pudo eliminar la comparativa',
+        message: error?.message ?? 'Inténtalo de nuevo.',
+        variant: 'error',
+      });
+    }
+  }
+
+  private async restaurarComparativa(comparativa: CotizacionTreeRow): Promise<void> {
+    try {
+      await this.supabaseClient.restaurarCotizacionMultiple(comparativa.id);
+      await this.cargarCotizaciones();
+      this.toast.show({
+        title: 'Comparativa pendiente',
+        message: 'La comparativa y todas sus cotizaciones volvieron al estatus pendiente.',
+        variant: 'success',
+      });
+    } catch (error: any) {
+      this.toast.show({
+        title: 'No se pudo restaurar la comparativa',
+        message: error?.message ?? 'Inténtalo de nuevo.',
+        variant: 'error',
+      });
     }
   }
 
@@ -324,17 +549,11 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
   }
 
   private applyCombinedFilters(): void {
-    this.dataSource.filter = JSON.stringify({
-      ...this.columnFilters,
-      empleados: this.empleadosSeleccionados,
-      estatuses: this.estatusSeleccionados,
-      fechaDesde: this.fechaRangoFiltro.start,
-      fechaHasta: this.fechaRangoFiltro.end,
-    });
+    this.rebuildRows();
     this.dataSource.paginator?.firstPage();
   }
 
-  private get solicitudesParaExportar(): ISolicitudCotizacionListado[] {
+  private get solicitudesParaExportar(): CotizacionTreeRow[] {
     return this.hasActiveFilters || this.quickFilter
       ? this.dataSource.filteredData
       : this.dataSource.data;
@@ -454,10 +673,91 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
   }
 
   folioCotizacionVisual(item: ISolicitudCotizacionListado): string {
+    if (this.esComparativa(item as CotizacionTreeRow)) {
+      return `CMTRO-${String(item.id).padStart(3, '0')}`;
+    }
     return (
       formatearFolioCotizacion(item?.id) ||
       `CTRO-${String(item?.id ?? '').trim()}`
     );
+  }
+
+  esComparativa(row: CotizacionTreeRow): boolean {
+    return row.tipoFila === 'comparativa';
+  }
+
+  esAlternativa(row: CotizacionTreeRow): boolean {
+    return row.tipoFila === 'alternativa';
+  }
+
+  toggleComparativa(row: CotizacionTreeRow): void {
+    if (!this.esComparativa(row) || !(row.solicitudes?.length)) return;
+
+    if (this.expandedComparativas.has(row.id)) {
+      this.expandedComparativas.delete(row.id);
+    } else {
+      this.expandedComparativas.add(row.id);
+    }
+    this.rebuildRows(false);
+  }
+
+  verComparativa(row: CotizacionTreeRow): void {
+    if (!row.public_id) return;
+    void this.router.navigate(['/admin/cotizaciones/concentrado/detalle', row.public_id]);
+  }
+
+  private rebuildRows(resetPaginator = true): void {
+    const filter = JSON.stringify({
+      ...this.columnFilters,
+      empleados: this.empleadosSeleccionados,
+      estatuses: this.estatusSeleccionados,
+      fechaDesde: this.fechaRangoFiltro.start,
+      fechaHasta: this.fechaRangoFiltro.end,
+    });
+    const filtradas = this.cotizacionesRaiz.filter((row) => this.dataSource.filterPredicate(row, filter));
+    const rows = filtradas.flatMap((row) => {
+      if (!this.esComparativa(row) || !this.expandedComparativas.has(row.id)) {
+        return [row];
+      }
+
+      const alternativas = (row.solicitudes ?? []).map((solicitud) => ({
+        ...solicitud,
+        cliente_nombre: row.cliente_nombre,
+        habitaciones: row.habitaciones,
+        empleado_id: row.empleado_id,
+        empleado_nombre: row.empleado_nombre,
+        tipoFila: 'alternativa' as const,
+        parentId: row.id,
+      }));
+      return [row, ...alternativas];
+    });
+    this.dataSource.data = rows;
+    if (resetPaginator) this.dataSource.paginator?.firstPage();
+  }
+
+  private resumenDestinos(solicitudes: ISolicitudCotizacionListado[]): string {
+    const destinos = [...new Set(solicitudes.map((solicitud) => solicitud.destino_nombre).filter(Boolean))];
+    return destinos.length === 1 ? destinos[0] : destinos.join(' · ');
+  }
+
+  private resumenHoteles(solicitudes: ISolicitudCotizacionListado[]): string {
+    const hoteles = solicitudes.map((solicitud) => solicitud.hotel_nombre).filter(Boolean);
+    return hoteles.length ? hoteles.join(' · ') : 'Sin alternativas';
+  }
+
+  private resumenTiposDestino(solicitudes: ISolicitudCotizacionListado[]): string {
+    const tipos = new Set(
+      solicitudes
+        .filter((solicitud) => !this.estaEliminada(solicitud))
+        .map((solicitud) => String(solicitud.tipo_destino ?? '').trim().toUpperCase())
+        .filter((tipo) => tipo === 'NACIONAL' || tipo === 'INTERNACIONAL'),
+    );
+
+    if (tipos.has('NACIONAL') && tipos.has('INTERNACIONAL')) {
+      return 'NACIONAL / INTERNACIONAL';
+    }
+
+    return tipos.has('INTERNACIONAL') ? 'INTERNACIONAL' : tipos.has('NACIONAL') ? 'NACIONAL' : '';
   }
 
   private obtenerTotalHabitaciones(item: ISolicitudCotizacionListado): number {

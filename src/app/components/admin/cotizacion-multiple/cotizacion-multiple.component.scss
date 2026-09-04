@@ -63,6 +63,27 @@
     color: var(--fuse-text-secondary);
 }
 
+.regimen-display {
+    min-height: 56px;
+    border: 1px solid var(--fuse-border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: grid;
+    align-content: center;
+    gap: 3px;
+    background: color-mix(in srgb, var(--fuse-bg-card, #fff) 94%, var(--fuse-border));
+}
+
+.regimen-display span {
+    font-size: 12px;
+    color: var(--fuse-text-secondary);
+}
+
+.regimen-display strong {
+    font-size: 14px;
+    font-weight: 600;
+}
+
 .client-name-fields {
     display: grid;
     grid-template-columns: minmax(120px, 0.2fr) minmax(0, 0.8fr);

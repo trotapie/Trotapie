@@ -3505,6 +3505,32 @@ export class SupabaseService {
     return solicitud;
   }
 
+  async quitarHotelDeCotizacionMultiple(
+    cotizacionMultipleId: number | string,
+    solicitudId: number | string
+  ): Promise<void> {
+    const cId = Number(cotizacionMultipleId);
+    const sId = Number(solicitudId);
+    if (!Number.isFinite(cId) || !Number.isFinite(sId)) {
+      throw new Error('IDs invalidos para quitar el hotel.');
+    }
+
+    const { error: errorRelacion } = await this.client
+      .from('cotizaciones_solicitudes')
+      .delete()
+      .eq('cotizacion_multiple_id', cId)
+      .eq('solicitud_cotizacion_id', sId);
+
+    if (errorRelacion) throw errorRelacion;
+
+    const { error: errorSolicitud } = await this.client
+      .from('solicitudes_cotizacion')
+      .update({ estatus_clave: 'eliminado' })
+      .eq('id', sId);
+
+    if (errorSolicitud) throw errorSolicitud;
+  }
+
   async guardarHotelesComparativaSolicitud(payload: Array<{
     solicitud_id: number;
     hotel_id: number;
@@ -3552,6 +3578,7 @@ export class SupabaseService {
     noches?: number | null;
     telefono?: string | null;
     public_id?: string | null;
+    tipo?: 'cotizacion' | 'comparativa';
   }) {
     const toEmail = String(payload?.to_email ?? '').trim();
     if (!toEmail) {
@@ -3569,7 +3596,8 @@ export class SupabaseService {
         fecha_salida: payload?.fecha_salida ?? null,
         noches: payload?.noches ?? null,
         telefono: payload?.telefono ?? null,
-        public_id: payload?.public_id ?? null
+        public_id: payload?.public_id ?? null,
+        tipo: payload?.tipo ?? 'cotizacion'
       }
     });
 
@@ -3766,10 +3794,11 @@ export class SupabaseService {
     const filas = (data ?? []) as any[];
 
     return filas.map((item) => {
-      const clienteNombre = construirNombreClienteVisible({
+      const pasajeroNombre = String(item?.nombre_persona ?? '').trim();
+      const clienteNombre = pasajeroNombre || construirNombreClienteVisible({
         tratamientoAbreviacion: item?.cliente?.tratamiento?.abreviacion ?? null,
         nombreCompleto: item?.cliente?.nombre_completo ?? null,
-        nombreFallback: item?.cliente?.nombre ?? item?.nombre_persona ?? null,
+        nombreFallback: item?.cliente?.nombre ?? null,
       });
       const clienteEmail = item?.cliente?.email ?? item?.correo ?? '';
       const clienteTelefono = item?.cliente?.telefono ?? item?.telefono ?? '';
@@ -3780,6 +3809,7 @@ export class SupabaseService {
       return {
         id: item.id,
         public_id: item.public_id ?? null,
+        empleado_id: Number.isFinite(Number(item.empleado_id)) ? Number(item.empleado_id) : null,
         fecha_creacion: item.created_at ?? null,
         created_at: item.updated_at ?? item.created_at ?? null,
         cliente_nombre: clienteNombre,
@@ -3794,6 +3824,128 @@ export class SupabaseService {
         solicitudes: hoteles
       } as ISolicitudCotizacionListado;
     });
+  }
+
+  async eliminarCotizacionMultiple(
+    cotizacionMultipleId: number | string,
+    solicitudesIds: Array<number | string>
+  ): Promise<void> {
+    const id = Number(cotizacionMultipleId);
+    if (!Number.isFinite(id) || id <= 0) {
+      throw new Error('Comparativa invalida para eliminar.');
+    }
+
+    const ids = solicitudesIds
+      .map((solicitudId) => Number(solicitudId))
+      .filter((solicitudId) => Number.isFinite(solicitudId) && solicitudId > 0);
+
+    if (ids.length) {
+      const { data: estatus, error: errorEstatus } = await this.client
+        .from('estatus_cotizacion')
+        .select('id')
+        .ilike('clave', 'eliminado')
+        .maybeSingle();
+
+      if (errorEstatus) throw errorEstatus;
+      if (!estatus?.id) {
+        throw new Error('No existe el estatus eliminado para las cotizaciones.');
+      }
+
+      const { error: errorSolicitudes } = await this.client
+        .from('solicitudes_cotizacion')
+        .update({ estatus_id: estatus.id })
+        .in('id', ids);
+
+      if (errorSolicitudes) throw errorSolicitudes;
+    }
+
+    const { error } = await this.client
+      .from('cotizaciones_multiples')
+      .update({ estatus_clave: 'eliminado' })
+      .eq('id', id);
+
+    if (error) throw error;
+  }
+
+  async sincronizarEstatusCotizacionMultiple(cotizacionMultipleId: number | string): Promise<void> {
+    const id = Number(cotizacionMultipleId);
+    if (!Number.isFinite(id) || id <= 0) return;
+
+    const { data: relaciones, error: errorRelaciones } = await this.client
+      .from('cotizaciones_solicitudes')
+      .select('solicitud:solicitud_cotizacion_id (estatus:estatus_id (clave))')
+      .eq('cotizacion_multiple_id', id);
+
+    if (errorRelaciones) throw errorRelaciones;
+
+    const todasEliminadas =
+      (relaciones?.length ?? 0) > 0 &&
+      relaciones!.every(
+        (relacion: any) => String(relacion?.solicitud?.estatus?.clave ?? '').trim().toLowerCase() === 'eliminado'
+      );
+
+    if (!todasEliminadas) return;
+
+    const { error } = await this.client
+      .from('cotizaciones_multiples')
+      .update({ estatus_clave: 'eliminado' })
+      .eq('id', id);
+
+    if (error) throw error;
+  }
+
+  async marcarCotizacionMultipleComoPendiente(cotizacionMultipleId: number | string): Promise<void> {
+    const id = Number(cotizacionMultipleId);
+    if (!Number.isFinite(id) || id <= 0) return;
+
+    const { error } = await this.client
+      .from('cotizaciones_multiples')
+      .update({ estatus_clave: 'pendiente' })
+      .eq('id', id);
+
+    if (error) throw error;
+  }
+
+  async restaurarCotizacionMultiple(cotizacionMultipleId: number | string): Promise<void> {
+    const id = Number(cotizacionMultipleId);
+    if (!Number.isFinite(id) || id <= 0) {
+      throw new Error('Comparativa invalida para restaurar.');
+    }
+
+    const { data: estatus, error: errorEstatus } = await this.client
+      .from('estatus_cotizacion')
+      .select('id')
+      .or('clave.ilike.pendiente,nombre.ilike.pendiente')
+      .order('activo', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (errorEstatus) throw errorEstatus;
+    if (!estatus?.id) {
+      throw new Error('No se encontró el estatus pendiente para las cotizaciones.');
+    }
+
+    const { data: relaciones, error: errorRelaciones } = await this.client
+      .from('cotizaciones_solicitudes')
+      .select('solicitud_cotizacion_id')
+      .eq('cotizacion_multiple_id', id);
+
+    if (errorRelaciones) throw errorRelaciones;
+
+    const solicitudesIds = (relaciones ?? [])
+      .map((relacion: any) => Number(relacion.solicitud_cotizacion_id))
+      .filter((solicitudId) => Number.isFinite(solicitudId) && solicitudId > 0);
+
+    if (solicitudesIds.length) {
+      const { error: errorSolicitudes } = await this.client
+        .from('solicitudes_cotizacion')
+        .update({ estatus_id: estatus.id })
+        .in('id', solicitudesIds);
+
+      if (errorSolicitudes) throw errorSolicitudes;
+    }
+
+    await this.marcarCotizacionMultipleComoPendiente(id);
   }
 
   async obtenerDetalleCotizacionMultiple(publicId: string) {
@@ -3847,6 +3999,9 @@ export class SupabaseService {
 
     const item = data as any;
     const hoteles = this.normalizarSolicitudesCotizacionMultiple(item?.cotizaciones_solicitudes)
+      .filter((hotel: any) =>
+        String(hotel?.estatus_clave ?? hotel?.estatus_nombre ?? '').trim().toLowerCase() !== 'eliminado'
+      )
       .sort((a: any, b: any) => Number(a?.orden ?? 0) - Number(b?.orden ?? 0));
     const hotelesConRegimen = hoteles.map((hotel: any) => {
       const regimenEs = hotel?.regimen?.traducciones?.find((x: any) => x.idioma_id === ES_ID);
@@ -3871,6 +4026,20 @@ export class SupabaseService {
       tipo_destino: hotelesConRegimen[0]?.tipo_destino ?? '',
       cotizacion: hotelesConRegimen
     };
+  }
+
+  async obtenerComparativaPublica(publicId: string) {
+    const id = String(publicId ?? '').trim();
+    if (!id) {
+      throw new Error('Public ID invalido.');
+    }
+
+    const { data, error } = await this.client.rpc('obtener_comparativa_por_public_id', {
+      p_public_id: id
+    });
+
+    if (error) throw error;
+    return data ?? null;
   }
 
   async obtenerCotizacionPorPublicId(publicId: string) {

@@ -11,6 +11,8 @@ import { FuseConfirmationConfig } from '@fuse/services/confirmation/confirmation
     styles: [
         `
             .fuse-confirmation-dialog-panel {
+                .confirmation-confirm-button-primary .mdc-button__label,
+                .confirmation-confirm-button-warn .mdc-button__label,
                 .confirmation-confirm-button-teal .mdc-button__label {
                     color: #fff !important;
                 }

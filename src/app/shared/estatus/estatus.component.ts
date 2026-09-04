@@ -19,7 +19,7 @@ export class EstatusComponent {
     estatusPurple: Estatus[] = ['Cerrado', 'CERRADO'];
     estatusGray: Estatus[] = ['Sin usuario', 'Sin estatus'];
     estatusBrown: Estatus[] = [];
-    estatusRed: Estatus[] = ['Cancelado', 'CANCELADO'];
+    estatusRed: Estatus[] = ['Cancelado', 'CANCELADO', 'Eliminado', 'ELIMINADO'];
     estatusOrange: Estatus[] = [];
 
     get normalizedStatus(): Estatus {
@@ -31,6 +31,7 @@ export class EstatusComponent {
         if (upper === 'CONFIRMADA') return 'CONFIRMADA';
         if (upper === 'CERRADO') return 'CERRADO';
         if (upper === 'CANCELADO') return 'CANCELADO';
+        if (upper === 'ELIMINADO') return 'ELIMINADO';
         if (upper === 'EN PROCESO') return 'EN PROCESO';
         if (upper === 'ACTIVO') return 'ACTIVO';
         if (upper === 'INACTIVO') return 'INACTIVO';

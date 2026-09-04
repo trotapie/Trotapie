@@ -12,6 +12,8 @@ export type Estatus =
   | 'CERRADO'
   | 'Cancelado'
   | 'CANCELADO'
+  | 'Eliminado'
+  | 'ELIMINADO'
   | 'SUMINISTRADA'
   | 'ALMACENADA'
   | 'RECOLECTADA'

@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { ConcentradoCotizacionesMultiplesComponent } from '../concentrado-cotizaciones-multiples/concentrado-cotizaciones-multiples.component';
 import { CotizacionMultipleComponent } from '../cotizacion-multiple/cotizacion-multiple.component';
+import { DetalleCotizacionMultipleComponent } from '../concentrado-cotizaciones-multiples/detalle-cotizacion-multiple.component';
 
 const COTIZACIONES_VIEW = { permissions: ['cotizaciones.view'] };
 const COTIZACIONES_CREATE = { permissions: ['cotizaciones.create'] };
@@ -15,5 +16,10 @@ export default [
         path: 'nueva',
         component: CotizacionMultipleComponent,
         data: COTIZACIONES_CREATE,
+    },
+    {
+        path: 'detalle/:id',
+        component: DetalleCotizacionMultipleComponent,
+        data: COTIZACIONES_VIEW,
     },
 ] as Routes;

@@ -31,7 +31,7 @@ export class ComparativaPublicaComponent implements OnInit {
 
     try {
       this.cargando = true;
-      const data = await this.supabase.obtenerDetalleCotizacionMultiple(publicId);
+      const data = await this.supabase.obtenerComparativaPublica(publicId);
 
       if (!data) {
         this.error = 'No se encontro la comparativa.';

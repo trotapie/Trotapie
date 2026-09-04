@@ -310,7 +310,10 @@
     padding: 4px 10px;
     border-radius: 999px;
     font-weight: 700;
-    font-size: 12px;
+    font-size: 11px;
+    line-height: 1.35;
+    overflow-wrap: normal;
+    word-break: keep-all;
     background: var(--pill-bg);
     color: var(--fuse-text-default);
 }
@@ -443,4 +446,44 @@ mat-form-field.search {
         gap: 0.25rem;
         padding: 0.25rem 0.4rem;
     }
+}
+
+.tree-id-cell {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.tree-id-cell--child {
+    padding-left: 12px;
+}
+
+.expand-btn {
+    width: 28px;
+    height: 28px;
+    padding: 2px;
+}
+
+.tree-branch {
+    width: 20px;
+    height: 18px;
+    margin-right: 8px;
+    border-bottom: 1px solid var(--fuse-border);
+    border-left: 1px solid var(--fuse-border);
+}
+
+.alternative-row .mat-mdc-cell {
+    color: var(--fuse-text-secondary);
+}
+
+.comparison-label {
+    display: inline-flex;
+    width: fit-content;
+    margin-bottom: 3px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--primary, #00a67c) 14%, transparent);
+    color: var(--fuse-text-default);
+    font-size: 11px;
+    font-weight: 700;
 }

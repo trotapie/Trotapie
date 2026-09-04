@@ -1,191 +1,320 @@
-<div class="absolute inset-0 flex min-w-0 flex-col overflow-y-auto" cdkScrollable>
-  <div class="mx-6 my-6 flex min-w-0 flex-auto flex-col gap-4">
-    <div class="sticky top-0 z-[100] rounded-xl border border-transparent bg-transparent px-2 py-2 backdrop-blur-md transition-all duration-300 md:px-4">
+<div class="absolute inset-0 flex flex-col min-w-0 overflow-y-auto" cdkScrollable>
+  <div class="flex min-w-0 flex-auto flex-col min-h-0 bg-gray-50 dark:bg-gray-950 pb-12">
+
+    <!-- ========================================================================= -->
+    <!-- HEADER STICKY (Sin breadcrumbs, título limpio y botones diferenciados)     -->
+    <!-- ========================================================================= -->
+    <div class="sticky top-0 z-[100] mx-6 mt-2 rounded-xl border border-transparent bg-transparent px-2 py-2 backdrop-blur-md transition-all duration-300 md:px-4">
       <div class="w-full md:flex md:items-center md:justify-between">
         <div>
-          <h1 class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">Detalle de comparativa</h1>
-          <p class="text-secondary">Comparativa de hoteles seleccionados para esta cotizacion multiple.</p>
+          <h1 class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">
+            Detalle de comparativa
+          </h1>
         </div>
 
+        <!-- Botones con Colores Diferenciados -->
         <div class="my-2 flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3 md:my-0">
           <button
             mat-raised-button
             color="warn"
             class="w-full text-white sm:w-auto"
-            [routerLink]="['/admin/cotizaciones/concentrado']">
+            type="button"
+            [routerLink]="'/admin/cotizaciones/solicitudes'">
             <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
             Regresar
           </button>
+
+          @if (cotizacion) {
+
+          <button
+            mat-raised-button
+            class="w-full  sm:w-auto"
+            type="button"
+            color="accent"
+            (click)="compartirComparativa()"
+            matTooltip="Compartir enlace de la comparativa"
+            aria-label="Compartir enlace">
+            <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:share'"></mat-icon>
+            Compartir
+          </button>
+
+          <!-- <button
+            mat-raised-button
+            class="w-full !bg-amber-600 hover:!bg-amber-700 !text-white sm:w-auto"
+            type="button"
+            [disabled]="enviandoCorreo"
+            (click)="enviarComparativaPorCorreo()"
+            matTooltip="Enviar comparativa por correo al cliente"
+            aria-label="Enviar comparativa por correo">
+            <mat-icon class="mr-2 icon-size-5 text-white" [class.animate-spin]="enviandoCorreo">
+              {{ enviandoCorreo ? 'sync' : 'mail' }}
+            </mat-icon>
+            {{ enviandoCorreo ? 'Enviando...' : 'Enviar correo' }}
+          </button> -->
+
+          <button
+            mat-raised-button
+            color="primary"
+            class="w-full text-white sm:w-auto"
+            type="button"
+            (click)="abrirSelectorHotel()">
+            <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+            Agregar hotel
+          </button>
+          }
         </div>
       </div>
     </div>
 
+    <!-- Error Alert -->
     @if (error) {
-    <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-      {{ error }}
+    <div class="mx-6 mt-3 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
+      <mat-icon class="icon-size-5 text-red-600 dark:text-red-400">error_outline</mat-icon>
+      <div class="flex-1 font-medium">{{ error }}</div>
     </div>
     }
 
+    <!-- Loading State -->
     @if (cargando) {
-    <div class="flex h-40 items-center justify-center">
-      <mat-progress-spinner diameter="36" mode="indeterminate"></mat-progress-spinner>
+    <div class="mx-6 mt-6 flex min-h-[320px] flex-col items-center justify-center gap-4 rounded-3xl border border-gray-200/80 bg-white p-12 text-center dark:border-gray-800 dark:bg-gray-900">
+      <mat-progress-spinner diameter="42" mode="indeterminate"></mat-progress-spinner>
+      <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Cargando información de la comparativa...</p>
     </div>
     } @else if (cotizacion) {
-    <section class="proposal-shell">
-      <div class="proposal-title">
-        <div>
-          <!-- <p>Preparado especialmente para esta cotizacion multiple.</p> -->
+
+    <!-- ========================================================================= -->
+    <!-- FRANJA DE KPIs / STATS CARDS                                              -->
+    <!-- ========================================================================= -->
+    <section class="comparison-brief mx-6 mt-4" aria-label="Resumen de la comparativa">
+      <div class="comparison-brief__client">
+        <div class="comparison-brief__avatar">
+          <mat-icon class="icon-size-6" [svgIcon]="'heroicons_outline:user'"></mat-icon>
         </div>
-
-        <app-status-badge [status]="estatusVisual"></app-status-badge>
-      </div>
-
-      <div class="proposal-summary">
-        <article class="summary-item summary-client">
-          <span class="summary-icon">
-            <mat-icon>person</mat-icon>
-          </span>
-          <div>
-            <p>Cliente</p>
-            <strong>{{ cotizacion.cliente_nombre || 'Sin cliente' }}</strong>
-            <small>{{ cotizacion.cliente_email || cotizacion.cliente_telefono || 'Sin contacto' }}</small>
-          </div>
-        </article>
-
-        <article class="summary-item">
-          <span class="summary-icon muted">
-            <mat-icon>calendar_month</mat-icon>
-          </span>
-          <div>
-            <p>Fechas</p>
-            <strong>{{ obtenerFechasResumen() }}</strong>
-            <small>{{ cotizacion.noches || 0 }} noches</small>
-          </div>
-        </article>
-
-        <article class="summary-item">
-          <span class="summary-icon muted">
-            <mat-icon>support_agent</mat-icon>
-          </span>
-          <div>
-            <p>Asesor</p>
-            <strong>{{ cotizacion.empleado_nombre || 'Sin asesor' }}</strong>
-            <small>{{ hoteles.length }} hoteles seleccionados</small>
-          </div>
-        </article>
-      </div>
-    </section>
-
-    <section class="comparison-section">
-      <div class="comparison-heading">
-        <div>
-          <h2>
-            <mat-icon>compare_arrows</mat-icon>
-            Opciones Seleccionadas
+        <div class="min-w-0">
+          <p class="comparison-brief__eyebrow">Comparativa para</p>
+          <h2 class="truncate text-lg font-bold tracking-tight text-gray-950 dark:text-white" [title]="cotizacion.cliente_nombre">
+            {{ cotizacion.cliente_nombre || 'Sin cliente' }}
           </h2>
-          <p>{{ hoteles.length }} registros en la comparativa</p>
-        </div>
-
-        <div class="comparison-actions">
-          <button mat-stroked-button color="primary" type="button" (click)="compartirComparativa()">
-            <mat-icon class="mr-2 icon-size-5" [svgIcon]="'heroicons_outline:share'"></mat-icon>
-            Compartir comparativa
-          </button>
-
-          <button mat-stroked-button color="primary" type="button" (click)="abrirSelectorHotel()">
-            <mat-icon class="mr-2 icon-size-5">add</mat-icon>
-            Agregar hotel
-          </button>
+          <p class="truncate text-xs text-gray-500 dark:text-gray-400" [title]="cotizacion.cliente_email || cotizacion.cliente_telefono">
+            {{ cotizacion.cliente_email || cotizacion.cliente_telefono || 'Sin contacto' }}
+          </p>
         </div>
       </div>
 
-      @if (!hoteles.length) {
-      <div class="empty-state">
-        Esta cotizacion multiple no tiene hoteles registrados.
+      <div class="comparison-brief__item">
+        <mat-icon class="comparison-brief__icon comparison-brief__icon--stay" [svgIcon]="'heroicons_outline:calendar'"></mat-icon>
+        <div class="min-w-0">
+          <p class="comparison-brief__eyebrow">Estadía</p>
+          <p class="comparison-brief__value">{{ cotizacion.noches || 0 }} noches</p>
+          <p class="comparison-brief__detail" [title]="obtenerFechasResumen()">{{ obtenerFechasResumen() }}</p>
+        </div>
       </div>
-      } @else {
-      <div class="hotel-grid">
-        @for (hotel of hoteles; track hotel.id; let i = $index) {
-        <article class="hotel-card">
-          <div class="hotel-image">
-            <img [src]="obtenerImagenHotel(hotel, i)" [alt]="hotel.hotel_nombre || 'Hotel'">
-          </div>
 
-          <div class="hotel-content">
-            <div class="hotel-title-row">
-              <div class="hotel-avatar">{{ obtenerInicialHotel(hotel) }}</div>
-              <div class="hotel-name-block">
-                <h3>{{ hotel.hotel_nombre || 'Hotel sin nombre' }}</h3>
-                <p>
-                  <mat-icon>location_on</mat-icon>
-                  {{ hotel.destino_nombre || 'Sin destino' }}
-                </p>
-              </div>
-            </div>
-
-            <div class="rating-row" [attr.aria-label]="obtenerEstrellas(hotel) + ' estrellas'">
-              @for (_ of obtenerEstrellasArray(hotel); track $index) {
-              <mat-icon>star</mat-icon>
-              }
-              <span>{{ obtenerEstrellas(hotel) }}.0</span>
-            </div>
-
-            <div class="hotel-meta">
-              <p>Regimen</p>
-              <strong>
-                <mat-icon>hotel</mat-icon>
-                {{ obtenerRegimenHotel(hotel) }}
-              </strong>
-            </div>
-
-            <div class="hotel-footer">
-              <div>
-                <p>Precio total</p>
-                <strong>{{ obtenerPrecio(hotel) }}</strong>
-              </div>
-
-              <div class="hotel-actions">
-                <app-status-badge [status]="obtenerEstatusFila(hotel)"></app-status-badge>
-                <button
-                  mat-stroked-button
-                  color="primary"
-                  type="button"
-                  [routerLink]="'/admin/edicion-cotizacion/' + hotel.public_id">
-                  Editar
-                </button>
-              </div>
-            </div>
-          </div>
-        </article>
-        }
+      <div class="comparison-brief__item">
+        <mat-icon class="comparison-brief__icon comparison-brief__icon--travelers" [svgIcon]="'heroicons_outline:users'"></mat-icon>
+        <div class="min-w-0">
+          <p class="comparison-brief__eyebrow">Viajeros</p>
+          <p class="comparison-brief__value">{{ totalPersonasVisual }}</p>
+          <p class="comparison-brief__detail" [title]="resumenHabitaciones">{{ obtenerHabitacionesCantidad() }}</p>
+        </div>
       </div>
-      }
+
+      <div class="comparison-brief__item">
+        <mat-icon class="comparison-brief__icon comparison-brief__icon--options" [svgIcon]="'heroicons_outline:building-office-2'"></mat-icon>
+        <div class="min-w-0">
+          <p class="comparison-brief__eyebrow">Opciones activas</p>
+          <p class="comparison-brief__value">{{ hoteles.length }} hoteles</p>
+          <p class="comparison-brief__detail" [title]="cotizacion.empleado_nombre">Asesor: {{ cotizacion.empleado_nombre || 'Sin asesor' }}</p>
+        </div>
+      </div>
     </section>
+
+    <!-- Peticiones Especiales (Callout informativo) -->
+    @if (cotizacion.peticiones_especiales) {
+    <div class="mx-6 mt-3 flex items-start gap-3 rounded-2xl border border-amber-200/80 bg-amber-50/70 p-3.5 text-xs text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
+      <mat-icon class="icon-size-5 flex-shrink-0 text-amber-600 dark:text-amber-400 mt-0.5">info</mat-icon>
+      <div class="leading-relaxed">
+        <strong class="font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300">Peticiones especiales del cliente:</strong>
+        <span class="ml-1.5 font-medium">{{ cotizacion.peticiones_especiales }}</span>
+      </div>
+    </div>
+    }
+
+    <!-- ========================================================================= -->
+    <!-- PANEL PRINCIPAL (Toolbar + Grilla de Hoteles / Empty State)                 -->
+    <!-- ========================================================================= -->
+    <main class="mx-6 my-4 space-y-4">
+      <section class="overflow-hidden rounded-3xl border border-gray-200/80 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        
+        <!-- Toolbar Superior del Panel -->
+        <div class="flex flex-col gap-3 border-b border-gray-100 p-4 dark:border-gray-800/80 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+          <div>
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">Opciones de Hoteles en la Comparativa</h2>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Revisa tarifas, amenidades y gestiona cada cotización individual.</p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button mat-raised-button color="primary" class="text-white" type="button" (click)="abrirSelectorHotel()">
+              <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+              <span>Agregar opción</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Área de Contenido del Panel -->
+        <div class="p-4 sm:p-6">
+          @if (!hoteles.length) {
+          <!-- Empty State Oficial Trotapie -->
+          <div class="flex flex-col items-center justify-center p-12 text-center">
+            <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 dark:bg-gray-800">
+              <mat-icon class="icon-size-8" [svgIcon]="'heroicons_outline:building-office-2'"></mat-icon>
+            </div>
+            <h3 class="mt-4 text-base font-bold text-gray-900 dark:text-white">No hay hoteles en esta comparativa</h3>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 max-w-sm">
+              Agrega alternativas hoteleras del destino {{ tipoComparativaLabel | lowercase }} para presentárselas a tu cliente.
+            </p>
+            <button mat-raised-button color="primary" class="mt-4 text-white" type="button" (click)="abrirSelectorHotel()">
+              <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+              <span>Agregar primer hotel</span>
+            </button>
+          </div>
+          } @else {
+
+          <!-- Grid de Tarjetas de Hotel (5 Columnas) -->
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            @for (hotel of hoteles; track hotel.id; let i = $index) {
+            <article class="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:border-gray-800 dark:bg-gray-900">
+              
+              <!-- Imagen de Portada -->
+              <div class="relative aspect-[16/10] w-full overflow-hidden bg-gray-100 dark:bg-gray-800">
+                <img [src]="obtenerImagenHotel(hotel, i)" [alt]="hotel.hotel_nombre || 'Hotel'"
+                  class="h-full w-full object-cover transition-transform duration-500 will-change-transform group-hover:scale-105" />
+                
+                <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-gray-950/75 via-transparent to-black/30"></div>
+
+                <!-- Top Left: Número de Opción -->
+                <div class="absolute left-2.5 top-2.5">
+                  <span class="inline-flex items-center gap-1 rounded-lg bg-black/60 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-white backdrop-blur-md">
+                    <mat-icon class="icon-size-3 text-primary">hotel</mat-icon>
+                    <span>Opción {{ i + 1 }}</span>
+                  </span>
+                </div>
+
+                
+
+                <!-- Bottom Bar: Destino y Estrellas -->
+                <div class="absolute bottom-2.5 left-2.5 right-2.5 flex items-end justify-between gap-1.5">
+                  <span class="inline-flex items-center gap-1 rounded-md bg-black/50 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur-md">
+                    <mat-icon class="icon-size-3 text-red-400">location_on</mat-icon>
+                    <span class="truncate max-w-[130px]">{{ hotel.destino_nombre || 'Sin destino' }}</span>
+                  </span>
+
+                  <!-- Estrellas -->
+                  <div class="inline-flex items-center gap-0.5 rounded-md bg-black/50 px-1.5 py-0.5 text-[11px] font-bold text-amber-300 backdrop-blur-md">
+                    <mat-icon class="icon-size-3 text-amber-400">star</mat-icon>
+                    <span>{{ obtenerEstrellas(hotel) }}.0</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Cuerpo de la Card -->
+              <div class="flex flex-1 flex-col justify-between p-3.5">
+                <div class="flex flex-col gap-2.5">
+                  <!-- Nombre del Hotel -->
+                  <div>
+                    <h3 class="text-sm sm:text-base font-bold leading-snug line-clamp-2 text-gray-900 group-hover:text-primary dark:text-white transition-colors" [title]="hotel.hotel_nombre">
+                      {{ hotel.hotel_nombre || 'Hotel sin nombre' }}
+                    </h3>
+                  </div>
+
+                  <!-- Pills de Régimen y Habitación -->
+                  <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
+                    <span class="inline-flex items-center gap-1 rounded-lg border border-gray-200/70 bg-gray-50/70 px-2 py-0.5 font-medium text-gray-700 dark:border-gray-800 dark:bg-gray-800/40 dark:text-gray-300">
+                      <mat-icon class="icon-size-3 text-primary">restaurant</mat-icon>
+                      <span class="truncate max-w-[120px]">{{ obtenerRegimenHotel(hotel) }}</span>
+                    </span>
+
+                    @if (hotel.tipo_habitacion) {
+                    <span class="inline-flex items-center gap-1 rounded-lg border border-gray-200/70 bg-gray-50/70 px-2 py-0.5 font-medium text-gray-700 dark:border-gray-800 dark:bg-gray-800/40 dark:text-gray-300">
+                      <mat-icon class="icon-size-3 text-gray-400">meeting_room</mat-icon>
+                      <span class="truncate max-w-[110px]">{{ hotel.tipo_habitacion }}</span>
+                    </span>
+                    }
+                  </div>
+                </div>
+
+                <!-- Footer de Acciones con Botones Oficiales del Sistema -->
+                <div class="mt-3.5 flex items-center justify-between gap-1 border-t border-gray-100 pt-3 dark:border-gray-800">
+                  <button
+                    mat-raised-button
+                    color="primary"
+                    type="button"
+                    class="text-white  leading-none"
+                    [routerLink]="'/admin/edicion-cotizacion/' + hotel.public_id"
+                    matTooltip="Editar detalle de esta cotización"
+                    aria-label="Editar cotización">
+                    <mat-icon class="mr-1 icon-size-3.5 text-white" [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
+                    <span>Editar</span>
+                  </button>
+
+                  <button
+                    mat-icon-button
+                    color="warn"
+                    type="button"
+                    (click)="solicitarQuitarHotel(hotel)"
+                    matTooltip="Quitar este hotel de la comparativa"
+                    aria-label="Quitar hotel de la comparativa">
+                    <mat-icon class="icon-size-4 text-red-500" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                  </button>
+                </div>
+              </div>
+            </article>
+            }
+          </div>
+          }
+        </div>
+      </section>
+    </main>
+
     }
   </div>
 </div>
 
+<!-- ========================================================================= -->
+<!-- MODAL: AGREGAR HOTEL A LA COMPARATIVA                                     -->
+<!-- ========================================================================= -->
 @if (selectorHotelAbierto) {
-<div class="modal-backdrop" (click)="cerrarSelectorHotel()">
-  <section class="modal-panel" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <div>
-        <h2 class="modal-title">Agregar hotel a la comparativa</h2>
-        <p class="modal-subtitle">Selecciona un destino {{ tipoComparativaLabel | lowercase }} y después el hotel.</p>
+<div class="fixed inset-0 z-[3025] flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/65 backdrop-blur-sm" (click)="cerrarSelectorHotel()"></div>
+  <div class="relative z-10 w-full max-w-lg rounded-2xl border border-gray-100 bg-white p-6 shadow-2xl dark:border-gray-800 dark:bg-gray-900 animate-in fade-in zoom-in-95 duration-200" (click)="$event.stopPropagation()">
+    
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800">
+      <div class="flex items-center gap-3">
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <mat-icon [svgIcon]="'heroicons_outline:building-office-2'"></mat-icon>
+        </div>
+        <div>
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white">Agregar hotel a la comparativa</h2>
+          <span class="text-xs text-gray-500 dark:text-gray-400">Selecciona un destino {{ tipoComparativaLabel | lowercase }} y después el hotel.</span>
+        </div>
       </div>
 
-      <button mat-icon-button type="button" [disabled]="guardandoHotel" (click)="cerrarSelectorHotel()">
-        <mat-icon>close</mat-icon>
+      <button mat-icon-button type="button" [disabled]="guardandoHotel" (click)="cerrarSelectorHotel()" matTooltip="Cerrar modal" aria-label="Cerrar modal">
+        <mat-icon class="icon-size-5">close</mat-icon>
       </button>
     </div>
 
-    <div class="modal-content">
+    <!-- Modal Content -->
+    <div class="mt-4 flex flex-col gap-4">
       @if (confirmarAgregarOtroHotel) {
-      <div class="success-panel">
-        <mat-icon class="success-icon">check_circle</mat-icon>
+      <div class="flex items-start gap-3.5 rounded-2xl border border-emerald-200 bg-emerald-50/90 p-4 dark:border-emerald-800 dark:bg-emerald-950/40">
+        <mat-icon class="icon-size-6 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5">check_circle</mat-icon>
         <div>
-          <h3>Hotel agregado correctamente</h3>
-          <p>Desea agregar otro hotel nuevo?</p>
+          <h3 class="text-sm font-bold text-emerald-900 dark:text-emerald-200">¡Hotel agregado correctamente!</h3>
+          <p class="mt-1 text-xs text-emerald-700 dark:text-emerald-300">
+            La opción se ha sumado a la comparativa. ¿Deseas agregar otro hotel más para este cliente?
+          </p>
         </div>
       </div>
       } @else {
@@ -193,20 +322,20 @@
         <mat-label>Destino {{ tipoComparativaLabel }}</mat-label>
         <mat-select [value]="destinoSeleccionadoId" [disabled]="guardandoHotel || !destinosParaAgregar.length"
           (selectionChange)="onDestinoAgregarChange($event.value)">
-          <mat-option [value]="null">Selecciona destino</mat-option>
+          <mat-option [value]="null">Selecciona un destino</mat-option>
           @for (destino of destinosParaAgregar; track destino.id) {
           <mat-option [value]="destino.id">{{ destino.nombre }}</mat-option>
           }
         </mat-select>
         @if (!destinosParaAgregar.length) {
-        <mat-hint>No hay destinos disponibles del mismo tipo para agregar hoteles.</mat-hint>
+        <mat-hint>No hay más destinos disponibles de tipo {{ tipoComparativaLabel | lowercase }}.</mat-hint>
         }
       </mat-form-field>
 
       <mat-form-field class="w-full">
         <mat-label>Hotel</mat-label>
         <mat-select [(ngModel)]="hotelSeleccionadoId" [disabled]="guardandoHotel || !destinoSeleccionadoId || !hotelesParaAgregar.length">
-          <mat-option [value]="null">Selecciona hotel</mat-option>
+          <mat-option [value]="null">Selecciona un hotel</mat-option>
           @for (hotel of hotelesParaAgregar; track hotel.id) {
           <mat-option [value]="hotel.id">
             {{ hotel.nombre_hotel }} - {{ hotel.destino_nombre }}
@@ -214,57 +343,108 @@
           }
         </mat-select>
         @if (destinoSeleccionadoId && !hotelesParaAgregar.length) {
-        <mat-hint>No hay hoteles disponibles para este destino.</mat-hint>
+        <mat-hint>No hay hoteles disponibles en este destino que no estén ya en la comparativa.</mat-hint>
         } @else if (!destinoSeleccionadoId) {
-        <mat-hint>Selecciona un destino para ver hoteles.</mat-hint>
+        <mat-hint>Primero selecciona un destino arriba para ver los hoteles.</mat-hint>
         }
       </mat-form-field>
 
       @if (hotelSeleccionado) {
-      <div class="modal-summary-grid">
-        <div class="modal-summary-item">
-          <p>Destino</p>
-          <strong>{{ hotelSeleccionado.destino_nombre }}</strong>
+      <div class="grid grid-cols-3 gap-3 rounded-2xl border border-gray-200 bg-gray-50 p-3 text-xs dark:border-gray-800 dark:bg-gray-800/40">
+        <div>
+          <span class="block font-semibold uppercase text-[10px] text-gray-400">Destino</span>
+          <strong class="block truncate text-gray-800 dark:text-gray-200">{{ hotelSeleccionado.destino_nombre }}</strong>
         </div>
-        <div class="modal-summary-item">
-          <p>Regimen</p>
-          <strong>{{ hotelSeleccionado.regimen || 'Sin regimen' }}</strong>
+        <div>
+          <span class="block font-semibold uppercase text-[10px] text-gray-400">Régimen</span>
+          <strong class="block truncate text-gray-800 dark:text-gray-200">{{ hotelSeleccionado.regimen || 'Sin régimen' }}</strong>
         </div>
-        <div class="modal-summary-item">
-          <p>Orden</p>
-          <strong>{{ hoteles.length + 1 }}</strong>
+        <div>
+          <span class="block font-semibold uppercase text-[10px] text-gray-400">Posición</span>
+          <strong class="block text-gray-800 dark:text-gray-200">Opción {{ hoteles.length + 1 }}</strong>
         </div>
       </div>
       }
       }
     </div>
 
-    <div class="modal-actions">
+    <!-- Modal Footer Actions -->
+    <div class="mt-6 flex justify-end gap-2 border-t border-gray-100 pt-3 dark:border-gray-800">
       @if (confirmarAgregarOtroHotel) {
-      <button mat-stroked-button type="button" (click)="terminarAgregarHoteles()">
-        No
+      <button mat-raised-button type="button" (click)="terminarAgregarHoteles()">
+        <mat-icon class="mr-2 icon-size-5">done</mat-icon>
+        Listo, ver comparativa
       </button>
 
       <button mat-raised-button color="primary" class="text-white" type="button" (click)="agregarOtroHotel()">
-        Si, agregar otro
+        <mat-icon class="mr-2 icon-size-5 text-white">add</mat-icon>
+        Sí, agregar otro
       </button>
       } @else {
-      <button mat-stroked-button type="button" [disabled]="guardandoHotel" (click)="cerrarSelectorHotel()">
+      <button mat-raised-button type="button" [disabled]="guardandoHotel" (click)="cerrarSelectorHotel()">
+        <mat-icon class="mr-2 icon-size-5">close</mat-icon>
         Cancelar
       </button>
 
       <button mat-raised-button color="primary" class="text-white" type="button"
         [disabled]="guardandoHotel || !hotelSeleccionado"
         (click)="agregarHotelComparativa()">
-        <mat-icon class="mr-2 icon-size-5 text-white">add</mat-icon>
-        @if (guardandoHotel) {
-        Agregando...
-        } @else {
-        Agregar hotel
-        }
+        <mat-icon class="mr-2 icon-size-5 text-white" [class.animate-spin]="guardandoHotel">
+          {{ guardandoHotel ? 'sync' : 'add' }}
+        </mat-icon>
+        {{ guardandoHotel ? 'Agregando...' : 'Agregar hotel' }}
       </button>
       }
     </div>
-  </section>
+  </div>
+</div>
+}
+
+<!-- ========================================================================= -->
+<!-- MODAL DESTRUCTIVO: QUITAR HOTEL DE LA COMPARATIVA                         -->
+<!-- ========================================================================= -->
+@if (modalQuitarAbierto && hotelParaQuitar) {
+<div class="fixed inset-0 z-[3025] flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/65 backdrop-blur-sm" (click)="cancelarQuitarHotel()"></div>
+  <div class="relative z-10 w-full max-w-md rounded-2xl border border-red-100 bg-white p-6 shadow-2xl dark:border-red-950/40 dark:bg-gray-900">
+    
+    <!-- Header con Icono de Alerta -->
+    <div class="flex items-center gap-3 text-red-600 dark:text-red-400">
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-red-100 dark:bg-red-950/50">
+        <mat-icon [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">Quitar de la comparativa</h2>
+        <span class="text-xs font-semibold text-red-600 dark:text-red-400">Se desvinculará de la propuesta</span>
+      </div>
+    </div>
+
+    <!-- Mensaje de Advertencia -->
+    <div class="mt-4 rounded-xl bg-gray-50 p-3.5 text-sm text-gray-700 dark:bg-gray-800/60 dark:text-gray-300">
+      <p>
+        ¿Estás seguro de que deseas retirar <strong class="text-gray-900 dark:text-white font-bold">"{{ hotelParaQuitar.hotel_nombre }}"</strong> de esta comparativa?
+      </p>
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        Esta opción dejará de aparecer en el enlace compartido al cliente.
+      </p>
+    </div>
+
+    <!-- Botones de Acción -->
+    <div class="mt-6 flex justify-end gap-2">
+      <button mat-raised-button type="button" [disabled]="quitandoHotelId != null" (click)="cancelarQuitarHotel()">
+        <mat-icon class="mr-2 icon-size-5">close</mat-icon>
+        Cancelar
+      </button>
+
+      <button mat-raised-button color="warn" class="text-white" type="button"
+        [disabled]="quitandoHotelId != null"
+        (click)="ejecutarQuitarHotel()">
+        <mat-icon class="mr-2 icon-size-5 text-white" [class.animate-spin]="quitandoHotelId != null">
+          {{ quitandoHotelId != null ? 'sync' : 'delete' }}
+        </mat-icon>
+        {{ quitandoHotelId != null ? 'Quitando...' : 'Quitar hotel' }}
+      </button>
+    </div>
+  </div>
 </div>
 }

@@ -3,8 +3,9 @@
     <div class="flex min-w-0 flex-auto flex-col min-h-0">
         <div class="sticky top-0 z-[100] mx-6 mt-2 rounded-xl border border-transparent bg-transparent px-2 py-2 backdrop-blur-md transition-all duration-300 md:px-4">
             <div class="w-full md:flex md:items-center md:justify-between">
-                <div class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">
-                    Solicitudes de cotización
+                <div>
+                    <h1 class="text-3xl font-semibold leading-tight text-gray-900 dark:text-white">Cotizaciones</h1>
+                    <p class="text-secondary">Gestiona solicitudes individuales y comparativas de hoteles.</p>
                 </div>
 
                 <div class="my-2 flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3 md:my-0">
@@ -27,11 +28,18 @@
                         Descargar Excel
                     </button> -->
 
+                    
                     <button mat-raised-button color="primary" class="w-full text-white sm:w-auto"
                         [routerLink]="['/admin/cotizaciones/solicitudes/nueva']">
                         <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:plus'"></mat-icon>
-                        Crear cotizacion
+                        Crear cotizacion 
                     </button>
+
+                    <!-- <button mat-raised-button color="primary" class="bg-[#1591df] w-full sm:w-auto"
+                        [routerLink]="['/admin/cotizaciones/concentrado/nueva']">
+                        <mat-icon class="mr-2 icon-size-5">compare_arrows</mat-icon>
+                        Crear comparativa
+                    </button> -->
 
                 </div>
             </div>
@@ -146,17 +154,32 @@
             <div class="table-shell mat-elevation-z2">
                 <!-- TABLE WRAPPER (SCROLL) -->
                 <div class="table-scroll px-4">
-                    <table mat-table [dataSource]="dataSource" matSort class="pretty-table">
+                    <table mat-table [dataSource]="dataSource" class="pretty-table">
 
                         <!-- ID -->
                         <ng-container matColumnDef="id">
-                            <th mat-header-cell *matHeaderCellDef mat-sort-header> ID Folio </th>
-                            <td mat-cell *matCellDef="let row" class="mono"> {{ folioCotizacionVisual(row) }} </td>
+                            <th mat-header-cell *matHeaderCellDef> ID Folio </th>
+                            <td mat-cell *matCellDef="let row" class="mono">
+                                <div class="tree-id-cell" [class.tree-id-cell--child]="esAlternativa(row)">
+                                    @if (esComparativa(row)) {
+                                    <button mat-icon-button type="button" class="expand-btn"
+                                        [disabled]="!row.solicitudes?.length"
+                                        [matTooltip]="expandedComparativas.has(row.id) ? 'Ocultar alternativas' : 'Mostrar alternativas'"
+                                        [attr.aria-label]="expandedComparativas.has(row.id) ? 'Ocultar alternativas' : 'Mostrar alternativas'"
+                                        (click)="toggleComparativa(row)">
+                                        <mat-icon>{{ expandedComparativas.has(row.id) ? 'expand_more' : 'chevron_right' }}</mat-icon>
+                                    </button>
+                                    } @else if (esAlternativa(row)) {
+                                    <span class="tree-branch" aria-hidden="true"></span>
+                                    }
+                                    <span>{{ folioCotizacionVisual(row) }}</span>
+                                </div>
+                            </td>
                         </ng-container>
 
                         <!-- Fecha cotizacion -->
                         <ng-container matColumnDef="fecha">
-                            <th mat-header-cell *matHeaderCellDef mat-sort-header> Fecha cotización </th>
+                            <th mat-header-cell *matHeaderCellDef> Fecha cotización </th>
                             <td mat-cell *matCellDef="let row">
                                 <span class="cell-title">
                                     {{ fechaCotizacionVisual(row) }}
@@ -166,31 +189,32 @@
 
                         <!-- Cliente -->
                         <ng-container matColumnDef="cliente">
-                            <th mat-header-cell *matHeaderCellDef mat-sort-header> Pasajero </th>
+                            <th mat-header-cell *matHeaderCellDef> Pasajero </th>
                             <td mat-cell *matCellDef="let row">
                                 <div>
                                     <span class="cell-title">{{ row.cliente_nombre }}</span>
-                                    <!-- <span class="cell-subtitle">{{ row.cliente_email }}</span> -->
                                 </div>
                             </td>
                         </ng-container>
 
                         <!-- Hotel -->
                         <ng-container matColumnDef="hotel">
-                            <th mat-header-cell *matHeaderCellDef mat-sort-header> Hotel </th>
+                            <th mat-header-cell *matHeaderCellDef> Hotel </th>
                             <td mat-cell *matCellDef="let row">
                                 <div>
+                                    @if (esComparativa(row)) {
+                                    <span class="comparison-label">Comparativa</span>
+                                    <span class="cell-subtitle cell-subtitle-clamp">{{ row.hotel_nombre }}</span>
+                                    } @else {
                                     <span class="cell-title">{{ row.hotel_nombre }}</span>
-                                    <!-- <span class="cell-subtitle">
-                                        {{ row.destino_nombre }} · {{ row.tipo_destino }}
-                                    </span> -->
+                                    }
                                 </div>
                             </td>
                         </ng-container>
 
                         <!-- Habitaciones -->
                         <ng-container matColumnDef="habitaciones">
-                            <th mat-header-cell *matHeaderCellDef mat-sort-header> Habitaciones </th>
+                            <th mat-header-cell *matHeaderCellDef> Habitaciones </th>
                             <td mat-cell *matCellDef="let row">
                                 <span class="cell-title"
                                     [matTooltip]="obtenerDetalleHabitaciones(row)"
@@ -202,7 +226,7 @@
 
                         <!-- Destino -->
                         <ng-container matColumnDef="destino">
-                            <th mat-header-cell *matHeaderCellDef mat-sort-header> Destino </th>
+                            <th mat-header-cell *matHeaderCellDef> Destino </th>
                             <td mat-cell *matCellDef="let row">
                                 {{ row.destino_nombre }}
                             </td>
@@ -210,7 +234,7 @@
 
                         <!-- Tipo destino -->
                         <ng-container matColumnDef="tipoDestino">
-                            <th mat-header-cell *matHeaderCellDef mat-sort-header> Tipo </th>
+                            <th mat-header-cell *matHeaderCellDef> Tipo </th>
                             <td mat-cell *matCellDef="let row">
                                 <span class="pill">
                                     {{ row.tipo_destino }}
@@ -220,7 +244,7 @@
 
                         <!-- Empleado -->
                         <ng-container matColumnDef="empleado">
-                            <th mat-header-cell *matHeaderCellDef mat-sort-header> Empleado </th>
+                            <th mat-header-cell *matHeaderCellDef> Empleado </th>
                             <td mat-cell *matCellDef="let row">
                                 {{ row.empleado_nombre }}
                             </td>
@@ -228,7 +252,7 @@
 
                         <!-- Estatus -->
                         <ng-container matColumnDef="estatus">
-                            <th mat-header-cell *matHeaderCellDef mat-sort-header> Estatus </th>
+                            <th mat-header-cell *matHeaderCellDef> Estatus </th>
                             <td mat-cell *matCellDef="let row">
                                     <div class="status-cell flex justify-center items-center w-full">
                                         <app-status-badge [status]="row.estatus_nombre"></app-status-badge>
@@ -242,17 +266,27 @@
                                 <span class="sr-only">Acciones</span>
                             </th>
                             <td mat-cell *matCellDef="let row" class="actions-col">
+                                @if (esComparativa(row)) {
                                 <app-tp-actions-menu
-                                    [actions]="accionesCotizacion"
+                                    [actions]="accionesParaComparativa(row)"
+                                    ariaLabel="Abrir acciones de la comparativa"
+                                    (actionSelected)="ejecutarAccionComparativa($event, row)">
+                                </app-tp-actions-menu>
+                                } @else {
+                                <app-tp-actions-menu
+                                    [actions]="accionesParaCotizacion(row)"
                                     ariaLabel="Abrir acciones de la cotización"
                                     (actionSelected)="ejecutarAccionCotizacion($event, row)">
                                 </app-tp-actions-menu>
+                                }
                             </td>
                         </ng-container>
 
                         <!-- Header / Rows -->
                         <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true" class="main-header-row"></tr>
-                        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="row"></tr>
+                        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="row"
+                            [class.comparison-row]="esComparativa(row)"
+                            [class.alternative-row]="esAlternativa(row)"></tr>
 
                         <!-- Empty state -->
                         <tr class="mat-row" *matNoDataRow>

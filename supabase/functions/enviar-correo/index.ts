@@ -19,6 +19,7 @@ type EmailPayload = {
     fecha_salida?: string | Date;
     noches?: number | string;
     public_id?: string;
+    tipo?: 'cotizacion' | 'comparativa';
     pdf_base64?: string;
     pdf_filename?: string;
 };
@@ -77,6 +78,7 @@ Deno.serve(async (req) => {
         const fechaEntrada = formatDate(body.fecha_entrada);
         const fechaSalida = formatDate(body.fecha_salida);
         const publicId = body.public_id?.trim() || '';
+        const tipo = body.tipo === 'comparativa' ? 'comparativa' : 'cotizacion';
         const noches = Number(body.noches ?? 0);
         const pdfBase64 = body.pdf_base64?.trim() || '';
         const pdfFilename = body.pdf_filename?.trim() || 'cotizacion.pdf';
@@ -137,10 +139,12 @@ Deno.serve(async (req) => {
         const mensajeFinal = mensaje || DEFAULT_MENSAJE_CORREO;
         const replyTo = Deno.env.get('MAILEROO_REPLY_TO') || DEFAULT_REPLY_TO;
         const remitenteNombre = DEFAULT_REMITENTE_NOMBRE;
-        const firma = publicId ? await obtenerFirmaEmpleado(publicId) : null;
+        const firma = publicId ? await obtenerFirmaEmpleado(publicId, tipo) : null;
         const firmaHtml = construirFirmaHtml(firma);
         const cotizacionUrl = publicId
-            ? `${APP_URL}/cotizacion/${encodeURIComponent(publicId)}`
+            ? tipo === 'comparativa'
+                ? `${APP_URL}/share/comparativa/${encodeURIComponent(publicId)}`
+                : `${APP_URL}/cotizacion/${encodeURIComponent(publicId)}`
             : '';
         const ctaHtml = construirCtaCotizacionHtml(cotizacionUrl);
 
@@ -393,7 +397,8 @@ type FirmaEmpleado = {
 };
 
 async function obtenerFirmaEmpleado(
-    publicId: string
+    publicId: string,
+    tipo: 'cotizacion' | 'comparativa'
 ): Promise<FirmaEmpleado | null> {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -405,8 +410,11 @@ async function obtenerFirmaEmpleado(
     }
 
     const client = createClient(supabaseUrl, serviceRoleKey);
+    const tabla = tipo === 'comparativa'
+        ? 'cotizaciones_multiples'
+        : 'solicitudes_cotizacion';
     const { data: solicitud, error: solicitudError } = await client
-        .from('solicitudes_cotizacion')
+        .from(tabla)
         .select('empleado_id')
         .eq('public_id', publicId)
         .maybeSingle();

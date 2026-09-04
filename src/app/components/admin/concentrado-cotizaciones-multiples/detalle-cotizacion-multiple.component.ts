@@ -1,14 +1,14 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { SupabaseService } from 'app/core/supabase.service';
-import { EstatusComponent } from 'app/shared/estatus/estatus.component';
 import { MaterialModule } from 'app/shared/material.module';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-detalle-cotizacion-multiple',
   standalone: true,
-  imports: [MaterialModule, RouterLink, EstatusComponent],
+  imports: [MaterialModule, RouterLink, FormsModule],
   templateUrl: './detalle-cotizacion-multiple.component.html',
   styleUrl: './detalle-cotizacion-multiple.component.scss'
 })
@@ -24,9 +24,14 @@ export class DetalleCotizacionMultipleComponent implements OnInit {
   hotelSeleccionadoId: number | null = null;
   cargando = true;
   guardandoHotel = false;
+  enviandoCorreo = false;
   selectorHotelAbierto = false;
   confirmarAgregarOtroHotel = false;
+  modalQuitarAbierto = false;
+  hotelParaQuitar: any | null = null;
+  quitandoHotelId: number | null = null;
   error = '';
+
   readonly imagenesRespaldo = [
     'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=1200&auto=format&fit=crop',
     'https://images.unsplash.com/photo-1582719508461-905c673771fd?q=80&w=1200&auto=format&fit=crop',
@@ -169,12 +174,76 @@ export class DetalleCotizacionMultipleComponent implements OnInit {
     this.cerrarSelectorHotel();
   }
 
+  solicitarQuitarHotel(hotel: any): void {
+    this.hotelParaQuitar = hotel;
+    this.modalQuitarAbierto = true;
+  }
+
+  cancelarQuitarHotel(): void {
+    if (this.quitandoHotelId != null) return;
+    this.modalQuitarAbierto = false;
+    this.hotelParaQuitar = null;
+  }
+
+  async ejecutarQuitarHotel(): Promise<void> {
+    const hotel = this.hotelParaQuitar;
+    if (!hotel || !this.cotizacion) return;
+
+    this.quitandoHotelId = Number(hotel.id);
+    try {
+      await this.supabase.quitarHotelDeCotizacionMultiple(this.cotizacion.id, hotel.id);
+      this.snackBar.open(`"${hotel.hotel_nombre || 'Hotel'}" retirado de la comparativa.`, 'Cerrar', { duration: 3000 });
+      this.modalQuitarAbierto = false;
+      this.hotelParaQuitar = null;
+      await this.cargarDetalle();
+    } catch (error: any) {
+      this.snackBar.open(error?.message ?? 'No se pudo retirar el hotel.', 'Cerrar', { duration: 4000 });
+    } finally {
+      this.quitandoHotelId = null;
+    }
+  }
+
+  async copiarPublicId(): Promise<void> {
+    const id = String(this.cotizacion?.public_id ?? this.route.snapshot.paramMap.get('id') ?? '').trim();
+    if (!id) return;
+    try {
+      await navigator.clipboard.writeText(id);
+      this.snackBar.open('ID copiado al portapapeles.', 'Cerrar', { duration: 2500 });
+    } catch {
+      this.snackBar.open('No se pudo copiar el ID.', 'Cerrar', { duration: 2500 });
+    }
+  }
+
+  async copiarEnlaceComparativa(): Promise<void> {
+    const publicId = String(this.cotizacion?.public_id ?? this.route.snapshot.paramMap.get('id') ?? '').trim();
+    if (!publicId) return;
+    const url = `${window.location.origin}/share/comparativa/${publicId}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      this.snackBar.open('Enlace de comparativa copiado al portapapeles.', 'Cerrar', { duration: 2500 });
+    } catch {
+      this.snackBar.open('No se pudo copiar el enlace.', 'Cerrar', { duration: 2500 });
+    }
+  }
+
+  abrirVistaPreviaPublica(): void {
+    const publicId = String(this.cotizacion?.public_id ?? this.route.snapshot.paramMap.get('id') ?? '').trim();
+    if (!publicId) return;
+    window.open(`/share/comparativa/${publicId}`, '_blank');
+  }
+
+  abrirPropuestaIndividual(hotel: any): void {
+    const publicId = String(hotel?.public_id ?? '').trim();
+    if (!publicId) return;
+    window.open(`/cotizacion/${publicId}`, '_blank');
+  }
+
   async compartirComparativa(): Promise<void> {
     const publicId = String(this.cotizacion?.public_id ?? this.route.snapshot.paramMap.get('id') ?? '').trim();
     if (!publicId) return;
 
     const url = `${window.location.origin}/share/comparativa/${publicId}`;
-    const title = 'Comparativa de cotizacion';
+    const title = 'Comparativa de cotizacion Trotapie';
 
     try {
       if (navigator.share) {
@@ -186,6 +255,37 @@ export class DetalleCotizacionMultipleComponent implements OnInit {
       this.snackBar.open('Enlace de comparativa copiado.', 'Cerrar', { duration: 3000 });
     } catch {
       this.snackBar.open('No se pudo compartir la comparativa.', 'Cerrar', { duration: 3000 });
+    }
+  }
+
+  async enviarComparativaPorCorreo(): Promise<void> {
+    if (this.enviandoCorreo) return;
+
+    const publicId = String(this.cotizacion?.public_id ?? this.route.snapshot.paramMap.get('id') ?? '').trim();
+    const correo = String(this.cotizacion?.cliente_email ?? this.cotizacion?.correo ?? '').trim();
+    if (!publicId || !correo) {
+      this.snackBar.open('La comparativa necesita un correo de cliente para enviarse.', 'Cerrar', { duration: 4000 });
+      return;
+    }
+
+    this.enviandoCorreo = true;
+    try {
+      await this.supabase.enviarCorreoCotizacion({
+        to_email: correo,
+        to_name: this.cotizacion?.cliente_nombre ?? this.cotizacion?.nombre_persona ?? '',
+        asunto: 'Tu comparativa de hoteles esta lista',
+        mensaje: 'Te compartimos las alternativas seleccionadas para tu viaje.',
+        fecha_entrada: this.cotizacion?.fecha_entrada ?? null,
+        fecha_salida: this.cotizacion?.fecha_salida ?? null,
+        noches: this.cotizacion?.noches ?? null,
+        public_id: publicId,
+        tipo: 'comparativa'
+      });
+      this.snackBar.open('Comparativa enviada por correo exitosamente.', 'Cerrar', { duration: 3000 });
+    } catch (error: any) {
+      this.snackBar.open(error?.message ?? 'No se pudo enviar la comparativa.', 'Cerrar', { duration: 4000 });
+    } finally {
+      this.enviandoCorreo = false;
     }
   }
 
@@ -205,6 +305,27 @@ export class DetalleCotizacionMultipleComponent implements OnInit {
 
   get estatusVisual(): string {
     return this.obtenerEtiquetaEstatus(this.cotizacion?.estatus_clave);
+  }
+
+  get fechaCreacionFormateada(): string {
+    if (!this.cotizacion?.created_at) return '';
+    try {
+      return new Intl.DateTimeFormat('es-MX', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      }).format(new Date(this.cotizacion.created_at));
+    } catch {
+      return '';
+    }
+  }
+
+  get totalPersonasVisual(): string {
+    const personas = Number(this.cotizacion?.total_personas ?? 0);
+    if (personas > 0) {
+      return `${personas} viajero${personas === 1 ? '' : 's'}`;
+    }
+    return 'Sin especificar';
   }
 
   obtenerHabitacionesCantidad(): string {
@@ -237,6 +358,31 @@ export class DetalleCotizacionMultipleComponent implements OnInit {
     }).format(precio);
   }
 
+  obtenerPrecioConSeguro(row: any): string | null {
+    const p = Number(row?.precio_con_seguro);
+    if (!Number.isFinite(p) || p <= 0) return null;
+    return new Intl.NumberFormat('es-MX', {
+      style: 'currency',
+      currency: 'MXN',
+      maximumFractionDigits: 0
+    }).format(p);
+  }
+
+  obtenerPrecioAMeses(row: any): string | null {
+    const p = Number(row?.precio_a_meses);
+    if (!Number.isFinite(p) || p <= 0) return null;
+    return new Intl.NumberFormat('es-MX', {
+      style: 'currency',
+      currency: 'MXN',
+      maximumFractionDigits: 0
+    }).format(p);
+  }
+
+  obtenerTotalImagenes(row: any): number {
+    const imagenes = Array.isArray(row?.imagenes) ? row.imagenes : [];
+    return imagenes.length;
+  }
+
   obtenerImagenHotel(row: any, index: number): string {
     const imagen = String(row?.imagen_url ?? row?.fondo ?? '').trim();
     if (imagen) return imagen;
@@ -267,13 +413,17 @@ export class DetalleCotizacionMultipleComponent implements OnInit {
   obtenerFechasResumen(): string {
     if (!this.cotizacion?.fecha_entrada || !this.cotizacion?.fecha_salida) return 'Sin fechas';
 
-    const formato = new Intl.DateTimeFormat('es-MX', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
+    try {
+      const formato = new Intl.DateTimeFormat('es-MX', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      });
 
-    return `${formato.format(new Date(this.cotizacion.fecha_entrada))} - ${formato.format(new Date(this.cotizacion.fecha_salida))}`;
+      return `${formato.format(new Date(this.cotizacion.fecha_entrada))} - ${formato.format(new Date(this.cotizacion.fecha_salida))}`;
+    } catch {
+      return `${this.cotizacion.fecha_entrada} - ${this.cotizacion.fecha_salida}`;
+    }
   }
 
   private async cargarHotelesDisponibles(): Promise<void> {
@@ -318,5 +468,9 @@ export class DetalleCotizacionMultipleComponent implements OnInit {
       default:
         return raw;
     }
+  }
+
+  regresar(): void {
+    window.history.back();
   }
 }

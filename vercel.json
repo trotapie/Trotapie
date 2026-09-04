@@ -17,6 +17,10 @@
       "destination": "/api/share/cotizacion/:id?share=1"
     },
     {
+      "source": "/share/comparativa/:id",
+      "destination": "/api/share/comparativa/:id?share=1"
+    },
+    {
       "source": "/cotizacion/:id",
       "has": [
         {
@@ -28,6 +32,19 @@
         }
       ],
       "destination": "/api/share/cotizacion/:id?share=0"
+    },
+    {
+      "source": "/comparativa/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": {
+            "re": ".*(facebookexternalhit|FacebookExternalHit|Facebot|facebot|WhatsApp|whatsapp|Twitterbot|twitterbot|Xbot|xbot|LinkedInBot|linkedinbot|Slackbot|slackbot|Discordbot|discordbot|TelegramBot|telegrambot|SkypeUriPreview|skypeuripreview|meta-externalagent).*"
+          }
+        }
+      ],
+      "destination": "/api/share/comparativa/:id?share=0"
     },
 
     { "source": "/(.*)", "destination": "/index.html" }
