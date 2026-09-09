@@ -10,8 +10,8 @@
 
 .date-range-filter__label-row {
   display: flex;
-  align-items: baseline;
-  gap: 0.3rem;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .date-range-filter__label {
@@ -21,9 +21,25 @@
 }
 
 .date-range-filter__nights {
-  color: var(--fuse-text-secondary);
-  font-size: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-height: 3.5rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 0.5rem;
+  background: #1e293b;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.date-range-filter__control-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .date-range-filter__trigger {
@@ -87,22 +103,6 @@
   width: 1px;
   height: 2rem;
   background: var(--fuse-border);
-}
-
-.date-range-filter__calendar-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 0.45rem;
-  padding: 0.25rem;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--fuse-text-secondary);
-}
-
-.date-range-filter__icon {
-  color: var(--fuse-text-secondary);
 }
 
 ::ng-deep .date-range-filter-menu {
@@ -225,6 +225,15 @@
 }
 
 @media (max-width: 640px) {
+  .date-range-filter__control-row {
+    align-items: flex-end;
+    flex-direction: column;
+  }
+
+  .date-range-filter__nights {
+    align-self: flex-end;
+  }
+
   .date-range-filter-menu__content {
     min-width: min(22rem, calc(100vw - 2rem));
   }

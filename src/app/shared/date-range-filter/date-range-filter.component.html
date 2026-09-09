@@ -1,35 +1,34 @@
 <div class="date-range-filter">
   <div class="date-range-filter__label-row">
     <span class="date-range-filter__label" [id]="labelId">{{ label }}</span>
-    @if (mostrarEstadia && triggerValue) {
-    <span class="date-range-filter__nights">({{ nights(value) }} {{ nights(value) === 1 ? 'noche' : 'noches' }})</span>
-    }
   </div>
-  <div class="date-range-filter__trigger" [attr.aria-labelledby]="labelId">
-    <button
-      type="button"
-      class="date-range-filter__field"
-      [matMenuTriggerFor]="rangeMenu"
-      [disabled]="disabled"
-      aria-label="Fecha de inicio"
-      (menuOpened)="open('start')">
-      <span class="date-range-filter__field-label">Inicio</span>
-      <span [class.date-range-filter__placeholder]="!value.start">{{ value.start ? formatDate(value.start) : 'Seleccionar' }}</span>
-    </button>
-    <span class="date-range-filter__separator" aria-hidden="true"></span>
-    <button
-      type="button"
-      class="date-range-filter__field"
-      [matMenuTriggerFor]="rangeMenu"
-      [disabled]="disabled"
-      aria-label="Fecha de fin"
-      (menuOpened)="open('end')">
-      <span class="date-range-filter__field-label">Fin</span>
-      <span [class.date-range-filter__placeholder]="!value.end">{{ value.end ? formatDate(value.end) : 'Seleccionar' }}</span>
-    </button>
-    <span class="date-range-filter__calendar-button" aria-hidden="true">
-      <mat-icon class="date-range-filter__icon" aria-hidden="true">calendar_month</mat-icon>
-    </span>
+  <div class="date-range-filter__control-row">
+    <div class="date-range-filter__trigger" [attr.aria-labelledby]="labelId">
+      <button
+        type="button"
+        class="date-range-filter__field"
+        [matMenuTriggerFor]="rangeMenu"
+        [disabled]="disabled"
+        aria-label="Fecha de inicio"
+        (menuOpened)="open('start')">
+        <span class="date-range-filter__field-label">Inicio</span>
+        <span [class.date-range-filter__placeholder]="!value.start">{{ value.start ? formatDate(value.start) : 'Seleccionar' }}</span>
+      </button>
+      <span class="date-range-filter__separator" aria-hidden="true"></span>
+      <button
+        type="button"
+        class="date-range-filter__field"
+        [matMenuTriggerFor]="rangeMenu"
+        [disabled]="disabled"
+        aria-label="Fecha de fin"
+        (menuOpened)="open('end')">
+        <span class="date-range-filter__field-label">Fin</span>
+        <span [class.date-range-filter__placeholder]="!value.end">{{ value.end ? formatDate(value.end) : 'Seleccionar' }}</span>
+      </button>
+    </div>
+    @if (mostrarEstadia && triggerValue) {
+    <span class="date-range-filter__nights">{{ nights(value) }} {{ nights(value) === 1 ? 'noche' : 'noches' }}</span>
+    }
   </div>
   <mat-menu #rangeMenu="matMenu" class="date-range-filter-menu" xPosition="after" yPosition="below" [hasBackdrop]="false">
     <div class="date-range-filter-menu__content" (click)="$event.stopPropagation()">
