@@ -442,9 +442,12 @@ export class ActividadesService {
        etiqueta_font_size?: number;
        etiqueta_color?: string;
        etiqueta_texto?: string | null;
-       overlay_posicion?: string;
-       overlay_x?: number | null;
-       overlay_y?: number | null;
+        overlay_posicion?: string;
+        overlay_x?: number | null;
+        overlay_y?: number | null;
+        contenido_posicion?: string;
+        contenido_x?: number | null;
+        contenido_y?: number | null;
       orden?: number | null;
       vigencia_desde?: string | null;
        vigencia_hasta?: string | null;
@@ -486,6 +489,9 @@ export class ActividadesService {
         overlay_posicion: this.normalizarPosicionOverlay(imagen?.overlay_posicion),
         overlay_x: this.normalizarCoordenadaOverlay(imagen?.overlay_x),
         overlay_y: this.normalizarCoordenadaOverlay(imagen?.overlay_y),
+        contenido_posicion: this.normalizarPosicionOverlay(imagen?.contenido_posicion),
+        contenido_x: this.normalizarCoordenadaOverlay(imagen?.contenido_x),
+        contenido_y: this.normalizarCoordenadaOverlay(imagen?.contenido_y),
         orden: Number.isFinite(Number(imagen?.orden)) ? Number(imagen?.orden) : index + 1,
         vigencia_desde: this.normalizarFecha(imagen?.vigencia_desde),
         vigencia_hasta: this.normalizarFecha(imagen?.vigencia_hasta),
@@ -573,6 +579,9 @@ export class ActividadesService {
             overlay_posicion: imagen.overlay_posicion,
             overlay_x: imagen.overlay_x,
             overlay_y: imagen.overlay_y,
+            contenido_posicion: imagen.contenido_posicion,
+            contenido_x: imagen.contenido_x,
+            contenido_y: imagen.contenido_y,
             orden: imagen.orden,
             vigencia_desde: imagen.vigencia_desde,
             vigencia_hasta: imagen.vigencia_hasta
@@ -613,6 +622,9 @@ export class ActividadesService {
           overlay_posicion: imagen.overlay_posicion,
           overlay_x: imagen.overlay_x,
           overlay_y: imagen.overlay_y,
+          contenido_posicion: imagen.contenido_posicion,
+          contenido_x: imagen.contenido_x,
+          contenido_y: imagen.contenido_y,
           orden: imagen.orden,
           vigencia_desde: imagen.vigencia_desde,
           vigencia_hasta: imagen.vigencia_hasta

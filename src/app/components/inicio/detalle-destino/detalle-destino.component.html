@@ -197,10 +197,11 @@
                                         @if (slide.efecto_destino !== 'texto') {
                                             <div class="absolute inset-0" [style.background-color]="colorConOpacidad(slide.overlay_color, slide.overlay_opacidad)"></div>
                                         }
-                                        @if (etiquetaEstaPosicionada(slide)) {
+                                        @if (etiquetaEstaPosicionada(slide) || contenidoEstaPosicionado(slide)) {
                                             <div
-                                                [ngStyle]="getOverlayStyle(slide)"
-                                                class="absolute z-20 w-max max-w-full"
+                                                [ngStyle]="etiquetaEstaPosicionada(slide) ? getOverlayStyle(slide) : null"
+                                                [class]="'absolute z-20 w-max max-w-full' +
+                                                    (!etiquetaEstaPosicionada(slide) ? ' carousel-slide__default-label' : '')"
                                             >
                                                 <span
                                                     class="carousel-slide__label inline-block w-fit rounded-full font-bold uppercase tracking-widest text-white shadow-md"
@@ -208,7 +209,11 @@
                                                     [style.background-color]="slide.etiqueta_color">{{ slide.etiqueta_texto || detallesDestino?.nombre }}</span>
                                             </div>
                                         }
-                                        <div class="absolute inset-0 flex flex-col justify-end p-4 sm:p-8 md:p-14 z-10">
+                                        <div
+                                            [ngStyle]="contenidoEstaPosicionado(slide) ? getContenidoStyle(slide) : null"
+                                            [class]="contenidoEstaPosicionado(slide)
+                                                ? 'carousel-content-overlay absolute z-10 max-w-[calc(100%-2rem)] sm:max-w-[calc(100%-4rem)] md:max-w-[calc(100%-7rem)]'
+                                                : 'absolute inset-0 z-10 flex flex-col justify-end p-4 sm:p-8 md:p-14'">
                                             <div
                                                 [class]="'relative max-w-3xl overflow-hidden' +
                                                     (slide.oscurecer_fondo || slide.efecto_destino !== 'fondo' ? ' rounded-2xl p-3 sm:p-5 md:p-8' : '') +
@@ -220,7 +225,7 @@
                                                     <div class="absolute inset-0 bg-white/12 backdrop-blur-xl backdrop-saturate-150"></div>
                                                 }
                                                 <div class="relative">
-                                                @if (!etiquetaEstaPosicionada(slide)) {
+                                                @if (!etiquetaEstaPosicionada(slide) && !contenidoEstaPosicionado(slide)) {
                                                     <span
                                                         class="carousel-slide__label mb-3 inline-block w-fit rounded-full font-bold uppercase tracking-widest text-white shadow-md"
                                                         [style.--font-size.px]="slide.etiqueta_font_size"

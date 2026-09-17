@@ -44,6 +44,16 @@
     -webkit-backdrop-filter: blur(var(--effect-blur, 0px));
 }
 
+.carousel-content-overlay {
+    width: fit-content;
+    max-width: calc(100% - 2rem);
+}
+
+.carousel-slide__default-label {
+    bottom: clamp(1rem, 4.7cqw, 3.5rem);
+    left: clamp(1rem, 4.7cqw, 3.5rem);
+}
+
 // Fluid clamp scaling relative to the container width (cqw)
 .carousel-slide__label {
     font-size: clamp(0.55rem, 1.15cqw, var(--font-size));

@@ -33,6 +33,9 @@ interface CarouselSlide {
   overlay_posicion: string;
   overlay_x: number | null;
   overlay_y: number | null;
+  contenido_posicion: string;
+  contenido_x: number | null;
+  contenido_y: number | null;
 }
 
 @Component({
@@ -185,9 +188,12 @@ export class DetalleDestinoComponent implements OnInit {
           etiqueta_font_size: Number(imagen.etiqueta_font_size ?? 12),
           etiqueta_color: imagen.etiqueta_color ?? '#F9B44B',
           etiqueta_texto: imagen.etiqueta_texto ?? null,
-          overlay_posicion: imagen.overlay_posicion ?? 'bottom-left',
-          overlay_x: imagen.overlay_x === null || imagen.overlay_x === undefined ? null : Number(imagen.overlay_x),
-          overlay_y: imagen.overlay_y === null || imagen.overlay_y === undefined ? null : Number(imagen.overlay_y)
+           overlay_posicion: imagen.overlay_posicion ?? 'bottom-left',
+           overlay_x: imagen.overlay_x === null || imagen.overlay_x === undefined ? null : Number(imagen.overlay_x),
+           overlay_y: imagen.overlay_y === null || imagen.overlay_y === undefined ? null : Number(imagen.overlay_y),
+           contenido_posicion: imagen.contenido_posicion ?? 'bottom-left',
+           contenido_x: imagen.contenido_x === null || imagen.contenido_x === undefined ? null : Number(imagen.contenido_x),
+           contenido_y: imagen.contenido_y === null || imagen.contenido_y === undefined ? null : Number(imagen.contenido_y)
         }));
     });
 
@@ -199,6 +205,20 @@ export class DetalleDestinoComponent implements OnInit {
   }
 
   getOverlayStyle(slide: CarouselSlide): Record<string, string> {
+    return this.getPositionStyle(slide.overlay_posicion, slide.overlay_x, slide.overlay_y);
+  }
+
+  getContenidoStyle(slide: CarouselSlide): Record<string, string> {
+    return this.getPositionStyle(slide.contenido_posicion, slide.contenido_x, slide.contenido_y);
+  }
+
+  contenidoEstaPosicionado(slide: CarouselSlide): boolean {
+    return slide.contenido_posicion !== 'bottom-left'
+      || slide.contenido_x !== null
+      || slide.contenido_y !== null;
+  }
+
+  private getPositionStyle(posicion: string, x: number | null, y: number | null): Record<string, string> {
     const positions: Record<string, { x: number; y: number; translateX: string; translateY: string }> = {
       'top-left': { x: 0, y: 0, translateX: '0%', translateY: '0%' },
       'top-center': { x: 50, y: 0, translateX: '-50%', translateY: '0%' },
@@ -210,14 +230,14 @@ export class DetalleDestinoComponent implements OnInit {
       'bottom-center': { x: 50, y: 100, translateX: '-50%', translateY: '-100%' },
       'bottom-right': { x: 100, y: 100, translateX: '-100%', translateY: '-100%' }
     };
-    const position = slide.overlay_posicion === 'custom'
+    const position = posicion === 'custom'
       ? {
-          x: Number.isFinite(slide.overlay_x) ? Number(slide.overlay_x) : 0,
-          y: Number.isFinite(slide.overlay_y) ? Number(slide.overlay_y) : 100,
+          x: Number.isFinite(x) ? Number(x) : 50,
+          y: Number.isFinite(y) ? Number(y) : 50,
           translateX: '-50%',
           translateY: '-50%'
         }
-      : positions[slide.overlay_posicion] ?? positions['bottom-left'];
+      : positions[posicion] ?? positions['bottom-left'];
 
     return {
       left: `${position.x}%`,

@@ -231,6 +231,16 @@
     width: max-content;
   }
 
+  .image-edit-modal__content-overlay {
+    width: fit-content;
+    max-width: calc(100% - 2.5rem);
+  }
+
+  .image-edit-modal__overlay--default {
+    bottom: 1.25rem;
+    left: 1.25rem;
+  }
+
   .image-edit-modal__overlay--draggable {
     cursor: grab;
     touch-action: none;
@@ -328,6 +338,16 @@
   .carousel-text-effect {
     backdrop-filter: blur(var(--effect-blur, 0px));
     -webkit-backdrop-filter: blur(var(--effect-blur, 0px));
+  }
+
+  .device-sim-content-overlay {
+    width: fit-content;
+    max-width: calc(100% - 2rem);
+  }
+
+  .carousel-slide__default-label {
+    bottom: clamp(1rem, 4.7cqw, 3.5rem);
+    left: clamp(1rem, 4.7cqw, 3.5rem);
   }
 
   .carousel-slide__label {

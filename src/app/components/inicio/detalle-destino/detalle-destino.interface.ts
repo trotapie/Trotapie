@@ -30,6 +30,9 @@ export interface AtraccionesPrincipale {
     overlay_posicion?: string;
     overlay_x?: number | null;
     overlay_y?: number | null;
+    contenido_posicion?: string;
+    contenido_x?: number | null;
+    contenido_y?: number | null;
   }>;
 }
 

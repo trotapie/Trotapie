@@ -77,6 +77,9 @@ type ImagenActividadForm = {
   overlay_posicion: string;
   overlay_x: number | null;
   overlay_y: number | null;
+  contenido_posicion: string;
+  contenido_x: number | null;
+  contenido_y: number | null;
   orden: number | null;
   vigencia_desde: string | null;
   vigencia_hasta: string | null;
@@ -97,7 +100,10 @@ const VALORES_PREDETERMINADOS_ESTILO_IMAGEN = {
   etiqueta_color: '#F9B44B',
   overlay_posicion: 'bottom-left',
   overlay_x: null,
-  overlay_y: null
+  overlay_y: null,
+  contenido_posicion: 'bottom-left',
+  contenido_x: null,
+  contenido_y: null
 } as const;
 
 type OverlayPosition =
@@ -161,6 +167,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   carpetaActiva = 'Todas';
   editorImagenAbierto = false;
   mostrarVistaPreviaDispositivos = false;
+  contenidoDragActivo = false;
   imagenEditandoIndex: number | null = null;
   imagenSeleccionadaIndex: number | null = null;
   traduciendoActividad = false;
@@ -201,6 +208,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   private imagenesClaveSecuencia = 0;
   private carpetasTemporalesSecuencia = -1;
   private overlayDragActivo = false;
+  private previewArrastre: HTMLElement | null = null;
   previewImageRatio: number | null = null;
   previewMediaStyle: Record<string, string> = { inset: '0' };
   readonly posicionesOverlay = OVERLAY_POSITIONS;
@@ -1518,6 +1526,9 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
                overlay_posicion: ['bottom-left'],
                overlay_x: [null],
                overlay_y: [null],
+               contenido_posicion: ['bottom-left'],
+               contenido_x: [null],
+               contenido_y: [null],
                orden: [this.imagenesArray.length + 1],
               vigencia_desde: [null],
               vigencia_hasta: [null],
@@ -1612,6 +1623,9 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
         overlay_posicion: ['bottom-left'],
         overlay_x: [null],
         overlay_y: [null],
+        contenido_posicion: ['bottom-left'],
+        contenido_x: [null],
+        contenido_y: [null],
         orden: [this.imagenesArray.length + 1],
         vigencia_desde: [null],
         vigencia_hasta: [null],
@@ -2306,9 +2320,12 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
            etiqueta_font_size: [this.normalizarNumeroEnRango(imagen?.etiqueta_font_size, 8, 32, 12)],
            etiqueta_color: [this.normalizarColorHex(imagen?.etiqueta_color, '#F9B44B')],
            etiqueta_texto: [this.limpiarTexto(imagen?.etiqueta_texto)],
-           overlay_posicion: [this.normalizarPosicionOverlay(imagen?.overlay_posicion)],
-           overlay_x: [this.normalizarCoordenadaOverlay(imagen?.overlay_x)],
-           overlay_y: [this.normalizarCoordenadaOverlay(imagen?.overlay_y)],
+            overlay_posicion: [this.normalizarPosicionOverlay(imagen?.overlay_posicion)],
+            overlay_x: [this.normalizarCoordenadaOverlay(imagen?.overlay_x)],
+            overlay_y: [this.normalizarCoordenadaOverlay(imagen?.overlay_y)],
+            contenido_posicion: [this.normalizarPosicionOverlay(imagen?.contenido_posicion)],
+            contenido_x: [this.normalizarCoordenadaOverlay(imagen?.contenido_x)],
+            contenido_y: [this.normalizarCoordenadaOverlay(imagen?.contenido_y)],
           orden: [Number.isFinite(Number(imagen?.orden)) ? Number(imagen.orden) : index + 1],
           vigencia_desde: [this.parseDateValue(imagen?.vigencia_desde)],
           vigencia_hasta: [this.parseDateValue(imagen?.vigencia_hasta)],
@@ -2360,9 +2377,12 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
            etiqueta_font_size: this.normalizarNumeroEnRango(imagen?.etiqueta_font_size, 8, 32, 12),
            etiqueta_color: this.normalizarColorHex(imagen?.etiqueta_color, '#F9B44B'),
            etiqueta_texto: this.limpiarTexto(imagen?.etiqueta_texto),
-           overlay_posicion: this.normalizarPosicionOverlay(imagen?.overlay_posicion),
-           overlay_x: this.normalizarCoordenadaOverlay(imagen?.overlay_x),
-           overlay_y: this.normalizarCoordenadaOverlay(imagen?.overlay_y),
+            overlay_posicion: this.normalizarPosicionOverlay(imagen?.overlay_posicion),
+            overlay_x: this.normalizarCoordenadaOverlay(imagen?.overlay_x),
+            overlay_y: this.normalizarCoordenadaOverlay(imagen?.overlay_y),
+            contenido_posicion: this.normalizarPosicionOverlay(imagen?.contenido_posicion),
+            contenido_x: this.normalizarCoordenadaOverlay(imagen?.contenido_x),
+            contenido_y: this.normalizarCoordenadaOverlay(imagen?.contenido_y),
           orden: this.parseNumber(imagen?.orden) ?? index + 1,
           vigencia_desde: this.normalizarFechaYYYYMMDD(imagen?.vigencia_desde),
            vigencia_hasta: this.normalizarFechaYYYYMMDD(imagen?.vigencia_hasta),
@@ -2798,6 +2818,18 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     });
   }
 
+  seleccionarPosicionContenido(posicion: OverlayPosition): void {
+    const control = this.imagenEditandoControl;
+    if (!control) return;
+
+    const preset = OVERLAY_POSITIONS.find((item) => item.value === posicion);
+    control.patchValue({
+      contenido_posicion: posicion,
+      contenido_x: preset?.x ?? control.get('contenido_x')?.value ?? 50,
+      contenido_y: preset?.y ?? control.get('contenido_y')?.value ?? 50
+    });
+  }
+
   getOverlayPreviewStyle(): Record<string, string> {
     const control = this.imagenEditandoControl;
     const posicion = this.normalizarPosicionOverlay(control?.get('overlay_posicion')?.value);
@@ -2822,6 +2854,10 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     return { left: `${x}%`, top: `${y}%`, transform: `translate(${translateX}, ${translateY})` };
   }
 
+  getContenidoPreviewStyle(): Record<string, string> {
+    return this.getPreviewPositionStyle('contenido_posicion', 'contenido_x', 'contenido_y');
+  }
+
   etiquetaEstaPosicionadaPreview(): boolean {
     const control = this.imagenEditandoControl;
     return control?.get('overlay_posicion')?.value !== 'bottom-left'
@@ -2829,22 +2865,44 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       || control?.get('overlay_y')?.value !== null;
   }
 
+  contenidoEstaPosicionadoPreview(): boolean {
+    const control = this.imagenEditandoControl;
+    return control?.get('contenido_posicion')?.value !== 'bottom-left'
+      || control?.get('contenido_x')?.value !== null
+      || control?.get('contenido_y')?.value !== null;
+  }
+
   iniciarArrastreOverlay(event: PointerEvent): void {
     if (this.imagenEditandoControl?.get('overlay_posicion')?.value !== 'custom') return;
     this.overlayDragActivo = true;
+    this.previewArrastre = (event.currentTarget as HTMLElement)
+      .closest('.image-edit-modal__media-stage, .device-sim-container');
+    (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
+    event.preventDefault();
+  }
+
+  iniciarArrastreContenido(event: PointerEvent): void {
+    if (this.imagenEditandoControl?.get('contenido_posicion')?.value !== 'custom') return;
+    this.contenidoDragActivo = true;
+    this.previewArrastre = (event.currentTarget as HTMLElement)
+      .closest('.image-edit-modal__media-stage, .device-sim-container');
     (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
     event.preventDefault();
   }
 
   @HostListener('document:pointermove', ['$event'])
   moverOverlayPersonalizado(event: PointerEvent): void {
-    if (!this.overlayDragActivo || !this.imagenEditandoControl) return;
-    const preview = document.querySelector('.image-edit-modal__media-stage') as HTMLElement | null;
+    if ((!this.overlayDragActivo && !this.contenidoDragActivo) || !this.imagenEditandoControl) return;
+    const preview = this.previewArrastre
+      ?? document.querySelector('.image-edit-modal__media-stage') as HTMLElement | null;
     if (!preview) return;
     const rect = preview.getBoundingClientRect();
     const x = Math.min(100, Math.max(0, ((event.clientX - rect.left) / rect.width) * 100));
     const y = Math.min(100, Math.max(0, ((event.clientY - rect.top) / rect.height) * 100));
-    this.imagenEditandoControl.patchValue({ overlay_x: Number(x.toFixed(2)), overlay_y: Number(y.toFixed(2)) });
+    const coordenadas = { x: Number(x.toFixed(2)), y: Number(y.toFixed(2)) };
+    this.imagenEditandoControl.patchValue(this.overlayDragActivo
+      ? { overlay_x: coordenadas.x, overlay_y: coordenadas.y }
+      : { contenido_x: coordenadas.x, contenido_y: coordenadas.y });
   }
 
   actualizarMarcoImagenPreview(event?: Event): void {
@@ -2867,6 +2925,36 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   @HostListener('document:pointerup')
   terminarArrastreOverlay(): void {
     this.overlayDragActivo = false;
+    this.contenidoDragActivo = false;
+    this.previewArrastre = null;
+  }
+
+  private getPreviewPositionStyle(
+    posicionControl: string,
+    xControl: string,
+    yControl: string
+  ): Record<string, string> {
+    const control = this.imagenEditandoControl;
+    const posicion = this.normalizarPosicionOverlay(control?.get(posicionControl)?.value);
+    const preset = OVERLAY_POSITIONS.find((item) => item.value === posicion);
+    const x = posicion === 'custom'
+      ? this.normalizarCoordenadaOverlay(control?.get(xControl)?.value) ?? 50
+      : preset?.x ?? 0;
+    const y = posicion === 'custom'
+      ? this.normalizarCoordenadaOverlay(control?.get(yControl)?.value) ?? 100
+      : preset?.y ?? 100;
+    const translateX = posicion === 'top-left' || posicion === 'center-left' || posicion === 'bottom-left'
+      ? '0%'
+      : posicion === 'top-right' || posicion === 'center-right' || posicion === 'bottom-right'
+        ? '-100%'
+        : '-50%';
+    const translateY = posicion === 'top-left' || posicion === 'top-center' || posicion === 'top-right'
+      ? '0%'
+      : posicion === 'bottom-left' || posicion === 'bottom-center' || posicion === 'bottom-right'
+        ? '-100%'
+        : '-50%';
+
+    return { left: `${x}%`, top: `${y}%`, transform: `translate(${translateX}, ${translateY})` };
   }
 
   private normalizarColorHex(value: string | null | undefined, predeterminado: string): string {

@@ -212,9 +212,10 @@
               [style.background-color]="colorConOpacidad(imagenEditandoControl.get('overlay_color')?.value, imagenEditandoControl.get('overlay_opacidad')?.value)">
             </div>
             }
-            @if (etiquetaEstaPosicionadaPreview()) {
-            <div [ngStyle]="getOverlayPreviewStyle()"
+            @if (etiquetaEstaPosicionadaPreview() || contenidoEstaPosicionadoPreview()) {
+            <div [ngStyle]="etiquetaEstaPosicionadaPreview() ? getOverlayPreviewStyle() : null"
               [class]="'image-edit-modal__overlay absolute z-20 max-w-[calc(100%-2.5rem)]' +
+                      (!etiquetaEstaPosicionadaPreview() ? ' image-edit-modal__overlay--default' : '') +
                       (imagenEditandoControl.get('overlay_posicion')?.value === 'custom' ? ' image-edit-modal__overlay--draggable' : '')"
               (pointerdown)="iniciarArrastreOverlay($event)">
               <span
@@ -224,7 +225,13 @@
                 imagenEditandoControl.get('etiqueta_texto')?.value || destinoNombre }}</span>
             </div>
             }
-            <div class="absolute inset-x-0 bottom-0 p-5">
+            <div
+              [ngStyle]="contenidoEstaPosicionadoPreview() ? getContenidoPreviewStyle() : null"
+              [class]="contenidoEstaPosicionadoPreview()
+                ? 'image-edit-modal__content-overlay absolute z-10 max-w-[calc(100%-2.5rem)]' +
+                  (imagenEditandoControl.get('contenido_posicion')?.value === 'custom' ? ' image-edit-modal__overlay--draggable' : '')
+                : 'absolute inset-x-0 bottom-0 p-5'"
+              (pointerdown)="iniciarArrastreContenido($event)">
               <div
                 [class]="'relative max-w-3xl overflow-hidden' +
                       (imagenEditandoControl.get('oscurecer_fondo')?.value || imagenEditandoControl.get('efecto_destino')?.value !== 'fondo' ? ' rounded-2xl p-5' : '') +
@@ -237,7 +244,7 @@
                 <div class="absolute inset-0 bg-white/12 backdrop-blur-xl backdrop-saturate-150"></div>
                 }
                 <div class="relative" [style.color]="imagenEditandoControl.get('texto_color')?.value">
-                  @if (!etiquetaEstaPosicionadaPreview()) {
+                  @if (!etiquetaEstaPosicionadaPreview() && !contenidoEstaPosicionadoPreview()) {
                   <span
                     class="image-edit-modal__preview-label inline-block rounded-full px-4 py-1 font-bold uppercase tracking-widest text-white"
                     [style.--font-size.px]="imagenEditandoControl.get('etiqueta_font_size')?.value"
@@ -372,10 +379,54 @@
         </section>
 
         <section class="image-edit-modal__section rounded-2xl border border-gray-100 bg-white p-4"
+          aria-labelledby="contenido-posicion-section-title">
+          <div class="mb-4 flex items-start gap-3">
+            <span class="image-edit-modal__section-index">04</span>
+            <div>
+              <h4 id="contenido-posicion-section-title" class="text-sm font-bold uppercase tracking-[0.16em] text-gray-800">
+                Posición del contenido</h4>
+              <p class="mt-1 text-xs text-gray-500">Mueve juntos el título y la descripción en la vista previa.</p>
+            </div>
+          </div>
+
+          <div class="grid max-w-52 grid-cols-3 gap-2" role="group" aria-label="Posiciones predefinidas del contenido">
+            @for (posicion of posicionesOverlay; track posicion.value) {
+            <button type="button" class="image-overlay-position"
+              [class.image-overlay-position--selected]="imagenEditandoControl.get('contenido_posicion')?.value === posicion.value"
+              [attr.aria-label]="posicion.label"
+              [attr.aria-pressed]="imagenEditandoControl.get('contenido_posicion')?.value === posicion.value"
+              (click)="seleccionarPosicionContenido(posicion.value)"><span aria-hidden="true"></span></button>
+            }
+          </div>
+
+          <div class="mt-4 flex flex-wrap items-center gap-3">
+            <button mat-stroked-button type="button"
+              [class.border-primary]="imagenEditandoControl.get('contenido_posicion')?.value === 'custom'"
+              [attr.aria-pressed]="imagenEditandoControl.get('contenido_posicion')?.value === 'custom'"
+              (click)="seleccionarPosicionContenido('custom')">
+              <mat-icon class="mr-1 icon-size-4">open_with</mat-icon>
+              Personalizada
+            </button>
+            @if (imagenEditandoControl.get('contenido_posicion')?.value === 'custom') {
+            <span class="text-xs text-gray-500">Arrastra el bloque en la vista previa o ingresa coordenadas.</span>
+            }
+          </div>
+
+          @if (imagenEditandoControl.get('contenido_posicion')?.value === 'custom') {
+          <div class="mt-4 grid gap-3 sm:grid-cols-2">
+            <app-tp-input class="w-full" label="Horizontal (X %)" type="number" inputMode="decimal" [min]="0"
+              [max]="100" [step]="0.01" [formControl]="imagenEditandoControl.get('contenido_x')"></app-tp-input>
+            <app-tp-input class="w-full" label="Vertical (Y %)" type="number" inputMode="decimal" [min]="0" [max]="100"
+              [step]="0.01" [formControl]="imagenEditandoControl.get('contenido_y')"></app-tp-input>
+          </div>
+          }
+        </section>
+
+        <section class="image-edit-modal__section rounded-2xl border border-gray-100 bg-white p-4"
           aria-labelledby="presentacion-section-title">
           <div class="mb-4 flex items-start justify-between gap-3">
             <div class="flex items-start gap-3">
-              <span class="image-edit-modal__section-index">04</span>
+              <span class="image-edit-modal__section-index">05</span>
               <div>
                 <h4 id="presentacion-section-title" class="text-sm font-bold uppercase tracking-[0.16em] text-gray-800">
                   Presentación</h4>
@@ -616,8 +667,11 @@
             ></div>
           }
 
-          @if (etiquetaEstaPosicionadaPreview()) {
-            <div class="absolute z-20 w-max max-w-full" [ngStyle]="getOverlayPreviewStyle()">
+          @if (etiquetaEstaPosicionadaPreview() || contenidoEstaPosicionadoPreview()) {
+            <div
+              [ngStyle]="etiquetaEstaPosicionadaPreview() ? getOverlayPreviewStyle() : null"
+              [class]="'absolute z-20 w-max max-w-full' +
+                (!etiquetaEstaPosicionadaPreview() ? ' carousel-slide__default-label' : '')">
               <span
                 class="carousel-slide__label inline-block w-fit rounded-full font-bold uppercase tracking-widest text-white shadow-md"
                 [style.--font-size.px]="imagenEditandoControl.get('etiqueta_font_size')?.value"
@@ -627,10 +681,15 @@
           }
 
           <div
-            class="absolute inset-0 flex flex-col justify-end z-10"
-            [class.p-8]="dispositivoSeleccionado === 'tablet'"
-            [class.md:p-16]="dispositivoSeleccionado === 'desktop'"
-            [class.p-4]="dispositivoSeleccionado === 'phone'"
+            [ngStyle]="contenidoEstaPosicionadoPreview() ? getContenidoPreviewStyle() : null"
+            [class]="contenidoEstaPosicionadoPreview()
+              ? 'device-sim-content-overlay absolute z-10 max-w-[calc(100%-2rem)] sm:max-w-[calc(100%-4rem)] md:max-w-[calc(100%-7rem)]' +
+                (imagenEditandoControl.get('contenido_posicion')?.value === 'custom' ? ' image-edit-modal__overlay--draggable' : '')
+              : 'absolute inset-0 z-10 flex flex-col justify-end'"
+            [class.p-8]="!contenidoEstaPosicionadoPreview() && dispositivoSeleccionado === 'tablet'"
+            [class.md:p-16]="!contenidoEstaPosicionadoPreview() && dispositivoSeleccionado === 'desktop'"
+            [class.p-4]="!contenidoEstaPosicionadoPreview() && dispositivoSeleccionado === 'phone'"
+            (pointerdown)="iniciarArrastreContenido($event)"
           >
             <div
               [class]="'relative max-w-3xl overflow-hidden' +
@@ -650,7 +709,7 @@
                 <div class="absolute inset-0 bg-white/12 backdrop-blur-xl backdrop-saturate-150"></div>
               }
               <div class="relative" [style.color]="imagenEditandoControl.get('texto_color')?.value">
-                @if (!etiquetaEstaPosicionadaPreview()) {
+                @if (!etiquetaEstaPosicionadaPreview() && !contenidoEstaPosicionadoPreview()) {
                   <span
                     class="carousel-slide__label mb-3 inline-block w-fit rounded-full font-bold uppercase tracking-widest text-white shadow-md"
                     [style.--font-size.px]="imagenEditandoControl.get('etiqueta_font_size')?.value"
