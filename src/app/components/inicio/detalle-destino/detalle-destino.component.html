@@ -143,43 +143,36 @@
         </div>
         <ng-template #contenidoReal>
             <div #scrollContainer class="absolute inset-0 flex flex-col min-w-0 overflow-y-auto" cdkScrollable>
-                <header
-                    class="sticky top-0 z-50 w-full border-b border-solid border-[#147052]/10 bg-background-light/80 backdrop-blur-md dark:bg-background-dark/80 px-6 md:px-20 py-4">
-                    <div class="max-w-[1200px] mx-auto w-full">
-                        <div class="flex w-full flex-col gap-3 sm:flex-row sm:items-center">
-                            <button mat-raised-button color="accent"
-                                class="text-white w-full sm:w-auto flex items-center justify-center gap-2"
-                                (click)="regresar()">
-
-                                <mat-icon class="icon-size-5 text-white" fontSet="material-symbols-outlined">
-                                    arrow_back
-                                </mat-icon>
-
-                                <span class="whitespace-normal text-center leading-tight">
-                                    {{ t('regresar-a-destinos') }}
-                                </span>
-                            </button>
-
-                            <button mat-raised-button (click)="cargarInfo()"
-                                class="text-white w-full sm:w-auto flex items-center justify-center gap-2 bg-[#147052]">
-
-                                <mat-icon class="icon-size-5 text-white" fontSet="material-symbols-outlined">
-                                    hotel
-                                </mat-icon>
-
-                                <span class="whitespace-normal text-center leading-tight">
-                                    {{ t('ver-hoteles-en', { destino: detallesDestino?.detalle?.nombre }) }}
-                                </span>
-                            </button>
-                        </div>
-                    </div>
-                </header>
                 <main class="flex-1">
                     <section class="px-6 md:px-20 py-4">
-                        <h1 class="text-4xl md:text-6xl font-black text-gray-700 leading-tight mb-4">
-                            {{detallesDestino?.detalle?.nombre}}
-                            <!-- <br />{{detallesDestino?.detalle?.apodo}} -->
-                        </h1>
+                        <div class="flex flex-col gap-4 md:flex-row md:items-center">
+                            <h1 class="min-w-0 text-4xl font-black leading-tight text-gray-700 md:text-6xl">
+                                {{detallesDestino?.detalle?.nombre}}
+                                <!-- <br />{{detallesDestino?.detalle?.apodo}} -->
+                            </h1>
+                            <div class="flex w-full flex-col gap-3 sm:flex-row sm:items-center md:ml-auto md:w-auto md:shrink-0">
+                                <button mat-raised-button color="accent"
+                                    class="w-full sm:w-auto flex items-center justify-center text-white"
+                                    (click)="regresar()">
+                                    <mat-icon class="mr-1.5 icon-size-5 text-white" fontSet="material-symbols-outlined">
+                                        arrow_back
+                                    </mat-icon>
+                                    <span class="whitespace-normal text-center leading-tight">
+                                        {{ t('regresar-a-destinos') }}
+                                    </span>
+                                </button>
+
+                                <button mat-raised-button (click)="cargarInfo()"
+                                    class="w-full sm:w-auto flex items-center justify-center bg-[#147052] text-white"
+                                    [matTooltip]="t('ver-hoteles-en', { destino: detallesDestino?.detalle?.nombre })"
+                                    [attr.aria-label]="t('ver-hoteles-en', { destino: detallesDestino?.detalle?.nombre })">
+                                    <img class="inline-block h-5 w-5 shrink-0 align-middle object-contain" src="assets/icons/double-eye.svg" alt="" aria-hidden="true" />
+                                    <span class="whitespace-nowrap text-center leading-tight">
+                                        {{ t('ver-hoteles') }}
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
                         <!-- <p class="max-w-2xl text-lg text-gray-700/90 font-medium">
                             {{detallesDestino?.detalle?.descripcion_corta}}</p> -->
                     </section>
