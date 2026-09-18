@@ -77,6 +77,14 @@ export const compactNavigation: FuseNavigationItem[] = [
         link : '/admin/empleados',
         meta : { permissions: ['empleados.manage'] }
     },
+    {
+        id   : 'imagenes-fondo',
+        title: 'Imagenes de fondo',
+        type : 'basic',
+        icon : 'heroicons_outline:photo',
+        link : '/admin/imagenes-fondo',
+        meta : { permissions: ['destinos.edit'] }
+    },
     // {
     //     id   : 'condiciones',
     //     title: 'Condiciones',

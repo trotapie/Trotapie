@@ -108,6 +108,7 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
   ngOnInit() {
     this.obtenerImagenesFondo();
     this.languageChangesSubscription = this._translocoService.langChanges$.subscribe((idioma) => {
+      this.actualizarTextosImagenesFondo(idioma);
       if (this.overlayAnimatedOnce) {
         this.obtenerSoloDestinos(idioma);
       }
@@ -217,7 +218,7 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
 
   async obtenerImagenesFondo() {
     try {
-      this.imagenesFondo = await this.supabase.getImagenesFondo();
+      this.imagenesFondo = await this.supabase.getImagenesFondo(this._translocoService.getActiveLang());
       if (!this.imagenesFondo?.length) return;
 
       // Mostrar la primera imagen sin bloquear el resto de la pantalla.
@@ -236,6 +237,20 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
         ? error.message
         : 'No se pudieron cargar las imagenes de inicio.';
       console.error('No se pudieron cargar las imagenes de fondo.', error);
+    }
+  }
+
+  private async actualizarTextosImagenesFondo(idioma: string): Promise<void> {
+    try {
+      const imagenes = await this.supabase.getImagenesFondo(idioma);
+      this.imagenesFondo = imagenes;
+
+      const imagenActual = imagenes.find((imagen) => imagen.url_imagen === this.currentImage);
+      if (imagenActual) {
+        this.currentText = imagenActual.nombre_destino;
+      }
+    } catch (error) {
+      console.error('No se pudieron actualizar los textos de las imágenes de fondo.', error);
     }
   }
 

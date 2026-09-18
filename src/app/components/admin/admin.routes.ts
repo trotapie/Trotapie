@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { AdminComponent } from './admin.component';
 import { CotizacionesComponent } from './cotizaciones/cotizaciones.component';
+import { ImagenesFondoComponent } from './imagenes-fondo/imagenes-fondo.component';
 
 export default [
     {
@@ -62,6 +63,11 @@ export default [
     {
         path: 'empleados',
         loadChildren: () => import('./empleados/empleados.routes'),
+    },
+    {
+        path: 'imagenes-fondo',
+        component: ImagenesFondoComponent,
+        data: { permissions: ['destinos.edit'] },
     },
     {
         path: 'condiciones',

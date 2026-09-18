@@ -1,0 +1,110 @@
+<div class="min-w-0 flex-auto bg-gray-50 dark:bg-gray-900">
+  <div class="mx-auto flex w-full max-w-screen-xl flex-col px-4 py-6 sm:px-6 lg:px-8">
+    <div class="flex flex-col gap-5 border-b border-gray-200 pb-6 dark:border-gray-700 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <p class="text-sm font-semibold uppercase tracking-wider text-primary-600 dark:text-primary-400">Página de inicio</p>
+        <h1 class="mt-1 text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Imágenes de fondo</h1>
+        <p class="mt-2 max-w-2xl text-sm leading-6 text-gray-600 dark:text-gray-300">Administra las imágenes y los textos del carrusel principal. Las traducciones faltantes usarán español como respaldo.</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-3">
+        <button mat-stroked-button type="button" [disabled]="procesandoSeleccion" [attr.aria-pressed]="modoSeleccion" (click)="alternarModoSeleccion()">
+          <mat-icon class="mr-1.5 icon-size-4" [svgIcon]="modoSeleccion ? 'heroicons_outline:x-mark' : 'heroicons_outline:check'"></mat-icon>
+          {{ modoSeleccion ? 'Salir de selección' : 'Seleccionar' }}
+        </button>
+        <button *ngIf="modoSeleccion" mat-stroked-button type="button" [disabled]="procesandoSeleccion" (click)="alternarSeleccionTodas()">
+          <mat-icon class="mr-1.5 icon-size-4" [svgIcon]="todasSeleccionadas ? 'heroicons_outline:x-mark' : 'heroicons_outline:check-circle'"></mat-icon>
+          {{ todasSeleccionadas ? 'Quitar todas' : 'Seleccionar todas' }}
+        </button>
+        <button mat-flat-button color="primary" type="button" [disabled]="procesandoSeleccion" (click)="abrirNueva()">
+          <mat-icon class="mr-1.5 icon-size-4" svgIcon="heroicons_outline:plus"></mat-icon>
+          Agregar imagen
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="cargando" class="flex min-h-64 items-center justify-center" role="status" aria-label="Cargando imágenes de fondo">
+      <mat-spinner diameter="36"></mat-spinner>
+    </div>
+
+    <div *ngIf="!cargando && error" class="mt-6 rounded-xl border border-red-200 bg-red-50 p-5 text-red-800 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200">
+      <div class="flex items-start gap-3"><mat-icon class="icon-size-5" svgIcon="heroicons_outline:exclamation-triangle"></mat-icon><p>{{ error }}</p></div>
+      <button mat-stroked-button color="warn" class="mt-4" type="button" (click)="cargarDatos()"><mat-icon class="mr-1.5 icon-size-4" svgIcon="heroicons_outline:arrow-path"></mat-icon>Reintentar</button>
+    </div>
+
+    <div *ngIf="!cargando && !error && !imagenes.length" class="mt-8 rounded-2xl border border-dashed border-gray-300 bg-white px-6 py-14 text-center dark:border-gray-700 dark:bg-gray-800">
+      <mat-icon class="mx-auto icon-size-12 text-gray-400" svgIcon="heroicons_outline:photo"></mat-icon>
+      <h2 class="mt-4 text-lg font-semibold text-gray-900 dark:text-white">Aún no hay imágenes de fondo</h2>
+      <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Agrega la primera imagen para mostrarla en el carrusel de inicio.</p>
+      <button mat-flat-button color="primary" class="mt-6" type="button" (click)="abrirNueva()"><mat-icon class="mr-1.5 icon-size-4" svgIcon="heroicons_outline:plus"></mat-icon>Agregar imagen</button>
+    </div>
+
+    <div *ngIf="!cargando && !error && cantidadSeleccionada" class="mt-6 flex flex-col gap-4 rounded-2xl border border-primary-200 bg-primary-50 p-4 dark:border-primary-900/60 dark:bg-primary-950/30 sm:flex-row sm:items-center sm:justify-between">
+      <div aria-live="polite">
+        <p class="text-sm font-semibold text-primary-900 dark:text-primary-100">Selección múltiple</p>
+        <p class="mt-1 text-sm text-primary-700 dark:text-primary-300">{{ cantidadSeleccionada }} {{ cantidadSeleccionada === 1 ? 'imagen seleccionada' : 'imágenes seleccionadas' }}</p>
+      </div>
+      <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
+        <button mat-flat-button color="primary" type="button" [disabled]="procesandoSeleccion" (click)="cambiarEstadoSeleccionadas(true)">
+          <mat-icon class="mr-1.5 icon-size-4" [class.animate-spin]="procesandoSeleccion" [svgIcon]="procesandoSeleccion ? 'heroicons_outline:arrow-path' : 'heroicons_outline:eye'"></mat-icon>
+          Activar seleccionadas
+        </button>
+        <button mat-stroked-button type="button" [disabled]="procesandoSeleccion" (click)="cambiarEstadoSeleccionadas(false)">
+          <mat-icon class="mr-1.5 icon-size-4" svgIcon="heroicons_outline:eye-slash"></mat-icon>
+          Inactivar seleccionadas
+        </button>
+        <button mat-stroked-button color="warn" type="button" [disabled]="procesandoSeleccion" (click)="eliminarSeleccionadas()">
+          <mat-icon class="mr-1.5 icon-size-4" svgIcon="heroicons_outline:trash"></mat-icon>
+          Eliminar seleccionadas
+        </button>
+        <button mat-stroked-button type="button" [disabled]="procesandoSeleccion" (click)="limpiarSeleccion()">
+          <mat-icon class="mr-1.5 icon-size-4" svgIcon="heroicons_outline:x-mark"></mat-icon>
+          Limpiar selección
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="!cargando && !error && imagenes.length" class="mt-6 grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      <article *ngFor="let imagen of imagenes" class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition dark:border-gray-700 dark:bg-gray-800" [class.cursor-pointer]="modoSeleccion" [class.border-primary-500]="estaSeleccionada(imagen)" [class.ring-2]="estaSeleccionada(imagen)" [class.ring-primary-500]="estaSeleccionada(imagen)" (click)="modoSeleccion && alternarSeleccion(imagen)">
+        <div class="relative aspect-[16/9] overflow-hidden bg-gray-100 dark:bg-gray-700">
+          <img [src]="imagen.url_imagen" [alt]="imagen.nombre_destino" class="h-full w-full object-cover" />
+          <label *ngIf="modoSeleccion" class="absolute left-3 top-3 flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-white/80 bg-white/95 shadow-sm transition hover:bg-white dark:border-gray-600 dark:bg-gray-900/95" [class.bg-primary-600]="estaSeleccionada(imagen)" [class.text-primary-600]="!estaSeleccionada(imagen)" [class.text-white]="estaSeleccionada(imagen)" (click)="$event.stopPropagation()">
+            <input type="checkbox" class="sr-only" [checked]="estaSeleccionada(imagen)" [attr.aria-label]="'Seleccionar ' + imagen.nombre_destino" (change)="alternarSeleccion(imagen)" />
+            <mat-icon class="icon-size-5" [class.text-primary-600]="!estaSeleccionada(imagen)" [class.text-white]="estaSeleccionada(imagen)" [svgIcon]="estaSeleccionada(imagen) ? 'heroicons_outline:check' : 'heroicons_outline:plus'"></mat-icon>
+          </label>
+        </div>
+        <div class="p-5">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0 flex-1"><h2 class="truncate text-lg font-semibold text-gray-900 dark:text-white">{{ imagen.nombre_destino }}</h2><div class="mt-3 flex items-center justify-between gap-3"><app-status-badge [status]="imagen.activo ? 'ACTIVO' : 'INACTIVO'"></app-status-badge><app-tp-actions-menu *ngIf="!modoSeleccion" [actions]="accionesImagen(imagen)" [ariaLabel]="'Abrir acciones de ' + imagen.nombre_destino" tooltip="Acciones" (actionSelected)="ejecutarAccionImagen($event, imagen)"></app-tp-actions-menu></div></div>
+            <span *ngIf="faltanTraducciones(imagen)" class="shrink-0 rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800 dark:bg-amber-950/50 dark:text-amber-200">Idiomas pendientes</span>
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+</div>
+
+<app-blocking-loader
+  [open]="guardando"
+  title="Guardando imagen"
+  message="Estamos traduciendo y guardando los cambios."
+/>
+
+<div *ngIf="modalAbierto" class="fixed inset-0 z-[210] flex items-end bg-black/50 p-0 sm:items-center sm:justify-center sm:p-6" role="dialog" aria-modal="true" aria-labelledby="imagen-fondo-titulo">
+  <div class="flex max-h-[80dvh] w-full flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl dark:bg-gray-800 sm:max-w-3xl sm:rounded-2xl">
+    <div class="flex shrink-0 items-start justify-between border-b border-gray-200 p-5 dark:border-gray-700 sm:p-6">
+       <div><h2 id="imagen-fondo-titulo" class="text-xl font-bold text-gray-900 dark:text-white">{{ form.id ? 'Editar imagen de fondo' : 'Agregar imagen de fondo' }}</h2><p class="mt-1 text-sm text-gray-600 dark:text-gray-300">{{ form.id ? 'Las traducciones se generarán automáticamente al guardar.' : 'Pega la URL para crear la tarjeta y completa el nombre en español.' }}</p></div>
+      <button mat-icon-button type="button" matTooltip="Cerrar" aria-label="Cerrar" [disabled]="guardando" (click)="cerrarModal()"><mat-icon svgIcon="heroicons_outline:x-mark"></mat-icon></button>
+    </div>
+    <div class="min-h-0 flex-1 space-y-6 overflow-y-auto p-5 sm:p-6">
+      <ng-container *ngIf="!form.id; else formularioEdicion">
+        <article class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 sm:flex">
+          <div class="flex aspect-[16/9] w-full shrink-0 items-center justify-center bg-gray-100 dark:bg-gray-700 sm:w-52"><img *ngIf="form.url_imagen; else imagenPendiente" [src]="form.url_imagen" [alt]="form.traducciones.es || 'Vista previa de imagen nueva'" class="h-full w-full object-cover" /><ng-template #imagenPendiente><div class="px-6 text-center"><mat-icon class="mx-auto icon-size-10 text-gray-400" svgIcon="heroicons_outline:photo"></mat-icon><p class="mt-2 text-xs text-gray-500 dark:text-gray-300">Vista previa</p></div></ng-template></div>
+          <div class="min-w-0 flex-1 p-4"><p class="text-sm font-semibold text-gray-900 dark:text-white">Imagen nueva</p><label class="mt-4 block"><span class="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-100">URL de la imagen <span class="text-red-600">*</span></span><input [(ngModel)]="form.url_imagen" name="urlImagenNueva" type="url" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-gray-600 dark:bg-gray-900 dark:text-white" placeholder="https://..." /></label><label class="mt-4 block"><span class="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-100">Nombre en español <span class="text-red-600">*</span></span><input [(ngModel)]="form.traducciones.es" name="nombreImagenNueva" type="text" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-gray-600 dark:bg-gray-900 dark:text-white" placeholder="Ej. Roma, Italia" /></label><div class="mt-4 flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2.5 dark:bg-gray-900/50"><div><p class="text-sm font-medium text-gray-900 dark:text-white">Mostrar en el carrusel</p><p class="mt-0.5 text-xs text-gray-600 dark:text-gray-300">Activa por defecto.</p></div><mat-slide-toggle [(ngModel)]="form.activo" name="activoNuevaImagen" aria-label="Mostrar imagen en el carrusel"></mat-slide-toggle></div></div>
+        </article>
+      </ng-container>
+
+      <ng-template #formularioEdicion><article class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 sm:flex"><div class="aspect-[16/9] w-full shrink-0 bg-gray-100 dark:bg-gray-700 sm:w-52"><img [src]="form.url_imagen" [alt]="form.traducciones.es || 'Vista previa de imagen'" class="h-full w-full object-cover" /></div><div class="min-w-0 flex-1 p-4"><p class="text-sm font-semibold text-gray-900 dark:text-white">Imagen actual</p><label class="mt-4 block"><span class="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-100">URL de la imagen <span class="text-red-600">*</span></span><input [(ngModel)]="form.url_imagen" name="urlImagen" type="url" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-gray-600 dark:bg-gray-900 dark:text-white" placeholder="https://..." /></label><label class="mt-4 block"><span class="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-100">Nombre en español <span class="text-red-600">*</span></span><input [(ngModel)]="form.traducciones.es" name="nombreImagen" type="text" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-gray-600 dark:bg-gray-900 dark:text-white" /></label><div class="mt-4 flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2.5 dark:bg-gray-900/50"><div><p class="text-sm font-medium text-gray-900 dark:text-white">Mostrar en el carrusel</p><p class="mt-0.5 text-xs text-gray-600 dark:text-gray-300">Las imágenes inactivas se conservan, pero no aparecen públicamente.</p></div><mat-slide-toggle [(ngModel)]="form.activo" name="activo" aria-label="Mostrar en el carrusel"></mat-slide-toggle></div></div></article><div class="rounded-xl border border-gray-200 p-4 dark:border-gray-700"><div><h3 class="font-semibold text-gray-900 dark:text-white">Traducciones actuales</h3><p class="mt-1 text-sm text-gray-600 dark:text-gray-300">Se actualizarán automáticamente desde el nombre en español al guardar.</p></div><div class="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2"><article *ngFor="let idioma of idiomas" class="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/50"><div class="flex items-center justify-between gap-3"><h4 class="font-semibold text-gray-900 dark:text-white">{{ idioma.nombre }}</h4><span class="rounded-md bg-gray-100 px-2 py-1 text-xs font-medium uppercase text-gray-600 dark:bg-gray-800 dark:text-gray-300">{{ idioma.codigo }}</span></div><p class="mt-4 text-xs font-medium text-gray-500 dark:text-gray-400">Nombre</p><p class="mt-1 text-sm leading-6 text-gray-900 dark:text-gray-100">{{ form.traducciones[idioma.codigo] || 'Sin traducción disponible' }}</p></article></div></div></ng-template>
+    </div>
+    <div class="flex shrink-0 flex-col-reverse gap-3 border-t border-gray-200 p-5 dark:border-gray-700 sm:flex-row sm:justify-end sm:p-6"><button mat-stroked-button type="button" [disabled]="guardando" (click)="cerrarModal()"><mat-icon class="mr-1.5 icon-size-4" svgIcon="heroicons_outline:x-mark"></mat-icon>Cancelar</button><button mat-flat-button color="primary" type="button" [disabled]="!puedeGuardar || guardando" (click)="guardar()"><mat-icon class="mr-1.5 icon-size-4" [class.animate-spin]="guardando" [svgIcon]="guardando ? 'heroicons_outline:arrow-path' : 'heroicons_outline:check'"></mat-icon>{{ guardando ? 'Traduciendo y guardando...' : 'Guardar imagen' }}</button></div>
+  </div>
+</div>

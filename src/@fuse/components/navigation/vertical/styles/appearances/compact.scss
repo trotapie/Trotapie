@@ -10,6 +10,11 @@ fuse-vertical-navigation {
         min-width: var(--fuse-vertical-navigation-compact-width);
         max-width: var(--fuse-vertical-navigation-compact-width);
 
+        // Keep small-screen navigation scrollable without displaying its rail.
+        .fuse-vertical-navigation-content > .ps__rail-y {
+            display: none !important;
+        }
+
         /* Left positioned */
         &.fuse-vertical-navigation-position-left {
             /* Side mode */

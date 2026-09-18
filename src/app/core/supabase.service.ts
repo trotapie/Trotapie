@@ -3654,14 +3654,172 @@ export class SupabaseService {
     return data?.id ?? 1; // fallback a es=1 si no existe
   }
 
-  async getImagenesFondo() {
+  async getImagenesFondo(idioma = 'es') {
     const { data, error } = await this.client
       .from('imagenes_fondo')
-      .select('url_imagen, nombre_destino')
+      .select(`
+        id,
+        url_imagen,
+        nombre_destino,
+        traducciones:imagenes_fondo_traducciones (
+          nombre_destino,
+          idioma:idioma_id ( codigo )
+        )
+      `)
       .eq('activo', true)
       .order('id', { ascending: true });
     if (error) throw error;
-    return data;
+
+    const idiomaActivo = idioma.toLowerCase();
+    return (data ?? []).map((imagen: any) => {
+      const traducciones = imagen.traducciones ?? [];
+      const traduccionActiva = traducciones.find((traduccion: any) =>
+        String(traduccion.idioma?.codigo ?? '').toLowerCase() === idiomaActivo
+      );
+      const traduccionEspanol = traducciones.find((traduccion: any) =>
+        String(traduccion.idioma?.codigo ?? '').toLowerCase() === 'es'
+      );
+
+      return {
+        id: imagen.id,
+        url_imagen: imagen.url_imagen,
+        nombre_destino: traduccionActiva?.nombre_destino ?? traduccionEspanol?.nombre_destino ?? imagen.nombre_destino ?? ''
+      };
+    });
+  }
+
+  async obtenerImagenesFondoAdmin() {
+    const { data, error } = await this.client
+      .from('imagenes_fondo')
+      .select(`
+        id,
+        url_imagen,
+        nombre_destino,
+        activo,
+        traducciones:imagenes_fondo_traducciones (
+          idioma_id,
+          nombre_destino,
+          idioma:idioma_id ( codigo )
+        )
+      `)
+      .order('id', { ascending: true });
+
+    if (error) throw error;
+    return data ?? [];
+  }
+
+  async obtenerIdiomasAdmin() {
+    const { data, error } = await this.client
+      .from('idiomas')
+      .select('id, codigo, nombre')
+      .in('codigo', ['es', 'en', 'pt', 'fr', 'de'])
+      .order('id', { ascending: true });
+
+    if (error) throw error;
+    return data ?? [];
+  }
+
+  async guardarImagenFondoAdmin(payload: {
+    id?: number | null;
+    url_imagen: string;
+    activo: boolean;
+    nombre_destino: string;
+    traducciones: Array<{ idioma_id: number; nombre_destino: string }>;
+  }) {
+    const imagenPayload = {
+      url_imagen: payload.url_imagen,
+      activo: payload.activo,
+      nombre_destino: payload.nombre_destino
+    };
+
+    let imagenId: number;
+    if (payload.id) {
+      const { data, error } = await this.client
+        .from('imagenes_fondo')
+        .update(imagenPayload)
+        .eq('id', payload.id)
+        .select('id, activo')
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) throw new Error('No tienes permisos para actualizar esta imagen de fondo.');
+      imagenId = payload.id;
+    } else {
+      const { data, error } = await this.client
+        .from('imagenes_fondo')
+        .insert(imagenPayload)
+        .select('id')
+        .single();
+      if (error) throw error;
+      imagenId = Number(data.id);
+    }
+
+    const { error: deleteError } = await this.client
+      .from('imagenes_fondo_traducciones')
+      .delete()
+      .eq('imagen_fondo_id', imagenId);
+    if (deleteError) throw deleteError;
+
+    const traducciones = payload.traducciones
+      .filter((traduccion) => traduccion.nombre_destino.trim())
+      .map((traduccion) => ({
+        imagen_fondo_id: imagenId,
+        idioma_id: traduccion.idioma_id,
+        nombre_destino: traduccion.nombre_destino.trim()
+      }));
+
+    if (traducciones.length) {
+      const { error: translationsError } = await this.client
+        .from('imagenes_fondo_traducciones')
+        .insert(traducciones);
+      if (translationsError) throw translationsError;
+    }
+
+    return imagenId;
+  }
+
+  async eliminarImagenFondoAdmin(id: number) {
+    const { error } = await this.client
+      .from('imagenes_fondo')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+  }
+
+  async eliminarImagenesFondoAdmin(ids: number[]) {
+    if (!ids.length) return;
+
+    const { error } = await this.client
+      .from('imagenes_fondo')
+      .delete()
+      .in('id', ids);
+    if (error) throw error;
+  }
+
+  async actualizarEstadoImagenFondoAdmin(id: number, activo: boolean) {
+    const { data, error } = await this.client
+      .from('imagenes_fondo')
+      .update({ activo })
+      .eq('id', id)
+      .select('id, activo')
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) throw new Error('No tienes permisos para actualizar esta imagen de fondo.');
+  }
+
+  async actualizarEstadoImagenesFondoAdmin(ids: number[], activo: boolean) {
+    if (!ids.length) return;
+
+    const { data, error } = await this.client
+      .from('imagenes_fondo')
+      .update({ activo })
+      .in('id', ids)
+      .select('id');
+
+    if (error) throw error;
+    if ((data?.length ?? 0) !== ids.length) {
+      throw new Error('No tienes permisos para actualizar una o más imágenes de fondo.');
+    }
   }
 
   async obtenerTiposImagenHotel() {
