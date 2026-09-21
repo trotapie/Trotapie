@@ -212,7 +212,7 @@
               [style.background-color]="colorConOpacidad(imagenEditandoControl.get('overlay_color')?.value, imagenEditandoControl.get('overlay_opacidad')?.value)">
             </div>
             }
-            @if (etiquetaEstaPosicionadaPreview() || contenidoEstaPosicionadoPreview()) {
+            @if ((etiquetaEstaPosicionadaPreview() || contenidoEstaPosicionadoPreview()) && (imagenEditandoControl.get('etiqueta_texto')?.value || '').trim()) {
             <div [ngStyle]="etiquetaEstaPosicionadaPreview() ? getOverlayPreviewStyle() : null"
               [class]="'image-edit-modal__overlay absolute z-20 max-w-[calc(100%-2.5rem)]' +
                       (!etiquetaEstaPosicionadaPreview() ? ' image-edit-modal__overlay--default' : '') +
@@ -222,7 +222,7 @@
                 class="image-edit-modal__preview-label inline-block rounded-full px-4 py-1 font-bold uppercase tracking-widest text-white"
                 [style.--font-size.px]="imagenEditandoControl.get('etiqueta_font_size')?.value"
                 [style.background-color]="imagenEditandoControl.get('etiqueta_color')?.value">{{
-                imagenEditandoControl.get('etiqueta_texto')?.value || destinoNombre }}</span>
+                imagenEditandoControl.get('etiqueta_texto')?.value }}</span>
             </div>
             }
             <div
@@ -244,12 +244,12 @@
                 <div class="absolute inset-0 bg-white/12 backdrop-blur-xl backdrop-saturate-150"></div>
                 }
                 <div class="relative" [style.color]="imagenEditandoControl.get('texto_color')?.value">
-                  @if (!etiquetaEstaPosicionadaPreview() && !contenidoEstaPosicionadoPreview()) {
+                  @if (!etiquetaEstaPosicionadaPreview() && !contenidoEstaPosicionadoPreview() && (imagenEditandoControl.get('etiqueta_texto')?.value || '').trim()) {
                   <span
                     class="image-edit-modal__preview-label inline-block rounded-full px-4 py-1 font-bold uppercase tracking-widest text-white"
                     [style.--font-size.px]="imagenEditandoControl.get('etiqueta_font_size')?.value"
                     [style.background-color]="imagenEditandoControl.get('etiqueta_color')?.value">{{
-                    imagenEditandoControl.get('etiqueta_texto')?.value || destinoNombre }}</span>
+                    imagenEditandoControl.get('etiqueta_texto')?.value }}</span>
                   }
                   <p class="image-edit-modal__preview-title mt-2 font-black leading-tight"
                     [style.--font-size.px]="imagenEditandoControl.get('titulo_font_size')?.value">{{
@@ -265,18 +265,11 @@
         </div>
       </div>
 
-      <div class="image-edit-modal__content space-y-5 px-6 py-5" [formGroup]="imagenEditandoControl">
-        <section class="image-edit-modal__section rounded-2xl border border-gray-100 bg-white p-4"
-          aria-labelledby="imagen-section-title">
-          <div class="mb-4 flex items-start gap-3">
-            <span class="image-edit-modal__section-index">01</span>
-            <div>
-              <h4 id="imagen-section-title" class="text-sm font-bold uppercase tracking-[0.16em] text-gray-800">Imagen
-              </h4>
-              <p class="mt-1 text-xs text-gray-500">Datos básicos y organización del archivo.</p>
-            </div>
-          </div>
-
+      <div class="image-edit-modal__content px-6 py-5" [formGroup]="imagenEditandoControl">
+        <mat-vertical-stepper class="image-edit-modal__stepper" [linear]="false">
+        <mat-step>
+          <ng-template matStepLabel>Imagen</ng-template>
+        <section class="image-edit-modal__section rounded-2xl border border-gray-100 bg-white p-4">
           <div class="grid gap-4">
             <mat-form-field class="w-full">
               <mat-label>URL de imagen</mat-label>
@@ -296,99 +289,29 @@
             </div>
           </div>
         </section>
+        </mat-step>
 
+        <mat-step>
+          <ng-template matStepLabel>Contenido</ng-template>
         <section class="image-edit-modal__section rounded-2xl border border-gray-100 bg-white p-4"
-          aria-labelledby="contenido-imagen-section-title" formGroupName="traducciones">
-          <div class="mb-4 flex items-start gap-3">
-            <span class="image-edit-modal__section-index">02</span>
-            <div>
-              <h4 id="contenido-imagen-section-title"
-                class="text-sm font-bold uppercase tracking-[0.16em] text-gray-800">Contenido del carrusel</h4>
-              <p class="mt-1 text-xs text-gray-500">Este texto se mostrará únicamente con esta imagen en el sitio
-                público.</p>
-            </div>
-          </div>
+          formGroupName="traducciones">
           <div formGroupName="es" class="grid gap-4">
             <app-tp-input label="Nombre" placeholder="Título de esta imagen" formControlName="nombre"
               [required]="true"></app-tp-input>
             <app-tp-textarea label="Descripción" placeholder="Describe esta imagen" formControlName="descripcion"
               [rows]="3"></app-tp-textarea>
           </div>
-          <div class="mt-4">
-            <app-tp-input label="Texto de etiqueta" placeholder="Usa el nombre del destino si lo dejas vacío"
+          <div class="-mt-2">
+            <app-tp-input label="Texto de etiqueta" placeholder="Ingresa texto de etiqueta"
               [formControl]="imagenEditandoControl.get('etiqueta_texto')"></app-tp-input>
           </div>
-          <div class="mt-4 grid gap-3 md:grid-cols-2">
-            @for (idioma of idiomas; track idioma.id) {
-            @if (idioma.codigo !== 'es') {
-            <div class="rounded-lg border border-gray-200 bg-gray-50 p-3" [formGroupName]="idioma.codigo">
-              <p class="text-sm font-semibold text-gray-700">{{ getNombreIdioma(idioma.codigo) }}</p>
-              <p class="mt-1 text-sm text-gray-900">{{ imagenEditandoControl.get(['traducciones', idioma.codigo,
-                'nombre'])?.value || 'Sin nombre' }}</p>
-              <p class="mt-1 text-sm text-gray-600">{{ imagenEditandoControl.get(['traducciones', idioma.codigo,
-                'descripcion'])?.value || 'Sin descripción' }}</p>
-            </div>
-            }
-            }
-          </div>
         </section>
+        </mat-step>
 
-        <section class="image-edit-modal__section rounded-2xl border border-gray-100 bg-white p-4"
-          aria-labelledby="posicion-section-title">
-          <div class="mb-4 flex items-start gap-3">
-            <span class="image-edit-modal__section-index">03</span>
-            <div>
-              <h4 id="posicion-section-title" class="text-sm font-bold uppercase tracking-[0.16em] text-gray-800">
-                Posición de la etiqueta</h4>
-              <p class="mt-1 text-xs text-gray-500">Elige un anclaje o ajusta únicamente la etiqueta sobre la vista
-                previa.</p>
-            </div>
-          </div>
-
-          <div class="grid max-w-52 grid-cols-3 gap-2" role="group" aria-label="Posiciones predefinidas del contenido">
-            @for (posicion of posicionesOverlay; track posicion.value) {
-            <button type="button" class="image-overlay-position"
-              [class.image-overlay-position--selected]="imagenEditandoControl.get('overlay_posicion')?.value === posicion.value"
-              [attr.aria-label]="posicion.label"
-              [attr.aria-pressed]="imagenEditandoControl.get('overlay_posicion')?.value === posicion.value"
-              (click)="seleccionarPosicionOverlay(posicion.value)"><span aria-hidden="true"></span></button>
-            }
-          </div>
-
-          <div class="mt-4 flex flex-wrap items-center gap-3">
-            <button mat-stroked-button type="button"
-              [class.border-primary]="imagenEditandoControl.get('overlay_posicion')?.value === 'custom'"
-              [attr.aria-pressed]="imagenEditandoControl.get('overlay_posicion')?.value === 'custom'"
-              (click)="seleccionarPosicionOverlay('custom')">
-              <mat-icon class="mr-1 icon-size-4">open_with</mat-icon>
-              Personalizada
-            </button>
-            @if (imagenEditandoControl.get('overlay_posicion')?.value === 'custom') {
-            <span class="text-xs text-gray-500">Arrastra el bloque en la vista previa o ingresa coordenadas.</span>
-            }
-          </div>
-
-          @if (imagenEditandoControl.get('overlay_posicion')?.value === 'custom') {
-          <div class="mt-4 grid gap-3 sm:grid-cols-2">
-            <app-tp-input class="w-full" label="Horizontal (X %)" type="number" inputMode="decimal" [min]="0"
-              [max]="100" [step]="0.01" [formControl]="imagenEditandoControl.get('overlay_x')"></app-tp-input>
-            <app-tp-input class="w-full" label="Vertical (Y %)" type="number" inputMode="decimal" [min]="0" [max]="100"
-              [step]="0.01" [formControl]="imagenEditandoControl.get('overlay_y')"></app-tp-input>
-          </div>
-          }
-        </section>
-
-        <section class="image-edit-modal__section rounded-2xl border border-gray-100 bg-white p-4"
-          aria-labelledby="contenido-posicion-section-title">
-          <div class="mb-4 flex items-start gap-3">
-            <span class="image-edit-modal__section-index">04</span>
-            <div>
-              <h4 id="contenido-posicion-section-title" class="text-sm font-bold uppercase tracking-[0.16em] text-gray-800">
-                Posición del contenido</h4>
-              <p class="mt-1 text-xs text-gray-500">Mueve juntos el título y la descripción en la vista previa.</p>
-            </div>
-          </div>
-
+        @if ((imagenEditandoControl.get(['traducciones', 'es', 'nombre'])?.value || '').trim() || (imagenEditandoControl.get(['traducciones', 'es', 'descripcion'])?.value || '').trim()) {
+        <mat-step>
+          <ng-template matStepLabel>Posicionamiento de texto</ng-template>
+        <section class="image-edit-modal__section rounded-2xl border border-gray-100 bg-white p-4">
           <div class="grid max-w-52 grid-cols-3 gap-2" role="group" aria-label="Posiciones predefinidas del contenido">
             @for (posicion of posicionesOverlay; track posicion.value) {
             <button type="button" class="image-overlay-position"
@@ -400,7 +323,7 @@
           </div>
 
           <div class="mt-4 flex flex-wrap items-center gap-3">
-            <button mat-stroked-button type="button"
+            <button mat-stroked-button class="image-edit-modal__action-button" type="button"
               [class.border-primary]="imagenEditandoControl.get('contenido_posicion')?.value === 'custom'"
               [attr.aria-pressed]="imagenEditandoControl.get('contenido_posicion')?.value === 'custom'"
               (click)="seleccionarPosicionContenido('custom')">
@@ -421,25 +344,51 @@
           </div>
           }
         </section>
+        </mat-step>
+        }
 
-        <section class="image-edit-modal__section rounded-2xl border border-gray-100 bg-white p-4"
-          aria-labelledby="presentacion-section-title">
-          <div class="mb-4 flex items-start justify-between gap-3">
-            <div class="flex items-start gap-3">
-              <span class="image-edit-modal__section-index">05</span>
-              <div>
-                <h4 id="presentacion-section-title" class="text-sm font-bold uppercase tracking-[0.16em] text-gray-800">
-                  Presentación</h4>
-                <p class="mt-1 text-xs text-gray-500">Define cómo se verá la imagen detrás del contenido.</p>
-              </div>
-            </div>
-            <button mat-stroked-button class="image-edit-modal__reset-all" type="button"
-              (click)="restablecerEstilosImagenEditando()">
-              <mat-icon svgIcon="heroicons_outline:arrow-path"></mat-icon>
-              Restablecer
-            </button>
+        @if ((imagenEditandoControl.get('etiqueta_texto')?.value || '').trim()) {
+        <mat-step>
+          <ng-template matStepLabel>Posicionamiento de etiqueta</ng-template>
+        <section class="image-edit-modal__section rounded-2xl border border-gray-100 bg-white p-4">
+          <div class="grid max-w-52 grid-cols-3 gap-2" role="group" aria-label="Posiciones predefinidas del contenido">
+            @for (posicion of posicionesOverlay; track posicion.value) {
+            <button type="button" class="image-overlay-position"
+              [class.image-overlay-position--selected]="imagenEditandoControl.get('overlay_posicion')?.value === posicion.value"
+              [attr.aria-label]="posicion.label"
+              [attr.aria-pressed]="imagenEditandoControl.get('overlay_posicion')?.value === posicion.value"
+              (click)="seleccionarPosicionOverlay(posicion.value)"><span aria-hidden="true"></span></button>
+            }
           </div>
 
+          <div class="mt-4 flex flex-wrap items-center gap-3">
+            <button mat-stroked-button class="image-edit-modal__action-button" type="button"
+              [class.border-primary]="imagenEditandoControl.get('overlay_posicion')?.value === 'custom'"
+              [attr.aria-pressed]="imagenEditandoControl.get('overlay_posicion')?.value === 'custom'"
+              (click)="seleccionarPosicionOverlay('custom')">
+              <mat-icon class="mr-1 icon-size-4">open_with</mat-icon>
+              Personalizada
+            </button>
+            @if (imagenEditandoControl.get('overlay_posicion')?.value === 'custom') {
+            <span class="text-xs text-gray-500">Arrastra el bloque en la vista previa o ingresa coordenadas.</span>
+            }
+          </div>
+
+          @if (imagenEditandoControl.get('overlay_posicion')?.value === 'custom') {
+          <div class="mt-4 grid gap-3 sm:grid-cols-2">
+            <app-tp-input class="w-full" label="Horizontal (X %)" type="number" inputMode="decimal" [min]="0"
+              [max]="100" [step]="0.01" [formControl]="imagenEditandoControl.get('overlay_x')"></app-tp-input>
+            <app-tp-input class="w-full" label="Vertical (Y %)" type="number" inputMode="decimal" [min]="0" [max]="100"
+              [step]="0.01" [formControl]="imagenEditandoControl.get('overlay_y')"></app-tp-input>
+          </div>
+          }
+        </section>
+        </mat-step>
+        }
+
+        <mat-step>
+          <ng-template matStepLabel>Presentación</ng-template>
+        <section class="image-edit-modal__section rounded-2xl border border-gray-100 bg-white p-4">
           <div class="flex items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3">
             <div>
               <p class="text-sm font-semibold text-gray-900">Oscurecer fondo</p>
@@ -500,17 +449,11 @@
             </label>
           </div>
         </section>
+        </mat-step>
 
-        <section class="image-edit-modal__section rounded-2xl border border-gray-100 bg-white p-4"
-          aria-labelledby="tipografia-section-title">
-          <div class="mb-4 flex items-start gap-3">
-            <span class="image-edit-modal__section-index">05</span>
-            <div>
-              <h4 id="tipografia-section-title" class="text-sm font-bold uppercase tracking-[0.16em] text-gray-800">
-                Tipografía</h4>
-              <p class="mt-1 text-xs text-gray-500">Ajusta color y escala del texto del carrusel.</p>
-            </div>
-          </div>
+        <mat-step>
+          <ng-template matStepLabel>Tipografía</ng-template>
+        <section class="image-edit-modal__section rounded-2xl border border-gray-100 bg-white p-4">
           <div class="grid gap-4 sm:grid-cols-2">
             <label class="block text-sm font-medium text-gray-700">Color del texto
               <span class="mt-2 flex items-center gap-2"><app-color-picker class="min-w-0 flex-1"
@@ -557,6 +500,8 @@
             </label>
           </div>
         </section>
+        </mat-step>
+        </mat-vertical-stepper>
       </div>
     </div>
 
@@ -566,10 +511,10 @@
         <button
           mat-stroked-button
           type="button"
-          class="!border-indigo-200 !text-indigo-700 hover:!bg-indigo-50/80 !transition-colors !rounded-xl !h-10 !px-4"
+          class="image-edit-modal__action-button"
           (click)="abrirVistaPreviaDispositivos()"
         >
-          <mat-icon class="mr-2 icon-size-5 !text-indigo-600" fontSet="material-symbols-outlined">devices</mat-icon>
+          <mat-icon class="mr-1.5 icon-size-4" fontSet="material-symbols-outlined">devices</mat-icon>
           Ver en dispositivos
         </button>
       </div>
@@ -578,21 +523,30 @@
         <button
           mat-stroked-button
           type="button"
-          class="!border-gray-200 !text-gray-700 hover:!bg-gray-100/80 !transition-colors !rounded-xl !h-10 !px-4"
+          class="image-edit-modal__action-button"
+          (click)="restablecerEstilosImagenEditando()"
+        >
+          <mat-icon class="mr-1.5 icon-size-4" svgIcon="heroicons_outline:arrow-path"></mat-icon>
+          Restablecer
+        </button>
+        <button
+          mat-stroked-button
+          type="button"
+          class="image-edit-modal__action-button image-edit-modal__cancel-button"
           (click)="cerrarEditorImagen()"
         >
-          <mat-icon class="mr-2 icon-size-5 text-gray-500" [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
+          <mat-icon class="mr-1.5 icon-size-4" [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
           Cancelar
         </button>
         <button
-          mat-flat-button
+          mat-raised-button
           color="primary"
           type="button"
-          class="!rounded-xl !h-10 !px-5 shadow-sm hover:shadow-md transition-all"
+          class="image-edit-modal__save-button"
           (click)="guardarImagenEditando()"
           [disabled]="guardandoImagenes"
         >
-          <mat-icon class="mr-2 icon-size-5" [svgIcon]="'heroicons_outline:check'"></mat-icon>
+          <mat-icon class="mr-1.5 icon-size-4" [svgIcon]="guardandoImagenes ? 'heroicons_outline:arrow-path' : 'heroicons_outline:check'"></mat-icon>
           {{ guardandoImagenes ? 'Guardando...' : 'Guardar' }}
         </button>
       </div>
@@ -667,7 +621,7 @@
             ></div>
           }
 
-          @if (etiquetaEstaPosicionadaPreview() || contenidoEstaPosicionadoPreview()) {
+          @if ((etiquetaEstaPosicionadaPreview() || contenidoEstaPosicionadoPreview()) && (imagenEditandoControl.get('etiqueta_texto')?.value || '').trim()) {
             <div
               [ngStyle]="etiquetaEstaPosicionadaPreview() ? getOverlayPreviewStyle() : null"
               [class]="'absolute z-20 w-max max-w-full' +
@@ -676,7 +630,7 @@
                 class="carousel-slide__label inline-block w-fit rounded-full font-bold uppercase tracking-widest text-white shadow-md"
                 [style.--font-size.px]="imagenEditandoControl.get('etiqueta_font_size')?.value"
                 [style.background-color]="imagenEditandoControl.get('etiqueta_color')?.value"
-              >{{ imagenEditandoControl.get('etiqueta_texto')?.value || destinoNombre }}</span>
+              >{{ imagenEditandoControl.get('etiqueta_texto')?.value }}</span>
             </div>
           }
 
@@ -709,12 +663,12 @@
                 <div class="absolute inset-0 bg-white/12 backdrop-blur-xl backdrop-saturate-150"></div>
               }
               <div class="relative" [style.color]="imagenEditandoControl.get('texto_color')?.value">
-                @if (!etiquetaEstaPosicionadaPreview() && !contenidoEstaPosicionadoPreview()) {
+                @if (!etiquetaEstaPosicionadaPreview() && !contenidoEstaPosicionadoPreview() && (imagenEditandoControl.get('etiqueta_texto')?.value || '').trim()) {
                   <span
                     class="carousel-slide__label mb-3 inline-block w-fit rounded-full font-bold uppercase tracking-widest text-white shadow-md"
                     [style.--font-size.px]="imagenEditandoControl.get('etiqueta_font_size')?.value"
                     [style.background-color]="imagenEditandoControl.get('etiqueta_color')?.value"
-                  >{{ imagenEditandoControl.get('etiqueta_texto')?.value || destinoNombre }}</span>
+                  >{{ imagenEditandoControl.get('etiqueta_texto')?.value }}</span>
                 }
                 @if (imagenEditandoControl.get(['traducciones', 'es', 'nombre'])?.value) {
                   <h1

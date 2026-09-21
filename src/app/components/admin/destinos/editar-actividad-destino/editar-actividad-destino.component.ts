@@ -205,6 +205,11 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   ultimaLlaveTraduccionActividad = '';
   private contenidoActividadGuardado = '';
   private pendientesImagenesCarpeta = new Map<string, { carpeta_id: number | null; carpeta_nombre: string; carpeta: string }>();
+  private imagenEditandoOriginal: any | null = null;
+  private carpetaPendienteOriginal: {
+    draftKey: string;
+    value: { carpeta_id: number | null; carpeta_nombre: string; carpeta: string } | null;
+  } | null = null;
   private imagenesClaveSecuencia = 0;
   private carpetasTemporalesSecuencia = -1;
   private overlayDragActivo = false;
@@ -1971,7 +1976,25 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     await this.guardarImagenes();
   }
 
-  cerrarEditorImagen() {
+  cerrarEditorImagen(descartarCambios = true) {
+    const control = this.imagenEditandoControl;
+    if (descartarCambios && control && this.imagenEditandoOriginal) {
+      control.reset(structuredClone(this.imagenEditandoOriginal), { emitEvent: false });
+      control.markAsPristine();
+      control.markAsUntouched();
+    }
+
+    if (descartarCambios && this.carpetaPendienteOriginal) {
+      const { draftKey, value } = this.carpetaPendienteOriginal;
+      if (value) {
+        this.pendientesImagenesCarpeta.set(draftKey, value);
+      } else {
+        this.pendientesImagenesCarpeta.delete(draftKey);
+      }
+    }
+
+    this.imagenEditandoOriginal = null;
+    this.carpetaPendienteOriginal = null;
     this.mostrarVistaPreviaDispositivos = false;
     this.editorImagenAbierto = false;
     this.imagenEditandoIndex = null;
@@ -2048,7 +2071,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
         imagen
       });
       if (guardada.id) control.get('id')?.setValue(guardada.id);
-      this.cerrarEditorImagen();
+      this.cerrarEditorImagen(false);
     } catch (error: any) {
       this.error = error?.message ?? 'No se pudo guardar la imagen.';
       this.toast.show({ title: 'No se pudo guardar la imagen', message: this.error, variant: 'error' });
@@ -3014,6 +3037,12 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const control = this.imagenesArray.at(index);
+    const draftKey = this.limpiarTexto(control.get('draft_key')?.value);
+    this.imagenEditandoOriginal = structuredClone(control.getRawValue());
+    this.carpetaPendienteOriginal = draftKey
+      ? { draftKey, value: this.pendientesImagenesCarpeta.get(draftKey) ?? null }
+      : null;
     this.imagenSeleccionadaIndex = index;
     this.imagenEditandoIndex = index;
     this.editorImagenAbierto = true;

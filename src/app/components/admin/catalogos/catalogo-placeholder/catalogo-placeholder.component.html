@@ -372,6 +372,12 @@
     </div>
 </div>
 
+<app-blocking-loader
+    [open]="guardandoEdicion || guardandoCreacion"
+    title="Guardando cambios"
+    message="Espera un momento mientras actualizamos la información."
+/>
+
 @if (modalEdicionAbierto && usaModalEdicion && !esCatalogoPoliticas && editingId !== null) {
 <div class="fixed inset-0 z-[3000] flex items-center justify-center p-4">
     <button type="button" class="absolute inset-0 cursor-default bg-black/50" aria-label="Cerrar modal"
@@ -979,15 +985,6 @@
             }
 
             @if (esCatalogoTiposTuristicos) {
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <app-tp-input
-                    class="w-full"
-                    label="Clave"
-                    placeholder="Ej. playa"
-                    [value]="editingDraft['clave'] ?? ''"
-                    [maxLength]="50"
-                    (valueChange)="actualizarTextoDraft('clave', $event)">
-                </app-tp-input>
                 <app-tp-input
                     class="w-full"
                     label="Nombre"
@@ -996,7 +993,6 @@
                     [maxLength]="120"
                     (valueChange)="actualizarTextoDraft('nombre', $event)">
                 </app-tp-input>
-            </div>
             <section class="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800" aria-labelledby="tipo-turistico-traducciones-titulo">
                 <h3 id="tipo-turistico-traducciones-titulo" class="text-sm font-semibold text-gray-900 dark:text-white">Traducciones guardadas</h3>
                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Se actualizan al guardar los cambios del nombre en español.</p>
@@ -1302,18 +1298,12 @@
     <div class="absolute inset-0 bg-black/60" @backdropFade></div>
     <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900" @modalScaleFade>
         <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
-            {{ esCatalogoIdiomas ? 'Eliminar idioma' : (esCatalogoAmenidades ? 'Eliminar actividad' : (esCatalogoPoliticas ? 'Eliminar politica' : (esCatalogoDescuentos ? 'Eliminar descuento' : (esCatalogoTarifas ? 'Eliminar tarifa' : (esCatalogoTipoImagen ? 'Eliminar tipo imagen' : (esCatalogoTiposHabitacion ? 'Eliminar habitacion' : (esCatalogoTratamientos ? 'Eliminar tratamiento' : (esCatalogoOrigenReservacion ? 'Eliminar origen de reservacion' : (esCatalogoRolesEmpresa ? 'Eliminar rol de empresa' : 'Eliminar continente'))))))))) }}
+            {{ esCatalogoTiposTuristicos ? 'Eliminar tipo turístico' : (esCatalogoIdiomas ? 'Eliminar idioma' : (esCatalogoAmenidades ? 'Eliminar actividad' : (esCatalogoPoliticas ? 'Eliminar politica' : (esCatalogoDescuentos ? 'Eliminar descuento' : (esCatalogoTarifas ? 'Eliminar tarifa' : (esCatalogoTipoImagen ? 'Eliminar tipo imagen' : (esCatalogoTiposHabitacion ? 'Eliminar habitacion' : (esCatalogoTratamientos ? 'Eliminar tratamiento' : (esCatalogoOrigenReservacion ? 'Eliminar origen de reservacion' : (esCatalogoRolesEmpresa ? 'Eliminar rol de empresa' : 'Eliminar continente')))))))))) }}
         </h3>
         <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
             Seguro que quieres eliminar
             <span class="font-semibold text-gray-900 dark:text-white">{{ itemAEliminar.codigo }}</span>?
         </p>
-
-        @if (errorModalEliminar) {
-        <div class="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {{ errorModalEliminar }}
-        </div>
-        }
 
         <div class="mt-6 flex justify-end gap-2">
             <button mat-stroked-button type="button" (click)="cerrarModalEliminar()" [disabled]="eliminandoRegistro">
@@ -1504,15 +1494,6 @@
             }
 
             @if (esCatalogoTiposTuristicos) {
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <app-tp-input
-                    class="w-full"
-                    label="Clave"
-                    placeholder="Ej. playa"
-                    [value]="nuevoRegistroDraft['clave'] ?? ''"
-                    [maxLength]="50"
-                    (valueChange)="actualizarTextoCreacion('clave', $event)">
-                </app-tp-input>
                 <app-tp-input
                     class="w-full"
                     label="Nombre"
@@ -1521,7 +1502,6 @@
                     [maxLength]="120"
                     (valueChange)="actualizarTextoCreacion('nombre', $event)">
                 </app-tp-input>
-            </div>
             } @else if (esCatalogoEstatus) {
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <mat-form-field appearance="outline" class="w-full">

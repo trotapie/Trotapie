@@ -180,6 +180,47 @@
     background: var(--fuse-bg-default);
   }
 
+  .image-edit-modal__stepper {
+    background: transparent;
+  }
+
+  ::ng-deep .image-edit-modal__stepper .mat-vertical-content-container {
+    margin-left: 0.875rem;
+  }
+
+  ::ng-deep .image-edit-modal__stepper .mat-vertical-content {
+    padding: 0.5rem 0 1.5rem 1.5rem;
+  }
+
+  ::ng-deep .image-edit-modal__stepper .mat-step-header {
+    height: auto;
+    min-height: 3.5rem;
+    padding: 0.5rem 0;
+  }
+
+  ::ng-deep .image-edit-modal__stepper .mat-step-icon {
+    background: color-mix(in srgb, var(--primary, #00a67c) 12%, transparent);
+    color: var(--primary, #008f75);
+  }
+
+  ::ng-deep .image-edit-modal__stepper .mat-step-icon-selected,
+  ::ng-deep .image-edit-modal__stepper .mat-step-icon-state-done {
+    background: var(--primary, #00a67c);
+    color: #fff;
+  }
+
+  ::ng-deep .image-edit-modal__stepper .mat-step-label {
+    color: var(--fuse-text-secondary);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  ::ng-deep .image-edit-modal__stepper .mat-step-label-active {
+    color: var(--fuse-text-default);
+  }
+
   .image-edit-modal__section {
     box-shadow: 0 0.35rem 1rem rgb(15 23 42 / 4%);
   }
@@ -198,16 +239,44 @@
     font-weight: 800;
   }
 
-  .image-edit-modal__reset-all {
+  .image-edit-modal__action-button {
     min-height: 2.25rem;
     line-height: 1;
+    border-color: color-mix(in srgb, var(--primary, #00a67c) 26%, var(--fuse-border));
+    border-radius: 0.75rem;
+    color: var(--primary, #008f75);
+    transition: background-color 160ms ease, border-color 160ms ease;
   }
 
-  .image-edit-modal__reset-all mat-icon {
+  .image-edit-modal__action-button:hover:not(:disabled) {
+    border-color: var(--primary, #00a67c);
+    background: color-mix(in srgb, var(--primary, #00a67c) 8%, transparent);
+  }
+
+  .image-edit-modal__action-button:disabled {
+    opacity: 0.6;
+  }
+
+  .image-edit-modal__cancel-button {
+    border-color: color-mix(in srgb, #dc2626 32%, var(--fuse-border));
+    color: #b91c1c;
+  }
+
+  .image-edit-modal__cancel-button:hover:not(:disabled) {
+    border-color: #dc2626;
+    background: rgb(220 38 38 / 8%);
+  }
+
+  .image-edit-modal__action-button mat-icon {
     width: 1rem;
     height: 1rem;
     min-width: 1rem;
-    margin-right: 0.35rem;
+  }
+
+  .image-edit-modal__save-button {
+    min-height: 2.25rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.25rem 0.75rem color-mix(in srgb, var(--primary, #00a67c) 26%, transparent);
   }
 
   .image-edit-modal__text-effect {
@@ -549,13 +618,17 @@
       max-height: calc(100vh - 28rem);
     }
 
+    ::ng-deep .image-edit-modal__stepper .mat-vertical-content {
+      padding-left: 1rem;
+    }
+
     .image-edit-modal__header,
     .image-edit-modal__footer {
       padding-left: 1rem;
       padding-right: 1rem;
     }
 
-    .image-edit-modal__reset-all {
+    .image-edit-modal__action-button {
       padding-inline: 0.65rem;
     }
 

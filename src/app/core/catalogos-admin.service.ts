@@ -955,11 +955,14 @@ export class CatalogosAdminService {
         return { deleted: 1 };
       }
       case 'tipos_turisticos': {
-        const { error } = await this.client
+        const { data, error } = await this.client
           .from('catalogo_tipos_turisticos')
           .delete()
-          .eq('id', id);
+          .eq('id', id)
+          .select('id')
+          .maybeSingle();
         if (error) throw error;
+        if (!data) throw new Error('No fue posible eliminar el tipo turístico. Verifica tus permisos o sus registros relacionados.');
         return { deleted: 1 };
       }
       case 'tipo_imagen': {

@@ -190,7 +190,7 @@
                                         @if (slide.efecto_destino !== 'texto') {
                                             <div class="absolute inset-0" [style.background-color]="colorConOpacidad(slide.overlay_color, slide.overlay_opacidad)"></div>
                                         }
-                                        @if (etiquetaEstaPosicionada(slide) || contenidoEstaPosicionado(slide)) {
+                                        @if ((etiquetaEstaPosicionada(slide) || contenidoEstaPosicionado(slide)) && slide.etiqueta_texto?.trim()) {
                                             <div
                                                 [ngStyle]="etiquetaEstaPosicionada(slide) ? getOverlayStyle(slide) : null"
                                                 [class]="'absolute z-20 w-max max-w-full' +
@@ -199,7 +199,7 @@
                                                 <span
                                                     class="carousel-slide__label inline-block w-fit rounded-full font-bold uppercase tracking-widest text-white shadow-md"
                                                     [style.--font-size.px]="slide.etiqueta_font_size"
-                                                    [style.background-color]="slide.etiqueta_color">{{ slide.etiqueta_texto || detallesDestino?.nombre }}</span>
+                                                    [style.background-color]="slide.etiqueta_color">{{ slide.etiqueta_texto }}</span>
                                             </div>
                                         }
                                         <div
@@ -218,11 +218,11 @@
                                                     <div class="absolute inset-0 bg-white/12 backdrop-blur-xl backdrop-saturate-150"></div>
                                                 }
                                                 <div class="relative">
-                                                @if (!etiquetaEstaPosicionada(slide) && !contenidoEstaPosicionado(slide)) {
+                                                @if (!etiquetaEstaPosicionada(slide) && !contenidoEstaPosicionado(slide) && slide.etiqueta_texto?.trim()) {
                                                     <span
                                                         class="carousel-slide__label mb-3 inline-block w-fit rounded-full font-bold uppercase tracking-widest text-white shadow-md"
                                                         [style.--font-size.px]="slide.etiqueta_font_size"
-                                                        [style.background-color]="slide.etiqueta_color">{{ slide.etiqueta_texto || detallesDestino?.nombre }}</span>
+                                                        [style.background-color]="slide.etiqueta_color">{{ slide.etiqueta_texto }}</span>
                                                 }
                                                 @if (slide.nombre) {
                                                     <h1 class="carousel-slide__title font-black leading-tight mb-2" [style.color]="slide.texto_color"

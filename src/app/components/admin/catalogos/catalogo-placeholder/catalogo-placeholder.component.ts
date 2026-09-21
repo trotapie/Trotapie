@@ -16,6 +16,7 @@ import { TpInputComponent } from 'app/shared/tp-input/tp-input.component';
 import { TpTextareaComponent } from 'app/shared/tp-textarea/tp-textarea.component';
 import { TpSelectSearchComponent } from 'app/shared/tp-select-search/tp-select-search.component';
 import { TpToastService } from 'app/shared/tp-toast/tp-toast.service';
+import { BlockingLoaderComponent } from 'app/shared/blocking-loader/blocking-loader.component';
 import { backdropFade, modalScaleFade } from 'app/shared/animations';
 
 interface IPoliticaTraduccionPreview {
@@ -51,7 +52,7 @@ interface CatalogoVistaConfig {
 @Component({
   selector: 'app-catalogo-placeholder',
   standalone: true,
-  imports: [CommonModule, FormsModule, A11yModule, MaterialModule, DragDropModule, EstatusComponent, CustomSwitchComponent, TpInputComponent, TpTextareaComponent, TpSelectSearchComponent],
+  imports: [CommonModule, FormsModule, A11yModule, MaterialModule, DragDropModule, EstatusComponent, CustomSwitchComponent, TpInputComponent, TpTextareaComponent, TpSelectSearchComponent, BlockingLoaderComponent],
   templateUrl: './catalogo-placeholder.component.html',
   styleUrl: './catalogo-placeholder.component.scss',
   animations: [modalScaleFade, backdropFade],
@@ -729,7 +730,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   get descripcionModalCrear(): string {
-    if (this.esCatalogoTiposTuristicos) return 'Captura la clave, el nombre y el estatus del nuevo tipo turístico.';
+    if (this.esCatalogoTiposTuristicos) return 'Captura el nombre y el estatus del nuevo tipo turístico.';
     if (this.esCatalogoEstatus) {
       return 'Captura la clave, el nombre y el estatus del nuevo registro.';
     }
@@ -847,7 +848,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   get descripcionModalEdicion(): string {
-    if (this.esCatalogoTiposTuristicos) return 'Actualiza la clave, el nombre y el estatus del tipo turístico.';
+    if (this.esCatalogoTiposTuristicos) return 'Actualiza el nombre y el estatus del tipo turístico.';
     if (this.esCatalogoEstatus) {
       return 'Actualiza la clave, el nombre y el estatus del registro.';
     }
@@ -1702,7 +1703,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
     this.errorModalEdicion = '';
 
     try {
-      if (this.esCatalogoEstatus) {
+      if (this.esCatalogoEstatus && !this.esCatalogoTiposTuristicos) {
         const clave = String(this.editingDraft['clave'] ?? '').trim().toLowerCase();
         const nombre = String(this.editingDraft['nombre'] ?? '').trim();
         const estatusOriginal = this.items.find((item) => Number(item.id) === this.editingId);
@@ -1726,6 +1727,27 @@ export class CatalogoPlaceholderComponent implements OnInit {
         await this.catalogosAdmin.actualizarCatalogoAdmin(this.catalogoKey, this.editingId, payload);
         this.items = this.items.map((current) =>
           Number(current.id) === this.editingId ? { ...current, ...payload } : current
+        );
+      } else if (this.esCatalogoTiposTuristicos) {
+        const nombre = String(this.editingDraft['nombre'] ?? '').trim();
+
+        if (!nombre) {
+          this.errorModalEdicion = 'El nombre es obligatorio para editar un tipo turístico.';
+          this.guardandoEdicion = false;
+          return;
+        }
+
+        const payload = {
+          clave: String(this.editingDraft['clave'] ?? '').trim(),
+          nombre,
+          activo: Boolean(this.editingDraft['activo'])
+        };
+
+        await this.catalogosAdmin.actualizarCatalogoAdmin('tipos_turisticos', this.editingId, payload);
+        this.items = this.items.map((current) =>
+          Number(current.id) === this.editingId
+            ? { ...current, ...payload, traducciones_preview: this.traduccionesTipoTuristicoPreview }
+            : current
         );
       } else if (this.esCatalogoIdiomas) {
         const codigo = String(this.editingDraft['codigo'] ?? '').trim().toLowerCase();
@@ -2301,7 +2323,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
     try {
       await this.catalogosAdmin.eliminarCatalogoAdmin(this.catalogoKey, this.itemAEliminar.id);
-      if (this.esCatalogoAmenidades) {
+      if (this.esCatalogoAmenidades || this.esCatalogoTiposTuristicos) {
         await this.cargar();
       } else {
         this.items = this.items.filter((item) => Number(item.id) !== this.itemAEliminar?.id);
@@ -2313,9 +2335,17 @@ export class CatalogoPlaceholderComponent implements OnInit {
       }
 
       this.cerrarModalEliminar();
-      this.mostrarModalExitoConMensaje(this.mensajeExitoEliminacion);
+      this.toast.show({
+        title: 'Eliminación exitosa',
+        message: this.mensajeExitoEliminacion,
+        variant: 'success'
+      });
     } catch (error: any) {
-      this.errorModalEliminar = error?.message ?? 'No se pudo eliminar el registro.';
+      this.toast.show({
+        title: 'No se pudo eliminar',
+        message: error?.message ?? 'No se pudo eliminar el registro.',
+        variant: 'error'
+      });
       this.eliminandoRegistro = false;
     }
   }
@@ -2348,7 +2378,21 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
     try {
       let atraccionCreadaId: number | null = null;
-      if (this.esCatalogoEstatus) {
+      if (this.esCatalogoTiposTuristicos) {
+        const nombre = String(this.nuevoRegistroDraft['nombre'] ?? '').trim();
+
+        if (!nombre) {
+          this.errorModalCreacion = 'El nombre es obligatorio para crear un tipo turístico.';
+          this.guardandoCreacion = false;
+          return;
+        }
+
+        await this.catalogosAdmin.crearCatalogoAdmin(this.catalogoKey, {
+          clave: this.generarClaveTipoTuristico(nombre),
+          nombre,
+          activo: Boolean(this.nuevoRegistroDraft['activo'])
+        });
+      } else if (this.esCatalogoEstatus) {
         const clave = String(this.nuevoRegistroDraft['clave'] ?? '').trim().toLowerCase();
         const nombre = String(this.nuevoRegistroDraft['nombre'] ?? '').trim();
 
@@ -3103,7 +3147,6 @@ export class CatalogoPlaceholderComponent implements OnInit {
   cerrarModalExito() {
     this.mostrarModalExito = false;
     this.mensajeModalExito = '';
-    this.router.navigate([`/admin/catalogos/${this.catalogoKey}`]);
   }
 
   private mostrarModalExitoConMensaje(message: string) {
@@ -3132,6 +3175,16 @@ export class CatalogoPlaceholderComponent implements OnInit {
       .trim()
       .replace(/[^a-z0-9]+/g, '_')
       .replace(/^_+|_+$/g, '');
+  }
+
+  private generarClaveTipoTuristico(nombre: string): string {
+    return nombre
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
   }
 
   private formatearNombreAtraccion(nombre: string | null | undefined): string {
