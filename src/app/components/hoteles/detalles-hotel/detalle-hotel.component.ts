@@ -331,10 +331,6 @@ export class DetalleHotelComponent {
         return new Date().getFullYear();
     }
 
-    get mostrarDemoDetalleHotel(): boolean {
-        return this.hotel?.id === 158;
-    }
-
     sanitizeImage(url: string): SafeStyle {
         return this.sanitizer.bypassSecurityTrustStyle(`url(${url})`);
     }

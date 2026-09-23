@@ -9,14 +9,12 @@
                     <div class="text-3xl font-semibold leading-tight">
                         {{hotel.nombre_hotel}}
                     </div>
-                    @if (mostrarDemoDetalleHotel) {
                     <div class="mt-1">
                         <div class="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
                             <mat-icon class="icon-size-4 text-rose-500" [svgIcon]="'heroicons_solid:map-pin'"></mat-icon>
                             <span>Mazatlán, Sinaloa, México</span>
                         </div>
                     </div>
-                    }
                 </div>
                 <div class="flex items-center gap-6 my-2">
                     <button mat-raised-button color="warn"
@@ -59,11 +57,9 @@
                             <span>{{ t('descripcion') }}</span>
                         </ng-template>
                         <div class="mt-4 text-base leading-relaxed whitespace-pre-line">
-                            @if (mostrarDemoDetalleHotel) {
                             <div class="mb-5">
                                 <h3 class="text-2xl font-semibold leading-tight text-gray-900 dark:text-gray-100">Conoce un poco más</h3>
                             </div>
-                            }
                             <div [class.line-clamp-6]="!verMasDescripcion" class="transition-all duration-300">
                                 {{ descripcionParrafo }}
                             </div>
@@ -120,7 +116,6 @@
 
                     </mat-tab>
 
-                    @if (mostrarDemoDetalleHotel) {
                     <mat-tab aria-label="Plan Todo Incluido">
                         <ng-template mat-tab-label>
                             <mat-icon class="hotel-tab-icon" [svgIcon]="'heroicons_outline:ticket'"></mat-icon>
@@ -184,7 +179,6 @@
                             </div>
                         </div>
                     </mat-tab>
-                    }
 
                 </mat-tab-group>
                 </div>
