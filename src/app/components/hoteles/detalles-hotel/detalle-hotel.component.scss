@@ -1,0 +1,43 @@
+@media (max-width: 1023px) {
+    .hotel-tabs {
+        .mat-mdc-tab-header {
+            height: auto;
+        }
+
+        .mat-mdc-tab-header-pagination {
+            display: none;
+        }
+
+        .mat-mdc-tab-header .mat-mdc-tab-label-container {
+            margin: 0;
+            overflow: visible;
+        }
+
+        .mat-mdc-tab-list {
+            flex-grow: 1;
+        }
+
+        .mat-mdc-tab-labels {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .mat-mdc-tab {
+            height: 52px;
+            min-width: 0;
+            padding: 0 6px;
+        }
+
+        .mdc-tab__text-label {
+            white-space: normal;
+            line-height: 1.2;
+            text-align: center;
+        }
+    }
+}
+
+.hotel-tabs .hotel-tab-icon {
+    height: 20px;
+    margin-right: 8px;
+    width: 20px;
+}
