@@ -25,6 +25,7 @@ type Room = { adults: number; children: number; childAges: (number | null)[] };
     selector: 'detalle-hotel',
     standalone: true,
     templateUrl: './detalle-hotel.component.html',
+    styleUrl: './detalle-hotel.component.scss',
     imports: [MaterialModule, MapaComponent, TranslocoModule, FooterComponent, ImagenesCarruselComponent, BotCotizadorComponent
         //  QRCodeComponent, 
     ],
@@ -328,6 +329,10 @@ export class DetalleHotelComponent {
 
     get currentYear(): number {
         return new Date().getFullYear();
+    }
+
+    get mostrarDemoDetalleHotel(): boolean {
+        return this.hotel?.id === 158;
     }
 
     sanitizeImage(url: string): SafeStyle {
