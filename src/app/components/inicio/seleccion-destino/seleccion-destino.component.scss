@@ -1,3 +1,7 @@
+.catalog-landing-hidden {
+  display: none !important;
+}
+
 .destination-page {
   display: flex;
   flex-direction: column;
@@ -243,13 +247,15 @@
 }
 
 .catalog-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 50;
   max-width: none;
   min-height: 100%;
-  overflow-y: auto;
   background: #f4f7f5;
+}
+
+.catalog-transitioning {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
 }
 
 .destination-page > app-footer {
@@ -292,11 +298,15 @@
 }
 
 .catalog-toolbar {
+  position: sticky;
+  top: 0.1rem;
+  z-index: 3;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 1.5rem;
   align-items: end;
   margin-top: clamp(1.75rem, 4vw, 3rem);
+  margin-inline: -clamp(0.5rem, 2vw, 1.5rem);
   padding: 1rem 1.15rem;
   border: 1px solid #dce7e1;
   border-radius: 1rem;
@@ -394,19 +404,11 @@
 
 .destination-list {
   display: grid;
-  max-height: min(38rem, calc(100dvh - 24rem));
   max-width: 100%;
-  overflow-x: hidden;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding-right: 0.85rem;
   border-top: 1px solid #dce7e1;
   margin-top: 1.5rem;
-  scrollbar-width: none;
 }
 
-.destination-list::-webkit-scrollbar { display: none; }
-.destination-list:focus-visible { outline: 3px solid #f1b91b; outline-offset: 3px; }
 
 @media (min-width: 900px) {
   .destination-view-toggle { display: flex; }
@@ -539,7 +541,6 @@
   }
   .destination-link { padding: 0.45rem 0.55rem; font-size: 0.74rem; }
   .destination-link mat-icon { width: 1rem; height: 1rem; font-size: 1rem; }
-  .destination-list { max-height: calc(100dvh - 24rem); }
 }
 
 @media (max-width: 380px) {

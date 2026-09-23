@@ -1,8 +1,8 @@
-import { AfterViewInit, Component, ElementRef, inject, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, inject, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormControl, FormGroup, FormsModule } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import { Router } from '@angular/router';
-import { FuseCardComponent } from '@fuse/components/card';
+import gsap from 'gsap';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { SupabaseService } from 'app/core/supabase.service';
 import { DestinosService, TipoTuristicoCatalogo } from 'app/core/destinos.service';
@@ -30,6 +30,7 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
   private destinosService = inject(DestinosService);
   private sanitizer = inject(DomSanitizer)
   private _translocoService = inject(TranslocoService);
+  private changeDetector = inject(ChangeDetectorRef);
 
   /**
    * Constructor
@@ -86,8 +87,13 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
   destinoFiltroCtrl = new FormControl(''); // solo para el texto del autocomplete
   @ViewChild('selectDestino') selectDestinoInternacionales!: MatSelect;
   overlayAnimatedOnce = false;
-  @ViewChild('heroCard', { static: false })
-  heroCard!: FuseCardComponent;
+  landingHidden = false;
+  catalogTransitioning = false;
+  private isAnimating = false;
+  private transition?: gsap.core.Timeline;
+  @ViewChild('landing') landing!: ElementRef<HTMLElement>;
+  @ViewChild('heroCard') heroCard!: ElementRef<HTMLElement>;
+  @ViewChild('catalog') catalog?: ElementRef<HTMLElement>;
 
 
   avisoUrl = '';
@@ -125,6 +131,7 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
   ngOnDestroy(): void {
     if (this.intervalId) clearInterval(this.intervalId);
     this.languageChangesSubscription?.unsubscribe();
+    this.transition?.kill();
   }
 
 
@@ -271,21 +278,69 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
   }
 
   showOverlay(): void {
-    this.heroCard.face = 'back';
+    if (this.isAnimating || this.overlayAnimatedOnce) return;
 
-    if (!this.overlayAnimatedOnce) {
-      setTimeout(() => {
-        this.overlayAnimatedOnce = true;
-      }, 350); // ajusta al tiempo del flip
+    this.isAnimating = true;
+    this.scrollContainer.nativeElement.scrollTop = 0;
+    this.overlayAnimatedOnce = true;
+    this.catalogTransitioning = true;
+    this.changeDetector.detectChanges();
+
+    const landing = this.landing.nativeElement;
+    const card = this.heroCard.nativeElement;
+    const catalog = this.catalog!.nativeElement;
+    const finish = () => {
+      this.landingHidden = true;
+      this.catalogTransitioning = false;
+      gsap.set([landing, card, catalog], { clearProps: 'opacity,visibility,transform' });
+      this.isAnimating = false;
+      this.changeDetector.detectChanges();
+    };
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      finish();
+      return;
     }
+
+    gsap.set(catalog, { autoAlpha: 0, y: 32 });
+    this.transition = gsap.timeline({ onComplete: finish })
+      .to(card, { autoAlpha: 0, scale: 0.88, y: -36, duration: 0.38, ease: 'power2.inOut' })
+      .to(landing, { autoAlpha: 0, duration: 0.1 }, '-=0.1')
+      .to(catalog, { autoAlpha: 1, y: 0, duration: 0.5, ease: 'power3.out' }, '-=0.16');
   }
 
   hideOverlay(): void {
-    this.heroCard.face = 'front';
-    this.overlayAnimatedOnce = false;
-    setTimeout(() => {
+    if (this.isAnimating || !this.overlayAnimatedOnce) return;
+
+    this.isAnimating = true;
+    this.scrollContainer.nativeElement.scrollTop = 0;
+    this.landingHidden = false;
+    this.catalogTransitioning = true;
+    this.changeDetector.detectChanges();
+
+    const landing = this.landing.nativeElement;
+    const card = this.heroCard.nativeElement;
+    const catalog = this.catalog!.nativeElement;
+    const finish = () => {
+      this.overlayAnimatedOnce = false;
+      this.catalogTransitioning = false;
+      gsap.set([landing, card, catalog], { clearProps: 'opacity,visibility,transform' });
       this.dropdownOpen = true;
-    }, 500);
+      this.isAnimating = false;
+      this.changeDetector.detectChanges();
+    };
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      finish();
+      return;
+    }
+
+    gsap.set(landing, { autoAlpha: 0 });
+    gsap.set(card, { autoAlpha: 0, scale: 0.88, y: -36 });
+    this.transition = gsap.timeline({ onComplete: finish })
+      .to(catalog, { autoAlpha: 0, y: 32, duration: 0.32, ease: 'power2.inOut' })
+      .to(landing, { autoAlpha: 1, duration: 0.1 }, '-=0.1')
+      .to(card, { autoAlpha: 1, scale: 1, y: 0, duration: 0.48, ease: 'power3.out' }, '-=0.1');
   }
 
   toggleDropdown(ev: Event) {

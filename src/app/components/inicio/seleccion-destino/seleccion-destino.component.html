@@ -40,21 +40,15 @@
 
 <div #scrollContainer class="absolute inset-0 flex flex-col min-w-0 overflow-y-auto" cdkScrollable>
     <ng-container *transloco="let t">
-        <div (click)="closeDropdown()" class="min-h-full flex items-center justify-center">
+        <div #landing (click)="closeDropdown()" class="min-h-full flex items-center justify-center" [class.catalog-landing-hidden]="landingHidden">
             <div class="flex min-w-0 flex-auto flex-col mt-2 items-center justify-center h-full w-full">
                 <div class="relative flex justify-center items-center p-3 sm:p-5 md:p-8 w-full h-full">
                     <h1 class="sr-only">Hoteles y destinos para tus vacaciones con Trotapie</h1>
-                    <fuse-card class="flex flex-col max-w-xl w-full md:w-[600px] h-[70vh] sm:h-[80vh] md:h-[70vh]"
-                        [flippable]="true" #heroCard>
-
-                        <ng-container fuseCardFront>
+                    <div class="flex flex-col max-w-xl w-full md:w-[600px] h-[70vh] sm:h-[80vh] md:h-[70vh]" #heroCard>
                             <div class="relative w-full h-full rounded-3xl overflow-hidden shadow-lg
                     flex items-center justify-center text-white bg-cover bg-center"
-                                style="backface-visibility: hidden; -webkit-backface-visibility: hidden;"
                                 [ngStyle]="{ 'background-image': currentImage ? 'url(' + currentImage + ')' : 'none' }"
-                                [style.pointerEvents]="heroCard?.face === 'back' ? 'none' : 'auto'"
-                                [style.visibility]="heroCard?.face === 'back' ? 'hidden' : 'visible'"
-                                [style.zIndex]="heroCard?.face === 'front' ? 20 : 0">
+                                >
 
                                 <div *ngIf="overlayImage"
                                     class="absolute inset-0 bg-cover bg-center transition-opacity duration-500 pointer-events-none"
@@ -166,17 +160,13 @@
                                     <strong>{{currentText}}</strong>
                                 </div>
                             </div>
-                        </ng-container>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                        <!-- <ng-container fuseCardBack>
-                            <div class="relative w-full h-full rounded-3xl shadow-lg
-                bg-[#0B0B2B] flex flex-col px-8 pt-10 pb-6 text-white z-[1000]">
-                            </div>
-                        </ng-container> -->
-
-                    </fuse-card>
                     @if(overlayAnimatedOnce){
-                    <section class="catalog-page catalog-overlay" aria-labelledby="catalog-title">
+                    <section #catalog class="catalog-page catalog-overlay" [class.catalog-transitioning]="catalogTransitioning" aria-labelledby="catalog-title">
                         <header class="catalog-header">
                             <button type="button" class="back-button" (click)="hideOverlay()" [attr.aria-label]="t('volver-a-tipos-viaje')">
                                 <mat-icon aria-hidden="true">arrow_back</mat-icon>
@@ -221,7 +211,7 @@
                         } @else if (destinosFiltrados.length === 0) {
                         <div class="catalog-state" role="status"><mat-icon aria-hidden="true">travel_explore</mat-icon><h2>{{ t('destino-no-encontrado') }}</h2><p>{{ t('prueba-otra-busqueda') }}</p></div>
                         } @else {
-                        <div class="destination-list" [class.destination-list--cards]="vistaDestinos === 'cards'" tabindex="0" [attr.aria-label]="t('lista-destinos')" aria-live="polite">
+                        <div class="destination-list p-3" [class.destination-list--cards]="vistaDestinos === 'cards'" [attr.aria-label]="t('lista-destinos')" aria-live="polite">
                             <button *ngFor="let item of destinosFiltrados" type="button" class="destination-row" (click)="cargaInfo(item)" [attr.aria-label]="t('explorar-destino', { destino: item.nombre })">
                                 <div class="destination-thumbnail" [class.destination-image-empty]="!item.imagen_destino">
                                     @if (item.imagen_destino) { <img [src]="item.imagen_destino" [alt]="t('vista-de-destino', { destino: item.nombre })" loading="lazy" /> } @else { <mat-icon aria-hidden="true">landscape</mat-icon> }
@@ -233,10 +223,6 @@
                         }
                     </section>
                     }
-
-                </div>
-            </div>
-        </div>
 
         <app-footer />
     </ng-container>
