@@ -1,0 +1,51 @@
+<main class="mx-auto max-w-5xl space-y-6 p-4 sm:p-8">
+  <header class="flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <a routerLink="/admin/hoteles" class="mb-3 inline-flex items-center text-sm text-primary"><mat-icon class="mr-1.5 icon-size-4">arrow_back</mat-icon>Hoteles</a>
+      <h1 class="text-2xl font-semibold">Pestañas adicionales de hoteles</h1>
+      <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">Los nombres y los íconos se comparten entre hoteles; el contenido se edita en cada hotel.</p>
+    </div>
+    <button mat-flat-button color="primary" type="button" (click)="editar()"><mat-icon class="mr-1.5 icon-size-4">add</mat-icon>Nueva pestaña</button>
+  </header>
+
+  @if (cargando) {
+    <p role="status" class="rounded-xl border p-6 text-sm">Cargando catálogo…</p>
+  } @else if (error) {
+    <div role="alert" class="rounded-xl border border-red-300 p-6">
+      <p>{{ error }}</p>
+      <button mat-stroked-button type="button" (click)="cargar()"><mat-icon class="mr-1.5 icon-size-4">refresh</mat-icon>Reintentar</button>
+    </div>
+  } @else if (!pestanas.length) {
+    <p class="rounded-xl border border-dashed p-6 text-sm">Aún no hay pestañas. Crea la primera para usarla en los hoteles.</p>
+  } @else {
+    <div class="grid gap-3">
+      @for (pestana of pestanas; track pestana.id) {
+        <div class="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+          <div class="flex items-center gap-3">
+            <mat-icon class="text-primary">{{ pestana.icono }}</mat-icon>
+            <div><strong>{{ pestana.titulo_es }}</strong><p class="text-xs text-slate-500 dark:text-slate-300">{{ pestana.activo ? 'Disponible para agregar' : 'Archivada · visible en hoteles que ya la usan' }}</p></div>
+          </div>
+          <button mat-stroked-button type="button" (click)="editar(pestana)"><mat-icon class="mr-1.5 icon-size-4">edit</mat-icon>Editar</button>
+        </div>
+      }
+    </div>
+  }
+
+  @if (editando) {
+    <section class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900" aria-label="Editar pestaña del catálogo">
+      <h2 class="mb-4 text-lg font-semibold">{{ editando.id ? 'Editar pestaña' : 'Nueva pestaña' }}</h2>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <mat-form-field class="w-full"><mat-label>Nombre de la pestaña *</mat-label><input matInput [(ngModel)]="editando.titulo_es" maxlength="120" required /></mat-form-field>
+        <mat-form-field class="w-full"><mat-label>Ícono</mat-label><mat-select [(ngModel)]="editando.icono">
+          @for (icono of iconos; track icono.valor) { <mat-option [value]="icono.valor">{{ icono.etiqueta }}</mat-option> }
+        </mat-select></mat-form-field>
+      </div>
+      <mat-checkbox [(ngModel)]="editando.activo">Disponible para agregar a hoteles</mat-checkbox>
+      <p class="mt-2 text-xs text-slate-500 dark:text-slate-300">Los cambios de nombre e ícono se reflejarán en todos los hoteles que usan esta pestaña. Archivarla no elimina su contenido.</p>
+      <div class="mt-5 flex flex-wrap justify-end gap-2">
+        <button mat-stroked-button type="button" [disabled]="guardando" (click)="editando = null"><mat-icon class="mr-1.5 icon-size-4">close</mat-icon>Cancelar</button>
+        <button mat-flat-button color="primary" type="button" [disabled]="guardando || !editando.titulo_es.trim()" (click)="guardar()"><mat-icon class="mr-1.5 icon-size-4">{{ guardando ? 'sync' : 'save' }}</mat-icon>{{ guardando ? 'Guardando…' : 'Guardar' }}</button>
+      </div>
+    </section>
+  }
+</main>

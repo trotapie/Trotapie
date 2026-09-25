@@ -102,6 +102,11 @@ export default [
         }
     },
     {
+        path: 'pestanas-hotel',
+        loadComponent: () => import('./pestanas-hotel/pestanas-hotel.component').then(m => m.PestanasHotelComponent),
+        data: { permissions: ['hoteles.edit'] }
+    },
+    {
         path: 'origen-reservacion',
         component: CatalogoPlaceholderComponent,
         data: {

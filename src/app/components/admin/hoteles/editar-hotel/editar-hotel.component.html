@@ -26,7 +26,7 @@
                     </button>
                     }
                     <button mat-raised-button color="primary" type="submit" form="form-editar-hotel" class="w-full text-white sm:w-auto"
-                        [disabled]="!puedeGuardar">
+                        [disabled]="guardando">
                         <mat-icon class="mr-2 icon-size-5 text-white">save</mat-icon>
                         @if (guardando) {
                         <span class="text-white">{{ esCreacion ? 'Creando...' : 'Guardando...' }}</span>
@@ -37,11 +37,12 @@
                     </div>
                 </div>
                 <nav aria-label="Secciones del editor" class="editor-section-nav mt-4 border-t border-slate-100 pt-3">
-                    <button type="button" (click)="desplazarASeccion('datos-generales')">Datos generales</button>
-                    <button type="button" (click)="desplazarASeccion('ubicacion-portada')">Ubicación y portada</button>
-                    <button type="button" (click)="desplazarASeccion('traducciones')">Idiomas</button>
-                    <button type="button" (click)="desplazarASeccion('servicios')">Servicios</button>
-                    <button type="button" (click)="desplazarASeccion('galeria')">Galería <span>{{ imagenes.length }}</span></button>
+                    <button id="tab-datos-generales" type="button" aria-controls="datos-generales" [attr.aria-current]="seccionActiva === 'datos-generales' ? 'true' : null" [class.editor-section-nav__active]="seccionActiva === 'datos-generales'" (click)="activarSeccion('datos-generales')"><mat-icon class="mr-1.5 icon-size-4">apartment</mat-icon>Datos generales</button>
+                    <button id="tab-ubicacion-portada" type="button" aria-controls="ubicacion-portada" [attr.aria-current]="seccionActiva === 'ubicacion-portada' ? 'true' : null" [class.editor-section-nav__active]="seccionActiva === 'ubicacion-portada'" (click)="activarSeccion('ubicacion-portada')"><mat-icon class="mr-1.5 icon-size-4">location_on</mat-icon>Ubicación y portada</button>
+                    <button id="tab-traducciones" type="button" aria-controls="traducciones" [attr.aria-current]="seccionActiva === 'traducciones' ? 'true' : null" [class.editor-section-nav__active]="seccionActiva === 'traducciones'" (click)="activarSeccion('traducciones')"><mat-icon class="mr-1.5 icon-size-4">translate</mat-icon>Idiomas</button>
+                     <button id="tab-detalles-publicos" type="button" aria-controls="detalles-publicos" [attr.aria-current]="seccionActiva === 'detalles-publicos' ? 'true' : null" [class.editor-section-nav__active]="seccionActiva === 'detalles-publicos'" (click)="activarSeccion('detalles-publicos')"><mat-icon class="mr-1.5 icon-size-4">article</mat-icon>Datos adicionales <span>{{ seccionesDetalle.length }}</span></button>
+                    <button id="tab-servicios" type="button" aria-controls="servicios" [attr.aria-current]="seccionActiva === 'servicios' ? 'true' : null" [class.editor-section-nav__active]="seccionActiva === 'servicios'" (click)="activarSeccion('servicios')"><mat-icon class="mr-1.5 icon-size-4">room_service</mat-icon>Servicios</button>
+                    <button id="tab-galeria" type="button" aria-controls="galeria" [attr.aria-current]="seccionActiva === 'galeria' ? 'true' : null" [class.editor-section-nav__active]="seccionActiva === 'galeria'" (click)="activarSeccion('galeria')"><mat-icon class="mr-1.5 icon-size-4">photo_library</mat-icon>Galería <span>{{ imagenes.length }}</span></button>
                 </nav>
             </div>
         </header>
@@ -53,7 +54,7 @@
         </div>
         } @else {
         <form id="form-editar-hotel" [formGroup]="form" (ngSubmit)="guardar()" class="space-y-5">
-            <section id="datos-generales" class="editor-section scroll-mt-52">
+             <section id="datos-generales" class="editor-section scroll-mt-52" aria-labelledby="tab-datos-generales" [hidden]="seccionActiva !== 'datos-generales'">
                 <div class="editor-section__header">
                     <div class="editor-section__icon bg-primary-50 text-primary-600"><mat-icon>apartment</mat-icon></div>
                     <div>
@@ -132,7 +133,7 @@
                 </div>
             </section>
 
-            <section id="ubicacion-portada" class="editor-section scroll-mt-52">
+             <section id="ubicacion-portada" class="editor-section scroll-mt-52" aria-labelledby="tab-ubicacion-portada" [hidden]="seccionActiva !== 'ubicacion-portada'">
                 <div class="editor-section__header">
                     <div class="editor-section__icon bg-amber-50 text-amber-600"><mat-icon>location_on</mat-icon></div>
                     <div>
@@ -203,13 +204,13 @@
             </div>
             </section>
 
-            @if (traduciendoContenido) {
+             @if (traduciendoContenido && (seccionActiva === 'datos-generales' || seccionActiva === 'traducciones')) {
             <div class="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
                 Traduciendo nombre y descripcion a los idiomas configurados...
             </div>
             }
 
-            <section id="traducciones" class="editor-section scroll-mt-52">
+             <section id="traducciones" class="editor-section scroll-mt-52" aria-labelledby="tab-traducciones" [hidden]="seccionActiva !== 'traducciones'">
                 <div class="editor-section__header">
                     <div class="editor-section__icon bg-violet-50 text-violet-600"><mat-icon>translate</mat-icon></div>
                     <div>
@@ -247,7 +248,75 @@
                 </div>
             </section>
 
-            <section id="servicios" class="editor-section scroll-mt-52">
+             <section id="detalles-publicos" class="editor-section scroll-mt-52" aria-labelledby="tab-detalles-publicos" [hidden]="seccionActiva !== 'detalles-publicos'">
+                <div class="editor-section__header flex-wrap justify-between">
+                    <div class="flex items-start gap-3">
+                        <div class="editor-section__icon bg-teal-50 text-teal-700"><mat-icon>article</mat-icon></div>
+                        <div>
+                             <h2>Datos adicionales</h2>
+                             <p>Organiza las pestañas de este hotel. El contenido en español se traducirá al guardar.</p>
+                         </div>
+                     </div>
+                     @if (seccionesDisponibles) {
+                     <button mat-flat-button color="primary" type="button" [disabled]="!pestanasDisponibles.length" (click)="abrirEditorSeccionDetalle()"><mat-icon class="mr-1.5 icon-size-4">add</mat-icon>Nueva pestaña</button>
+                     }
+                 </div>
+
+                @if (!seccionesDisponibles) {
+                <div class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950" role="status">
+                    <p>{{ errorSeccionesDetalle }}</p>
+                    <button mat-stroked-button type="button" (click)="cargarSeccionesDetalle()">
+                        <mat-icon class="mr-1.5 icon-size-4">refresh</mat-icon> Reintentar
+                    </button>
+                </div>
+                 } @else {
+
+                 <div class="mb-5 flex flex-wrap items-center gap-3">
+                      <button mat-stroked-button type="button" (click)="actualizarCatalogoPestanas()" matTooltip="Actualizar opciones del catálogo"><mat-icon class="mr-1.5 icon-size-4">refresh</mat-icon>Actualizar catálogo</button>
+                      <a mat-stroked-button routerLink="/admin/catalogos/pestanas-hotel" target="_blank" rel="noopener"><mat-icon class="mr-1.5 icon-size-4">settings</mat-icon>Administrar catálogo</a>
+                      @if (!pestanasDisponibles.length) { <p class="w-full text-sm text-slate-500 dark:text-slate-300">No hay más pestañas disponibles. Puedes crear una en el catálogo o quitar alguna de este hotel.</p> }
+                  </div>
+
+                 @if (!seccionesDetalle.length) {
+                 <p class="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500 dark:border-slate-600 dark:text-slate-300">
+                      No hay pestañas adicionales. Crea una para este hotel; la descripción y las amenidades permanecen en sus pestañas habituales.
+                 </p>
+                 } @else {
+                 <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
+                     <table class="w-full min-w-[600px] border-collapse text-left text-sm" aria-label="Pestañas adicionales de este hotel">
+                         <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:bg-slate-800 dark:text-slate-200"><tr>
+                              <th scope="col" class="px-4 py-3">Pestaña</th>
+                              <th scope="col" class="px-4 py-3">Contenido</th>
+                              <th scope="col" class="px-4 py-3">Estado</th>
+                              <th scope="col" class="w-16 px-4 py-3 text-center">Orden</th>
+                              <th scope="col" class="w-28 px-4 py-3 text-right">Acciones</th>
+                         </tr></thead>
+                          <tbody cdkDropList [cdkDropListData]="seccionesDetalle" (cdkDropListDropped)="soltarSeccionDetalle($event)" class="divide-y divide-slate-200 dark:divide-slate-700">
+                              @for (seccion of seccionesDetalle; track seccion.id; let i = $index) {
+                              <tr cdkDrag class="bg-white dark:bg-slate-900">
+                                  <th scope="row" class="px-4 py-3 font-semibold text-slate-900 dark:text-white"><span class="flex items-center gap-2"><mat-icon class="text-primary">{{ seccion.catalogo_pestana?.icono || seccion.icono }}</mat-icon>{{ seccion.titulo }}</span></th>
+                                  <td class="max-w-64 truncate px-4 py-3 text-slate-600 dark:text-slate-300">{{ resumenSeccionDetalle(seccion) }}</td>
+                                  <td class="px-4 py-3"><app-status-badge [status]="seccion.visible ? 'ACTIVO' : 'INACTIVO'"></app-status-badge></td>
+                                  <td class="whitespace-nowrap px-2 py-2 text-center text-slate-600 dark:text-slate-300">
+                                      <span class="font-medium">{{ i + 1 }}</span>
+                                  </td>
+                                  <td class="px-2 py-2 text-right">
+                                      <div class="flex items-center justify-end gap-1">
+                                          <button mat-icon-button cdkDragHandle type="button" class="cursor-grab active:cursor-grabbing" [attr.aria-label]="'Reordenar ' + seccion.titulo + '. Arrastra o usa Alt y flecha arriba o abajo'" matTooltip="Arrastra para ordenar" (keydown)="reordenarSeccionDetalleConTeclado($event, i)"><mat-icon>drag_indicator</mat-icon></button>
+                                          <app-tp-actions-menu [actions]="accionesSeccionDetalle(seccion)" [ariaLabel]="'Acciones de ' + seccion.titulo" (actionSelected)="ejecutarAccionSeccionDetalle($event, seccion)"></app-tp-actions-menu>
+                                      </div>
+                                  </td>
+                             </tr>
+                             }
+                         </tbody>
+                     </table>
+                 </div>
+                 }
+                 <p class="mt-3 text-xs text-slate-500 dark:text-slate-300">El orden, la visibilidad y el contenido se guardarán al guardar el hotel. Los nombres e íconos se comparten desde el catálogo.</p>
+                 }
+            </section>
+
+             <section id="servicios" class="editor-section scroll-mt-52" aria-labelledby="tab-servicios" [hidden]="seccionActiva !== 'servicios'">
                 <div class="editor-section__header">
                     <div class="editor-section__icon bg-emerald-50 text-emerald-600"><mat-icon>room_service</mat-icon></div>
                     <div>
@@ -339,7 +408,7 @@
             </div>
             </section>
 
-            <section id="galeria" class="editor-section scroll-mt-52">
+             <section id="galeria" class="editor-section scroll-mt-52" aria-labelledby="tab-galeria" [hidden]="seccionActiva !== 'galeria'">
                 <div class="editor-section__header editor-section__header--gallery">
                     <div class="editor-section__icon bg-rose-50 text-rose-600"><mat-icon>photo_library</mat-icon></div>
                     <div>
@@ -348,7 +417,8 @@
                     </div>
                 </div>
 
-                <app-folder-image-manager
+                 @if (galeriaInicializada) {
+                 <app-folder-image-manager
                     title="Galería del hotel"
                     subtitle="Las imágenes se organizan visualmente por tipo. Clasifica las pendientes desde Sin tipo asignado."
                     [folders]="galeriaHotel"
@@ -366,7 +436,8 @@
                     (deleteImage)="eliminarImagenDesdeGaleria($event)"
                     (imageTypeChanged)="cambiarTipoImagenDesdeDetalle($event)"
                     (bulkPrimaryAction)="abrirModalAsignarTipoImagenes($event)">
-                </app-folder-image-manager>
+                 </app-folder-image-manager>
+                 }
             </section>
 
             @if (error) {
@@ -379,21 +450,6 @@
         }
     </div>
 </div>
-
-@if (mostrarModalExito) {
-<div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
-    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
-        <h3 class="text-xl font-semibold text-gray-900">Actualizacion completada</h3>
-        <p class="mt-2 text-sm text-gray-600">{{ mensajeModalExito }}</p>
-
-        <div class="mt-6 flex justify-end">
-            <button mat-flat-button color="primary" class="text-white" (click)="cerrarModalExito()">
-                Aceptar
-            </button>
-        </div>
-    </div>
-</div>
-}
 
 @if (mostrarModalAgregarImagenes) {
 <div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">
@@ -464,6 +520,89 @@
     </div>
 </div>
 }
+
+<ng-template #editorSeccionDetalleModal>
+    @if (seccionDetalleBorrador; as borrador) {
+    <h2 mat-dialog-title class="!mb-0">{{ editandoSeccionDetalle ? 'Editar pestaña' : 'Nueva pestaña' }}</h2>
+    <mat-dialog-content class="!max-h-[calc(90vh-160px)] !px-4 sm:!px-6">
+        <p class="mb-4 text-sm text-slate-600 dark:text-slate-300">Elige una pestaña del catálogo y escribe el contenido que verá el público en este hotel. Se traducirá al guardar el hotel.</p>
+        <mat-form-field class="w-full" subscriptSizing="dynamic">
+            <mat-label>Pestaña del catálogo *</mat-label>
+            <mat-select [ngModel]="borrador.catalogo_pestana_id || null" (ngModelChange)="seleccionarCatalogoDetalle($event)" [ngModelOptions]="{standalone: true}" required>
+                @for (pestana of pestanasEditorDetalle; track pestana.id) {
+                <mat-option [value]="pestana.id">{{ pestana.titulo_es }}</mat-option>
+                }
+            </mat-select>
+        </mat-form-field>
+        <p class="mt-2 text-xs text-slate-500 dark:text-slate-300">Los nombres e íconos se comparten entre hoteles; aquí editas solo el contenido de este hotel.</p>
+
+        <div class="mt-5 space-y-4">
+            @for (bloque of borrador.bloques; track bloque; let b = $index) {
+            <section class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:p-4">
+                <div class="mb-3 flex items-center justify-between gap-2">
+                    <h3 class="font-semibold text-slate-800 dark:text-slate-100">{{ bloque.tipo === 'texto' ? 'Texto y listas' : 'Grupo de cards' }}</h3>
+                    <button mat-icon-button type="button" aria-label="Quitar bloque" matTooltip="Quitar bloque" (click)="borrador.bloques.splice(b, 1)"><mat-icon>close</mat-icon></button>
+                </div>
+                @if (bloque.tipo === 'texto') {
+                <ng-container *ngTemplateOutlet="editorContenido; context: { $implicit: bloque }"></ng-container>
+                } @else {
+                <div class="grid gap-3 lg:grid-cols-2">
+                    @for (card of bloque.cards; track card; let c = $index) {
+                    <div class="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-900">
+                        <div class="mb-2 flex items-center justify-between">
+                            <span class="text-sm font-semibold">Card {{ c + 1 }}</span>
+                            <button mat-icon-button type="button" aria-label="Quitar card" matTooltip="Quitar card" [disabled]="bloque.cards.length === 1" (click)="bloque.cards.splice(c, 1)"><mat-icon>close</mat-icon></button>
+                        </div>
+                        <mat-form-field class="w-full"><mat-label>Título (opcional)</mat-label><input matInput [ngModel]="card.titulo" (ngModelChange)="card.titulo = $event" [ngModelOptions]="{standalone: true}" /></mat-form-field>
+                        <mat-form-field class="w-full"><mat-label>Texto destacado (opcional)</mat-label><input matInput [ngModel]="card.destacado" (ngModelChange)="card.destacado = $event" [ngModelOptions]="{standalone: true}" /></mat-form-field>
+                        <ng-container *ngTemplateOutlet="editorContenido; context: { $implicit: card }"></ng-container>
+                    </div>
+                    }
+                </div>
+                <button mat-stroked-button type="button" class="mt-3" (click)="agregarCardDetalle(bloque)"><mat-icon class="mr-1.5 icon-size-4">add</mat-icon>Agregar card</button>
+                }
+            </section>
+            }
+        </div>
+        <div class="mt-4 flex flex-wrap gap-2">
+            <button mat-stroked-button type="button" (click)="agregarBloqueDetalle(borrador, 'texto')"><mat-icon class="mr-1.5 icon-size-4">notes</mat-icon>Agregar texto o lista</button>
+            <button mat-stroked-button type="button" (click)="agregarBloqueDetalle(borrador, 'cards')"><mat-icon class="mr-1.5 icon-size-4">view_module</mat-icon>Agregar cards</button>
+        </div>
+        @if (borrador.bloques.length) {
+        <div class="mt-5 border-t border-slate-200 pt-4 dark:border-slate-700">
+            <h3 class="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-200">Vista previa</h3>
+            <div class="hotel-contenido rounded-xl border border-slate-200 bg-white p-4 text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100" [innerHTML]="vistaPreviaDetalle(borrador)"></div>
+        </div>
+        }
+    </mat-dialog-content>
+    <mat-dialog-actions align="end" class="!flex-col-reverse !items-stretch !gap-2 !px-4 sm:!flex-row sm:!items-center sm:!px-6">
+        <button mat-stroked-button type="button" (click)="cerrarEditorSeccionDetalle()"><mat-icon class="mr-1.5 icon-size-4">close</mat-icon>Cancelar</button>
+        <button mat-flat-button color="primary" type="button" [disabled]="!borrador.catalogo_pestana_id" (click)="aplicarEditorSeccionDetalle()"><mat-icon class="mr-1.5 icon-size-4">check</mat-icon>{{ editandoSeccionDetalle ? 'Aplicar cambios' : 'Agregar pestaña' }}</button>
+    </mat-dialog-actions>
+    }
+</ng-template>
+
+<ng-template #confirmarEliminarSeccionDetalleModal>
+    <h2 mat-dialog-title>Eliminar pestaña de este hotel</h2>
+    <mat-dialog-content>
+        <p>Se eliminará «{{ tituloSeccionEliminar }}» y todo su contenido traducido cuando guardes el hotel. El catálogo global no se modificará.</p>
+    </mat-dialog-content>
+    <mat-dialog-actions align="end">
+        <button mat-stroked-button type="button" [mat-dialog-close]="false"><mat-icon class="mr-1.5 icon-size-4">close</mat-icon>Cancelar</button>
+        <button mat-flat-button color="warn" type="button" [mat-dialog-close]="true"><mat-icon class="mr-1.5 icon-size-4">delete_outline</mat-icon>Eliminar pestaña</button>
+    </mat-dialog-actions>
+</ng-template>
+
+<ng-template #editorContenido let-destino>
+    <div class="mb-2 text-sm font-medium text-slate-700 dark:text-slate-200">Contenido</div>
+    <div class="hotel-editor-toolbar flex flex-wrap gap-1 rounded-t-xl border border-slate-300 bg-slate-100 p-1 dark:border-slate-600 dark:bg-slate-700" role="toolbar" aria-label="Formato de contenido">
+        <button type="button" aria-label="Negrita" matTooltip="Negrita" (mousedown)="$event.preventDefault()" (click)="formatoDetalle('bold')"><mat-icon>format_bold</mat-icon></button>
+        <button type="button" aria-label="Cursiva" matTooltip="Cursiva" (mousedown)="$event.preventDefault()" (click)="formatoDetalle('italic')"><mat-icon>format_italic</mat-icon></button>
+        <button type="button" aria-label="Lista con viñetas" matTooltip="Lista con viñetas" (mousedown)="$event.preventDefault()" (click)="formatoDetalle('insertUnorderedList')"><mat-icon>format_list_bulleted</mat-icon></button>
+        <button type="button" aria-label="Lista numerada" matTooltip="Lista numerada" (mousedown)="$event.preventDefault()" (click)="formatoDetalle('insertOrderedList')"><mat-icon>format_list_numbered</mat-icon></button>
+    </div>
+    <div class="hotel-editor-body min-h-28 rounded-b-xl border border-t-0 border-slate-300 bg-white p-3 text-slate-900 outline-none focus:border-primary dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100" contenteditable="true" role="textbox" aria-label="Contenido del bloque" aria-multiline="true" [innerHTML]="destino.contenido" (blur)="actualizarContenidoDetalle(destino, $event)"></div>
+</ng-template>
 
 @if (mostrarModalEditarImagen) {
 <div class="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4">

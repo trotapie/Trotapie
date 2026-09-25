@@ -2,6 +2,35 @@
   display: block;
 }
 
+.hotel-editor-toolbar button {
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+}
+.hotel-editor-toolbar button:hover, .hotel-editor-toolbar button:focus-visible {
+  background: rgb(204 251 241);
+  outline: 2px solid rgb(13 148 136);
+}
+.hotel-editor-body ul { list-style: disc; padding-left: 1.5rem; }
+.hotel-editor-body ol { list-style: decimal; padding-left: 1.5rem; }
+
+.hotel-contenido {
+  .hotel-contenido-texto > * + * { margin-top: 0.75rem; }
+  ul { list-style: disc; padding-left: 1.5rem; }
+  ol { list-style: decimal; padding-left: 1.5rem; }
+  > * + * { margin-top: 1.25rem; }
+  .hotel-contenido-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+    gap: 1rem;
+  }
+  .hotel-contenido-card { min-width: 0; padding: 1.25rem; border: 1px solid #cbd5e1; border-radius: 1rem; }
+  .hotel-contenido-card h4 { font-weight: 600; }
+  .hotel-contenido-destacado { display: block; margin: 0.5rem 0; font-size: 1.25rem; color: #087968; }
+}
+
 mat-form-field {
   display: block;
 }
@@ -20,6 +49,10 @@ mat-form-field {
   background: white;
   padding: 1.25rem;
   box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
+}
+
+.editor-section[hidden] {
+  display: none;
 }
 
 .editor-section__header {
@@ -100,11 +133,10 @@ mat-form-field {
 }
 
 .editor-section-nav {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.4rem;
-  overflow-x: auto;
   padding-bottom: 0.15rem;
-  scrollbar-width: thin;
 }
 
 .editor-section-nav button {
@@ -119,16 +151,24 @@ mat-form-field {
   cursor: pointer;
   font-size: 0.75rem;
   font-weight: 600;
-  white-space: nowrap;
+  white-space: normal;
+  text-align: left;
   text-decoration: none;
   transition: background-color 150ms ease, color 150ms ease;
+  min-width: 0;
 }
 
 .editor-section-nav button:hover,
 .editor-section-nav button:focus-visible {
   background: rgb(239 246 255);
   color: rgb(2 132 199);
-  outline: none;
+  outline: 2px solid rgb(2 132 199);
+  outline-offset: -2px;
+}
+
+.editor-section-nav button.editor-section-nav__active {
+  background: rgb(239 246 255);
+  color: rgb(3 105 161);
 }
 
 .editor-section-nav span {
@@ -292,6 +332,10 @@ mat-form-field {
 }
 
 @media (min-width: 640px) {
+  .editor-section-nav {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .editor-section {
     padding: 1.5rem;
   }
@@ -307,6 +351,15 @@ mat-form-field {
 }
 
 @media (min-width: 1024px) {
+  .editor-section-nav {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .editor-section-nav button {
+    white-space: nowrap;
+  }
+
   .editor-section__header--gallery {
     flex-wrap: nowrap;
     align-items: center;
@@ -375,6 +428,11 @@ mat-form-field {
 
   .editor-section-nav button:hover,
   .editor-section-nav button:focus-visible {
+    background: rgb(30 41 59);
+    color: rgb(125 211 252);
+  }
+
+  .editor-section-nav button.editor-section-nav__active {
     background: rgb(30 41 59);
     color: rgb(125 211 252);
   }

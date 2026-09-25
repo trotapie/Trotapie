@@ -18,6 +18,7 @@ import { FooterComponent } from 'app/footer/footer.component';
 import { getDefaultLang } from 'app/lang.utils';
 import { ImagenesCarruselComponent } from 'app/shared/imagenes-carrusel/imagenes-carrusel.component';
 import { BotCotizadorComponent } from 'app/bot-cotizador/bot-cotizador.component';
+import { HotelDetalleSeccionesService } from 'app/core/hotel-detalle-secciones.service';
 
 
 type Room = { adults: number; children: number; childAges: (number | null)[] };
@@ -35,6 +36,7 @@ export class DetalleHotelComponent {
     private router = inject(Router);
     private _fuseMediaWatcherService = inject(FuseMediaWatcherService)
     private supabase = inject(HotelesService);
+    private seccionesService = inject(HotelDetalleSeccionesService);
     private route = inject(ActivatedRoute)
     private _translocoService = inject(TranslocoService);
     private destroyRef = inject(DestroyRef);
@@ -44,6 +46,8 @@ export class DetalleHotelComponent {
     hotel: IDetalleHotel;
     descripcionParrafo: string = '';
     descripcionLista: Array<{ id: number; descripcion: string }> = [];
+    seccionesDetalle: Array<{ id: string; icono: string; titulo: string; contenido_html: string }> = [];
+    cargandoSecciones = false;
     imagenes: string[] = [];
     imagenesFilter: string[] = [];
     scrolled = false;
@@ -177,6 +181,7 @@ export class DetalleHotelComponent {
             this.mostrarInfo = true;
 
             void this.cargarAmenidades(id, idioma, version);
+            void this.cargarSecciones(id, idioma, version);
             this.cargaRegimenesPendiente = this.cargarRegimenes(id, idioma, version);
             if (debeCargarGaleria) void this.cargarGaleria(id, version);
         } finally {
@@ -194,6 +199,32 @@ export class DetalleHotelComponent {
             if (version === this.cargaVersion) this.descripcionLista = [];
         } finally {
             if (version === this.cargaVersion) this.cargandoAmenidades = false;
+        }
+    }
+
+    private async cargarSecciones(id: number, idioma: string, version: number): Promise<void> {
+        this.cargandoSecciones = true;
+        try {
+            const secciones = await this.seccionesService.obtener(id);
+            const idiomaId = await this.supabase.getIdiomaId(idioma);
+            if (version !== this.cargaVersion) return;
+            this.seccionesDetalle = secciones.filter((s) => s.visible).flatMap((seccion) => {
+                const texto = seccion.traducciones.find((t) => t.idioma_id === idiomaId)
+                    ?? seccion.traducciones.find((t) => t.idioma_id === 1);
+                const catalogo = seccion.catalogo_pestana;
+                const titulo = catalogo?.traducciones.find((t) => t.idioma_id === idiomaId)?.titulo
+                    ?? catalogo?.titulo_es ?? '';
+                return texto ? [{
+                    id: seccion.id, icono: catalogo?.icono ?? seccion.icono, titulo,
+                    contenido_html: texto.contenido_html || this.seccionesService.generarHtml(texto.bloques ?? [])
+                }] : [];
+            });
+        } catch {
+            if (version === this.cargaVersion) {
+                this.seccionesDetalle = [];
+            }
+        } finally {
+            if (version === this.cargaVersion) this.cargandoSecciones = false;
         }
     }
 

@@ -164,7 +164,7 @@
                       @if (getFolderPreviewImages(folder).length) {
                         @for (preview of getFolderPreviewImages(folder); track trackByImage($index, preview)) {
                           <div class="fm-folder-collage-tile" [class.fm-folder-collage-tile--accent]="isFolderPreviewAccent($index)">
-                            <img [src]="preview.imageUrl" [alt]="preview.name" />
+                            <img [src]="preview.imageUrl" [alt]="preview.name" loading="lazy" decoding="async" />
                           </div>
                         }
                       } @else {
@@ -270,7 +270,7 @@
                     }
 
                     <div class="fm-image-preview">
-                      <img class="fm-image-thumb" [src]="image.imageUrl" [alt]="image.name" />
+                      <img class="fm-image-thumb" [src]="image.imageUrl" [alt]="image.name" loading="lazy" decoding="async" />
                       @if (isActiveImage(image)) {
                         <div
                           class="fm-active-star"

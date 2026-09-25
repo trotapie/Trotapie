@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { AuthService } from './auth/auth.service';
 import { environment } from '../../environments/environment';
+import { CatalogosHotelesCacheService } from './catalogos-hoteles-cache.service';
 import { getDefaultLang } from 'app/lang.utils';
 import { TranslocoService } from '@jsverse/transloco';
 import { Observable } from 'rxjs';
@@ -137,6 +138,12 @@ export interface IPreviewDestinoAdmin {
 
 @Injectable({ providedIn: 'root' })
 export class SupabaseService {
+  private readonly catalogosHotelesCache = inject(CatalogosHotelesCacheService);
+  private readonly tablasCatalogosHoteles = new Set([
+    'destinos', 'catalogo_destinos', 'regiones', 'paises', 'divisiones_area',
+    'idiomas', 'regimen', 'regimen_traducciones', 'actividades', 'descuentos',
+    'tipos_imagen', 'tipos_imagen_traducciones', 'tipos_habitacion'
+  ]);
   private readonly traduccionEndpoint =
     'https://script.google.com/macros/s/AKfycbwJ64gxjQiSsfZzixzr0tIe1na6tM81oAAW9Cjt8uuI53DDSaaAn_UMl2zgU69ZYyg3/exec';
   private readonly driveActividadImagenesEndpoint =
@@ -165,9 +172,21 @@ export class SupabaseService {
             this.showMissingSessionDialog();
           }
 
+          const metodo = (init?.method ?? (url instanceof Request ? url.method : 'GET')).toUpperCase();
+          if (response.ok && metodo !== 'GET' && metodo !== 'HEAD') {
+            const direccion = typeof url === 'string' ? url : url instanceof URL ? url.href : url.url;
+            const tabla = new URL(direccion).pathname.match(/\/rest\/v1\/([^/]+)/)?.[1];
+            if (tabla && this.tablasCatalogosHoteles.has(tabla)) this.catalogosHotelesCache.invalidar();
+          }
+
           return response;
         },
       },
+    });
+    this.client.auth.onAuthStateChange((evento) => {
+      if (evento === 'SIGNED_IN' || evento === 'SIGNED_OUT' || evento === 'USER_UPDATED') {
+        this.catalogosHotelesCache.invalidar();
+      }
     });
   }
 
@@ -1040,7 +1059,7 @@ export class SupabaseService {
   }
 
   async infoHotel(idHotel: number, lang?: string) {
-    const idiomaId = await this.getIdiomaId(lang);
+    const idiomaId = lang === 'es' ? ES_ID : await this.getIdiomaId(lang);
 
     const { data, error } = await this.client
       .from('hoteles')

@@ -21,6 +21,13 @@ export class AdminActividadesComponent {
 
   catalogos: CatalogoItem[] = [
     {
+      titulo: 'Pestañas adicionales de hoteles',
+      descripcion: 'Configura los nombres compartidos de las pestañas que se pueden añadir a cada hotel.',
+      icono: 'heroicons_outline:document-text',
+      imagen: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=774&auto=format&fit=crop',
+      link: '/admin/catalogos/pestanas-hotel'
+    },
+    {
       titulo: 'Amenidades',
       descripcion: 'Gestiona el catalogo general de amenidades disponibles.',
       icono: 'heroicons_outline:clipboard-document-list',

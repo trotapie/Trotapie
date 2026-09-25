@@ -47,6 +47,7 @@ export interface Destinos {
 export interface IDetalleHotel {
     id: number;
     nombre_hotel: string;
+    ubicacion_texto?: string;
     descripcion: string;
     ubicacion: null;
     imagenes: Imagenes[];

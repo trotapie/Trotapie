@@ -60,6 +60,10 @@ export class HotelesService {
       .select(`
         id,
         ubicacion,
+        destino:destinos!hoteles_destino_id_fkey (
+          nombre,
+          destino_padre:destino_padre_id (nombre)
+        ),
         traducciones:hotel_traducciones!hotel_traducciones_hotel_id_fkey (
           idioma_id,
           nombre_hotel,
@@ -75,10 +79,24 @@ export class HotelesService {
     const traduccion = data.traducciones?.find((item: any) => item.idioma_id === idiomaId) ??
       data.traducciones?.find((item: any) => item.idioma_id === ES_ID);
 
+    // El catálogo resuelve tanto los hoteles nuevos como los vinculados al destino legacy.
+    const { data: catalogo } = await this.client
+      .from('v_hoteles_catalogo_admin')
+      .select('catalogo_destino_nombre_resuelto, division_area_nombre_resuelto, pais_nombre_resuelto')
+      .eq('id', idHotel)
+      .maybeSingle();
+
+    const partesUbicacion = [
+      catalogo?.catalogo_destino_nombre_resuelto || (data.destino as any)?.nombre,
+      catalogo?.division_area_nombre_resuelto || (data.destino as any)?.destino_padre?.nombre,
+      catalogo?.pais_nombre_resuelto
+    ].map((parte) => String(parte ?? '').trim()).filter((parte, index, partes) => parte && partes.indexOf(parte) === index);
+
     return {
       ...data,
       nombre_hotel: traduccion?.nombre_hotel ?? '',
       descripcion: traduccion?.descripcion ?? this.transloco.translate('sin-descripcion'),
+      ubicacion_texto: partesUbicacion.join(', '),
       imagenes: [],
       actividades: [],
       regimenes: []

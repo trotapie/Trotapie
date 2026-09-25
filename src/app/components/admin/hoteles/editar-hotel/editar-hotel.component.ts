@@ -1,5 +1,7 @@
-import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, OnInit, TemplateRef, ViewChild, inject } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { FormBuilder, Validators } from '@angular/forms';
 import * as L from 'leaflet';
 import { Subscription } from 'rxjs';
@@ -9,6 +11,12 @@ import { TpSelectSearchComponent, TpSelectSearchOption } from 'app/shared/tp-sel
 import { TpTextareaComponent } from 'app/shared/tp-textarea/tp-textarea.component';
 import { TpSelectDirective } from 'app/shared/directives/tp-select.directive';
 import { SupabaseService } from 'app/core/supabase.service';
+import { CatalogosHotelesCacheService } from 'app/core/catalogos-hoteles-cache.service';
+import { TpToastService } from 'app/shared/tp-toast/tp-toast.service';
+import { TpActionMenuItem, TpActionsMenuComponent } from 'app/shared/tp-actions-menu/tp-actions-menu.component';
+import { EstatusComponent } from 'app/shared/estatus/estatus.component';
+import { HotelDetalleBloque, HotelDetalleCard, HotelDetalleSeccion, HotelDetalleSeccionesService } from 'app/core/hotel-detalle-secciones.service';
+import { CatalogoPestanaHotel, CatalogoPestanasHotelService } from 'app/core/catalogo-pestanas-hotel.service';
 import { DestinosService, DestinoCatalogo, PaisCatalogo, RegionCatalogo } from 'app/core/destinos.service';
 import {
   FolderImageManagerComponent,
@@ -78,10 +86,13 @@ interface IImagenEditable {
   eliminar?: boolean;
 }
 
+type SeccionEditorHotel = 'datos-generales' | 'ubicacion-portada' | 'traducciones' | 'detalles-publicos' | 'servicios' | 'galeria';
+type SeccionDetalleEditable = HotelDetalleSeccion & { titulo: string; bloques: HotelDetalleBloque[] };
+
 @Component({
   selector: 'app-editar-hotel',
   standalone: true,
-  imports: [MaterialModule, FolderImageManagerComponent, TpInputComponent, TpSelectDirective, TpSelectSearchComponent, TpTextareaComponent],
+  imports: [MaterialModule, DragDropModule, RouterLink, FolderImageManagerComponent, TpInputComponent, TpSelectDirective, TpSelectSearchComponent, TpTextareaComponent, TpActionsMenuComponent, EstatusComponent],
   templateUrl: './editar-hotel.component.html',
   styleUrl: './editar-hotel.component.scss'
 })
@@ -96,9 +107,17 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly supabase = inject(SupabaseService);
+  private readonly catalogosCache = inject(CatalogosHotelesCacheService);
+  private readonly toast = inject(TpToastService);
+  private readonly seccionesService = inject(HotelDetalleSeccionesService);
+  private readonly catalogoPestanasService = inject(CatalogoPestanasHotelService);
+  private readonly dialog = inject(MatDialog);
   private readonly destinosService = inject(DestinosService);
   private readonly fb = inject(FormBuilder);
   @ViewChild('ubicacionMapPreview') private ubicacionMapElement?: ElementRef<HTMLDivElement>;
+  @ViewChild('editorSeccionDetalleModal') private editorSeccionDetalleModal!: TemplateRef<unknown>;
+  @ViewChild('confirmarEliminarSeccionDetalleModal') private confirmarEliminarSeccionDetalleModal!: TemplateRef<unknown>;
+  private dialogoSeccionDetalle?: MatDialogRef<unknown>;
   private ubicacionSub?: Subscription;
   private mapaUbicacion?: L.Map;
   private marcadorUbicacion?: L.Marker;
@@ -109,8 +128,6 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
   cargandoDestinos = false;
   guardando = false;
   error = '';
-  mostrarModalExito = false;
-  mensajeModalExito = 'Hotel actualizado correctamente.';
   mostrarModalCambiosPendientes = false;
   mostrarModalActividadesSeleccionadas = false;
   mostrarModalEliminarImagenesSeleccionadas = false;
@@ -128,6 +145,25 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
   descuentos: IDescuentoAdmin[] = [];
   tiposImagen: ITipoImagenAdmin[] = [];
   idiomas: IIdiomaHotel[] = [];
+  seccionesDisponibles = true;
+  errorSeccionesDetalle = '';
+  seccionesDetalle: SeccionDetalleEditable[] = [];
+  seccionDetalleBorrador: SeccionDetalleEditable | null = null;
+  editandoSeccionDetalle = false;
+  tituloSeccionEliminar = '';
+  private idSeccionEditando: string | null = null;
+  catalogoPestanas: CatalogoPestanaHotel[] = [];
+  seccionActiva: SeccionEditorHotel = 'datos-generales';
+  galeriaInicializada = false;
+  get pestanasDisponibles(): CatalogoPestanaHotel[] {
+    return this.catalogoPestanas.filter((item) => item.activo &&
+      !this.seccionesDetalle.some((seccion) => seccion.catalogo_pestana_id === item.id));
+  }
+  get pestanasEditorDetalle(): CatalogoPestanaHotel[] {
+    const actual = this.catalogoPestanas.find((item) => item.id === this.seccionDetalleBorrador?.catalogo_pestana_id);
+    return actual && !this.pestanasDisponibles.includes(actual)
+      ? [actual, ...this.pestanasDisponibles] : this.pestanasDisponibles;
+  }
 
   filtroRegimenes = '';
   filtroActividades = '';
@@ -157,6 +193,7 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
   tiposHabitacionSeleccionados = new Set<number>();
   actividadesSeleccionadasDetalleMap = new Map<number, string>();
   ultimaLlaveTraduccionHotel = '';
+  private llaveHotelCargado = '';
   concentradoTraduccionesHotel: Record<string, { nombre: string; descripcion: string }> = {};
   traduccionesHotelExistentes = new Map<number, { nombre_hotel: string | null; descripcion: string | null }>();
   coordenadasUbicacion: { lat: number; lng: number } | null = null;
@@ -218,8 +255,14 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
     return estrellas;
   }
 
-  desplazarASeccion(id: string): void {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  activarSeccion(seccion: SeccionEditorHotel): void {
+    if (this.seccionActiva === seccion) return;
+    this.seccionActiva = seccion;
+    if (seccion === 'galeria') this.galeriaInicializada = true;
+    requestAnimationFrame(() => {
+      document.getElementById(seccion)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (seccion === 'ubicacion-portada') this.actualizarPreviewUbicacion();
+    });
   }
 
   ngAfterViewInit(): void {
@@ -234,14 +277,18 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     try {
-      const [destinos, regimenes, actividades, descuentos, tiposImagen, idiomas, tiposHabitacion] = await Promise.all([
-        this.supabase.obtenerDestinosAdmin(),
-        this.supabase.obtenerRegimenesAdmin(),
-        this.supabase.obtenerActividadesAdmin(),
-        this.supabase.obtenerDescuentosAdmin(),
-        this.supabase.obtenerTiposImagenAdmin(),
-        this.supabase.obtenerIdiomasPreviewAdmin(),
-        this.supabase.obtenerTiposHabitacionAdmin()
+      const id = this.esCreacion ? null : Number(idRaw);
+      if (!this.esCreacion && !Number.isFinite(id)) throw new Error('No se encontro el hotel a editar.');
+
+      const [destinos, regimenes, actividades, descuentos, tiposImagen, idiomas, tiposHabitacion, detalleHotel] = await Promise.all([
+        this.catalogosCache.obtener('hotel:destinos', () => this.supabase.obtenerDestinosAdmin()),
+        this.catalogosCache.obtener('hotel:regimenes', () => this.supabase.obtenerRegimenesAdmin()),
+        this.catalogosCache.obtener('hotel:actividades', () => this.supabase.obtenerActividadesAdmin()),
+        this.catalogosCache.obtener('hotel:descuentos', () => this.supabase.obtenerDescuentosAdmin()),
+        this.catalogosCache.obtener('hotel:tipos-imagen', () => this.supabase.obtenerTiposImagenAdmin()),
+        this.catalogosCache.obtener('hotel:idiomas', () => this.supabase.obtenerIdiomasPreviewAdmin()),
+        this.catalogosCache.obtener('hotel:tipos-habitacion', () => this.supabase.obtenerTiposHabitacionAdmin()),
+        id === null ? Promise.resolve(null) : this.supabase.infoHotel(id, 'es')
       ]);
 
       this.destinos = (destinos ?? []) as IDestinoAdmin[];
@@ -264,18 +311,13 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
 
       if (this.esCreacion) {
         this.configurarValidacionesCreacion();
+        await this.cargarSeccionesDetalle(0);
         this.actualizarPreviewUbicacion();
         this.marcarEstadoGuardado();
         return;
       }
 
-      const id = Number(idRaw);
-      if (!Number.isFinite(id)) {
-        throw new Error('No se encontro el hotel a editar.');
-      }
-
       this.hotelId = id;
-      const detalleHotel = await this.supabase.infoHotel(this.hotelId, 'es');
       if (!detalleHotel) {
         throw new Error('No se encontro el hotel solicitado.');
       }
@@ -346,10 +388,13 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
           descripcion: item.descripcion ?? null
         });
       });
+      this.llaveHotelCargado = `${this.limpiarTexto(detalleHotel.nombre_hotel)}|${this.limpiarTexto(detalleHotel.descripcion)}`;
+      await this.cargarSeccionesDetalle(this.hotelId);
       this.actualizarPreviewUbicacion();
       this.marcarEstadoGuardado();
     } catch (error: any) {
       this.error = error?.message ?? 'No se pudo cargar la informacion del hotel.';
+      this.toast.show({ title: 'No se pudo cargar el hotel', message: this.error, variant: 'error' }, 6000);
     } finally {
       this.cargando = false;
     }
@@ -1081,8 +1126,12 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async guardar() {
+    if (this.guardando) return;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.error = '';
+      this.activarSeccion('datos-generales');
+      this.toast.show({ title: 'Revisa los datos generales', message: 'Corrige los campos marcados antes de guardar.', variant: 'error' }, 5000);
       return;
     }
 
@@ -1090,20 +1139,28 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
     const catalogoDestinoId = Number(this.form.get('catalogo_destino_id')?.value);
     if (this.esCreacion && !Number.isFinite(catalogoDestinoId)) {
       this.error = 'Selecciona un destino valido.';
+      this.activarSeccion('datos-generales');
+      this.toast.show({ title: 'Destino requerido', message: this.error, variant: 'error' }, 5000);
       return;
     }
     if (!this.esCreacion && !Number.isFinite(destinoId) && !Number.isFinite(catalogoDestinoId)) {
       this.error = 'Selecciona un destino valido.';
+      this.activarSeccion('datos-generales');
+      this.toast.show({ title: 'Destino requerido', message: this.error, variant: 'error' }, 5000);
       return;
     }
 
     this.guardando = true;
     this.error = '';
-    this.mostrarModalExito = false;
+    const creandoHotel = this.esCreacion;
+    let datosHotelGuardados = false;
 
     try {
       const raw = this.form.getRawValue();
       await this.traducirHotelDesdeEspanol(false);
+      const seccionesPreparadas: HotelDetalleSeccion[] = this.seccionesDisponibles
+        ? await this.seccionesService.prepararSecciones(this.seccionesDetalle, this.idiomas)
+        : [];
       const regimenPrincipalId = this.parseNumber(raw.regimen_principal_id);
       const descuentoId = this.parseNumber(raw.descuento_id);
       if (regimenPrincipalId) {
@@ -1166,7 +1223,6 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
         const hotelIdCreado = await this.supabase.crearHotelDetalleAdmin(payloadGuardar);
         this.hotelId = hotelIdCreado;
         this.esCreacion = false;
-        this.mensajeModalExito = 'Hotel creado correctamente.';
       } else {
         const hotelId = Number(this.hotelId);
         if (!Number.isFinite(hotelId)) {
@@ -1177,15 +1233,33 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
           hotelId,
           ...payloadGuardar
         });
-        this.mensajeModalExito = 'Hotel actualizado correctamente.';
+      }
+      datosHotelGuardados = true;
+
+      if (this.seccionesDisponibles) {
+        await this.seccionesService.guardar(Number(this.hotelId), seccionesPreparadas);
+        this.seccionesDetalle.forEach((seccion, index) => {
+          seccion.orden = index;
+          seccion.traducciones = seccionesPreparadas[index].traducciones;
+        });
       }
 
       this.imagenesEliminadasPendientes = [];
       this.marcarEstadoGuardado();
       this.error = '';
-      this.mostrarModalExito = true;
+      this.toast.show({
+        title: creandoHotel ? 'Hotel creado' : 'Cambios guardados',
+        message: creandoHotel ? 'El hotel se creó correctamente.' : 'La información del hotel se actualizó correctamente.',
+        variant: 'success'
+      }, 5000);
+      if (creandoHotel) this.regresar();
     } catch (error: any) {
       this.error = error?.message ?? 'No se pudo guardar la informacion del hotel.';
+      this.toast.show({
+        title: datosHotelGuardados ? 'Guardado parcial' : 'No se pudo guardar el hotel',
+        message: datosHotelGuardados ? `Se guardaron los datos del hotel, pero no los datos adicionales. ${this.error}` : this.error,
+        variant: 'error'
+      }, 7000);
     } finally {
       this.guardando = false;
     }
@@ -1231,17 +1305,185 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  cerrarModalExito() {
-    this.mostrarModalExito = false;
-    this.regresar();
-  }
-
   trackById(_: number, item: { id: number }) {
     return item.id;
   }
 
   trackByKey(_: number, item: IImagenEditable) {
     return item.key;
+  }
+
+  abrirEditorSeccionDetalle(seccion?: SeccionDetalleEditable): void {
+    if (!seccion && !this.pestanasDisponibles.length) return;
+    this.idSeccionEditando = seccion?.id ?? null;
+    this.editandoSeccionDetalle = !!seccion;
+    this.seccionDetalleBorrador = seccion ? structuredClone(seccion) : {
+      id: crypto.randomUUID(), catalogo_pestana_id: 0, orden: this.seccionesDetalle.length,
+      icono: 'article', visible: true, titulo: '', bloques: [{ tipo: 'texto', contenido: '' }], traducciones: []
+    };
+    this.dialogoSeccionDetalle = this.dialog.open(this.editorSeccionDetalleModal, {
+      width: 'min(920px, calc(100vw - 24px))', maxWidth: 'calc(100vw - 24px)', maxHeight: '90vh',
+      autoFocus: 'first-tabbable', restoreFocus: true
+    });
+    this.dialogoSeccionDetalle.afterClosed().subscribe(() => {
+      this.seccionDetalleBorrador = null;
+      this.idSeccionEditando = null;
+      this.editandoSeccionDetalle = false;
+      this.dialogoSeccionDetalle = undefined;
+    });
+  }
+
+  seleccionarCatalogoDetalle(id: number): void {
+    const catalogo = this.pestanasEditorDetalle.find((item) => item.id === id);
+    if (!catalogo || !this.seccionDetalleBorrador) return;
+    Object.assign(this.seccionDetalleBorrador, {
+      catalogo_pestana_id: catalogo.id, catalogo_pestana: catalogo,
+      titulo: catalogo.titulo_es, icono: catalogo.icono
+    });
+  }
+
+  aplicarEditorSeccionDetalle(): void {
+    const borrador = this.seccionDetalleBorrador;
+    if (!borrador?.catalogo_pestana_id || !borrador.catalogo_pestana) return;
+    if (this.seccionesDetalle.some((item) => item.id !== this.idSeccionEditando &&
+      item.catalogo_pestana_id === borrador.catalogo_pestana_id)) {
+      this.toast.show({ title: 'Pestaña repetida', message: 'Esta pestaña ya se agregó al hotel.', variant: 'error' });
+      return;
+    }
+    const indice = this.seccionesDetalle.findIndex((item) => item.id === this.idSeccionEditando);
+    if (this.idSeccionEditando && indice < 0) return;
+    if (indice < 0) this.seccionesDetalle.push(borrador);
+    else this.seccionesDetalle[indice] = borrador;
+    this.dialogoSeccionDetalle?.close();
+  }
+
+  cerrarEditorSeccionDetalle(): void {
+    this.dialogoSeccionDetalle?.close();
+  }
+
+  resumenSeccionDetalle(seccion: SeccionDetalleEditable): string {
+    const textos = seccion.bloques.flatMap((bloque) => bloque.tipo === 'texto'
+      ? [bloque.contenido]
+      : bloque.cards.flatMap((card) => [card.titulo, card.destacado, card.contenido]));
+    const contenedor = document.createElement('div');
+    contenedor.innerHTML = this.seccionesService.limpiarHtml(textos.join(' '));
+    const texto = (contenedor.textContent ?? '').trim().replace(/\s+/g, ' ');
+    return texto.length > 100 ? `${texto.slice(0, 100)}…` : texto || 'Sin contenido';
+  }
+
+  accionesSeccionDetalle(seccion: SeccionDetalleEditable): TpActionMenuItem[] {
+    return [
+      { id: 'editar', label: 'Editar', icon: 'heroicons_outline:pencil-square' },
+      { id: 'visibilidad', label: seccion.visible ? 'Inactivar' : 'Activar',
+        icon: seccion.visible ? 'heroicons_outline:eye-slash' : 'heroicons_outline:eye' },
+      { id: 'eliminar', label: 'Eliminar', icon: 'heroicons_outline:trash', danger: true }
+    ];
+  }
+
+  ejecutarAccionSeccionDetalle(accion: string, seccion: SeccionDetalleEditable): void {
+    switch (accion) {
+      case 'editar':
+        this.abrirEditorSeccionDetalle(seccion);
+        break;
+      case 'visibilidad':
+        seccion.visible = !seccion.visible;
+        break;
+      case 'eliminar':
+        this.solicitarEliminarSeccionDetalle(seccion);
+        break;
+    }
+  }
+
+  async cargarSeccionesDetalle(hotelId = this.hotelId ?? 0): Promise<void> {
+    try {
+      const [catalogo, secciones] = await Promise.all([
+        this.catalogoPestanasService.obtener(), this.seccionesService.obtener(hotelId)
+      ]);
+      this.catalogoPestanas = catalogo;
+      this.seccionesDetalle = secciones.map((seccion) => {
+        const opcion = catalogo.find((item) => item.id === seccion.catalogo_pestana_id);
+        return { ...seccion, catalogo_pestana: opcion ?? seccion.catalogo_pestana,
+          titulo: opcion?.titulo_es ?? seccion.catalogo_pestana?.titulo_es ?? '',
+          bloques: structuredClone(seccion.traducciones.find((item) => item.idioma_id === 1)?.bloques ?? []) };
+      });
+      this.seccionesDisponibles = true;
+      this.errorSeccionesDetalle = '';
+    } catch (error: any) {
+      // La ficha existente debe seguir siendo editable aunque falle la consulta a la nueva tabla.
+      this.seccionesDisponibles = false;
+      this.errorSeccionesDetalle = ['42P01', 'PGRST205', 'PGRST200'].includes(error?.code)
+        ? 'Para activar las pestañas, aplica las migraciones 20260925120000 y 20260925130000 en Supabase.'
+        : 'No se pudieron cargar los datos adicionales. Comprueba la conexión y vuelve a intentarlo.';
+      this.toast.show({ title: 'Datos adicionales no disponibles', message: this.errorSeccionesDetalle, variant: 'error' }, 6000);
+    }
+  }
+
+  async actualizarCatalogoPestanas(): Promise<void> {
+    try {
+      this.catalogoPestanas = await this.catalogoPestanasService.obtener();
+      this.seccionesDetalle.forEach((seccion) => {
+        const opcion = this.catalogoPestanas.find((item) => item.id === seccion.catalogo_pestana_id);
+        if (opcion) {
+          seccion.catalogo_pestana = opcion;
+          seccion.titulo = opcion.titulo_es;
+          seccion.icono = opcion.icono;
+        }
+      });
+    } catch {
+      this.toast.show({ title: 'No se pudo actualizar el catálogo', message: 'Comprueba la conexión y vuelve a intentarlo.', variant: 'error' });
+    }
+  }
+
+  moverSeccionDetalle(indice: number, cambio: number): void {
+    const destino = indice + cambio;
+    if (destino < 0 || destino >= this.seccionesDetalle.length) return;
+    const [seccion] = this.seccionesDetalle.splice(indice, 1);
+    this.seccionesDetalle.splice(destino, 0, seccion);
+  }
+
+  soltarSeccionDetalle(evento: CdkDragDrop<SeccionDetalleEditable[]>): void {
+    if (evento.previousIndex === evento.currentIndex) return;
+    moveItemInArray(this.seccionesDetalle, evento.previousIndex, evento.currentIndex);
+    this.seccionesDetalle = [...this.seccionesDetalle];
+  }
+
+  reordenarSeccionDetalleConTeclado(evento: KeyboardEvent, indice: number): void {
+    if (!evento.altKey || !['ArrowUp', 'ArrowDown'].includes(evento.key)) return;
+    evento.preventDefault();
+    this.moverSeccionDetalle(indice, evento.key === 'ArrowUp' ? -1 : 1);
+  }
+
+  solicitarEliminarSeccionDetalle(seccion: SeccionDetalleEditable): void {
+    this.tituloSeccionEliminar = seccion.titulo;
+    this.dialog.open(this.confirmarEliminarSeccionDetalleModal, {
+      width: 'min(440px, calc(100vw - 24px))', maxWidth: 'calc(100vw - 24px)'
+    }).afterClosed().subscribe((confirmado: boolean) => {
+      if (!confirmado) return;
+      const indice = this.seccionesDetalle.findIndex((item) => item.id === seccion.id);
+      if (indice >= 0) this.seccionesDetalle.splice(indice, 1);
+    });
+  }
+
+  agregarBloqueDetalle(seccion: SeccionDetalleEditable, tipo: 'texto' | 'cards'): void {
+    seccion.bloques.push(tipo === 'texto'
+      ? { tipo: 'texto', contenido: '' }
+      : { tipo: 'cards', cards: [{ titulo: '', destacado: '', contenido: '' }] });
+  }
+
+  agregarCardDetalle(bloque: Extract<HotelDetalleBloque, { tipo: 'cards' }>): void {
+    bloque.cards.push({ titulo: '', destacado: '', contenido: '' });
+  }
+
+  actualizarContenidoDetalle(destino: HotelDetalleCard | Extract<HotelDetalleBloque, { tipo: 'texto' }>, evento: Event): void {
+    destino.contenido = this.seccionesService.limpiarHtml((evento.target as HTMLElement).innerHTML);
+  }
+
+  formatoDetalle(comando: string): void {
+    document.execCommand(comando, false);
+  }
+
+  vistaPreviaDetalle(seccion: SeccionDetalleEditable): string {
+    return this.seccionesService.generarHtml(seccion.bloques);
   }
 
   obtenerTraduccionHotelVista(idioma: IIdiomaHotel): ITraduccionHotelVista {
@@ -1275,6 +1517,11 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     const llaveActual = `${esNombre}|${esDescripcion}`;
+    if (llaveActual === this.llaveHotelCargado && this.idiomas.every((idioma) =>
+      idioma.codigo === 'es' || (this.traduccionesHotelExistentes.get(idioma.id)?.nombre_hotel &&
+        this.traduccionesHotelExistentes.get(idioma.id)?.descripcion))) {
+      return;
+    }
     if (
       llaveActual === this.ultimaLlaveTraduccionHotel &&
       Object.keys(this.concentradoTraduccionesHotel).length > 0
@@ -1303,6 +1550,7 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
       this.ultimaLlaveTraduccionHotel = llaveActual;
     } catch (error: any) {
       this.error = error?.message ?? 'No se pudo traducir la informacion del hotel.';
+      if (!this.guardando) this.toast.show({ title: 'No se pudo traducir', message: this.error, variant: 'error' }, 6000);
       if (requerirExito) {
         throw error;
       }
@@ -1361,7 +1609,9 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
       actividades: Array.from(this.actividadesSeleccionadas).sort((a, b) => a - b),
       tipos_habitacion: Array.from(this.tiposHabitacionSeleccionados).sort((a, b) => a - b),
       imagenes: imagenesNormalizadas,
-      imagenes_eliminadas: imagenesEliminadas
+      imagenes_eliminadas: imagenesEliminadas,
+      secciones_detalle: this.seccionesDetalle.map(({ id, catalogo_pestana_id, visible, bloques }) =>
+        ({ id, catalogo_pestana_id, visible, bloques }))
     };
 
     return JSON.stringify(estado);
@@ -1382,7 +1632,8 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     if (tipo === 'NACIONAL') {
       try {
-        this.destinosCatalogo = (await this.destinosService.obtenerCatalogoNacionalDestinos()) as IDestinoCatalogoAdmin[];
+        this.destinosCatalogo = (await this.catalogosCache.obtener('hotel:destinos:nacionales',
+          () => this.destinosService.obtenerCatalogoNacionalDestinos())) as IDestinoCatalogoAdmin[];
       } finally {
         this.cargandoDestinos = false;
       }
@@ -1392,7 +1643,7 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
     this.destinosCatalogo = [];
     try {
       this.regionesInternacionales = tipo
-        ? await this.destinosService.obtenerCatalogoInternacionalRegiones()
+        ? await this.catalogosCache.obtener('hotel:regiones', () => this.destinosService.obtenerCatalogoInternacionalRegiones())
         : [];
     } finally {
       this.cargandoDestinos = false;
@@ -1403,7 +1654,7 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
     const id = this.parseNumber(regionId);
     this.form.patchValue({ continente_id: id, pais_id: null });
     this.paisesInternacionales = id
-      ? await this.destinosService.obtenerCatalogoInternacionalPaises([id])
+      ? await this.obtenerPaisesInternacionales([id])
       : [];
     this.destinosInternacionales = [];
     this.form.get('catalogo_destino_id')?.reset(null, { emitEvent: false });
@@ -1415,7 +1666,8 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cargandoDestinos = Boolean(id);
     try {
       this.destinosInternacionales = id
-        ? await this.destinosService.obtenerCatalogoInternacionalDestinosPorPais(id)
+        ? await this.catalogosCache.obtener(`hotel:destinos:pais:${id}`,
+          () => this.destinosService.obtenerCatalogoInternacionalDestinosPorPais(id))
         : [];
     } finally {
       this.cargandoDestinos = false;
@@ -1427,20 +1679,28 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!catalogoDestinoId) return;
     this.cargandoDestinos = true;
     try {
-      const destinos = await this.destinosService.obtenerCatalogoInternacionalDestinos();
+      const destinos = await this.catalogosCache.obtener('hotel:destinos:internacionales',
+        () => this.destinosService.obtenerCatalogoInternacionalDestinos());
       const destino = destinos.find((item) => item.id === catalogoDestinoId);
       if (!destino) return;
 
-      const pais = (await this.destinosService.obtenerCatalogoInternacionalPaises([destino.pais_id]))
+      const pais = (await this.obtenerPaisesInternacionales([destino.pais_id]))
         .find((item) => item.id === destino.pais_id);
       if (!pais) return;
 
       this.form.patchValue({ continente_id: pais.region_id, pais_id: pais.id }, { emitEvent: false });
-      this.paisesInternacionales = await this.destinosService.obtenerCatalogoInternacionalPaises([pais.region_id]);
-      this.destinosInternacionales = await this.destinosService.obtenerCatalogoInternacionalDestinosPorPais(pais.id);
+      this.paisesInternacionales = await this.obtenerPaisesInternacionales([pais.region_id]);
+      this.destinosInternacionales = await this.catalogosCache.obtener(`hotel:destinos:pais:${pais.id}`,
+        () => this.destinosService.obtenerCatalogoInternacionalDestinosPorPais(pais.id));
     } finally {
       this.cargandoDestinos = false;
     }
+  }
+
+  private obtenerPaisesInternacionales(regionIds: number[]): Promise<PaisCatalogo[]> {
+    const ids = [...regionIds].sort((a, b) => a - b);
+    return this.catalogosCache.obtener(`hotel:paises:${ids.join(',')}`,
+      () => this.destinosService.obtenerCatalogoInternacionalPaises(ids));
   }
 
   private configurarValidacionesCreacion(): void {
@@ -1488,10 +1748,12 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    if (this.seccionActiva !== 'ubicacion-portada') return;
     setTimeout(() => this.renderizarMapaUbicacion(coordenadas), 0);
   }
 
   private renderizarMapaUbicacion(coordenadas: { lat: number; lng: number }): void {
+    if (this.seccionActiva !== 'ubicacion-portada') return;
     const element = this.ubicacionMapElement?.nativeElement;
     if (!element) {
       return;
