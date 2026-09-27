@@ -3,8 +3,13 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { SupabaseService } from 'app/core/supabase.service';
 import { getDefaultLang } from 'app/lang.utils';
 import { TranslocoService } from '@jsverse/transloco';
+import { normalizarHorarios, normalizarPlan } from 'app/components/hoteles/hotel-estancia.interface';
 
 const ES_ID = 1;
+
+function primerRegistro<T>(valor: T | T[] | null | undefined): T | null {
+  return (Array.isArray(valor) ? valor[0] : valor) ?? null;
+}
 
 export interface IHotelAdminCatalogo {
   id: number;
@@ -60,10 +65,20 @@ export class HotelesService {
       .select(`
         id,
         ubicacion,
+        horarios,
+        catalogoDestino:catalogo_destinos!hoteles_catalogo_destino_id_fkey (
+          nombre,
+          division_area:divisiones_area!catalogo_destinos_division_area_id_fkey (
+            nombre,
+            pais:paises!divisiones_area_pais_id_fkey (nombre)
+          )
+        ),
+        destinoLegacy:destinos!hoteles_destino_id_fkey (nombre),
         traducciones:hotel_traducciones!hotel_traducciones_hotel_id_fkey (
           idioma_id,
           nombre_hotel,
-          descripcion
+          descripcion,
+          plan_todo_incluido
         )
       `)
       .eq('id', idHotel)
@@ -74,11 +89,23 @@ export class HotelesService {
 
     const traduccion = data.traducciones?.find((item: any) => item.idioma_id === idiomaId) ??
       data.traducciones?.find((item: any) => item.idioma_id === ES_ID);
+    const catalogo = primerRegistro(data.catalogoDestino);
+    const division = primerRegistro(catalogo?.division_area);
+    const pais = primerRegistro(division?.pais);
+    const ubicacionNombre = [
+      catalogo?.nombre ?? primerRegistro(data.destinoLegacy)?.nombre,
+      division?.nombre,
+      pais?.nombre
+    ].map((parte) => String(parte ?? '').trim()).filter((parte, index, partes) => !!parte && partes.indexOf(parte) === index).join(', ');
 
     return {
       ...data,
+      ubicacion_nombre: ubicacionNombre,
       nombre_hotel: traduccion?.nombre_hotel ?? '',
       descripcion: traduccion?.descripcion ?? this.transloco.translate('sin-descripcion'),
+      horarios: normalizarHorarios(data.horarios),
+      plan_todo_incluido: normalizarPlan(traduccion?.plan_todo_incluido) ??
+        normalizarPlan(data.traducciones?.find((item: any) => item.idioma_id === ES_ID)?.plan_todo_incluido),
       imagenes: [],
       actividades: [],
       regimenes: []
@@ -313,6 +340,7 @@ export class HotelesService {
       .select(`
     id,
     ubicacion,
+    horarios,
     fondo,
     estrellas,
     orden,
@@ -331,7 +359,8 @@ export class HotelesService {
     traducciones:hotel_traducciones!hotel_traducciones_hotel_id_fkey (
       idioma_id,
       nombre_hotel,
-      descripcion
+      descripcion,
+      plan_todo_incluido
     ),
 
     imagenes:imagenes_hoteles!imagenes_hoteles_hotel_id_fkey (
@@ -738,223 +767,4 @@ export class HotelesService {
     if (error) throw error;
   }
 
-  async crearHotelDetalleAdmin(payload: {
-    nombre_hotel: string;
-    descripcion: string | null;
-    orden: number | null;
-    estrellas: number | null;
-    fondo: string | null;
-    ubicacion: string | null;
-    destino_id: number;
-    division_area_id?: number | null;
-    catalogo_destino_id?: number | null;
-    descuento_id: number | null;
-    regimen_id: number | null;
-    regimen_ids: number[];
-    actividad_ids: number[];
-    room_type_ids?: number[];
-    imagenes: Array<{
-      id?: number | null;
-      url_imagen: string;
-      tipo_imagen_id: number | null;
-      eliminar?: boolean;
-    }>;
-    traducciones?: Array<{
-      idioma_id: number;
-      nombre_hotel: string;
-      descripcion: string | null;
-    }>;
-  }) {
-    return this.guardarHotelDetalleAdminRpc(null, payload);
-  }
-
-  async actualizarHotelDetalleAdmin(payload: {
-    hotelId: number;
-    nombre_hotel: string;
-    descripcion: string | null;
-    orden: number | null;
-    estrellas: number | null;
-    fondo: string | null;
-    ubicacion: string | null;
-    destino_id: number;
-    division_area_id?: number | null;
-    catalogo_destino_id?: number | null;
-    descuento_id: number | null;
-    regimen_id: number | null;
-    regimen_ids: number[];
-    actividad_ids: number[];
-    room_type_ids?: number[];
-    imagenes: Array<{
-      id?: number | null;
-      url_imagen: string;
-      tipo_imagen_id: number | null;
-      eliminar?: boolean;
-    }>;
-    traducciones?: Array<{
-      idioma_id: number;
-      nombre_hotel: string;
-      descripcion: string | null;
-    }>;
-  }) {
-    const hotelId = Number(payload.hotelId);
-    if (!Number.isFinite(hotelId)) {
-      throw new Error('Hotel invalido para actualizar.');
-    }
-    await this.guardarHotelDetalleAdminRpc(hotelId, payload);
-  }
-
-  private async guardarHotelDetalleAdminRpc(
-    hotelId: number | null,
-    payload: {
-      nombre_hotel: string;
-      descripcion: string | null;
-      orden: number | null;
-      estrellas: number | null;
-      fondo: string | null;
-      ubicacion: string | null;
-      destino_id: number;
-      division_area_id?: number | null;
-      catalogo_destino_id?: number | null;
-      descuento_id: number | null;
-      regimen_id: number | null;
-      regimen_ids: number[];
-      actividad_ids: number[];
-      room_type_ids?: number[];
-      imagenes: Array<{
-        id?: number | null;
-        url_imagen: string;
-        tipo_imagen_id: number | null;
-        eliminar?: boolean;
-      }>;
-      traducciones?: Array<{
-        idioma_id: number;
-        nombre_hotel: string;
-        descripcion: string | null;
-      }>;
-    }
-  ): Promise<number> {
-    const descuentoIdNormalizado =
-      payload.descuento_id === null || payload.descuento_id === undefined
-        ? null
-        : Number(payload.descuento_id);
-    const descuentoId = Number.isFinite(descuentoIdNormalizado) ? descuentoIdNormalizado : null;
-
-    const regimenIdNormalizado =
-      payload.regimen_id === null || payload.regimen_id === undefined
-        ? null
-        : Number(payload.regimen_id);
-    const regimenId = Number.isFinite(regimenIdNormalizado) ? regimenIdNormalizado : null;
-
-    const regimenesIds = [
-      ...new Set(
-        (payload.regimen_ids ?? [])
-          .map((id) => Number(id))
-          .filter((id) => Number.isFinite(id) && id > 0)
-      )
-    ];
-    const actividadesIds = [
-      ...new Set(
-        (payload.actividad_ids ?? [])
-          .map((id) => Number(id))
-          .filter((id) => Number.isFinite(id) && id > 0)
-      )
-    ];
-    const roomTypeIds = [
-      ...new Set(
-        (payload.room_type_ids ?? [])
-          .map((id) => Number(id))
-          .filter((id) => Number.isFinite(id) && id > 0)
-      )
-    ];
-    const imagenes = (payload.imagenes ?? [])
-      .map((item) => ({
-        id: item.id ? Number(item.id) : null,
-        url_imagen: (item.url_imagen ?? '').trim(),
-        tipo_imagen_id: item.tipo_imagen_id ? Number(item.tipo_imagen_id) : null,
-        eliminar: Boolean(item.eliminar)
-      }))
-      .filter((item) => item.url_imagen.length > 0);
-
-    const traducciones = (payload.traducciones?.length
-      ? payload.traducciones
-      : [
-          {
-            idioma_id: ES_ID,
-            nombre_hotel: payload.nombre_hotel,
-            descripcion: payload.descripcion
-          }
-        ]
-    )
-      .map((item) => ({
-        idioma_id: Number(item.idioma_id),
-        nombre_hotel: (item.nombre_hotel ?? '').trim(),
-        descripcion: item.descripcion
-      }))
-      .filter((item) => Number.isFinite(item.idioma_id) && item.idioma_id > 0 && item.nombre_hotel.length > 0);
-
-    const rpcPayload = {
-      nombre_hotel: (payload.nombre_hotel ?? '').trim(),
-      descripcion: payload.descripcion,
-      orden: payload.orden,
-      estrellas: payload.estrellas,
-      fondo: payload.fondo,
-      ubicacion: payload.ubicacion,
-      destino_id: payload.destino_id,
-      descuento_id: descuentoId,
-      regimen_id: regimenId,
-      regimen_ids: regimenesIds,
-      actividad_ids: actividadesIds,
-      imagenes,
-      traducciones
-    };
-
-    const { data, error } = await this.client.rpc('guardar_hotel_detalle_admin', {
-      p_hotel_id: hotelId,
-      p_payload: rpcPayload
-    });
-
-    if (error) throw error;    
-    const hotelIdGuardado = Number(data.hotel_id);
-    if (!Number.isFinite(hotelIdGuardado)) {
-      throw new Error('No se pudo guardar el hotel.');
-    }
-
-    const { error: errorCatalogo } = await this.client
-      .from('hoteles')
-      .update({
-        division_area_id: payload.division_area_id ?? null,
-        catalogo_destino_id: payload.catalogo_destino_id ?? null
-      })
-      .eq('id', hotelIdGuardado);
-
-    if (errorCatalogo) throw errorCatalogo;
-
-    if (roomTypeIds.length) {
-      await this.sincronizarTiposHabitacionHotel(hotelIdGuardado, roomTypeIds);
-    }
-
-    return hotelIdGuardado;
-  }
-
-  private async sincronizarTiposHabitacionHotel(hotelId: number, tipoIds: number[]) {
-    const { error: deleteError } = await this.client
-      .from('hotel_tipos_habitacion')
-      .delete()
-      .eq('hotel_id', hotelId);
-
-    if (deleteError) throw deleteError;
-
-    if (!tipoIds.length) return;
-
-    const inserts = tipoIds.map((tipoId) => ({
-      hotel_id: hotelId,
-      tipo_habitacion_id: tipoId
-    }));
-
-    const { error: insertError } = await this.client
-      .from('hotel_tipos_habitacion')
-      .insert(inserts);
-
-    if (insertError) throw insertError;
-  }
 }

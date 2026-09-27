@@ -1,6 +1,6 @@
 <div class="flex min-w-0 flex-auto flex-col bg-slate-50">
     <div class="mx-auto flex w-full max-w-screen-2xl flex-col px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
-        <header class="sticky top-0 z-[100] -mx-2 mb-5 bg-slate-50/95 px-2 pb-3 pt-2 backdrop-blur-md sm:mx-0 sm:px-0">
+        <header class="hotel-editor-header sticky top-0 z-[100] -mx-2 mb-5 bg-slate-50/95 px-2 pb-3 pt-2 backdrop-blur-md sm:mx-0 sm:px-0">
             <div class="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm sm:px-6">
                 <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                     <div class="min-w-0">
@@ -36,12 +36,13 @@
                     </button>
                     </div>
                 </div>
-                <nav aria-label="Secciones del editor" class="editor-section-nav mt-4 border-t border-slate-100 pt-3">
-                    <button type="button" (click)="desplazarASeccion('datos-generales')">Datos generales</button>
-                    <button type="button" (click)="desplazarASeccion('ubicacion-portada')">Ubicación y portada</button>
-                    <button type="button" (click)="desplazarASeccion('traducciones')">Idiomas</button>
-                    <button type="button" (click)="desplazarASeccion('servicios')">Servicios</button>
-                    <button type="button" (click)="desplazarASeccion('galeria')">Galería <span>{{ imagenes.length }}</span></button>
+                <nav aria-label="Secciones del editor" role="tablist" class="editor-section-nav mt-4 border-t border-slate-100 pt-3">
+                    <button id="tab-datos-generales" type="button" role="tab" aria-controls="datos-generales" [attr.aria-selected]="seccionActiva === 'datos-generales'" [tabIndex]="seccionActiva === 'datos-generales' ? 0 : -1" (click)="activarSeccion('datos-generales')" (keydown)="navegarSecciones($event, 0)">Datos generales</button>
+                    <button id="tab-ubicacion-portada" type="button" role="tab" aria-controls="ubicacion-portada" [attr.aria-selected]="seccionActiva === 'ubicacion-portada'" [tabIndex]="seccionActiva === 'ubicacion-portada' ? 0 : -1" (click)="activarSeccion('ubicacion-portada')" (keydown)="navegarSecciones($event, 1)">Ubicación y portada</button>
+                    <button id="tab-estancia" type="button" role="tab" aria-controls="estancia" [attr.aria-selected]="seccionActiva === 'estancia'" [tabIndex]="seccionActiva === 'estancia' ? 0 : -1" (click)="activarSeccion('estancia')" (keydown)="navegarSecciones($event, 2)">Datos adicionales</button>
+                    <button id="tab-traducciones" type="button" role="tab" aria-controls="traducciones" [attr.aria-selected]="seccionActiva === 'traducciones'" [tabIndex]="seccionActiva === 'traducciones' ? 0 : -1" (click)="activarSeccion('traducciones')" (keydown)="navegarSecciones($event, 3)">Idiomas</button>
+                    <button id="tab-servicios" type="button" role="tab" aria-controls="servicios" [attr.aria-selected]="seccionActiva === 'servicios'" [tabIndex]="seccionActiva === 'servicios' ? 0 : -1" (click)="activarSeccion('servicios')" (keydown)="navegarSecciones($event, 4)">Servicios</button>
+                    <button id="tab-galeria" type="button" role="tab" aria-controls="galeria" [attr.aria-selected]="seccionActiva === 'galeria'" [tabIndex]="seccionActiva === 'galeria' ? 0 : -1" (click)="activarSeccion('galeria')" (keydown)="navegarSecciones($event, 5)">Galería <span>{{ imagenes.length }}</span></button>
                 </nav>
             </div>
         </header>
@@ -53,7 +54,7 @@
         </div>
         } @else {
         <form id="form-editar-hotel" [formGroup]="form" (ngSubmit)="guardar()" class="space-y-5">
-            <section id="datos-generales" class="editor-section scroll-mt-52">
+            <section id="datos-generales" role="tabpanel" aria-labelledby="tab-datos-generales" [hidden]="seccionActiva !== 'datos-generales'" class="editor-section scroll-mt-52">
                 <div class="editor-section__header">
                     <div class="editor-section__icon bg-primary-50 text-primary-600"><mat-icon>apartment</mat-icon></div>
                     <div>
@@ -61,7 +62,7 @@
                         <p>Identificación, clasificación y condiciones comerciales.</p>
                     </div>
                 </div>
-                <div class="grid grid-cols-1 gap-x-5 gap-y-2 md:grid-cols-2 lg:grid-cols-3">
+                <div class="hotel-general-grid">
                 <app-tp-input class="w-full" label="Nombre del hotel" formControlName="nombre_hotel" [required]="true" [maxLength]="160"
                     [error]="form.get('nombre_hotel')?.invalid && form.get('nombre_hotel')?.touched ? 'El nombre del hotel es requerido.' : ''"
                     (blur)="traducirHotelDesdeEspanol()"></app-tp-input>
@@ -127,12 +128,12 @@
                     </div>
                 </div>
 
-                <app-tp-textarea class="w-full md:col-span-2 lg:col-span-3" label="Descripcion" formControlName="descripcion" [rows]="5"
+                <app-tp-textarea class="hotel-general-grid__full w-full" label="Descripcion" formControlName="descripcion" [rows]="5"
                     (blur)="traducirHotelDesdeEspanol()"></app-tp-textarea>
                 </div>
             </section>
 
-            <section id="ubicacion-portada" class="editor-section scroll-mt-52">
+            <section id="ubicacion-portada" role="tabpanel" aria-labelledby="tab-ubicacion-portada" [hidden]="seccionActiva !== 'ubicacion-portada'" class="editor-section scroll-mt-52">
                 <div class="editor-section__header">
                     <div class="editor-section__icon bg-amber-50 text-amber-600"><mat-icon>location_on</mat-icon></div>
                     <div>
@@ -140,14 +141,14 @@
                         <p>Enlace de mapa e imagen que representa al hotel.</p>
                     </div>
                 </div>
-            <div class="grid w-full grid-cols-1 gap-5 lg:grid-cols-2">
-                <div class="space-y-2">
+            <div class="hotel-media-grid">
+                <div class="min-w-0 space-y-2">
                     <app-tp-input class="w-full" label="Ubicacion" placeholder="Enlace de Google Maps" formControlName="ubicacion" [required]="esCreacion"
                         [error]="esCreacion && form.get('ubicacion')?.invalid && form.get('ubicacion')?.touched ? 'La ubicacion es requerida.' : ''"></app-tp-input>
 
                     @if (form.get('ubicacion')?.value) {
                     <div class="preview-panel">
-                        <div class="mb-2 flex min-h-10 items-center justify-between gap-3">
+                        <div class="mb-2 flex min-h-10 flex-wrap items-center justify-between gap-3">
                             <p class="text-sm font-medium text-gray-700">Vista previa de ubicacion</p>
                             <a mat-stroked-button color="primary" [href]="form.get('ubicacion')?.value" target="_blank"
                                 rel="noopener noreferrer">
@@ -173,7 +174,7 @@
                     }
                 </div>
 
-                <div class="space-y-2">
+                <div class="min-w-0 space-y-2">
                     <div class="flex items-end gap-2">
                         <app-tp-input class="min-w-0 flex-1" label="Imagen de fondo (URL)" placeholder="https://..." formControlName="fondo" [required]="esCreacion"
                             [error]="esCreacion && form.get('fondo')?.invalid && form.get('fondo')?.touched ? 'La imagen de fondo es requerida.' : ''"></app-tp-input>
@@ -203,13 +204,40 @@
             </div>
             </section>
 
+            <section id="estancia" role="tabpanel" aria-labelledby="tab-estancia" [hidden]="seccionActiva !== 'estancia'" class="editor-section scroll-mt-52">
+                <div class="editor-section__header">
+                    <div class="editor-section__icon bg-teal-50 text-teal-700"><mat-icon>schedule</mat-icon></div>
+                    <div>
+                        <h2>Datos adicionales</h2>
+                        <p>Información opcional de este hotel. Los horarios no se traducen; los textos del plan se traducen al guardar.</p>
+                    </div>
+                </div>
+                <div class="space-y-5">
+                    <div>
+                        <h3 class="mb-2 text-base font-semibold text-slate-900">Check-in, salida y desayuno</h3>
+                        <div class="hotel-times-grid">
+                            <app-time-picker label="Check-in desde" [allowEmpty]="true" formControlName="check_in_desde"></app-time-picker>
+                            <app-time-picker label="Check-in hasta" [allowEmpty]="true" formControlName="check_in_hasta"></app-time-picker>
+                            <app-time-picker label="Check-out" [allowEmpty]="true" formControlName="check_out"></app-time-picker>
+                            <app-time-picker label="Desayuno desde" [allowEmpty]="true" formControlName="desayuno_desde"></app-time-picker>
+                            <app-time-picker label="Desayuno hasta" [allowEmpty]="true" formControlName="desayuno_hasta"></app-time-picker>
+                        </div>
+                    </div>
+                    <div class="border-t border-slate-200 pt-4">
+                        <h3 class="mb-1 text-base font-semibold text-slate-900">Plan todo incluido</h3>
+                        <p class="mb-3 text-sm text-slate-500">Escribe la descripción en español. La pestaña del plan solo se mostrará en la ficha pública si este hotel tiene asignado el régimen Todo Incluido y cuenta con una descripción.</p>
+                        <app-tp-textarea class="w-full" label="Descripción del plan" [rows]="5" formControlName="plan_descripcion"></app-tp-textarea>
+                    </div>
+                </div>
+            </section>
+
             @if (traduciendoContenido) {
             <div class="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
-                Traduciendo nombre y descripcion a los idiomas configurados...
+                Traduciendo información del hotel a los idiomas configurados...
             </div>
             }
 
-            <section id="traducciones" class="editor-section scroll-mt-52">
+            <section id="traducciones" role="tabpanel" aria-labelledby="tab-traducciones" [hidden]="seccionActiva !== 'traducciones'" class="editor-section scroll-mt-52">
                 <div class="editor-section__header">
                     <div class="editor-section__icon bg-violet-50 text-violet-600"><mat-icon>translate</mat-icon></div>
                     <div>
@@ -218,9 +246,9 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                <div class="hotel-languages-grid">
                     @for (idioma of idiomas; track idioma.id) {
-                    <article class="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+                    <article class="min-w-0 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
                         <div class="mb-2 flex items-center justify-between">
                             <span class="text-sm font-semibold text-gray-800">{{ idioma.nombre }}</span>
                             <span class="rounded bg-gray-100 px-2 py-0.5 text-xs uppercase text-gray-600">
@@ -241,13 +269,19 @@
                                     {{ obtenerTraduccionHotelVista(idioma).descripcion || 'Sin texto' }}
                                 </p>
                             </div>
+                            @if (planesTraducidos[idioma.codigo]) {
+                            <div>
+                                <p class="text-xs font-medium text-gray-500">Plan todo incluido</p>
+                                <p class="line-clamp-3 text-sm text-gray-800">{{ planesTraducidos[idioma.codigo].descripcion }}</p>
+                            </div>
+                            }
                         </div>
                     </article>
                     }
                 </div>
             </section>
 
-            <section id="servicios" class="editor-section scroll-mt-52">
+            <section id="servicios" role="tabpanel" aria-labelledby="tab-servicios" [hidden]="seccionActiva !== 'servicios'" class="editor-section scroll-mt-52">
                 <div class="editor-section__header">
                     <div class="editor-section__icon bg-emerald-50 text-emerald-600"><mat-icon>room_service</mat-icon></div>
                     <div>
@@ -255,7 +289,7 @@
                         <p>Selecciona las opciones disponibles para este hotel.</p>
                     </div>
                 </div>
-            <div class="grid grid-cols-1 gap-4 xl:grid-cols-3">
+            <div class="hotel-services-grid">
                 <section class="selector-card">
                     <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
                         <h3>Regimenes del hotel</h3>
@@ -287,7 +321,7 @@
                         <div class="flex items-center gap-2">
                             <span class="selection-count">{{ totalActividadesSeleccionadas }} seleccionadas</span>
                             <button mat-stroked-button type="button" (click)="abrirModalActividadesSeleccionadas()">
-                                Ver seleccionadas
+                                <mat-icon class="mr-1.5 icon-size-4">checklist</mat-icon>Ver seleccionadas
                             </button>
                         </div>
                     </div>
@@ -339,7 +373,7 @@
             </div>
             </section>
 
-            <section id="galeria" class="editor-section scroll-mt-52">
+            <section id="galeria" role="tabpanel" aria-labelledby="tab-galeria" [hidden]="seccionActiva !== 'galeria'" class="editor-section scroll-mt-52">
                 <div class="editor-section__header editor-section__header--gallery">
                     <div class="editor-section__icon bg-rose-50 text-rose-600"><mat-icon>photo_library</mat-icon></div>
                     <div>
