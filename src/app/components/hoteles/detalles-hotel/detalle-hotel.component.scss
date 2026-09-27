@@ -41,3 +41,52 @@
     margin-right: 8px;
     width: 20px;
 }
+
+.hotel-tab-panel {
+    min-width: 0;
+    margin: 2px 8px 2px;
+    padding: 0.25rem;
+    // border: 1px solid rgb(203 213 225);
+    // border-radius: 0.75rem;
+    background: white;
+}
+
+.dark .hotel-tab-panel {
+    border-color: rgb(71 85 105);
+    background: rgb(15 23 42);
+}
+
+.hotel-tabs .mat-mdc-tab-body-content {
+    padding: 0 !important;
+}
+
+.hotel-tabs .mat-mdc-tab[aria-selected='true'] {
+    border-radius: 0.75rem;
+    background-color: #0f766e !important;
+    box-shadow: 0 2px 8px rgb(15 118 110 / 0.24);
+
+    .mdc-tab__text-label,
+    .hotel-tab-icon {
+        color: white !important;
+    }
+}
+
+.hotel-tabs .mat-mdc-tab .mdc-tab-indicator {
+    display: none;
+}
+
+.dark .hotel-tabs .mat-mdc-tab[aria-selected='true'] {
+    background-color: #115e59 !important;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.3);
+}
+
+.hotel-tabs .mat-mdc-tab:focus-visible {
+    outline: 2px solid #0f766e;
+    outline-offset: 2px;
+}
+
+@media (max-width: 639px) {
+    .hotel-tab-panel {
+        padding: 1rem;
+    }
+}

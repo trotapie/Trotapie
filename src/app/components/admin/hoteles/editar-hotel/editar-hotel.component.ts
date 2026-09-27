@@ -7,8 +7,10 @@ import { MaterialModule } from 'app/shared/material.module';
 import { TpInputComponent } from 'app/shared/tp-input/tp-input.component';
 import { TpSelectSearchComponent, TpSelectSearchOption } from 'app/shared/tp-select-search/tp-select-search.component';
 import { TpTextareaComponent } from 'app/shared/tp-textarea/tp-textarea.component';
+import { TimePickerComponent } from 'app/shared/time-picker/time-picker.component';
 import { TpSelectDirective } from 'app/shared/directives/tp-select.directive';
 import { SupabaseService } from 'app/core/supabase.service';
+import { HotelPlanTodoIncluido, normalizarHorarios, normalizarPlan } from 'app/components/hoteles/hotel-estancia.interface';
 import { DestinosService, DestinoCatalogo, PaisCatalogo, RegionCatalogo } from 'app/core/destinos.service';
 import {
   FolderImageManagerComponent,
@@ -78,10 +80,12 @@ interface IImagenEditable {
   eliminar?: boolean;
 }
 
+type SeccionHotel = 'datos-generales' | 'ubicacion-portada' | 'estancia' | 'traducciones' | 'servicios' | 'galeria';
+
 @Component({
   selector: 'app-editar-hotel',
   standalone: true,
-  imports: [MaterialModule, FolderImageManagerComponent, TpInputComponent, TpSelectDirective, TpSelectSearchComponent, TpTextareaComponent],
+  imports: [MaterialModule, FolderImageManagerComponent, TpInputComponent, TpSelectDirective, TpSelectSearchComponent, TpTextareaComponent, TimePickerComponent],
   templateUrl: './editar-hotel.component.html',
   styleUrl: './editar-hotel.component.scss'
 })
@@ -151,6 +155,8 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
   urlDriveLote = '';
   consultandoImagenesDrive = false;
   private snapshotEstadoInicial = '';
+  readonly seccionesHotel: SeccionHotel[] = ['datos-generales', 'ubicacion-portada', 'estancia', 'traducciones', 'servicios', 'galeria'];
+  seccionActiva: SeccionHotel = 'datos-generales';
 
   regimenesSeleccionados = new Set<number>();
   actividadesSeleccionadas = new Set<number>();
@@ -159,6 +165,8 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
   ultimaLlaveTraduccionHotel = '';
   concentradoTraduccionesHotel: Record<string, { nombre: string; descripcion: string }> = {};
   traduccionesHotelExistentes = new Map<number, { nombre_hotel: string | null; descripcion: string | null }>();
+  planesTraducidos: Record<string, HotelPlanTodoIncluido> = {};
+  private ultimaLlavePlan = '';
   coordenadasUbicacion: { lat: number; lng: number } | null = null;
 
   form = this.fb.group({
@@ -174,6 +182,12 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
     tipo_catalogo: [null as 'NACIONAL' | 'INTERNACIONAL' | null],
     estrellas: [null as number | null, [Validators.min(0), Validators.max(5)]],
     ubicacion: [''],
+    check_in_desde: [''],
+    check_in_hasta: [''],
+    check_out: [''],
+    desayuno_desde: [''],
+    desayuno_hasta: [''],
+    plan_descripcion: [''],
     regimen_principal_id: [null as number | null]
   });
 
@@ -218,8 +232,26 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
     return estrellas;
   }
 
-  desplazarASeccion(id: string): void {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  activarSeccion(seccion: SeccionHotel): void {
+    this.seccionActiva = seccion;
+    if (seccion === 'ubicacion-portada') {
+      this.actualizarPreviewUbicacion();
+      setTimeout(() => this.mapaUbicacion?.invalidateSize(), 100);
+    }
+  }
+
+  navegarSecciones(event: KeyboardEvent, indice: number): void {
+    let siguiente: number;
+    switch (event.key) {
+      case 'ArrowRight': siguiente = (indice + 1) % this.seccionesHotel.length; break;
+      case 'ArrowLeft': siguiente = (indice - 1 + this.seccionesHotel.length) % this.seccionesHotel.length; break;
+      case 'Home': siguiente = 0; break;
+      case 'End': siguiente = this.seccionesHotel.length - 1; break;
+      default: return;
+    }
+    event.preventDefault();
+    this.activarSeccion(this.seccionesHotel[siguiente]);
+    (event.currentTarget as HTMLElement).parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[siguiente]?.focus();
   }
 
   ngAfterViewInit(): void {
@@ -295,6 +327,12 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
         catalogo_destino_id: this.parseNumber(detalleHotel.catalogo_destino_id),
         estrellas: detalleHotel.estrellas ?? null,
         ubicacion: detalleHotel.ubicacion ?? '',
+        check_in_desde: detalleHotel.horarios?.check_in_desde ?? '',
+        check_in_hasta: detalleHotel.horarios?.check_in_hasta ?? '',
+        check_out: detalleHotel.horarios?.check_out ?? '',
+        desayuno_desde: detalleHotel.horarios?.desayuno_desde ?? '',
+        desayuno_hasta: detalleHotel.horarios?.desayuno_hasta ?? '',
+        plan_descripcion: normalizarPlan((detalleHotel.traducciones ?? []).find((item: any) => Number(item.idioma_id) === 1)?.plan_todo_incluido)?.descripcion ?? '',
         regimen_principal_id: detalleHotel.regimen_id ?? null
       });
 
@@ -345,7 +383,11 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
           nombre_hotel: item.nombre_hotel ?? null,
           descripcion: item.descripcion ?? null
         });
+        const plan = normalizarPlan(item.plan_todo_incluido);
+        const codigo = this.idiomas.find((idioma) => idioma.id === idiomaId)?.codigo;
+        if (plan && codigo) this.planesTraducidos[codigo] = plan;
       });
+      this.ultimaLlavePlan = JSON.stringify(this.obtenerPlanEspanol());
       this.actualizarPreviewUbicacion();
       this.marcarEstadoGuardado();
     } catch (error: any) {
@@ -1103,7 +1145,16 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
 
     try {
       const raw = this.form.getRawValue();
-      await this.traducirHotelDesdeEspanol(false);
+      if (!this.idiomas.some((idioma) => idioma.codigo === 'es')) {
+        throw new Error('No se pudieron cargar los idiomas del hotel. Vuelve a abrir el editor antes de guardar.');
+      }
+      await this.traducirHotelDesdeEspanol(true);
+      await this.traducirPlanDesdeEspanol();
+      const horarios = normalizarHorarios({
+        check_in_desde: raw.check_in_desde, check_in_hasta: raw.check_in_hasta,
+        check_out: raw.check_out, desayuno_desde: raw.desayuno_desde, desayuno_hasta: raw.desayuno_hasta
+      });
+      const planEspanol = this.obtenerPlanEspanol();
       const regimenPrincipalId = this.parseNumber(raw.regimen_principal_id);
       const descuentoId = this.parseNumber(raw.descuento_id);
       if (regimenPrincipalId) {
@@ -1117,7 +1168,8 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
           return {
             idioma_id: idioma.id,
             nombre_hotel: nombreEspanol,
-            descripcion: descripcionEspanol
+            descripcion: descripcionEspanol,
+            plan_todo_incluido: planEspanol
           };
         }
 
@@ -1127,7 +1179,8 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
         return {
           idioma_id: idioma.id,
           nombre_hotel: this.limpiarTexto(traducido?.nombre) ?? this.limpiarTexto(existente?.nombre_hotel) ?? nombreEspanol,
-          descripcion: this.limpiarTexto(traducido?.descripcion) ?? this.limpiarTexto(existente?.descripcion) ?? descripcionEspanol
+          descripcion: this.limpiarTexto(traducido?.descripcion) ?? this.limpiarTexto(existente?.descripcion) ?? descripcionEspanol,
+          plan_todo_incluido: planEspanol ? this.planesTraducidos[idioma.codigo] : null
         };
       });
 
@@ -1138,6 +1191,7 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
         estrellas: this.parseNumber(raw.estrellas),
         fondo: this.limpiarTexto(raw.fondo),
         ubicacion: this.limpiarTexto(raw.ubicacion),
+        horarios,
         destino_id: this.esCreacion ? null : destinoId,
         catalogo_destino_id: Number.isFinite(catalogoDestinoId) ? catalogoDestinoId : undefined,
         descuento_id: descuentoId,
@@ -1311,6 +1365,38 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  private obtenerPlanEspanol(): HotelPlanTodoIncluido | null {
+    const raw = this.form.getRawValue();
+    return normalizarPlan({ descripcion: raw.plan_descripcion });
+  }
+
+  private async traducirPlanDesdeEspanol(): Promise<void> {
+    const plan = this.obtenerPlanEspanol();
+    if (!plan) {
+      this.planesTraducidos = {};
+      this.ultimaLlavePlan = '';
+      return;
+    }
+    const llave = JSON.stringify(plan);
+    if (llave === this.ultimaLlavePlan && this.idiomas.every((idioma) => idioma.codigo === 'es' || this.planesTraducidos[idioma.codigo])) return;
+
+    this.traduciendoContenido = true;
+    try {
+      const resultados = await this.supabase.traducirDesdeEspanol({ title: plan.descripcion, description: '' });
+      const traducidos: Record<string, HotelPlanTodoIncluido> = {};
+      for (const idioma of this.idiomas) {
+        if (idioma.codigo === 'es') continue;
+        const descripcion = resultados?.[idioma.codigo]?.title?.trim();
+        if (!descripcion) throw new Error(`No se pudo traducir el plan al idioma ${idioma.nombre}.`);
+        traducidos[idioma.codigo] = { descripcion };
+      }
+      this.planesTraducidos = { es: plan, ...traducidos };
+      this.ultimaLlavePlan = llave;
+    } finally {
+      this.traduciendoContenido = false;
+    }
+  }
+
   private limpiarTexto(value: string | null | undefined): string | null {
     const limpio = (value ?? '').trim();
     return limpio ? limpio : null;
@@ -1355,6 +1441,12 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
         tipo_catalogo: raw.tipo_catalogo ?? null,
         estrellas: this.parseNumber(raw.estrellas),
         ubicacion: (raw.ubicacion ?? '').trim(),
+        check_in_desde: raw.check_in_desde,
+        check_in_hasta: raw.check_in_hasta,
+        check_out: raw.check_out,
+        desayuno_desde: raw.desayuno_desde,
+        desayuno_hasta: raw.desayuno_hasta,
+        plan_descripcion: raw.plan_descripcion,
         regimen_principal_id: this.parseNumber(raw.regimen_principal_id)
       },
       regimenes: Array.from(this.regimenesSeleccionados).sort((a, b) => a - b),
@@ -1488,6 +1580,7 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    if (this.seccionActiva !== 'ubicacion-portada') return;
     setTimeout(() => this.renderizarMapaUbicacion(coordenadas), 0);
   }
 
