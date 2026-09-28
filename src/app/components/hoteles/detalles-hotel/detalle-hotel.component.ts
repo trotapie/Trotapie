@@ -63,7 +63,6 @@ export class DetalleHotelComponent {
     intervalId: any;
     mesActual = new Date();
     verMasDescripcion = false;
-    informacionEstanciaExpandida = true;
     dateFilter = (date: Date | null): boolean => {
         if (!date) return false;
 

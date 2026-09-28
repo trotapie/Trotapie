@@ -38,19 +38,16 @@
                 [errorCorrectionLevel]="'M'">
                 </qrcode> -->
             <fuse-card class="filter-article flex w-full flex-col p-1">
-                <div class="flex items-start justify-between gap-4 px-4 pt-5 sm:px-6">
-                    <div>
-                        <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">{{ t('detalles-hotel') }}</h2>
-                        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{{ t('detalles-hotel-descripcion') }}</p>
+                <div class="hotel-intro mx-3 mt-3 sm:mx-5 sm:mt-5">
+                    <div class="hotel-intro-content">
+                        <div class="hotel-intro-action">
+                            <h2 class="hotel-intro-title">{{ t('informacion-del-hotel') }}</h2>
+                            <span class="hotel-intro-badge">{{ t('descubre-mas') }}</span>
+                        </div>
+                        <p class="hotel-intro-message">{{ t('hotel-cuidamos-detalles') }}</p>
                     </div>
-                    <button mat-icon-button type="button" class="mt-0.5 shrink-0" (click)="informacionEstanciaExpandida = !informacionEstanciaExpandida"
-                        [attr.aria-expanded]="informacionEstanciaExpandida" aria-controls="informacion-estancia"
-                        [attr.aria-label]="informacionEstanciaExpandida ? t('ocultar-detalles-hotel') : t('mostrar-detalles-hotel')">
-                        <mat-icon [svgIcon]="informacionEstanciaExpandida ? 'heroicons_outline:chevron-up' : 'heroicons_outline:chevron-down'"></mat-icon>
-                    </button>
                 </div>
 
-                @if (informacionEstanciaExpandida) {
                 <div id="informacion-estancia" class="mt-3 min-w-0 overflow-hidden">
                 <mat-tab-group class="hotel-tabs sm:px-2" mat-stretch-tabs="true" [animationDuration]="'0'">
                     @if (hotel.horarios) {
@@ -93,7 +90,7 @@
                         </ng-template>
                         <div class="hotel-tab-panel text-base leading-relaxed whitespace-pre-line">
                             <div class="mb-5">
-                                <h3 class="text-2xl font-semibold leading-tight text-gray-900 dark:text-gray-100">Conoce un poco más</h3>
+                                <h3 class="text-2xl font-semibold leading-tight text-gray-900 dark:text-gray-100">{{ t('conoce-un-poco-mas') }}</h3>
                             </div>
                             <div [class.line-clamp-6]="!verMasDescripcion" class="transition-all duration-300">
                                 {{ descripcionParrafo }}
@@ -169,7 +166,6 @@
 
                 </mat-tab-group>
                 </div>
-                }
                 <div class="flex flex-col gap-2 px-4 pb-2 pt-0.5 sm:flex-row sm:flex-wrap sm:px-6">
                     <button mat-raised-button color="primary" class="w-full text-white sm:w-auto" (click)="abrirUbicacion()">
                         <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:map-pin'"></mat-icon>
