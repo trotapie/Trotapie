@@ -185,8 +185,9 @@
                                      <span id="category-title">{{ t('explora-por-experiencia') }}</span>
                                  </div>
                                  <div class="category-list" role="group" aria-labelledby="category-title">
-                                     <button type="button" [attr.aria-pressed]="selectedTipoTuristicoId === null" [class.category-active]="selectedTipoTuristicoId === null" (click)="filtrarPorTipo(null)">{{ t('todos') }}</button>
-                                     <button *ngFor="let tipo of tiposTuristicos" type="button" [attr.aria-pressed]="selectedTipoTuristicoId === tipo.id" [class.category-active]="selectedTipoTuristicoId === tipo.id" (click)="filtrarPorTipo(tipo.id)">{{ tipo.nombre }}</button>
+                                      <button *ngFor="let tipo of tiposTuristicos" type="button" [attr.aria-pressed]="selectedTipoTuristicoId === tipo.id" [class.category-active]="selectedTipoTuristicoId === tipo.id" (click)="filtrarPorTipo(tipo.id)">{{ tipo.nombre }}</button>
+                                      <button type="button" [attr.aria-pressed]="selectedTipoTuristicoId === -1" [class.category-active]="selectedTipoTuristicoId === -1" (click)="filtrarPorTipo(-1)">{{ t('cabanas') }}</button>
+                                      <button type="button" [attr.aria-pressed]="selectedTipoTuristicoId === -2" [class.category-active]="selectedTipoTuristicoId === -2" (click)="filtrarPorTipo(-2)">{{ t('promociones') }}</button>
                                  </div>
                              </div>
                             <div class="destination-view-panel">
@@ -208,8 +209,17 @@
                         <div class="catalog-state" aria-busy="true">{{ t('cargando-destinos') }}</div>
                         } @else if (error) {
                         <div class="catalog-state catalog-error" role="alert"><h2>{{ t('error-cargar-destinos') }}</h2><p>{{ t('revisa-conexion') }}</p></div>
-                        } @else if (destinosFiltrados.length === 0) {
-                        <div class="catalog-state" role="status"><mat-icon aria-hidden="true">travel_explore</mat-icon><h2>{{ t('destino-no-encontrado') }}</h2><p>{{ t('prueba-otra-busqueda') }}</p></div>
+                         } @else if (selectedTipoTuristicoId === -1 || selectedTipoTuristicoId === -2) {
+                         <div #proximamente class="catalog-state catalog-state--coming-soon" role="status">
+                             <div class="coming-soon-icon" aria-hidden="true"><mat-icon>{{ selectedTipoTuristicoId === -1 ? 'cabin' : 'local_offer' }}</mat-icon></div>
+                             <div class="coming-soon-copy">
+                                 <span class="coming-soon-label">{{ selectedTipoTuristicoId === -1 ? t('cabanas') : t('promociones') }}</span>
+                                 <h2>{{ t('proximamente') }}</h2>
+                                 <p>{{ t('experiencia-proximamente') }}</p>
+                             </div>
+                         </div>
+                         } @else if (destinosFiltrados.length === 0) {
+                         <div class="catalog-state" role="status"><mat-icon aria-hidden="true">travel_explore</mat-icon><h2>{{ t('destino-no-encontrado') }}</h2><p>{{ t('prueba-otra-busqueda') }}</p></div>
                         } @else {
                         <div class="destination-list p-3" [class.destination-list--cards]="vistaDestinos === 'cards'" [attr.aria-label]="t('lista-destinos')" aria-live="polite">
                             <button *ngFor="let item of destinosFiltrados" type="button" class="destination-row" (click)="cargaInfo(item)" [attr.aria-label]="t('explorar-destino', { destino: item.nombre })">
