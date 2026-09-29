@@ -574,6 +574,25 @@ export class CatalogosAdminService {
 
   async crearCatalogoAdmin(catalogo: CatalogoAdminKey, payload: Record<string, any>) {
     switch (catalogo) {
+      case 'regimen_hotel': {
+        const descripcion = String(payload.descripcion ?? '').trim();
+        const traducciones = await this.prepararTraduccionesRegimen(descripcion);
+        const { data: regimen, error } = await this.client
+          .from('regimen')
+          .insert({ descripcion })
+          .select('id')
+          .single();
+        if (error) throw error;
+
+        const { error: traduccionError } = await this.client
+          .from('regimen_traducciones')
+          .insert(traducciones.map((item) => ({ ...item, regimen_id: regimen.id })));
+        if (traduccionError) {
+          await this.client.from('regimen').delete().eq('id', regimen.id);
+          throw traduccionError;
+        }
+        return { id: regimen.id, descripcion };
+      }
       case 'actividades': {
         const { data: ultimoRegistro, error: ultimoError } = await this.client
           .from('actividades')
@@ -907,6 +926,12 @@ export class CatalogosAdminService {
 
   async eliminarCatalogoAdmin(catalogo: CatalogoAdminKey, id: number) {
     switch (catalogo) {
+      case 'regimen_hotel': {
+        const { data, error } = await this.client.rpc('eliminar_regimen_hotel', { p_regimen_id: id });
+        if (error) throw error;
+        if (!data) throw new Error('No se pudo eliminar el régimen. Verifica tus permisos o si ya fue eliminado.');
+        return { deleted: 1 };
+      }
       case 'actividades': {
         const { error } = await this.client
           .from('actividades')
@@ -1263,18 +1288,17 @@ export class CatalogosAdminService {
         return data;
       }
       case 'regimen_hotel': {
+        const descripcion = String(payload.descripcion ?? '').trim();
+        const traducciones = await this.prepararTraduccionesRegimen(descripcion);
+        const { error: regimenError } = await this.client
+          .from('regimen')
+          .update({ descripcion })
+          .eq('id', id);
+        if (regimenError) throw regimenError;
         const { data, error } = await this.client
           .from('regimen_traducciones')
-          .upsert(
-            {
-              regimen_id: id,
-              idioma_id: ES_ID,
-              descripcion: payload.descripcion ?? ''
-            },
-            { onConflict: 'regimen_id,idioma_id' }
-          )
-          .select('regimen_id')
-          .maybeSingle();
+          .upsert(traducciones.map((item) => ({ ...item, regimen_id: id })), { onConflict: 'regimen_id,idioma_id' })
+          .select('regimen_id');
         if (error) throw error;
         return data;
       }
@@ -1438,6 +1462,37 @@ export class CatalogosAdminService {
       .insert(payload);
 
     if (insertError) throw insertError;
+  }
+
+  private async prepararTraduccionesRegimen(descripcion: string): Promise<Array<{ idioma_id: number; descripcion: string }>> {
+    if (!descripcion) throw new Error('La descripción del régimen es obligatoria.');
+
+    const [traducciones, idiomas] = await Promise.all([
+      this.supabase.traducirDesdeEspanol({ title: '', description: descripcion }),
+      this.supabase.obtenerIdiomasPreviewAdmin()
+    ]);
+
+    return idiomas.map((idioma) => {
+      const texto = idioma.codigo === 'es'
+        ? descripcion
+        : String(traducciones?.[idioma.codigo]?.description ?? '').trim();
+      if (!texto) throw new Error(`No se pudo generar la traducción del régimen a ${idioma.nombre}.`);
+      return { idioma_id: idioma.id, descripcion: texto };
+    });
+  }
+
+  async obtenerTraduccionesRegimenHotel(regimenId: number): Promise<Array<{ codigo: string; nombre: string; descripcion: string }>> {
+    const [idiomas, respuesta] = await Promise.all([
+      this.supabase.obtenerIdiomasPreviewAdmin(),
+      this.client.from('regimen_traducciones').select('idioma_id, descripcion').eq('regimen_id', regimenId)
+    ]);
+    if (respuesta.error) throw respuesta.error;
+
+    return idiomas.map((idioma) => ({
+      codigo: idioma.codigo,
+      nombre: idioma.nombre,
+      descripcion: respuesta.data?.find((item) => item.idioma_id === idioma.id)?.descripcion ?? ''
+    }));
   }
 
   private async guardarTraduccionesActividad(actividadId: number, descripcion: string) {
