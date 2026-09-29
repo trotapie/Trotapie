@@ -9,6 +9,8 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => TpInputComponent), multi: true }]
 })
 export class TpInputComponent implements ControlValueAccessor {
+  private static nextId = 0;
+  readonly inputId = `tp-input-${TpInputComponent.nextId++}`;
   @Input() label = '';
   @Input() placeholder = '';
   @Input() type = 'text';

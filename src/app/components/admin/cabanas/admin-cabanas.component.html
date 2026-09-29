@@ -1,0 +1,187 @@
+<main class="experiencias-page">
+  @if (!modoEditor) {
+    <header class="experiencias-hero">
+      <div class="experiencias-hero__copy">
+        <p class="experiencias-hero__eyebrow">Inventario de alojamiento</p>
+        <h1>Catálogo de cabañas</h1>
+        <p>Consulta y administra las cabañas de cada destino.</p>
+      </div>
+      <div class="experiencias-hero__stat" aria-live="polite"><strong>{{ fichas.length }}</strong><span>cabañas en el catálogo</span></div>
+    </header>
+    <div class="experiencias-toolbar">
+      <div class="experiencias-toolbar__heading"><mat-icon>tune</mat-icon><div><strong>Ubicación</strong><span>Filtra el catálogo por destino o nombre</span></div></div>
+      <div class="experiencias-toolbar__fields">
+        <app-tp-select-search label="Destino" [options]="opcionesDestinosFiltro" [disabled]="cargando" [(ngModel)]="filtroDestino"></app-tp-select-search>
+        <app-tp-input label="Buscar por nombre" [(ngModel)]="filtroTexto"></app-tp-input>
+      </div>
+      <button mat-flat-button color="primary" type="button" (click)="crear()"><mat-icon class="mr-2 icon-size-5">add</mat-icon>Crear {{ nombreSingular }}</button>
+    </div>
+    @if (error) { <div role="alert" class="experiencias-error">{{ error }} <button mat-button type="button" (click)="cargar()"><mat-icon class="mr-1.5 icon-size-4">refresh</mat-icon>Reintentar</button></div> }
+    <section class="experiencias-resultados" aria-label="Resultados del catálogo">
+      <header class="experiencias-resultados__header"><h2>Cabañas</h2><p>{{ fichasFiltradas.length }} resultados · Solo se muestra públicamente el contenido publicado y vigente.</p></header>
+      @if (cargando) { <p role="status" class="experiencias-vacio">Cargando cabañas…</p> }
+      @else if (!fichasFiltradas.length) {
+        <div class="experiencias-vacio"><mat-icon>inventory_2</mat-icon><h3>{{ fichas.length ? 'No hay coincidencias' : 'Aún no hay cabañas' }}</h3><p>{{ fichas.length ? 'Prueba otra búsqueda o destino.' : 'Crea la primera cabaña para comenzar el catálogo.' }}</p></div>
+      } @else {
+        <div class="experiencias-tabla-wrap"><table class="experiencias-tabla"><thead><tr><th>Cabaña</th><th>Ubicación</th><th>Estado</th><th><span class="sr-only">Acciones</span></th></tr></thead><tbody>
+          @for (item of fichasFiltradas; track item.id) {
+            <tr><td><div class="experiencias-nombre"><img [src]="item.imagen_principal" [alt]="item.nombre" /><strong>{{ item.nombre }}</strong></div></td>
+              <td>{{ item.hotelNombre || item.destinoNombre || '—' }}</td><td><app-status-badge [status]="item.publicada ? 'ACTIVO' : 'INACTIVO'"></app-status-badge></td>
+              <td class="experiencias-acciones"><app-tp-actions-menu [actions]="acciones(item)" [ariaLabel]="'Acciones de ' + item.nombre" (actionSelected)="accion($event, item)"></app-tp-actions-menu></td></tr>
+          }
+        </tbody></table></div>
+      }
+    </section>
+  } @else {
+    <button mat-button type="button" class="experiencias-volver" (click)="cerrar()"><mat-icon class="mr-1.5 icon-size-4">arrow_back</mat-icon>Volver al catálogo</button>
+    @if (cargando) {
+      <section class="experiencias-editor-skeleton" role="status" aria-label="Cargando formulario">
+        <span class="sr-only">Cargando formulario de {{ nombreSingular }}…</span>
+        <div aria-hidden="true">
+          <div class="experiencias-editor-skeleton__header">
+            <span class="experiencias-skeleton experiencias-editor-skeleton__eyebrow"></span>
+            <span class="experiencias-skeleton experiencias-editor-skeleton__title"></span>
+            <span class="experiencias-skeleton experiencias-editor-skeleton__subtitle"></span>
+          </div>
+          <div class="experiencias-editor-skeleton__steps">
+            @for (numero of [1, 2, 3, 4]; track numero) { <span class="experiencias-skeleton"></span> }
+          </div>
+          <div class="experiencias-editor-skeleton__panel">
+            <span class="experiencias-skeleton experiencias-editor-skeleton__kicker"></span>
+            <span class="experiencias-skeleton experiencias-editor-skeleton__section-title"></span>
+            <div class="experiencias-editor-skeleton__fields">
+              @for (numero of [1, 2, 3]; track numero) {
+                <div><span class="experiencias-skeleton experiencias-editor-skeleton__label"></span><span class="experiencias-skeleton experiencias-editor-skeleton__field"></span></div>
+              }
+            </div>
+            <span class="experiencias-skeleton experiencias-editor-skeleton__description"></span>
+          </div>
+        </div>
+      </section>
+    }
+    @else if (!ficha) {
+      <div class="experiencias-error" role="alert">{{ error || 'No se pudo abrir el formulario.' }}
+        <button mat-button type="button" (click)="cargar()"><mat-icon class="mr-1.5 icon-size-4">refresh</mat-icon>Reintentar</button>
+      </div>
+    } @else {
+      @if (cargandoCatalogo) { <p class="experiencias-catalogo-status" role="status"><mat-progress-spinner diameter="16" mode="indeterminate"></mat-progress-spinner>{{ tipoDestino === 'INTERNACIONAL' ? paisId ? 'Cargando destinos del país…' : continenteId ? 'Cargando países…' : 'Cargando continentes…' : 'Cargando destinos nacionales…' }}</p> }
+      @if (errorCatalogo) { <div class="experiencias-error" role="alert">{{ errorCatalogo }} <button mat-button type="button" (click)="reintentarCatalogo()"><mat-icon class="mr-1.5 icon-size-4">refresh</mat-icon>Reintentar</button></div> }
+      <header class="experiencias-editor-header">
+        <p class="experiencias-hero__eyebrow">{{ ficha.id ? 'Editar' : 'Nueva' }} {{ nombreSingular }}</p>
+        <h1>{{ ficha.id ? 'Edita' : 'Crea' }} tu cabaña paso a paso</h1>
+        <p>Completa una parte a la vez. Los campos con * son necesarios para guardar; los textos en todos los idiomas y las fotos adicionales se revisan al publicar.</p>
+      </header>
+      <nav class="experiencias-steps" aria-label="Pasos para dar de alta">
+        <ol>
+          @for (titulo of pasos; track $index) {
+            <li><button type="button" class="experiencias-step" [class.experiencias-step--actual]="paso === $index" [attr.aria-current]="paso === $index ? 'step' : null" (click)="irAlPaso($index)">
+              <span class="experiencias-step__number">{{ $index + 1 }}</span><span>{{ titulo }}</span></button></li>
+          }
+        </ol>
+      </nav>
+      <section class="experiencias-editor" [attr.aria-label]="pasos[paso]">
+        <div class="experiencias-editor__intro"><span>Paso {{ paso + 1 }} de 4</span><h2>{{ pasos[paso] }}</h2>
+          <p>{{ paso === 0 ? 'Cuéntanos qué estás ofreciendo y dónde se encuentra.' : paso === 1 ? 'Indica cuántas personas pueden hospedarse y cuánto cuesta.' : paso === 2 ? 'Elige una buena portada y agrega las fotos que mostrarás.' : 'Comprueba los datos y decide si deseas guardarlos o publicarlos.' }}</p>
+        </div>
+        @if (error) { <div class="experiencias-error" role="alert"><mat-icon>error_outline</mat-icon><span>{{ error }}</span></div> }
+
+        @if (paso === 0) {
+          <div class="experiencias-campos experiencias-campos--basico">
+            <app-tp-input label="Nombre de la cabaña" placeholder="Escribe un nombre fácil de reconocer" [required]="true" [error]="mostrarErrores && !texto['nombre']?.trim() ? 'Escribe un nombre para continuar.' : ''" [(ngModel)]="texto['nombre']"></app-tp-input>
+            <div><app-tp-select-search label="Tipo de destino" [required]="true" [placeholder]="ficha.id && cargandoCatalogo ? 'Cargando tipo de destino…' : 'Selecciona un tipo'" [disabled]="!!ficha.id && cargandoCatalogo" [showClear]="false" [options]="opcionesTipoDestino" [ngModel]="tipoDestino" (ngModelChange)="seleccionarTipoDestino($event)"></app-tp-select-search>
+              @if (mostrarErrores && !tipoDestino) { <p class="experiencias-campo-error">Elige Nacional o Internacional.</p> }
+            </div>
+            @if (tipoDestino === 'INTERNACIONAL') {
+              <div><app-tp-select-search label="Continente" [required]="true" [placeholder]="cargandoCatalogo ? 'Cargando continentes…' : 'Selecciona un continente'" [disabled]="cargandoCatalogo || !!errorCatalogo" [options]="opcionesContinentes" [ngModel]="continenteId" (ngModelChange)="seleccionarContinente($event)"></app-tp-select-search>
+                @if (mostrarErrores && !continenteId) { <p class="experiencias-campo-error">Selecciona un continente.</p> }
+              </div>
+              <div><app-tp-select-search label="País" [required]="true" [placeholder]="!continenteId ? 'Elige primero un continente' : 'Selecciona un país'" [disabled]="!continenteId || cargandoCatalogo || !!errorCatalogo" [options]="opcionesPaises" [ngModel]="paisId" (ngModelChange)="seleccionarPais($event)"></app-tp-select-search>
+                @if (mostrarErrores && continenteId && !paisId) { <p class="experiencias-campo-error">Selecciona un país.</p> }
+              </div>
+            }
+            <div><app-tp-select-search label="Destino (división de área)" [required]="true" [placeholder]="!tipoDestino ? 'Elige primero el tipo de destino' : tipoDestino === 'INTERNACIONAL' && !paisId ? 'Elige primero el país' : cargandoCatalogo ? 'Cargando divisiones…' : 'Selecciona una división de área'" [disabled]="!tipoDestino || (tipoDestino === 'INTERNACIONAL' && !paisId) || cargandoCatalogo || !!errorCatalogo" [options]="opcionesDivisionesArea" [ngModel]="divisionAreaId" (ngModelChange)="seleccionarDivisionArea($event)"></app-tp-select-search>
+              @if (mostrarErrores && tipoDestino && !divisionAreaId) { <p class="experiencias-campo-error">Selecciona una división de área.</p> }
+            </div>
+            <div><app-tp-select-search label="Zona o ubicación" [required]="true" [placeholder]="!divisionAreaId ? 'Elige primero una división de área' : 'Selecciona un destino dentro de la división'" [disabled]="!divisionAreaId || cargandoCatalogo || !!errorCatalogo" [options]="opcionesZonas" [ngModel]="ficha.catalogo_destino_id" (ngModelChange)="seleccionarZona($event)"></app-tp-select-search>
+              @if (mostrarErrores && divisionAreaId && !ficha.catalogo_destino_id) { <p class="experiencias-campo-error">Selecciona una zona o ubicación.</p> }
+            </div>
+            <app-tp-input class="experiencias-campos__full" label="Descripción breve" placeholder="¿Qué hace especial a esta cabaña?" [multiline]="true" [rows]="3" [(ngModel)]="texto['descripcion']"></app-tp-input>
+          </div>
+        } @else if (paso === 1) {
+          <div class="experiencias-campos experiencias-campos--capacidad">
+            <app-tp-input label="Precio desde *" type="number" [min]="0" [error]="mostrarErrores && ficha.precio_desde === null ? 'Indica el precio desde.' : ''" [(ngModel)]="ficha.precio_desde"></app-tp-input>
+            <app-tp-select-search label="¿El precio es por noche o estancia? *" [options]="opcionesPeriodo" [(ngModel)]="ficha.precio_por"></app-tp-select-search>
+            <app-tp-input label="El precio incluye a cuántas personas *" type="number" [min]="1" [(ngModel)]="ficha.precio_personas"></app-tp-input>
+            <app-tp-input label="Máximo de adultos *" type="number" [min]="1" [(ngModel)]="ficha.adultos_max"></app-tp-input>
+            <app-tp-input label="Máximo de niños *" type="number" [min]="0" [(ngModel)]="ficha.ninos_max"></app-tp-input>
+            <app-tp-input label="Habitaciones *" type="number" [min]="1" [(ngModel)]="ficha.habitaciones"></app-tp-input>
+            <app-tp-input label="Camas" placeholder="Ej. 1 King y 2 matrimoniales" [(ngModel)]="texto['camas']"></app-tp-input>
+            <app-tp-input label="Tipo de experiencia" placeholder="Ej. Familiar o romántica" [(ngModel)]="texto['experiencia']"></app-tp-input>
+            <app-tp-date-input label="Disponible desde" [(ngModel)]="ficha.disponible_desde"></app-tp-date-input>
+            <app-tp-date-input label="Disponible hasta" [(ngModel)]="ficha.disponible_hasta"></app-tp-date-input>
+            <app-tp-input label="Moneda (ej. MXN) *" [maxLength]="3" [error]="mostrarErrores && !ficha.moneda ? 'Escribe una moneda de tres letras.' : ''" [(ngModel)]="ficha.moneda"></app-tp-input>
+          </div>
+        } @else if (paso === 2) {
+          <div class="experiencias-campos">
+            <div class="experiencias-campos__full">
+              <h3 class="experiencias-campo-titulo">Imagen de portada *</h3>
+              <app-tp-input label="URL HTTPS de la portada" placeholder="https://ejemplo.com/portada.jpg" [required]="true" [(ngModel)]="ficha.imagen_principal"></app-tp-input>
+              <p class="experiencias-ayuda">Pega un enlace directo a la imagen.</p>
+              @if (ficha.imagen_principal) { <img class="experiencias-portada" [src]="ficha.imagen_principal" alt="Vista previa de la portada" /> }
+              @if (mostrarErrores && !ficha.imagen_principal) { <p class="experiencias-campo-error">Agrega la imagen de portada.</p> }
+            </div>
+            <div class="experiencias-campos__full experiencias-galeria">
+                <h3>Galería <span>({{ ficha.imagenes.length }}/10 fotos)</span></h3>
+                <p class="experiencias-ayuda">Agrega entre 5 y 10 enlaces directos a fotos para publicar. Puedes completar la galería más adelante si guardas un borrador.</p>
+                <div class="experiencias-galeria__agregar"><app-tp-input label="URL HTTPS de la foto" placeholder="https://ejemplo.com/foto.jpg" [(ngModel)]="imagenNueva"></app-tp-input>
+                  <button mat-stroked-button type="button" [disabled]="!imagenNueva.trim() || ficha.imagenes.length >= 10" (click)="agregarImagen()"><mat-icon class="mr-1.5 icon-size-4">add_photo_alternate</mat-icon>Agregar foto</button></div>
+                <div class="experiencias-fotos">@for (url of ficha.imagenes; track $index) {
+                  <div class="experiencias-foto"><img [src]="url" [alt]="'Foto ' + ($index + 1)" /><button mat-icon-button type="button" [attr.aria-label]="'Quitar foto ' + ($index + 1)" [matTooltip]="'Quitar foto ' + ($index + 1)" (click)="ficha.imagenes.splice($index, 1)"><mat-icon>close</mat-icon></button></div>
+                }</div>
+            </div>
+            <div class="experiencias-campos__full experiencias-amenidades"><h3>Amenidades</h3><p class="experiencias-ayuda">Selecciona los servicios que incluye la cabaña.</p>
+                <app-tp-select-search label="Agregar amenidad" [placeholder]="cargandoCatalogo ? 'Cargando amenidades…' : 'Selecciona una amenidad'" [disabled]="cargandoCatalogo || !!errorCatalogo" [options]="opcionesAmenidades" (selectionChange)="agregarAmenidad($event)"></app-tp-select-search>
+                <div class="experiencias-chips">@for (id of ficha.amenidadIds; track id) {
+                  <button mat-stroked-button type="button" (click)="ficha.amenidadIds.splice(ficha.amenidadIds.indexOf(id), 1)"><mat-icon class="mr-1.5 icon-size-4">close</mat-icon>{{ nombreAmenidad(id) }}</button>
+                }</div>
+            </div>
+          </div>
+        } @else {
+          <div class="experiencias-resumen">
+            <div><span>Nombre</span><strong>{{ ficha.traducciones['es']?.['nombre'] || 'Sin nombre' }}</strong></div>
+            <div><span>Destino</span><strong>{{ ubicacionResumen }}</strong></div>
+            <div><span>Precio desde</span><strong>{{ ficha.precio_desde ?? 'Sin precio' }} {{ ficha.moneda }}</strong></div>
+            <div><span>Imagen de portada</span><strong>{{ ficha.imagen_principal ? 'Agregada' : 'Pendiente' }}</strong></div>
+          </div>
+          <div class="experiencias-traducciones">
+            <div class="experiencias-traducciones__header"><div><h3>Textos y traducciones</h3><p>El español es la base. Para publicar, revisa los cinco idiomas.</p></div>
+              <button mat-stroked-button type="button" [disabled]="traduciendo" (click)="generarTraducciones()"><mat-icon class="mr-1.5 icon-size-4">{{ traduciendo ? 'sync' : 'translate' }}</mat-icon>{{ traduciendo ? 'Traduciendo…' : 'Traducir desde español' }}</button></div>
+            <div class="experiencias-idiomas" role="group" aria-label="Idioma de edición">@for (codigo of idiomas; track codigo) {
+              <button mat-stroked-button type="button" [color]="idioma === codigo ? 'primary' : undefined" [attr.aria-pressed]="idioma === codigo" (click)="idioma = codigo"><mat-icon class="mr-1.5 icon-size-4">language</mat-icon>{{ codigo.toUpperCase() }}</button>
+            }</div>
+            <div class="experiencias-campos experiencias-campos--textos">
+              <app-tp-input label="Nombre *" [(ngModel)]="texto['nombre']"></app-tp-input>
+              <app-tp-input label="Zona / ubicación *" [(ngModel)]="texto['zona']"></app-tp-input>
+              <app-tp-input label="Experiencia *" [(ngModel)]="texto['experiencia']"></app-tp-input>
+              <app-tp-input label="Camas *" [(ngModel)]="texto['camas']"></app-tp-input>
+              <app-tp-input label="Referencia pública del mapa (opcional)" [(ngModel)]="texto['referencia_mapa']"></app-tp-input>
+              <app-tp-input class="experiencias-campos__full" label="Descripción breve *" [multiline]="true" [rows]="3" [(ngModel)]="texto['descripcion']"></app-tp-input>
+            </div>
+          </div>
+          <p class="experiencias-ayuda">{{ ficha.publicada ? 'Guardar borrador retirará esta cabaña del sitio público.' : 'Guardar borrador no mostrará esta cabaña al público.' }} Publicar la mostrará cuando esté vigente.</p>
+        }
+        <div class="experiencias-editor__footer">
+          <div><button mat-stroked-button type="button" [disabled]="guardando || paso === 0" (click)="irAlPaso(paso - 1)"><mat-icon class="mr-1.5 icon-size-4">arrow_back</mat-icon>Anterior</button></div>
+          <div class="experiencias-editor__acciones">
+            @if (paso === 3) {
+              <button mat-stroked-button type="button" [disabled]="guardando || traduciendo || subiendoImagen" (click)="guardar(false)"><mat-icon class="mr-1.5 icon-size-4">{{ guardando ? 'sync' : 'save' }}</mat-icon>Guardar borrador</button>
+              <button mat-flat-button color="primary" type="button" [disabled]="guardando || traduciendo || subiendoImagen" (click)="guardar(true)"><mat-icon class="mr-1.5 icon-size-4">{{ guardando ? 'sync' : 'publish' }}</mat-icon>Publicar cabaña</button>
+            } @else {
+              <button mat-flat-button color="primary" type="button" (click)="irAlPaso(paso + 1)"><mat-icon class="mr-1.5 icon-size-4">arrow_forward</mat-icon>Continuar</button>
+            }
+          </div>
+        </div>
+      </section>
+    }
+  }
+</main>

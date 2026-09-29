@@ -1,0 +1,170 @@
+<main class="experiencias-page">
+  @if (!modoEditor) {
+    <header class="experiencias-hero">
+      <div class="experiencias-hero__copy">
+        <p class="experiencias-hero__eyebrow">Inventario de ofertas</p>
+        <h1>Catálogo de promociones</h1>
+        <p>Consulta y administra las ofertas para hoteles y destinos.</p>
+      </div>
+      <div class="experiencias-hero__stat" aria-live="polite"><strong>{{ fichas.length }}</strong><span>promociones en el catálogo</span></div>
+    </header>
+    <div class="experiencias-toolbar">
+      <div class="experiencias-toolbar__heading"><mat-icon>tune</mat-icon><div><strong>Ubicación</strong><span>Filtra el catálogo por destino o nombre</span></div></div>
+      <div class="experiencias-toolbar__fields">
+        <app-tp-select-search label="Destino" [options]="opcionesDestinosFiltro" [disabled]="cargando" [(ngModel)]="filtroDestino"></app-tp-select-search>
+        <app-tp-input label="Buscar por nombre" [(ngModel)]="filtroTexto"></app-tp-input>
+      </div>
+      <button mat-flat-button color="primary" type="button" (click)="crear()"><mat-icon class="mr-2 icon-size-5">add</mat-icon>Crear promoción</button>
+    </div>
+    @if (error) { <div role="alert" class="experiencias-error">{{ error }} <button mat-button type="button" (click)="cargar()"><mat-icon class="mr-1.5 icon-size-4">refresh</mat-icon>Reintentar</button></div> }
+    <section class="experiencias-resultados" aria-label="Resultados del catálogo">
+      <header class="experiencias-resultados__header"><h2>Promociones</h2><p>{{ fichasFiltradas.length }} resultados · Solo se muestra públicamente el contenido publicado y vigente.</p></header>
+      @if (cargando) { <p role="status" class="experiencias-vacio">Cargando promociones…</p> }
+      @else if (!fichasFiltradas.length) {
+        <div class="experiencias-vacio"><mat-icon>inventory_2</mat-icon><h3>{{ fichas.length ? 'No hay coincidencias' : 'Aún no hay promociones' }}</h3><p>{{ fichas.length ? 'Prueba otra búsqueda o destino.' : 'Crea la primera promoción para comenzar el catálogo.' }}</p></div>
+      } @else {
+        <div class="experiencias-tabla-wrap"><table class="experiencias-tabla"><thead><tr><th>Promoción</th><th>Ubicación</th><th>Estado</th><th><span class="sr-only">Acciones</span></th></tr></thead><tbody>
+          @for (item of fichasFiltradas; track item.id) {
+            <tr><td><div class="experiencias-nombre"><img [src]="item.imagen_principal" [alt]="item.nombre" /><strong>{{ item.nombre }}</strong></div></td>
+              <td>{{ item.hotelNombre || item.destinoNombre || '—' }}</td><td><app-status-badge [status]="item.publicada ? 'ACTIVO' : 'INACTIVO'"></app-status-badge></td>
+              <td class="experiencias-acciones"><app-tp-actions-menu [actions]="acciones(item)" [ariaLabel]="'Acciones de ' + item.nombre" (actionSelected)="accion($event, item)"></app-tp-actions-menu></td></tr>
+          }
+        </tbody></table></div>
+      }
+    </section>
+  } @else {
+    <button mat-button type="button" class="experiencias-volver" (click)="cerrar()"><mat-icon class="mr-1.5 icon-size-4">arrow_back</mat-icon>Volver al catálogo</button>
+    @if (cargando) {
+      <section class="experiencias-editor-skeleton" role="status" aria-label="Cargando formulario">
+        <span class="sr-only">Cargando formulario de promoción…</span>
+        <div aria-hidden="true">
+          <div class="experiencias-editor-skeleton__header">
+            <span class="experiencias-skeleton experiencias-editor-skeleton__eyebrow"></span>
+            <span class="experiencias-skeleton experiencias-editor-skeleton__title"></span>
+            <span class="experiencias-skeleton experiencias-editor-skeleton__subtitle"></span>
+          </div>
+          <div class="experiencias-editor-skeleton__steps">
+            @for (numero of [1, 2, 3, 4]; track numero) { <span class="experiencias-skeleton"></span> }
+          </div>
+          <div class="experiencias-editor-skeleton__panel">
+            <span class="experiencias-skeleton experiencias-editor-skeleton__kicker"></span>
+            <span class="experiencias-skeleton experiencias-editor-skeleton__section-title"></span>
+            <div class="experiencias-editor-skeleton__fields">
+              @for (numero of [1, 2, 3]; track numero) {
+                <div><span class="experiencias-skeleton experiencias-editor-skeleton__label"></span><span class="experiencias-skeleton experiencias-editor-skeleton__field"></span></div>
+              }
+            </div>
+            <span class="experiencias-skeleton experiencias-editor-skeleton__description"></span>
+          </div>
+        </div>
+      </section>
+    }
+    @else if (!ficha) {
+      <div class="experiencias-error" role="alert">{{ error || 'No se pudo abrir el formulario.' }}
+        <button mat-button type="button" (click)="cargar()"><mat-icon class="mr-1.5 icon-size-4">refresh</mat-icon>Reintentar</button>
+      </div>
+    } @else {
+      @if (cargandoCatalogo) { <p class="experiencias-catalogo-status" role="status"><mat-progress-spinner diameter="16" mode="indeterminate"></mat-progress-spinner>{{ tipoDestino === 'INTERNACIONAL' ? paisId ? 'Cargando destinos del país…' : continenteId ? 'Cargando países…' : 'Cargando continentes…' : 'Cargando destinos nacionales…' }}</p> }
+      @if (errorCatalogo) { <div class="experiencias-error" role="alert">{{ errorCatalogo }} <button mat-button type="button" (click)="reintentarCatalogo()"><mat-icon class="mr-1.5 icon-size-4">refresh</mat-icon>Reintentar</button></div> }
+      <header class="experiencias-editor-header">
+        <p class="experiencias-hero__eyebrow">{{ ficha.id ? 'Editar' : 'Nueva' }} promoción</p>
+        <h1>{{ ficha.id ? 'Edita' : 'Crea' }} tu promoción paso a paso</h1>
+        <p>Completa una parte a la vez. Los campos con * son necesarios para guardar; los textos en todos los idiomas se revisan al publicar.</p>
+      </header>
+      <nav class="experiencias-steps" aria-label="Pasos para dar de alta">
+        <ol>
+          @for (titulo of pasos; track $index) {
+            <li><button type="button" class="experiencias-step" [class.experiencias-step--actual]="paso === $index" [attr.aria-current]="paso === $index ? 'step' : null" (click)="irAlPaso($index)">
+              <span class="experiencias-step__number">{{ $index + 1 }}</span><span>{{ titulo }}</span></button></li>
+          }
+        </ol>
+      </nav>
+      <section class="experiencias-editor" [attr.aria-label]="pasos[paso]">
+        <div class="experiencias-editor__intro"><span>Paso {{ paso + 1 }} de 4</span><h2>{{ pasos[paso] }}</h2>
+          <p>{{ paso === 0 ? 'Cuéntanos qué estás ofreciendo y dónde se encuentra.' : paso === 1 ? 'Escribe el beneficio que recibirán tus clientes.' : paso === 2 ? 'Define cuándo aplica la oferta y elige su portada.' : 'Comprueba los datos y decide si deseas guardarlos o publicarlos.' }}</p>
+        </div>
+        @if (error) { <div class="experiencias-error" role="alert"><mat-icon>error_outline</mat-icon><span>{{ error }}</span></div> }
+
+        @if (paso === 0) {
+          <div class="experiencias-campos experiencias-campos--basico">
+            <div><app-tp-select-search label="Tipo de destino" [required]="true" [placeholder]="ficha.id && cargandoCatalogo ? 'Cargando tipo de destino…' : 'Selecciona un tipo'" [disabled]="!!ficha.id && cargandoCatalogo" [showClear]="false" [options]="opcionesTipoDestino" [ngModel]="tipoDestino" (ngModelChange)="seleccionarTipoDestino($event)"></app-tp-select-search>
+              @if (mostrarErrores && !tipoDestino) { <p class="experiencias-campo-error">Elige Nacional o Internacional.</p> }
+            </div>
+            @if (tipoDestino === 'INTERNACIONAL') {
+              <div><app-tp-select-search label="Continente" [required]="true" [placeholder]="cargandoCatalogo ? 'Cargando continentes…' : 'Selecciona un continente'" [disabled]="cargandoCatalogo || !!errorCatalogo" [options]="opcionesContinentes" [ngModel]="continenteId" (ngModelChange)="seleccionarContinente($event)"></app-tp-select-search>
+                @if (mostrarErrores && !continenteId) { <p class="experiencias-campo-error">Selecciona un continente.</p> }
+              </div>
+              <div><app-tp-select-search label="País" [required]="true" [placeholder]="!continenteId ? 'Elige primero un continente' : 'Selecciona un país'" [disabled]="!continenteId || cargandoCatalogo || !!errorCatalogo" [options]="opcionesPaises" [ngModel]="paisId" (ngModelChange)="seleccionarPais($event)"></app-tp-select-search>
+                @if (mostrarErrores && continenteId && !paisId) { <p class="experiencias-campo-error">Selecciona un país.</p> }
+              </div>
+            }
+            <div><app-tp-select-search [label]="ficha.hotel_id && !hotelTieneDestino ? 'Destino (este hotel no tiene uno asignado)' : 'Destino (si no elegiste hotel)'" [required]="!!ficha.hotel_id && !hotelTieneDestino" [placeholder]="!tipoDestino ? 'Elige primero el tipo de destino' : tipoDestino === 'INTERNACIONAL' && !paisId ? 'Elige primero el país' : cargandoCatalogo ? 'Cargando destinos…' : 'Selecciona un destino'" [disabled]="!tipoDestino || (tipoDestino === 'INTERNACIONAL' && !paisId) || cargandoCatalogo || !!errorCatalogo || (!!ficha.hotel_id && hotelTieneDestino)" [options]="opcionesDestinosPorTipo" [(ngModel)]="ficha.catalogo_destino_id"></app-tp-select-search>
+              @if (ficha.hotel_id && hotelTieneDestino) { <p class="experiencias-ayuda">Usaremos el destino del hotel elegido.</p> }
+              @if (mostrarErrores && tipoDestino && !ficha.catalogo_destino_id && (!ficha.hotel_id || !hotelTieneDestino)) { <p class="experiencias-campo-error">Selecciona un destino{{ ficha.hotel_id ? ' para este hotel.' : ' o un hotel.' }}</p> }
+            </div>
+            <app-tp-input label="Título de la promoción" placeholder="Escribe un nombre fácil de reconocer" [required]="true" [error]="mostrarErrores && !texto['nombre']?.trim() ? 'Escribe un nombre para continuar.' : ''" [(ngModel)]="texto['nombre']"></app-tp-input>
+            <app-tp-select-search label="Hotel (opcional)" [placeholder]="!tipoDestino ? 'Elige primero el tipo de destino' : tipoDestino === 'INTERNACIONAL' && !paisId ? 'Elige primero el país' : cargandoCatalogo ? 'Cargando hoteles…' : 'Selecciona un hotel'" [disabled]="!tipoDestino || (tipoDestino === 'INTERNACIONAL' && !paisId) || cargandoCatalogo || !!errorCatalogo" [options]="opcionesHoteles" [ngModel]="ficha.hotel_id" (ngModelChange)="seleccionarHotel($event)"></app-tp-select-search>
+            <app-tp-input class="experiencias-campos__full" label="Etiqueta de la oferta" placeholder="Ej. Oferta especial" [(ngModel)]="texto['etiqueta']"></app-tp-input>
+          </div>
+        } @else if (paso === 1) {
+          <div class="experiencias-campos">
+            <app-tp-input label="Precio promocional" type="number" [min]="0" [(ngModel)]="ficha.precio_promocional"></app-tp-input>
+            <app-tp-input label="Precio anterior" type="number" [min]="0" [(ngModel)]="ficha.precio_anterior"></app-tp-input>
+            <app-tp-input label="Descuento %" type="number" [min]="1" [max]="100" [(ngModel)]="ficha.descuento_porcentaje"></app-tp-input>
+            <app-tp-input label="Condiciones de la oferta" placeholder="Explica qué incluye y qué restricciones tiene" [multiline]="true" [rows]="3" [(ngModel)]="texto['condiciones']"></app-tp-input>
+            <p class="experiencias-ayuda experiencias-campos__full">Indica un precio promocional o un descuento. El precio anterior es opcional.</p>
+            <app-tp-input label="Moneda (ej. MXN) *" [maxLength]="3" [error]="mostrarErrores && !ficha.moneda ? 'Escribe una moneda de tres letras.' : ''" [(ngModel)]="ficha.moneda"></app-tp-input>
+          </div>
+        } @else if (paso === 2) {
+          <div class="experiencias-campos">
+            <app-tp-date-input label="Oferta vigente desde" [required]="true" [(ngModel)]="ficha.vigencia_desde"></app-tp-date-input>
+            <app-tp-date-input label="Oferta vigente hasta" [required]="true" [(ngModel)]="ficha.vigencia_hasta"></app-tp-date-input>
+            <app-tp-date-input label="Viaje desde" [required]="true" [(ngModel)]="ficha.viaje_desde"></app-tp-date-input>
+            <app-tp-date-input label="Viaje hasta" [required]="true" [(ngModel)]="ficha.viaje_hasta"></app-tp-date-input>
+            <div class="experiencias-campos__full">
+              <h3 class="experiencias-campo-titulo">Imagen de portada *</h3>
+              <label class="experiencias-archivo" [class.experiencias-archivo--disabled]="subiendoImagen"><mat-icon>upload_file</mat-icon>{{ subiendoImagen ? 'Subiendo imagen…' : 'Seleccionar imagen de portada' }}
+                <input type="file" accept="image/jpeg,image/png,image/webp" [disabled]="subiendoImagen" (change)="seleccionarArchivo($event, true)" />
+              </label>
+              <p class="experiencias-ayuda">JPG, PNG o WebP de hasta 10 MB.</p>
+              <details class="experiencias-enlace"><summary>O usar un enlace a una imagen</summary><app-tp-input label="URL HTTPS de la portada" placeholder="https://..." [(ngModel)]="ficha.imagen_principal"></app-tp-input></details>
+              @if (ficha.imagen_principal) { <img class="experiencias-portada" [src]="ficha.imagen_principal" alt="Vista previa de la portada" /> }
+              @if (mostrarErrores && !ficha.imagen_principal) { <p class="experiencias-campo-error">Agrega la imagen de portada.</p> }
+            </div>
+          </div>
+        } @else {
+          <div class="experiencias-resumen">
+            <div><span>Nombre</span><strong>{{ ficha.traducciones['es']?.['nombre'] || 'Sin nombre' }}</strong></div>
+            <div><span>{{ ficha.hotel_id ? 'Hotel' : 'Destino' }}</span><strong>{{ ubicacionResumen }}</strong></div>
+            <div><span>Precio promocional</span><strong>{{ ficha.precio_promocional ?? 'Sin precio' }} {{ ficha.moneda }}</strong></div>
+            <div><span>Imagen de portada</span><strong>{{ ficha.imagen_principal ? 'Agregada' : 'Pendiente' }}</strong></div>
+          </div>
+          <div class="experiencias-traducciones">
+            <div class="experiencias-traducciones__header"><div><h3>Textos y traducciones</h3><p>El español es la base. Para publicar, revisa los cinco idiomas.</p></div>
+              <button mat-stroked-button type="button" [disabled]="traduciendo" (click)="generarTraducciones()"><mat-icon class="mr-1.5 icon-size-4">{{ traduciendo ? 'sync' : 'translate' }}</mat-icon>{{ traduciendo ? 'Traduciendo…' : 'Traducir desde español' }}</button></div>
+            <div class="experiencias-idiomas" role="group" aria-label="Idioma de edición">@for (codigo of idiomas; track codigo) {
+              <button mat-stroked-button type="button" [color]="idioma === codigo ? 'primary' : undefined" [attr.aria-pressed]="idioma === codigo" (click)="idioma = codigo"><mat-icon class="mr-1.5 icon-size-4">language</mat-icon>{{ codigo.toUpperCase() }}</button>
+            }</div>
+            <div class="experiencias-campos experiencias-campos--textos">
+              <app-tp-input label="Título comercial *" [(ngModel)]="texto['nombre']"></app-tp-input>
+              <app-tp-input label="Etiqueta *" [(ngModel)]="texto['etiqueta']"></app-tp-input>
+              <app-tp-input class="experiencias-campos__full" label="Condiciones principales *" [multiline]="true" [rows]="3" [(ngModel)]="texto['condiciones']"></app-tp-input>
+            </div>
+          </div>
+          <p class="experiencias-ayuda">{{ ficha.publicada ? 'Guardar borrador retirará esta promoción del sitio público.' : 'Guardar borrador no mostrará esta promoción al público.' }} Publicar la mostrará cuando esté vigente.</p>
+        }
+        <div class="experiencias-editor__footer">
+          <div><button mat-stroked-button type="button" [disabled]="guardando || paso === 0" (click)="irAlPaso(paso - 1)"><mat-icon class="mr-1.5 icon-size-4">arrow_back</mat-icon>Anterior</button></div>
+          <div class="experiencias-editor__acciones">
+            @if (paso === 3) {
+              <button mat-stroked-button type="button" [disabled]="guardando || traduciendo || subiendoImagen" (click)="guardar(false)"><mat-icon class="mr-1.5 icon-size-4">{{ guardando ? 'sync' : 'save' }}</mat-icon>Guardar borrador</button>
+              <button mat-flat-button color="primary" type="button" [disabled]="guardando || traduciendo || subiendoImagen" (click)="guardar(true)"><mat-icon class="mr-1.5 icon-size-4">{{ guardando ? 'sync' : 'publish' }}</mat-icon>Publicar promoción</button>
+            } @else {
+              <button mat-flat-button color="primary" type="button" (click)="irAlPaso(paso + 1)"><mat-icon class="mr-1.5 icon-size-4">arrow_forward</mat-icon>Continuar</button>
+            }
+          </div>
+        </div>
+      </section>
+    }
+  }
+</main>

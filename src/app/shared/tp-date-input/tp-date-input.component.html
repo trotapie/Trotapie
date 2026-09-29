@@ -1,0 +1,32 @@
+<div class="tp-date-input" [class.tp-date-input--error]="error" [class.tp-date-input--disabled]="disabled">
+  @if (label) { <span class="tp-date-input__label" [id]="labelId" [class.tp-date-input__label--required]="required">{{ label }}</span> }
+  <button type="button" class="tp-date-input__field" [class.tp-date-input__field--empty]="!value"
+    [disabled]="disabled" [attr.aria-labelledby]="label ? labelId : null" [attr.aria-label]="label ? null : 'Seleccionar fecha'"
+    [matMenuTriggerFor]="calendar" #trigger="matMenuTrigger" (menuOpened)="showSelectedMonth()" (menuClosed)="markTouched()">
+    <span>{{ formattedValue }}</span><mat-icon aria-hidden="true">calendar_today</mat-icon>
+  </button>
+  @if (error) { <span class="tp-date-input__error" role="alert">{{ error }}</span> }
+</div>
+
+<mat-menu #calendar="matMenu" class="tp-date-input-menu" xPosition="after" yPosition="below">
+  <div class="tp-date-calendar" (click)="$event.stopPropagation()">
+    <div class="tp-date-calendar__header">
+      <button mat-icon-button type="button" aria-label="Mes anterior" (click)="moveMonth(-1)"><mat-icon>chevron_left</mat-icon></button>
+      <strong aria-live="polite">{{ monthLabel }}</strong>
+      <button mat-icon-button type="button" aria-label="Mes siguiente" (click)="moveMonth(1)"><mat-icon>chevron_right</mat-icon></button>
+    </div>
+    <div class="tp-date-calendar__grid" role="group" [attr.aria-label]="monthLabel">
+      @for (weekday of weekdays; track weekday) { <span class="tp-date-calendar__weekday">{{ weekday }}</span> }
+      @for (day of days; track day.key) {
+        <button type="button" class="tp-date-calendar__day" [class.tp-date-calendar__day--selected]="day.key === value"
+          [class.tp-date-calendar__day--today]="day.key === todayKey" [class.tp-date-calendar__day--outside]="!day.currentMonth"
+          [attr.aria-label]="day.number + ' de ' + monthLabel" [attr.aria-pressed]="day.key === value"
+          [disabled]="isUnavailable(day)" (click)="choose(day.key); trigger.closeMenu()">{{ day.number }}</button>
+      }
+    </div>
+    <div class="tp-date-calendar__footer">
+      <button mat-button type="button" [disabled]="!value" (click)="clear(); trigger.closeMenu()"><mat-icon class="mr-1.5 icon-size-4">backspace</mat-icon>Borrar</button>
+      <button mat-button type="button" [disabled]="(!!min && todayKey < min) || (!!max && todayKey > max)" (click)="choose(todayKey); trigger.closeMenu()"><mat-icon class="mr-1.5 icon-size-4">today</mat-icon>Hoy</button>
+    </div>
+  </div>
+</mat-menu>

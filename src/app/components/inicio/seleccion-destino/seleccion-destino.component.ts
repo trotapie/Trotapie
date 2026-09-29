@@ -14,6 +14,7 @@ import { FooterComponent } from 'app/footer/footer.component';
 import { DatosService } from 'app/components/hoteles/hoteles.service';
 import { Destinos, GrupoDestino, Hotel, IHoteles } from 'app/components/hoteles/hoteles.interface';
 import { IImagenesFondo } from './imagenes-fondo.interface';
+import { ExperienciasService, ExperienciaTipo, FichaExperiencia } from 'app/core/experiencias.service';
 
 @Component({
   selector: 'app-seleccion-destino',
@@ -28,6 +29,7 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
   private datosService = inject(DatosService);
   private supabase = inject(SupabaseService);
   private destinosService = inject(DestinosService);
+  private experienciasService = inject(ExperienciasService);
   private sanitizer = inject(DomSanitizer)
   private _translocoService = inject(TranslocoService);
   private changeDetector = inject(ChangeDetectorRef);
@@ -116,6 +118,9 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
   tiposTuristicos: TipoTuristicoCatalogo[] = [];
   selectedTipoTuristicoId: number | null = null;
   vistaDestinos: 'lista' | 'cards' = 'cards';
+  experiencias: FichaExperiencia[] = [];
+  cargandoExperiencias = false;
+  errorExperiencias = '';
   private languageChangesSubscription?: Subscription;
   constructor() {
   }
@@ -124,6 +129,7 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
     this.obtenerImagenesFondo();
     this.languageChangesSubscription = this._translocoService.langChanges$.subscribe((idioma) => {
       this.actualizarTextosImagenesFondo(idioma);
+      if (this.selectedTipoTuristicoId === -1 || this.selectedTipoTuristicoId === -2) void this.cargarExperiencias(idioma);
       if (this.overlayAnimatedOnce) {
         this.obtenerSoloDestinos(idioma, true);
       }
@@ -381,8 +387,23 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
     const experienciaVaciaVisible = this.selectedTipoTuristicoId === -1 || this.selectedTipoTuristicoId === -2;
     this.selectedTipoTuristicoId = this.selectedTipoTuristicoId === tipoId ? null : tipoId;
     this.filtrarDestinos();
+    if (this.selectedTipoTuristicoId === -1 || this.selectedTipoTuristicoId === -2) void this.cargarExperiencias();
     if (experienciaVaciaVisible && (tipoId === -1 || tipoId === -2) && this.selectedTipoTuristicoId !== null) {
       this.proximamenteTween?.restart();
     }
+  }
+
+  async cargarExperiencias(idioma = this._translocoService.getActiveLang()): Promise<void> {
+    const tipo: ExperienciaTipo = this.selectedTipoTuristicoId === -1 ? 'cabana' : 'promocion';
+    this.cargandoExperiencias = true; this.errorExperiencias = '';
+    try {
+      const fichas = await this.experienciasService.listar(tipo, idioma);
+      if ((tipo === 'cabana' ? -1 : -2) === this.selectedTipoTuristicoId) this.experiencias = fichas;
+    } catch (error: any) { this.errorExperiencias = error?.message ?? 'No se pudieron cargar las experiencias.'; }
+    finally { this.cargandoExperiencias = false; }
+  }
+
+  verExperiencia(ficha: FichaExperiencia): void {
+    void this.router.navigate(['/experiencias', ficha.tipo, ficha.id]);
   }
 }

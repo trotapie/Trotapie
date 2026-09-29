@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { AdminComponent } from './admin.component';
 import { CotizacionesComponent } from './cotizaciones/cotizaciones.component';
 import { ImagenesFondoComponent } from './imagenes-fondo/imagenes-fondo.component';
+import { experienciasPendingGuard } from './experiencias/experiencias-pending.guard';
 
 export default [
     {
@@ -16,6 +17,40 @@ export default [
     {
         path: 'hoteles',
         loadChildren: () => import('./hoteles/hoteles.routes'),
+    },
+    {
+        path: 'cabanas/nueva',
+        loadComponent: () => import('./cabanas/admin-cabanas.component').then(m => m.AdminCabanasComponent),
+        data: { roles: ['admin'], editor: true },
+        canDeactivate: [experienciasPendingGuard]
+    },
+    {
+        path: 'cabanas/editar/:id',
+        loadComponent: () => import('./cabanas/admin-cabanas.component').then(m => m.AdminCabanasComponent),
+        data: { roles: ['admin'], editor: true },
+        canDeactivate: [experienciasPendingGuard]
+    },
+    {
+        path: 'cabanas',
+        loadComponent: () => import('./cabanas/admin-cabanas.component').then(m => m.AdminCabanasComponent),
+        data: { roles: ['admin'] }
+    },
+    {
+        path: 'promociones/nueva',
+        loadComponent: () => import('./promociones/admin-promociones.component').then(m => m.AdminPromocionesComponent),
+        data: { roles: ['admin'], editor: true },
+        canDeactivate: [experienciasPendingGuard]
+    },
+    {
+        path: 'promociones/editar/:id',
+        loadComponent: () => import('./promociones/admin-promociones.component').then(m => m.AdminPromocionesComponent),
+        data: { roles: ['admin'], editor: true },
+        canDeactivate: [experienciasPendingGuard]
+    },
+    {
+        path: 'promociones',
+        loadComponent: () => import('./promociones/admin-promociones.component').then(m => m.AdminPromocionesComponent),
+        data: { roles: ['admin'] }
     },
     {
         path: 'catalogos',

@@ -48,7 +48,9 @@ export class TpSelectSearchComponent implements ControlValueAccessor {
 
   get opcionesFiltradas(): TpSelectSearchOption[] {
     const filtro = this.busqueda.trim().toLocaleLowerCase();
-    return filtro ? this.options.filter((option) => option.label.toLocaleLowerCase().includes(filtro)) : this.options;
+    return filtro ? this.options.filter((option) =>
+      option.label.toLocaleLowerCase().includes(filtro) || option.group?.toLocaleLowerCase().includes(filtro)
+    ) : this.options;
   }
 
   get textoSeleccion(): string {

@@ -1,0 +1,46 @@
+<div *transloco="let t" class="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
+  <main class="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-8">
+    <a routerLink="/inicio" class="inline-flex items-center gap-2 text-primary-700 dark:text-primary-300"><mat-icon aria-hidden="true">arrow_back</mat-icon>{{ t('volver-experiencias') }}</a>
+    @if (cargando) { <p class="rounded-2xl bg-white p-10 text-center dark:bg-gray-800" role="status">{{ t('cargando-experiencias') }}</p> }
+    @else if (!ficha) { <div role="alert" class="rounded-2xl bg-white p-10 text-center dark:bg-gray-800"><h1 class="text-2xl font-bold">{{ error }}</h1><button mat-stroked-button type="button" (click)="cargar()"><mat-icon class="mr-1.5 icon-size-4">refresh</mat-icon>{{ t('reintentar-experiencias') }}</button></div> }
+    @else {
+      <header><p class="font-semibold uppercase tracking-wider text-primary-600 dark:text-primary-300">{{ ficha.etiqueta || ficha.experiencia || (ficha.tipo === 'cabana' ? t('cabanas') : t('promociones')) }}</p>
+        <h1 class="mt-2 text-3xl font-bold sm:text-5xl">{{ ficha.nombre }}</h1><p class="mt-2 text-secondary"><mat-icon class="align-middle icon-size-5" aria-hidden="true">place</mat-icon> {{ ficha.zona || ficha.hotelNombre || ficha.destinoNombre }}</p></header>
+      <section [attr.aria-label]="t('galeria-experiencia')" class="space-y-3">
+        <img [src]="fotos[fotoActual]" [alt]="ficha.nombre + ' ' + (fotoActual + 1)" class="max-h-[32rem] w-full rounded-2xl bg-gray-200 object-cover" />
+        @if (fotos.length > 1) { <div class="flex gap-2 overflow-x-auto pb-2">@for (foto of fotos; track $index) {
+          <button type="button" class="shrink-0 rounded-lg focus-visible:outline-2 focus-visible:outline-primary" [attr.aria-label]="t('foto-experiencia', { numero: $index + 1 })" [attr.aria-pressed]="fotoActual === $index" (click)="fotoActual = $index"><img [src]="foto" alt="" loading="lazy" class="h-20 w-28 rounded-lg object-cover" [class.ring-2]="fotoActual === $index" /></button>
+        }</div> }
+      </section>
+      <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <div class="space-y-6">
+          @if (ficha.tipo === 'cabana') {
+            <p class="text-lg leading-relaxed">{{ ficha.descripcion }}</p>
+            <div class="grid gap-3 sm:grid-cols-2"><p><mat-icon class="mr-2 align-middle" aria-hidden="true">groups</mat-icon>{{ t('capacidad-experiencia') }}: {{ ficha.adultos_max }} {{ t('adultos-experiencia') }}, {{ ficha.ninos_max }} {{ t('ninos-experiencia') }}</p>
+              <p><mat-icon class="mr-2 align-middle" aria-hidden="true">bed</mat-icon>{{ ficha.habitaciones }} {{ t('habitaciones-experiencia') }} · {{ ficha.camas }}</p></div>
+            @if (ficha.amenidades.length) { <section><h2 class="text-xl font-bold">{{ t('amenidades-experiencia') }}</h2><ul class="mt-3 flex flex-wrap gap-2">@for (amenidad of ficha.amenidades; track amenidad) { <li class="rounded-full bg-emerald-50 px-3 py-2 text-sm text-emerald-900 dark:bg-emerald-900 dark:text-emerald-100">{{ amenidad }}</li> }</ul></section> }
+            @if (ficha.disponible_desde) { <p>{{ t('disponible-desde-experiencia') }}: {{ formatearFecha(ficha.disponible_desde) }} @if (ficha.disponible_hasta) { – {{ formatearFecha(ficha.disponible_hasta) }} }</p> }
+            @if (ficha.referencia_mapa) { <section><h2 class="text-xl font-bold">{{ t('ubicacion-experiencia') }}</h2><p class="mt-2">{{ ficha.referencia_mapa }}</p></section> }
+          } @else {
+            @if (ficha.hotelNombre) { <p>{{ t('hotel-experiencia') }}: {{ ficha.hotelNombre }}</p> }
+            @if (ficha.destinoNombre) { <p>{{ t('destino-experiencia') }}: {{ ficha.destinoNombre }}</p> }
+            <section><h2 class="text-xl font-bold">{{ t('condiciones-experiencia') }}</h2><p class="mt-2 whitespace-pre-line leading-relaxed">{{ ficha.condiciones }}</p></section>
+            <p>{{ t('vigencia-experiencia') }}: {{ formatearFecha(ficha.vigencia_desde) }} – {{ formatearFecha(ficha.vigencia_hasta) }}</p>
+            <p>{{ t('viaje-experiencia') }}: {{ formatearFecha(ficha.viaje_desde) }} – {{ formatearFecha(ficha.viaje_hasta) }}</p>
+          }
+        </div>
+        <aside class="h-fit space-y-4 rounded-2xl border bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+          @if (ficha.tipo === 'cabana') { <p class="text-2xl font-bold">{{ t('desde-experiencia') }} {{ ficha.precio_desde | currency:ficha.moneda:'symbol':'1.0-0' }} <span class="text-sm font-normal">/ {{ ficha.precio_por === 'noche' ? t('por-noche') : t('por-estancia') }} · {{ ficha.precio_personas }} {{ t('personas-experiencia') }}</span></p> }
+          @else { @if (ficha.precio_anterior !== null) { <p class="text-secondary line-through">{{ ficha.precio_anterior | currency:ficha.moneda:'symbol':'1.0-0' }}</p> }
+            @if (ficha.precio_promocional !== null) { <p class="text-2xl font-bold">{{ ficha.precio_promocional | currency:ficha.moneda:'symbol':'1.0-0' }}</p> }
+            @if (ficha.descuento_porcentaje) { <p class="font-semibold text-primary-700 dark:text-primary-300">{{ ficha.descuento_porcentaje }}% {{ t('descuento-experiencia') }}</p> } }
+          <label class="block text-sm font-semibold">{{ t('fecha-inicio-experiencia') }}<input type="date" class="mt-1 w-full rounded-lg border bg-transparent p-2 dark:border-gray-600" [(ngModel)]="desde" [min]="ficha.tipo === 'cabana' ? ficha.disponible_desde || undefined : ficha.viaje_desde" [max]="ficha.tipo === 'cabana' ? ficha.disponible_hasta || undefined : ficha.viaje_hasta" /></label>
+          <label class="block text-sm font-semibold">{{ t('fecha-fin-experiencia') }}<input type="date" class="mt-1 w-full rounded-lg border bg-transparent p-2 dark:border-gray-600" [(ngModel)]="hasta" [min]="desde || (ficha.tipo === 'cabana' ? ficha.disponible_desde || undefined : ficha.viaje_desde)" [max]="ficha.tipo === 'cabana' ? ficha.disponible_hasta || undefined : ficha.viaje_hasta" /></label>
+          <div class="grid grid-cols-2 gap-2"><app-tp-input [label]="t('adultos-experiencia')" type="number" [min]="1" [(ngModel)]="adultos"></app-tp-input><app-tp-input [label]="t('ninos-experiencia')" type="number" [min]="0" [(ngModel)]="ninos"></app-tp-input></div>
+          @if (error) { <p class="text-sm text-red-600 dark:text-red-300" role="alert">{{ error }}</p> }
+          <button mat-flat-button color="primary" type="button" class="w-full" (click)="cotizar()"><mat-icon class="mr-2 icon-size-5">chat</mat-icon>{{ t('cotizar-experiencia') }}</button>
+        </aside>
+      </div>
+    }
+  </main><app-footer />
+</div>

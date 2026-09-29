@@ -1,0 +1,28 @@
+:host { display: block; min-width: 0; }
+.tp-date-input__label { display: block; margin: 0 0 .45rem .2rem; color: var(--fuse-text-secondary); font-size: .72rem; font-weight: 700; letter-spacing: .02em; }
+.tp-date-input__label--required::after { margin-left: .2rem; color: #c2413d; content: '*'; }
+.tp-date-input__field { display: flex; width: 100%; min-height: 3.5rem; align-items: center; justify-content: space-between; gap: .75rem; padding: .75rem .9rem; border: 1px solid var(--fuse-border); border-radius: 1rem; background: var(--fuse-bg-card); color: var(--fuse-text-default); font: inherit; font-size: .875rem; text-align: left; transition: border-color .18s ease, box-shadow .18s ease; }
+.tp-date-input__field--empty span { color: var(--fuse-text-secondary); }
+.tp-date-input__field mat-icon { flex: 0 0 auto; width: 1.2rem; height: 1.2rem; font-size: 1.2rem; }
+.tp-date-input__field:hover:not(:disabled), .tp-date-input__field:focus { border-color: var(--primary, #00a67c); box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary, #00a67c) 20%, transparent); }
+.tp-date-input__field:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary, #00a67c) 35%, transparent); outline-offset: 2px; }
+.tp-date-input--error .tp-date-input__field { border-color: #c2413d; }
+.tp-date-input--disabled { opacity: .58; }
+.tp-date-input__error { display: block; padding: .3rem .2rem 0; color: #c2413d; font-size: .72rem; }
+
+::ng-deep .tp-date-input-menu { max-width: calc(100vw - 1.5rem) !important; border: 1px solid var(--fuse-border); border-radius: 1rem !important; background: var(--fuse-bg-card) !important; box-shadow: 0 16px 36px color-mix(in srgb, var(--fuse-text-default) 16%, transparent) !important; }
+::ng-deep .tp-date-input-menu .mat-mdc-menu-content { padding: 0 !important; }
+.tp-date-calendar { width: min(20rem, calc(100vw - 1.5rem)); padding: .75rem; color: var(--fuse-text-default); }
+.tp-date-calendar__header { display: flex; align-items: center; justify-content: space-between; gap: .25rem; padding-bottom: .75rem; }
+.tp-date-calendar__header strong { font-size: .875rem; text-align: center; text-transform: capitalize; }
+.tp-date-calendar__header button { color: var(--fuse-text-secondary); }
+.tp-date-calendar__grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .2rem; }
+.tp-date-calendar__weekday { padding: .35rem 0; color: var(--fuse-text-secondary); font-size: .72rem; font-weight: 700; text-align: center; }
+.tp-date-calendar__day { min-width: 0; aspect-ratio: 1; border: 1px solid transparent; border-radius: .65rem; background: transparent; color: var(--fuse-text-default); font: inherit; font-size: .8rem; cursor: pointer; }
+.tp-date-calendar__day:hover:not(:disabled) { background: color-mix(in srgb, var(--primary, #00a67c) 12%, var(--fuse-bg-card)); }
+.tp-date-calendar__day--today:not(.tp-date-calendar__day--selected) { border-color: var(--primary, #00a67c); }
+.tp-date-calendar__day--selected, .tp-date-calendar__day--selected:hover:not(:disabled) { background: var(--primary, #00a67c); color: #fff; font-weight: 700; }
+.tp-date-calendar__day--outside { opacity: .35; }
+.tp-date-calendar__day:disabled { cursor: default; }
+.tp-date-calendar__day:focus-visible { outline: 2px solid var(--primary, #00a67c); outline-offset: 1px; }
+.tp-date-calendar__footer { display: flex; justify-content: space-between; margin-top: .75rem; padding-top: .5rem; border-top: 1px solid var(--fuse-border); }

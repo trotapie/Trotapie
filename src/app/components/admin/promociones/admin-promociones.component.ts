@@ -1,0 +1,20 @@
+import { Component } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { MaterialModule } from 'app/shared/material.module';
+import { TpInputComponent } from 'app/shared/tp-input/tp-input.component';
+import { TpDateInputComponent } from 'app/shared/tp-date-input/tp-date-input.component';
+import { TpSelectSearchComponent } from 'app/shared/tp-select-search/tp-select-search.component';
+import { TpActionsMenuComponent } from 'app/shared/tp-actions-menu/tp-actions-menu.component';
+import { EstatusComponent } from 'app/shared/estatus/estatus.component';
+import { ExperienciasAdminBase } from '../experiencias/experiencias-admin.base';
+
+@Component({
+  selector: 'app-admin-promociones',
+  standalone: true,
+  imports: [FormsModule, MaterialModule, TpInputComponent, TpDateInputComponent, TpSelectSearchComponent, TpActionsMenuComponent, EstatusComponent],
+  templateUrl: './admin-promociones.component.html',
+  styleUrl: '../experiencias/admin-experiencias.component.scss'
+})
+export class AdminPromocionesComponent extends ExperienciasAdminBase {
+  override tipo = 'promocion' as const;
+}

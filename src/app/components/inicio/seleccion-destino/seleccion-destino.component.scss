@@ -494,6 +494,24 @@
   text-align: center;
 }
 
+.experience-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); gap: 1.25rem; margin-top: 1.5rem; }
+.experience-card { min-width: 0; overflow: hidden; border: 1px solid #dce7e1; border-radius: 1rem; background: #fff; color: #18332a; }
+.experience-cover { position: relative; display: block; width: 100%; padding: 0; border: 0; background: #dce7e1; text-align: left; }
+.experience-cover img { display: block; width: 100%; height: 13rem; object-fit: cover; transition: transform 300ms ease; }
+.experience-cover:hover img { transform: scale(1.025); }
+.experience-tag { position: absolute; bottom: 0.8rem; left: 0.8rem; max-width: calc(100% - 1.6rem); overflow: hidden; border-radius: 999px; background: #fff; padding: 0.35rem 0.75rem; color: #176a4b; font-size: 0.75rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.experience-card__body { display: grid; gap: 0.6rem; padding: 1.25rem; }
+.experience-card__body h2 { margin: 0; font-size: 1.3rem; font-weight: 750; line-height: 1.2; }
+.experience-place { display: flex; align-items: center; gap: 0.25rem; margin: 0; color: #52685b; font-size: 0.85rem; }
+.experience-place mat-icon { width: 1rem; height: 1rem; font-size: 1rem; }
+.experience-summary { display: -webkit-box; min-height: 2.6rem; overflow: hidden; color: #52685b; font-size: 0.86rem; line-height: 1.4; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.experience-card__bottom { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; border-top: 1px solid #dce7e1; padding-top: 0.9rem; }
+.experience-card__bottom strong { font-size: 1rem; }
+.experience-card__bottom small { font-size: 0.73rem; font-weight: 400; }
+.experience-card__bottom button { display: inline-flex; align-items: center; gap: 0.35rem; flex: 0 0 auto; border: 0; border-radius: 0.5rem; background: #176a4b; padding: 0.55rem; color: #fff; font-size: 0.8rem; font-weight: 700; }
+.experience-card__bottom mat-icon { width: 1rem; height: 1rem; font-size: 1rem; }
+@media (min-width: 850px) { .experience-grid--list { grid-template-columns: 1fr; } .experience-grid--list .experience-card { display: grid; grid-template-columns: 13rem 1fr; } .experience-grid--list .experience-cover img { height: 100%; min-height: 12rem; } }
+
 .catalog-state--coming-soon .coming-soon-icon {
   display: grid;
   width: 4rem;

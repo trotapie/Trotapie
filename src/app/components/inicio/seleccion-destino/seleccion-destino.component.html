@@ -191,7 +191,7 @@
                                  </div>
                              </div>
                             <div class="destination-view-panel">
-                                <span class="result-count">{{ t('cantidad-destinos', { cantidad: destinosFiltrados.length }) }}</span>
+                                 <span class="result-count">{{ selectedTipoTuristicoId === -1 || selectedTipoTuristicoId === -2 ? t('cantidad-experiencias', { cantidad: experiencias.length }) : t('cantidad-destinos', { cantidad: destinosFiltrados.length }) }}</span>
                                 <div class="destination-view-toggle" role="group" aria-label="Cambiar vista de destinos">
                                     <button type="button" [class.is-active]="vistaDestinos === 'lista'" [attr.aria-pressed]="vistaDestinos === 'lista'" (click)="cambiarVistaDestinos('lista')">
                                         <mat-icon aria-hidden="true" [svgIcon]="'heroicons_outline:list-bullet'"></mat-icon>
@@ -205,19 +205,39 @@
                             </div>
                          </div>
 
-                        @if (cargando) {
+                         @if (cargando && selectedTipoTuristicoId !== -1 && selectedTipoTuristicoId !== -2) {
                         <div class="catalog-state" aria-busy="true">{{ t('cargando-destinos') }}</div>
-                        } @else if (error) {
+                         } @else if (error && selectedTipoTuristicoId !== -1 && selectedTipoTuristicoId !== -2) {
                         <div class="catalog-state catalog-error" role="alert"><h2>{{ t('error-cargar-destinos') }}</h2><p>{{ t('revisa-conexion') }}</p></div>
-                         } @else if (selectedTipoTuristicoId === -1 || selectedTipoTuristicoId === -2) {
-                         <div #proximamente class="catalog-state catalog-state--coming-soon" role="status">
-                             <div class="coming-soon-icon" aria-hidden="true"><mat-icon>{{ selectedTipoTuristicoId === -1 ? 'cabin' : 'local_offer' }}</mat-icon></div>
-                             <div class="coming-soon-copy">
-                                 <span class="coming-soon-label">{{ selectedTipoTuristicoId === -1 ? t('cabanas') : t('promociones') }}</span>
-                                 <h2>{{ t('proximamente') }}</h2>
-                                 <p>{{ t('experiencia-proximamente') }}</p>
-                             </div>
-                         </div>
+                          } @else if (selectedTipoTuristicoId === -1 || selectedTipoTuristicoId === -2) {
+                            @if (cargandoExperiencias) { <div class="catalog-state" role="status">{{ t('cargando-experiencias') }}</div> }
+                            @else if (errorExperiencias) { <div class="catalog-state catalog-error" role="alert"><h2>{{ t('error-experiencias') }}</h2><p>{{ t('revisa-conexion') }}</p><button type="button" class="state-button" (click)="cargarExperiencias()"><mat-icon aria-hidden="true">refresh</mat-icon>{{ t('reintentar-experiencias') }}</button></div> }
+                            @else if (!experiencias.length) {
+                              <div class="catalog-state" role="status"><mat-icon aria-hidden="true">{{ selectedTipoTuristicoId === -1 ? 'cabin' : 'local_offer' }}</mat-icon><h2>{{ t('sin-experiencias') }}</h2><p>{{ t('sin-experiencias-ayuda') }}</p></div>
+                            } @else {
+                              <div class="experience-grid" [class.experience-grid--list]="vistaDestinos === 'lista'" aria-live="polite">
+                                @for (ficha of experiencias; track ficha.id) {
+                                  <article class="experience-card">
+                                    <button type="button" class="experience-cover" (click)="verExperiencia(ficha)" [attr.aria-label]="t('ver-experiencia', { nombre: ficha.nombre })">
+                                      <img [src]="ficha.imagen_principal" [alt]="ficha.nombre" loading="lazy" />
+                                      @if (ficha.etiqueta || ficha.experiencia) { <span class="experience-tag">{{ ficha.etiqueta || ficha.experiencia }}</span> }
+                                    </button>
+                                    <div class="experience-card__body">
+                                      <p class="experience-place"><mat-icon aria-hidden="true">place</mat-icon>{{ ficha.hotelNombre || ficha.zona || ficha.destinoNombre }}</p>
+                                      <h2>{{ ficha.nombre }}</h2>
+                                      @if (ficha.tipo === 'cabana') { <p class="experience-summary">{{ ficha.descripcion }}</p> }
+                                      @else { <p class="experience-summary">{{ ficha.condiciones }}</p> }
+                                      <div class="experience-card__bottom">
+                                        <strong>@if (ficha.tipo === 'cabana') { {{ t('desde-experiencia') }} {{ ficha.precio_desde | currency:ficha.moneda:'symbol':'1.0-0' }} <small>/ {{ ficha.precio_por === 'noche' ? t('por-noche') : t('por-estancia') }}</small> }
+                                          @else if (ficha.precio_promocional !== null) { {{ ficha.precio_promocional | currency:ficha.moneda:'symbol':'1.0-0' }} }
+                                          @else { {{ ficha.descuento_porcentaje }}% {{ t('descuento-experiencia') }} }</strong>
+                                        <button type="button" (click)="verExperiencia(ficha)"><mat-icon aria-hidden="true">arrow_forward</mat-icon>{{ t('ver-experiencia-cta') }}</button>
+                                      </div>
+                                    </div>
+                                  </article>
+                                }
+                              </div>
+                            }
                          } @else if (destinosFiltrados.length === 0) {
                          <div class="catalog-state" role="status"><mat-icon aria-hidden="true">travel_explore</mat-icon><h2>{{ t('destino-no-encontrado') }}</h2><p>{{ t('prueba-otra-busqueda') }}</p></div>
                         } @else {

@@ -38,6 +38,14 @@ export const compactNavigation: FuseNavigationItem[] = [
         link : '/admin/hoteles',
         meta : { permissions: ['hoteles.view'] }
     },
+    {
+        id: 'cabanas', title: 'Cabañas', type: 'basic', icon: 'heroicons_outline:home-modern',
+        link: '/admin/cabanas', meta: { roles: ['admin'] }
+    },
+    {
+        id: 'promociones', title: 'Promociones', type: 'basic', icon: 'heroicons_outline:tag',
+        link: '/admin/promociones', meta: { roles: ['admin'] }
+    },
     // {
     //     id   : 'circuitos',
     //     title: 'Circuitos',
