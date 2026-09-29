@@ -1,6 +1,6 @@
 import { Directive, HostListener, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ExperienciasService, ExperienciaTipo, FichaExperiencia, IDIOMAS_EXPERIENCIAS, IdiomaExperiencia } from 'app/core/experiencias.service';
+import { ExperienciasService, ExperienciaTipo, FichaExperiencia, IDIOMAS_EXPERIENCIAS } from 'app/core/experiencias.service';
 import { TraduccionesService } from 'app/core/traducciones.service';
 import { TpToastService } from 'app/shared/tp-toast/tp-toast.service';
 import { TpActionMenuItem } from 'app/shared/tp-actions-menu/tp-actions-menu.component';
@@ -41,7 +41,6 @@ export abstract class ExperienciasAdminBase implements OnInit {
     { value: 'NACIONAL', label: 'Nacional' },
     { value: 'INTERNACIONAL', label: 'Internacional' }
   ];
-  idioma: IdiomaExperiencia = 'es';
   destinos: Array<{ id: number; nombre: string; divisionAreaId: number; estado: string; pais: string; paisId: number; region: string; regionId: number; tipo: 'NACIONAL' | 'INTERNACIONAL'; activo: boolean }> = [];
   regionesInternacionales: Array<{ id: number; nombre: string }> = [];
   paisesInternacionales: Array<{ id: number; nombre: string }> = [];
@@ -144,7 +143,7 @@ export abstract class ExperienciasAdminBase implements OnInit {
 
   crear(): void {
     if (!this.modoEditor) { void this.router.navigateByUrl(`${this.rutaListado}/nueva`); return; }
-    this.ficha = fichaNueva(this.tipo); this.tipoDestino = null; this.continenteId = null; this.paisId = null; this.divisionAreaId = null; this.idioma = 'es'; this.imagenNueva = ''; this.paso = 0;
+    this.ficha = fichaNueva(this.tipo); this.tipoDestino = null; this.continenteId = null; this.paisId = null; this.divisionAreaId = null; this.imagenNueva = ''; this.paso = 0;
   }
   editar(ficha: FichaExperiencia): void {
     if (!this.modoEditor) { void this.router.navigateByUrl(`${this.rutaListado}/editar/${ficha.id}`); return; }
@@ -152,7 +151,7 @@ export abstract class ExperienciasAdminBase implements OnInit {
     for (const codigo of this.idiomas) this.ficha.traducciones[codigo] ??= {};
     this.divisionAreaId = null;
     this.inferirTipoDestino();
-    this.idioma = 'es'; this.imagenNueva = ''; this.paso = 0;
+    this.imagenNueva = ''; this.paso = 0;
   }
   private inferirTipoDestino(): void {
     if (!this.ficha) return;
@@ -276,7 +275,7 @@ export abstract class ExperienciasAdminBase implements OnInit {
   cerrar(): void { if (!this.guardando) void this.router.navigateByUrl(this.rutaListado); }
   get texto(): Record<string, string> {
     if (!this.ficha) return {};
-    return this.ficha.traducciones[this.idioma] ??= {};
+    return this.ficha.traducciones['es'] ??= {};
   }
   get opcionesDestinos() {
     return this.destinos.map((destino) => ({ value: destino.id, label: destino.nombre }));
@@ -376,28 +375,33 @@ export abstract class ExperienciasAdminBase implements OnInit {
     try { return new URL(value).protocol === 'https:'; } catch { return false; }
   }
 
-  async generarTraducciones(): Promise<void> {
+  private async generarTraducciones(): Promise<void> {
     if (!this.ficha) return;
-    const base = this.ficha.traducciones['es'];
-    if (!base?.['nombre']?.trim()) { this.error = 'Captura primero el nombre o título en español.'; return; }
-    this.traduciendo = true; this.error = '';
-    try {
-      const campos = this.tipo === 'cabana'
-        ? ['nombre', 'descripcion', 'camas', 'experiencia', 'zona', 'referencia_mapa']
-        : ['nombre', 'etiqueta', 'condiciones'];
-      for (const campo of campos) {
-        const valor = base[campo]?.trim();
-        if (!valor) continue;
-        const resultado = await this.traduccionesService.traducirDesdeEspanol({ title: valor, description: '' });
-        for (const codigo of this.idiomas.filter((i) => i !== 'es')) {
-          const traducido = resultado[codigo]?.title;
-          if (!traducido?.trim()) throw new Error(`Falta la traducción de ${campo} a ${codigo}.`);
-          (this.ficha.traducciones[codigo] ??= {})[campo] = traducido.trim();
-        }
+    const base = this.ficha.traducciones['es'] ?? {};
+    const traducciones = structuredClone(this.ficha.traducciones);
+    const destinos = this.idiomas.filter((codigo) => codigo !== 'es');
+    const campos = this.tipo === 'cabana'
+      ? ['nombre', 'descripcion', 'camas', 'experiencia', 'zona', 'referencia_mapa']
+      : ['nombre', 'etiqueta', 'condiciones'];
+    for (const campo of campos) {
+      const valor = base[campo]?.trim();
+      if (!valor) {
+        for (const codigo of destinos) (traducciones[codigo] ??= {})[campo] = '';
+        continue;
       }
-      this.toast.show({ title: 'Traducciones listas', message: 'Revísalas antes de publicar.', variant: 'success' });
-    } catch (error: any) { this.error = error?.message ?? 'No se pudieron generar las traducciones.'; }
-    finally { this.traduciendo = false; }
+      let resultado: Record<string, { title?: string }>;
+      try {
+        resultado = await this.traduccionesService.traducirDesdeEspanol({ title: valor, description: '' });
+      } catch {
+        throw new Error(`No se pudo traducir ${campo}. Vuelve a intentar guardar.`);
+      }
+      for (const codigo of destinos) {
+        const traducido = resultado[codigo]?.title;
+        if (!traducido?.trim()) throw new Error(`No se pudo traducir ${campo} a ${codigo.toUpperCase()}. Vuelve a intentar guardar.`);
+        (traducciones[codigo] ??= {})[campo] = traducido.trim();
+      }
+    }
+    this.ficha.traducciones = traducciones;
   }
 
   private validarPaso(paso: number, publicar: boolean): string {
@@ -436,18 +440,15 @@ export abstract class ExperienciasAdminBase implements OnInit {
       if (f.tipo === 'cabana') {
         if (this.imagenNueva.trim()) return 'Agrega la foto pendiente o borra su enlace antes de continuar.';
         if (f.imagenes.some((url) => !this.urlValida(url))) return 'Revisa las URLs de la galería.';
-        if (publicar && (f.imagenes.length < 5 || f.imagenes.length > 10)) return 'Para publicar, agrega entre 5 y 10 fotos a la galería.';
+        if (publicar && (f.imagenes.length < 5 || f.imagenes.length > 10)) return 'Para guardar, agrega entre 5 y 10 fotos a la galería.';
       } else if (!f.vigencia_desde || !f.vigencia_hasta || !f.viaje_desde || !f.viaje_hasta || f.vigencia_hasta < f.vigencia_desde || f.viaje_hasta < f.viaje_desde) {
         return 'Completa las fechas de vigencia y viaje en orden.';
       }
     }
     if (paso === 3) {
       const requeridos = f.tipo === 'cabana' ? ['nombre', 'descripcion', 'camas', 'experiencia', 'zona'] : ['nombre', 'etiqueta', 'condiciones'];
-      const idiomas = publicar ? this.idiomas : (['es'] as const);
-      for (const idioma of idiomas) {
-        const faltante = requeridos.find((campo) => !f.traducciones[idioma]?.[campo]?.trim());
-        if (faltante && (publicar || faltante === 'nombre')) { this.idioma = idioma; return `Completa ${faltante} en ${idioma.toUpperCase()} antes de ${publicar ? 'publicar' : 'guardar'}.`; }
-      }
+      const faltante = requeridos.find((campo) => !es[campo]?.trim());
+      if (faltante && (publicar || faltante === 'nombre')) return `Completa ${faltante} en español antes de guardar.`;
     }
     return '';
   }
@@ -464,22 +465,25 @@ export abstract class ExperienciasAdminBase implements OnInit {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  async guardar(publicar = false): Promise<void> {
+  async guardar(): Promise<void> {
     if (!this.ficha || this.guardando || this.subiendoImagen) return;
     for (let indice = 0; indice < 4; indice++) {
-      const error = this.validarPaso(indice, publicar);
+      const error = this.validarPaso(indice, true);
       if (error) { this.paso = indice; this.error = error; this.mostrarErrores = true; window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
     }
     this.guardando = true;
     this.error = '';
     try {
-      this.ficha.publicada = publicar;
+      this.traduciendo = true;
+      await this.generarTraducciones();
+      this.traduciendo = false;
+      this.ficha.publicada = true;
       await this.service.guardar(this.ficha);
-      this.toast.show({ title: this.tipo === 'cabana' ? 'Cabaña guardada' : 'Promoción guardada', message: publicar ? 'El contenido ya puede aparecer en el sitio público.' : 'Se guardó como borrador.', variant: 'success' });
+      this.toast.show({ title: this.tipo === 'cabana' ? 'Cabaña guardada' : 'Promoción guardada', message: 'Se tradujo el contenido y ya puede aparecer en el sitio público.', variant: 'success' });
       this.marcarGuardado();
       await this.router.navigateByUrl(this.rutaListado);
     } catch (error: any) { this.error = error?.message ?? `No se pudo guardar la ${this.tipo === 'cabana' ? 'cabaña' : 'promoción'}.`; }
-    finally { this.guardando = false; }
+    finally { this.traduciendo = false; this.guardando = false; }
   }
 
   acciones(ficha: FichaExperiencia): TpActionMenuItem[] {

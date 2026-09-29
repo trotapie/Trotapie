@@ -69,7 +69,7 @@
       <header class="experiencias-editor-header">
         <p class="experiencias-hero__eyebrow">{{ ficha.id ? 'Editar' : 'Nueva' }} {{ nombreSingular }}</p>
         <h1>{{ ficha.id ? 'Edita' : 'Crea' }} tu cabaña paso a paso</h1>
-        <p>Completa una parte a la vez. Los campos con * son necesarios para guardar; los textos en todos los idiomas y las fotos adicionales se revisan al publicar.</p>
+        <p>Completa una parte a la vez. Escribe los textos en español; se traducirán automáticamente al guardar. Necesitarás entre 5 y 10 fotos para guardar.</p>
       </header>
       <nav class="experiencias-steps" aria-label="Pasos para dar de alta">
         <ol>
@@ -81,7 +81,7 @@
       </nav>
       <section class="experiencias-editor" [attr.aria-label]="pasos[paso]">
         <div class="experiencias-editor__intro"><span>Paso {{ paso + 1 }} de 4</span><h2>{{ pasos[paso] }}</h2>
-          <p>{{ paso === 0 ? 'Cuéntanos qué estás ofreciendo y dónde se encuentra.' : paso === 1 ? 'Indica cuántas personas pueden hospedarse y cuánto cuesta.' : paso === 2 ? 'Elige una buena portada y agrega las fotos que mostrarás.' : 'Comprueba los datos y decide si deseas guardarlos o publicarlos.' }}</p>
+          <p>{{ paso === 0 ? 'Cuéntanos qué estás ofreciendo y dónde se encuentra.' : paso === 1 ? 'Indica cuántas personas pueden hospedarse y cuánto cuesta.' : paso === 2 ? 'Elige una buena portada y agrega las fotos que mostrarás.' : 'Comprueba los datos antes de guardar.' }}</p>
         </div>
         @if (error) { <div class="experiencias-error" role="alert"><mat-icon>error_outline</mat-icon><span>{{ error }}</span></div> }
 
@@ -132,7 +132,7 @@
             </div>
             <div class="experiencias-campos__full experiencias-galeria">
                 <h3>Galería <span>({{ ficha.imagenes.length }}/10 fotos)</span></h3>
-                <p class="experiencias-ayuda">Agrega entre 5 y 10 enlaces directos a fotos para publicar. Puedes completar la galería más adelante si guardas un borrador.</p>
+                 <p class="experiencias-ayuda">Agrega entre 5 y 10 enlaces directos a fotos para guardar la cabaña.</p>
                 <div class="experiencias-galeria__agregar"><app-tp-input label="URL HTTPS de la foto" placeholder="https://ejemplo.com/foto.jpg" [(ngModel)]="imagenNueva"></app-tp-input>
                   <button mat-stroked-button type="button" [disabled]="!imagenNueva.trim() || ficha.imagenes.length >= 10" (click)="agregarImagen()"><mat-icon class="mr-1.5 icon-size-4">add_photo_alternate</mat-icon>Agregar foto</button></div>
                 <div class="experiencias-fotos">@for (url of ficha.imagenes; track $index) {
@@ -154,11 +154,7 @@
             <div><span>Imagen de portada</span><strong>{{ ficha.imagen_principal ? 'Agregada' : 'Pendiente' }}</strong></div>
           </div>
           <div class="experiencias-traducciones">
-            <div class="experiencias-traducciones__header"><div><h3>Textos y traducciones</h3><p>El español es la base. Para publicar, revisa los cinco idiomas.</p></div>
-              <button mat-stroked-button type="button" [disabled]="traduciendo" (click)="generarTraducciones()"><mat-icon class="mr-1.5 icon-size-4">{{ traduciendo ? 'sync' : 'translate' }}</mat-icon>{{ traduciendo ? 'Traduciendo…' : 'Traducir desde español' }}</button></div>
-            <div class="experiencias-idiomas" role="group" aria-label="Idioma de edición">@for (codigo of idiomas; track codigo) {
-              <button mat-stroked-button type="button" [color]="idioma === codigo ? 'primary' : undefined" [attr.aria-pressed]="idioma === codigo" (click)="idioma = codigo"><mat-icon class="mr-1.5 icon-size-4">language</mat-icon>{{ codigo.toUpperCase() }}</button>
-            }</div>
+            <div class="experiencias-traducciones__header"><div><h3>Textos en español</h3><p>Al guardar se traducirán automáticamente al inglés, francés, alemán y portugués.</p></div></div>
             <div class="experiencias-campos experiencias-campos--textos">
               <app-tp-input label="Nombre *" [(ngModel)]="texto['nombre']"></app-tp-input>
               <app-tp-input label="Zona / ubicación *" [(ngModel)]="texto['zona']"></app-tp-input>
@@ -168,14 +164,13 @@
               <app-tp-input class="experiencias-campos__full" label="Descripción breve *" [multiline]="true" [rows]="3" [(ngModel)]="texto['descripcion']"></app-tp-input>
             </div>
           </div>
-          <p class="experiencias-ayuda">{{ ficha.publicada ? 'Guardar borrador retirará esta cabaña del sitio público.' : 'Guardar borrador no mostrará esta cabaña al público.' }} Publicar la mostrará cuando esté vigente.</p>
+          <p class="experiencias-ayuda">Al guardar, la cabaña quedará disponible en el sitio público cuando esté vigente.</p>
         }
         <div class="experiencias-editor__footer">
           <div><button mat-stroked-button type="button" [disabled]="guardando || paso === 0" (click)="irAlPaso(paso - 1)"><mat-icon class="mr-1.5 icon-size-4">arrow_back</mat-icon>Anterior</button></div>
           <div class="experiencias-editor__acciones">
             @if (paso === 3) {
-              <button mat-stroked-button type="button" [disabled]="guardando || traduciendo || subiendoImagen" (click)="guardar(false)"><mat-icon class="mr-1.5 icon-size-4">{{ guardando ? 'sync' : 'save' }}</mat-icon>Guardar borrador</button>
-              <button mat-flat-button color="primary" type="button" [disabled]="guardando || traduciendo || subiendoImagen" (click)="guardar(true)"><mat-icon class="mr-1.5 icon-size-4">{{ guardando ? 'sync' : 'publish' }}</mat-icon>Publicar cabaña</button>
+              <button mat-flat-button color="primary" type="button" [disabled]="guardando || subiendoImagen" (click)="guardar()"><mat-icon class="mr-1.5 icon-size-4">{{ guardando ? 'sync' : 'save' }}</mat-icon>{{ traduciendo ? 'Traduciendo…' : guardando ? 'Guardando…' : 'Guardar' }}</button>
             } @else {
               <button mat-flat-button color="primary" type="button" (click)="irAlPaso(paso + 1)"><mat-icon class="mr-1.5 icon-size-4">arrow_forward</mat-icon>Continuar</button>
             }
