@@ -8,6 +8,7 @@ import { TpInputComponent } from 'app/shared/tp-input/tp-input.component';
 import { TpSelectSearchComponent, TpSelectSearchOption } from 'app/shared/tp-select-search/tp-select-search.component';
 import { TpTextareaComponent } from 'app/shared/tp-textarea/tp-textarea.component';
 import { TpSelectDirective } from 'app/shared/directives/tp-select.directive';
+import { TpToastService } from 'app/shared/tp-toast/tp-toast.service';
 import { SupabaseService } from 'app/core/supabase.service';
 import { DestinosService, DestinoCatalogo, PaisCatalogo, RegionCatalogo } from 'app/core/destinos.service';
 import {
@@ -88,6 +89,8 @@ interface IImagenEditable {
 export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
   private static readonly ZOOM_VISTA_CERCANA = 17;
   private static readonly DRIVE_IMAGENES_ENDPOINT =
+    'https://script.google.com/macros/s/AKfycbzZlWKBZW4rYHYNEBkjA-9Ct2ibBrVGL4mauadvOAGE2avCS4dwjGKQQgvQUMOnEfQkyA/exec';
+  private static readonly DRIVE_IMAGENES_RESPALDO_ENDPOINT =
     'https://script.google.com/macros/s/AKfycbwLioRXwoAhPfZMrHnlTPBfkMEaitAHrrkqbd6PFZdX9NoxNpTuZMW0OpzPdISheiTT/exec';
   private static readonly DRIVE_FONDO_ENDPOINT =
     'https://script.google.com/macros/s/AKfycbxpFsRZUQ__79EVqF07MWc_-UgymAQPtVcoxhU8uQ5jxeIldPRP2fkd09r6yK76zqu-uA/exec';
@@ -98,6 +101,7 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly supabase = inject(SupabaseService);
   private readonly destinosService = inject(DestinosService);
   private readonly fb = inject(FormBuilder);
+  private readonly toast = inject(TpToastService);
   @ViewChild('ubicacionMapPreview') private ubicacionMapElement?: ElementRef<HTMLDivElement>;
   private ubicacionSub?: Subscription;
   private mapaUbicacion?: L.Map;
@@ -108,7 +112,18 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
   cargando = true;
   cargandoDestinos = false;
   guardando = false;
-  error = '';
+  private _error = '';
+
+  get error(): string {
+    return this._error;
+  }
+
+  set error(message: string) {
+    this._error = message;
+    if (message) {
+      this.toast.show({ title: 'No se pudo completar la acción', message, variant: 'error' }, 6500);
+    }
+  }
   mostrarModalExito = false;
   mensajeModalExito = 'Hotel actualizado correctamente.';
   mostrarModalCambiosPendientes = false;
@@ -790,6 +805,20 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async obtenerImagenesHotel(carpetaId: string, endpoint = EditarHotelComponent.DRIVE_IMAGENES_ENDPOINT): Promise<string[]> {
+    if (endpoint === EditarHotelComponent.DRIVE_IMAGENES_ENDPOINT) {
+      try {
+        const imagenes = await this.consultarImagenesHotelEnEndpoint(carpetaId, endpoint);
+        if (imagenes.length) return imagenes;
+      } catch {
+        // Si el script principal falla, se consulta el anterior como respaldo.
+      }
+      return this.consultarImagenesHotelEnEndpoint(carpetaId, EditarHotelComponent.DRIVE_IMAGENES_RESPALDO_ENDPOINT);
+    }
+
+    return this.consultarImagenesHotelEnEndpoint(carpetaId, endpoint);
+  }
+
+  private async consultarImagenesHotelEnEndpoint(carpetaId: string, endpoint: string): Promise<string[]> {
     const url = `${endpoint}?carpetaId=${encodeURIComponent(carpetaId)}`;
     const response = await fetch(url);
 
