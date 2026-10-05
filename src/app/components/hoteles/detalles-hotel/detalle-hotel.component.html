@@ -151,18 +151,16 @@
 
                     </mat-tab>
 
-                    @if (mostrarPlanTodoIncluido) {
-                    <mat-tab [aria-label]="t('hotel-plan-todo-incluido')">
+                    <mat-tab [aria-label]="hotel.regimen_principal || t('regimen')">
                         <ng-template mat-tab-label>
                             <mat-icon class="hotel-tab-icon" aria-hidden="true">restaurant</mat-icon>
-                            <span>{{ t('hotel-plan-todo-incluido') }}</span>
+                            <span>{{ hotel.regimen_principal || t('regimen') }}</span>
                         </ng-template>
                         <div class="hotel-tab-panel text-base leading-relaxed">
-                            <h3 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ t('hotel-plan-todo-incluido') }}</h3>
-                            <p class="mt-5 whitespace-pre-line text-gray-700 dark:text-gray-300">{{ hotel.plan_todo_incluido.descripcion }}</p>
+                            <h3 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ hotel.regimen_principal || t('regimen') }}</h3>
+                            <p class="mt-5 whitespace-pre-line text-gray-700 dark:text-gray-300">{{ hotel.plan_todo_incluido?.descripcion || t('sin-descripcion') }}</p>
                         </div>
                     </mat-tab>
-                    }
 
                 </mat-tab-group>
                 </div>

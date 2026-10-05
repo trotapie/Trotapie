@@ -3,6 +3,8 @@
 /*  @ Styles from this file will override 'vendors.scss' and Fuse's base styles.
 /* ----------------------------------------------------------------------------------------------------- */
 
+@use './admin-theme';
+
 @font-face {
     font-family: 'Arial';
     src: url('/assets/fonts/ARIAL.TTF') format('truetype');
@@ -104,6 +106,24 @@
     animation: tp-motion-glow 2.4s ease-in-out infinite;
 }
 
+@keyframes tp-motion-pulse {
+    0%,
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgb(20 112 82 / 35%);
+    }
+
+    50% {
+        transform: scale(1.045);
+        box-shadow: 0 0 0 12px rgb(20 112 82 / 0%);
+    }
+}
+
+.tp-motion-pulse {
+    animation: tp-motion-pulse 1.8s ease-in-out infinite;
+    transform-origin: center;
+}
+
 .tp-motion-dialog-backdrop {
     animation: tp-motion-fade-in var(--tp-motion-duration-medium) ease-out both;
 }
@@ -125,7 +145,8 @@
 
     .tp-motion-pop-in,
     .tp-motion-pop-out,
-    .tp-motion-glow {
+    .tp-motion-glow,
+    .tp-motion-pulse {
         animation: none !important;
     }
 }

@@ -118,19 +118,6 @@ export class DetalleHotelComponent {
     trackById = (_: number, item: any) => item.id;
     readonly panelOpenState = signal(false);
 
-    get mostrarPlanTodoIncluido(): boolean {
-        if (!this.hotel?.plan_todo_incluido || this.cargandoRegimenes) return false;
-
-        return this.hotel.regimenes.some((regimen) => {
-            const nombre = String(regimen.es || regimen.descripcion || '')
-                .normalize('NFD')
-                .replace(/[\u0300-\u036f]/g, '')
-                .trim()
-                .toLowerCase();
-            return /^(?:plan\s+)?todo\s+incluido$/.test(nombre);
-        });
-    }
-
     constructor(private sanitizer: DomSanitizer) {
         const nav = this.router.getCurrentNavigation();
         this.hotel = nav?.extras.state?.hotel;

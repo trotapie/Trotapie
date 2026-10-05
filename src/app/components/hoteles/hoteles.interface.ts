@@ -56,6 +56,7 @@ export interface IDetalleHotel {
     actividades: any[];
     destino: any;
     ubicacion_nombre?: string;
+    regimen_principal?: string;
     horarios?: HotelHorarios | null;
     plan_todo_incluido?: HotelPlanTodoIncluido | null;
 }

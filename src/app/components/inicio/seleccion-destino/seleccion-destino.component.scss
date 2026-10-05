@@ -337,7 +337,10 @@
   display: flex;
   gap: 0.4rem;
   overflow-x: auto;
-  padding: 0.15rem 0.1rem 0.45rem;
+  padding: 0.25rem;
+  border: 1px solid #b8ccc2;
+  border-radius: 0.8rem;
+  background: #fff;
   scrollbar-width: none;
 }
 
@@ -349,9 +352,9 @@
   min-height: 3.25rem;
   padding: 0.65rem 0.85rem;
   border: 1px solid transparent;
-  border-radius: 0.85rem;
+  border-radius: 0.55rem;
   background: transparent;
-  color: #63758a;
+  color: #176a4b;
   font-size: 0.9rem;
   font-weight: 700;
   text-align: center;
@@ -549,17 +552,16 @@
   .catalog-toolbar { margin-top: 1.5rem; padding: 0.85rem; border-radius: 0.85rem; }
   .category-heading { align-items: flex-start; }
   .category-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(calc((100% - 0.7rem) / 3), 1fr));
+    display: flex;
     gap: 0.35rem;
-    overflow: visible;
+    overflow-x: auto;
     margin-right: 0;
-    padding-right: 0;
+    padding: 0.25rem;
   }
   .category-list button {
-    width: 100%;
+    width: 8rem;
     min-width: 0;
-    flex-basis: auto;
+    flex: 0 0 8rem;
     padding-inline: 0.4rem;
     font-size: 0.78rem;
   }
