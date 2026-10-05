@@ -66,6 +66,10 @@ export class HotelesService {
         id,
         ubicacion,
         horarios,
+        regimen:regimen_id (
+          id,
+          traducciones:regimen_traducciones (idioma_id, descripcion)
+        ),
         catalogoDestino:catalogo_destinos!hoteles_catalogo_destino_id_fkey (
           nombre,
           division_area:divisiones_area!catalogo_destinos_division_area_id_fkey (
@@ -90,6 +94,9 @@ export class HotelesService {
     const traduccion = data.traducciones?.find((item: any) => item.idioma_id === idiomaId) ??
       data.traducciones?.find((item: any) => item.idioma_id === ES_ID);
     const catalogo = primerRegistro(data.catalogoDestino);
+    const regimenPrincipal = primerRegistro(data.regimen);
+    const regimenTraduccion = regimenPrincipal?.traducciones?.find((item: any) => item.idioma_id === idiomaId) ??
+      regimenPrincipal?.traducciones?.find((item: any) => item.idioma_id === ES_ID);
     const division = primerRegistro(catalogo?.division_area);
     const pais = primerRegistro(division?.pais);
     const ubicacionNombre = [
@@ -101,6 +108,7 @@ export class HotelesService {
     return {
       ...data,
       ubicacion_nombre: ubicacionNombre,
+      regimen_principal: regimenTraduccion?.descripcion ?? '',
       nombre_hotel: traduccion?.nombre_hotel ?? '',
       descripcion: traduccion?.descripcion ?? this.transloco.translate('sin-descripcion'),
       horarios: normalizarHorarios(data.horarios),
