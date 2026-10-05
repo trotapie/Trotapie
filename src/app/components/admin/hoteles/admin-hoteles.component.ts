@@ -7,6 +7,7 @@ import { SupabaseService } from 'app/core/supabase.service';
 import { DestinosService, PaisCatalogo } from 'app/core/destinos.service';
 import { MaterialModule } from 'app/shared/material.module';
 import { TpSelectSearchComponent, TpSelectSearchOption } from 'app/shared/tp-select-search/tp-select-search.component';
+import { TpActionsMenuComponent, TpActionMenuItem } from 'app/shared/tp-actions-menu/tp-actions-menu.component';
 
 interface IDestinoFiltro {
   id: number;
@@ -45,7 +46,7 @@ interface IHotelAdmin {
 @Component({
   selector: 'app-admin-hoteles',
   standalone: true,
-  imports: [FormsModule, MaterialModule, DragDropModule, TpSelectSearchComponent],
+  imports: [FormsModule, MaterialModule, DragDropModule, TpSelectSearchComponent, TpActionsMenuComponent],
   templateUrl: './admin-hoteles.component.html',
   styleUrl: './admin-hoteles.component.scss'
 })
@@ -345,6 +346,16 @@ export class AdminHotelesComponent implements OnInit {
     this.router.navigate(['/admin/hoteles/editar', hotel.id], {
       queryParams: this.obtenerQueryParamsContexto()
     });
+  }
+
+  readonly accionesHotel: TpActionMenuItem[] = [
+    { id: 'editar', label: 'Editar hotel', icon: 'heroicons_outline:pencil-square' },
+    { id: 'eliminar', label: 'Eliminar hotel', icon: 'heroicons_outline:trash', danger: true }
+  ];
+
+  ejecutarAccionHotel(accion: string, hotel: IHotelAdmin): void {
+    if (accion === 'editar') this.irAEdicion(hotel);
+    if (accion === 'eliminar') this.abrirModalConfirmarEliminarHotel(hotel);
   }
 
   irACreacion() {

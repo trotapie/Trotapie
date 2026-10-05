@@ -167,13 +167,12 @@
                 <th mat-header-cell *matHeaderCellDef>Acciones</th>
                 <td mat-cell *matCellDef="let item">
                     <div class="hoteles-acciones">
-                        <button mat-icon-button type="button" [attr.aria-label]="'Editar hotel ' + item.nombre_hotel" [matTooltip]="'Editar hotel'" (click)="irAEdicion(item)">
-                            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
-                        </button>
-
-                        <button mat-icon-button type="button" [attr.aria-label]="'Eliminar hotel ' + item.nombre_hotel" [matTooltip]="'Eliminar hotel'" (click)="abrirModalConfirmarEliminarHotel(item)">
-                            <mat-icon class="icon-size-5 text-red-600">delete_outline</mat-icon>
-                        </button>
+                        <app-tp-actions-menu
+                            [actions]="accionesHotel"
+                            [ariaLabel]="'Abrir acciones de ' + item.nombre_hotel"
+                            [tooltip]="'Acciones de ' + item.nombre_hotel"
+                            (actionSelected)="ejecutarAccionHotel($event, item)">
+                        </app-tp-actions-menu>
 
                         <button mat-icon-button type="button" aria-label="Reordenar hotel" [matTooltip]="'Arrastrar para reordenar'" cdkDragHandle>
                             <mat-icon class="cursor-move">drag_indicator</mat-icon>

@@ -16,6 +16,7 @@ import { TpInputComponent } from 'app/shared/tp-input/tp-input.component';
 import { TpTextareaComponent } from 'app/shared/tp-textarea/tp-textarea.component';
 import { TpSelectSearchComponent } from 'app/shared/tp-select-search/tp-select-search.component';
 import { TpToastService } from 'app/shared/tp-toast/tp-toast.service';
+import { TpActionsMenuComponent, TpActionMenuItem } from 'app/shared/tp-actions-menu/tp-actions-menu.component';
 import { BlockingLoaderComponent } from 'app/shared/blocking-loader/blocking-loader.component';
 import { backdropFade, modalScaleFade } from 'app/shared/animations';
 
@@ -52,7 +53,7 @@ interface CatalogoVistaConfig {
 @Component({
   selector: 'app-catalogo-placeholder',
   standalone: true,
-  imports: [CommonModule, FormsModule, A11yModule, MaterialModule, DragDropModule, EstatusComponent, CustomSwitchComponent, TpInputComponent, TpTextareaComponent, TpSelectSearchComponent, BlockingLoaderComponent],
+  imports: [CommonModule, FormsModule, A11yModule, MaterialModule, DragDropModule, EstatusComponent, CustomSwitchComponent, TpInputComponent, TpTextareaComponent, TpSelectSearchComponent, BlockingLoaderComponent, TpActionsMenuComponent],
   templateUrl: './catalogo-placeholder.component.html',
   styleUrl: './catalogo-placeholder.component.scss',
   animations: [modalScaleFade, backdropFade],
@@ -298,6 +299,9 @@ export class CatalogoPlaceholderComponent implements OnInit {
   traduccionesPoliticaPreview: Record<string, IPoliticaTraduccionPreview> = {};
   traduciendoPolitica = false;
   traduccionesAmenidadPreview: Record<string, { descripcion: string }> = {};
+  traduccionesRegimen: Array<{ codigo: string; nombre: string; descripcion: string }> = [];
+  cargandoTraduccionesRegimen = false;
+  errorTraduccionesRegimen = '';
   traduciendoAmenidad = false;
   traduccionesDescuentoPreview: Record<string, IDescuentoTraduccionPreview> = {};
   traduciendoDescuento = false;
@@ -414,6 +418,23 @@ export class CatalogoPlaceholderComponent implements OnInit {
     return this.catalogoKey === 'actividades';
   }
 
+  get esCatalogoRegimenHotel(): boolean {
+    return this.catalogoKey === 'regimen_hotel';
+  }
+
+  get accionesRegistro(): TpActionMenuItem[] {
+    const etiquetaEditar = this.esCatalogoAmenidades ? 'Editar amenidad' : this.tituloModalEdicion;
+    return [
+      { id: 'editar', label: etiquetaEditar, icon: 'heroicons_outline:pencil-square' },
+      ...(this.puedeEliminarRegistro ? [{ id: 'eliminar', label: etiquetaEditar.replace('Editar', 'Eliminar'), icon: 'heroicons_outline:trash', danger: true, disabled: this.eliminandoRegistro }] : [])
+    ];
+  }
+
+  ejecutarAccionRegistro(accion: string, item: any): void {
+    if (accion === 'editar') void this.iniciarEdicion(item);
+    if (accion === 'eliminar') this.abrirModalEliminar(item);
+  }
+
   get esCatalogoTarifas(): boolean {
     return this.catalogoKey === 'tarifas';
   }
@@ -428,6 +449,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
   get puedeCrearRegistro(): boolean {
     return (
+      this.esCatalogoRegimenHotel ||
       this.catalogoKey === 'actividades' ||
       this.catalogoKey === 'conceptos' ||
        this.catalogoKey === 'tratamientos' ||
@@ -451,6 +473,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
   get usaModalEdicion(): boolean {
     return (
+      this.esCatalogoRegimenHotel ||
       this.catalogoKey === 'actividades' ||
       this.catalogoKey === 'conceptos' ||
        this.catalogoKey === 'tratamientos' ||
@@ -472,6 +495,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
   get puedeEliminarRegistro(): boolean {
     return (
+      this.esCatalogoRegimenHotel ||
       this.catalogoKey === 'actividades' ||
       this.catalogoKey === 'conceptos' ||
        this.catalogoKey === 'tratamientos' ||
@@ -673,6 +697,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   get tituloModalCrear(): string {
+    if (this.esCatalogoRegimenHotel) return 'Nuevo régimen de hotel';
     if (this.esCatalogoTiposTuristicos) return 'Nuevo tipo turístico';
     if (this.esCatalogoEstatus) {
       return 'Nuevo estatus';
@@ -730,6 +755,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   get descripcionModalCrear(): string {
+    if (this.esCatalogoRegimenHotel) return 'Escribe la descripción en español del nuevo régimen.';
     if (this.esCatalogoTiposTuristicos) return 'Captura el nombre y el estatus del nuevo tipo turístico.';
     if (this.esCatalogoEstatus) {
       return 'Captura la clave, el nombre y el estatus del nuevo registro.';
@@ -789,6 +815,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   get tituloModalEdicion(): string {
+    if (this.esCatalogoRegimenHotel) return 'Editar régimen de hotel';
     if (this.esCatalogoTiposTuristicos) return 'Editar tipo turístico';
     if (this.esCatalogoEstatus) {
       return 'Editar estatus';
@@ -848,6 +875,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   get descripcionModalEdicion(): string {
+    if (this.esCatalogoRegimenHotel) return 'Actualiza la descripción en español de este régimen.';
     if (this.esCatalogoTiposTuristicos) return 'Actualiza el nombre y el estatus del tipo turístico.';
     if (this.esCatalogoEstatus) {
       return 'Actualiza la clave, el nombre y el estatus del registro.';
@@ -907,6 +935,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   get textoBotonCrear(): string {
+    if (this.esCatalogoRegimenHotel) return 'Nuevo régimen';
     if (this.esCatalogoTiposTuristicos) return 'Nuevo tipo turístico';
     if (this.esCatalogoEstatus) {
       return 'Nuevo estatus';
@@ -966,6 +995,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   get textoBotonConfirmarCrear(): string {
+    if (this.esCatalogoRegimenHotel) return 'Crear régimen';
     if (this.esCatalogoTiposTuristicos) return 'Crear tipo turístico';
     if (this.esCatalogoEstatus) {
       return 'Crear estatus';
@@ -1025,6 +1055,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   get mensajeExitoEdicion(): string {
+    if (this.esCatalogoRegimenHotel) return 'Régimen de hotel guardado correctamente.';
     if (this.esCatalogoTiposTuristicos) return 'Tipo turístico guardado correctamente.';
     if (this.esCatalogoEstatus) {
       return 'Estatus guardado correctamente.';
@@ -1079,6 +1110,7 @@ export class CatalogoPlaceholderComponent implements OnInit {
   }
 
   get mensajeExitoCreacion(): string {
+    if (this.esCatalogoRegimenHotel) return 'Régimen de hotel creado correctamente.';
     if (this.esCatalogoTiposTuristicos) return 'Tipo turístico creado correctamente.';
     if (this.esCatalogoEstatus) {
       return 'Estatus creado correctamente.';
@@ -1381,6 +1413,25 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
     if (this.usaModalEdicion) {
       this.modalEdicionAbierto = true;
+      if (this.esCatalogoRegimenHotel) void this.cargarTraduccionesRegimen();
+    }
+  }
+
+  async cargarTraduccionesRegimen(): Promise<void> {
+    const regimenId = this.editingId;
+    if (regimenId === null) return;
+    this.cargandoTraduccionesRegimen = true;
+    this.errorTraduccionesRegimen = '';
+    try {
+      const traducciones = await this.catalogosAdmin.obtenerTraduccionesRegimenHotel(regimenId);
+      if (this.editingId === regimenId && this.modalEdicionAbierto) this.traduccionesRegimen = traducciones;
+    } catch (error: any) {
+      if (this.editingId === regimenId && this.modalEdicionAbierto) {
+        this.errorTraduccionesRegimen = error?.message ?? 'No se pudieron cargar las traducciones.';
+        this.toast.show({ title: 'No se pudieron cargar las traducciones', message: this.errorTraduccionesRegimen, variant: 'error' }, 6000);
+      }
+    } finally {
+      if (this.editingId === regimenId) this.cargandoTraduccionesRegimen = false;
     }
   }
 
@@ -1393,6 +1444,9 @@ export class CatalogoPlaceholderComponent implements OnInit {
   cerrarModalEdicion() {
     this.errorModalEdicion = '';
     this.modalEdicionAbierto = false;
+    this.traduccionesRegimen = [];
+    this.errorTraduccionesRegimen = '';
+    this.cargandoTraduccionesRegimen = false;
     this.cancelarEdicion();
     this.limpiarVistaPreviaPolitica();
     this.limpiarVistaPreviaAmenidad();
@@ -1703,7 +1757,16 @@ export class CatalogoPlaceholderComponent implements OnInit {
     this.errorModalEdicion = '';
 
     try {
-      if (this.esCatalogoEstatus && !this.esCatalogoTiposTuristicos) {
+      if (this.esCatalogoRegimenHotel) {
+        const descripcion = String(this.editingDraft['descripcion'] ?? '').trim();
+        if (!descripcion) {
+          this.toast.show({ title: 'Datos incompletos', message: 'La descripción del régimen es obligatoria.', variant: 'error' });
+          this.guardandoEdicion = false;
+          return;
+        }
+        await this.catalogosAdmin.actualizarCatalogoAdmin(this.catalogoKey, this.editingId, { descripcion });
+        this.items = this.items.map((item) => Number(item.id) === this.editingId ? { ...item, descripcion } : item);
+      } else if (this.esCatalogoEstatus && !this.esCatalogoTiposTuristicos) {
         const clave = String(this.editingDraft['clave'] ?? '').trim().toLowerCase();
         const nombre = String(this.editingDraft['nombre'] ?? '').trim();
         const estatusOriginal = this.items.find((item) => Number(item.id) === this.editingId);
@@ -2127,7 +2190,11 @@ export class CatalogoPlaceholderComponent implements OnInit {
       this.cerrarModalEdicion();
       this.mostrarModalExitoConMensaje(this.mensajeExitoEdicion);
     } catch (error: any) {
-      this.errorModalEdicion = error?.message ?? 'No se pudo guardar la edicion.';
+      if (this.esCatalogoRegimenHotel) {
+        this.toast.show({ title: 'No se pudo guardar el régimen', message: error?.message ?? 'Inténtalo de nuevo.', variant: 'error' }, 6000);
+      } else {
+        this.errorModalEdicion = error?.message ?? 'No se pudo guardar la edicion.';
+      }
       this.guardandoEdicion = false;
     }
   }
@@ -2343,7 +2410,9 @@ export class CatalogoPlaceholderComponent implements OnInit {
     } catch (error: any) {
       this.toast.show({
         title: 'No se pudo eliminar',
-        message: error?.message ?? 'No se pudo eliminar el registro.',
+        message: this.esCatalogoRegimenHotel && error?.code === '23503'
+          ? 'Este régimen sigue asociado a otros registros. No se eliminó ni se desvinculó ningún hotel.'
+          : error?.message ?? 'No se pudo eliminar el registro.',
         variant: 'error'
       });
       this.eliminandoRegistro = false;
@@ -2378,7 +2447,15 @@ export class CatalogoPlaceholderComponent implements OnInit {
 
     try {
       let atraccionCreadaId: number | null = null;
-      if (this.esCatalogoTiposTuristicos) {
+      if (this.esCatalogoRegimenHotel) {
+        const descripcion = String(this.nuevoRegistroDraft['descripcion'] ?? '').trim();
+        if (!descripcion) {
+          this.toast.show({ title: 'Datos incompletos', message: 'La descripción del régimen es obligatoria.', variant: 'error' });
+          this.guardandoCreacion = false;
+          return;
+        }
+        await this.catalogosAdmin.crearCatalogoAdmin(this.catalogoKey, { descripcion });
+      } else if (this.esCatalogoTiposTuristicos) {
         const nombre = String(this.nuevoRegistroDraft['nombre'] ?? '').trim();
 
         if (!nombre) {
@@ -2672,7 +2749,11 @@ export class CatalogoPlaceholderComponent implements OnInit {
       }
       this.mostrarModalExitoConMensaje(this.mensajeExitoCreacion);
     } catch (error: any) {
-      this.errorModalCreacion = error?.message ?? 'No se pudo crear el registro.';
+      if (this.esCatalogoRegimenHotel) {
+        this.toast.show({ title: 'No se pudo crear el régimen', message: error?.message ?? 'Inténtalo de nuevo.', variant: 'error' }, 6000);
+      } else {
+        this.errorModalCreacion = error?.message ?? 'No se pudo crear el registro.';
+      }
       this.guardandoCreacion = false;
     }
   }

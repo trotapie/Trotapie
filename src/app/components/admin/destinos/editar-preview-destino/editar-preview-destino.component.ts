@@ -16,6 +16,7 @@ import { TpInputComponent } from 'app/shared/tp-input/tp-input.component';
 import { TpSelectSearchComponent, TpSelectSearchOption } from 'app/shared/tp-select-search/tp-select-search.component';
 import { TpToastService } from 'app/shared/tp-toast/tp-toast.service';
 import { EstatusComponent } from 'app/shared/estatus/estatus.component';
+import { TpActionsMenuComponent, TpActionMenuItem } from 'app/shared/tp-actions-menu/tp-actions-menu.component';
 import {
   DriveImageAssignment,
   DriveImageAssignmentDialogComponent,
@@ -30,7 +31,7 @@ interface ILangConfig {
 @Component({
   selector: 'app-editar-preview-destino',
   standalone: true,
-  imports: [MaterialModule, DragDropModule, BlockingLoaderComponent, TpInputComponent, TpSelectSearchComponent, DriveImageAssignmentDialogComponent, EstatusComponent],
+  imports: [MaterialModule, DragDropModule, BlockingLoaderComponent, TpInputComponent, TpSelectSearchComponent, DriveImageAssignmentDialogComponent, EstatusComponent, TpActionsMenuComponent],
   templateUrl: './editar-preview-destino.component.html',
   styleUrl: './editar-preview-destino.component.scss'
 })
@@ -166,6 +167,42 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
 
         return !busqueda || this.normalizarTextoFiltro(nombre).includes(busqueda);
       });
+  }
+
+  accionesDatoRapido(index: number): TpActionMenuItem[] {
+    const activo = Boolean(this.detallesRapidosArray.at(index)?.get('activo')?.value);
+    const ocupado = this.cambiandoActivoDatoRapidoId !== null || this.eliminandoDatoRapidoId !== null;
+    return [
+      { id: 'editar', label: 'Editar dato rápido', icon: 'heroicons_outline:pencil-square', disabled: ocupado },
+      { id: 'estado', label: activo ? 'Desactivar dato rápido' : 'Activar dato rápido', icon: activo ? 'heroicons_outline:eye-slash' : 'heroicons_outline:eye', disabled: ocupado },
+      { id: 'eliminar', label: 'Eliminar dato rápido', icon: 'heroicons_outline:trash', danger: true, disabled: ocupado }
+    ];
+  }
+
+  ejecutarAccionDatoRapido(accion: string, index: number): void {
+    switch (accion) {
+      case 'editar': this.abrirModalEditarDatoRapido(index); break;
+      case 'estado': void this.alternarActivoDatoRapido(index); break;
+      case 'eliminar': this.abrirModalConfirmarEliminarDatoRapido(index); break;
+    }
+  }
+
+  accionesActividad(index: number): TpActionMenuItem[] {
+    const activo = Boolean(this.actividadesArray.at(index)?.get('activo')?.value);
+    const ocupado = this.cambiandoActivoActividadId !== null || this.eliminandoActividadIndex !== null;
+    return [
+      { id: 'editar', label: 'Editar atracción', icon: 'heroicons_outline:pencil-square', disabled: ocupado },
+      { id: 'estado', label: activo ? 'Desactivar atracción' : 'Activar atracción', icon: activo ? 'heroicons_outline:eye-slash' : 'heroicons_outline:eye', disabled: ocupado },
+      { id: 'eliminar', label: 'Eliminar atracción', icon: 'heroicons_outline:trash', danger: true, disabled: ocupado }
+    ];
+  }
+
+  ejecutarAccionActividad(accion: string, index: number): void {
+    switch (accion) {
+      case 'editar': this.abrirPantallaEditarActividad(index); break;
+      case 'estado': void this.alternarActivoActividad(index); break;
+      case 'eliminar': this.abrirModalConfirmarEliminarActividad(index); break;
+    }
   }
 
   get destinosImportacionDrive(): DriveImageAssignmentTarget[] {

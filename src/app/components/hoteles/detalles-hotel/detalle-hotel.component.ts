@@ -25,6 +25,7 @@ type Room = { adults: number; children: number; childAges: (number | null)[] };
     selector: 'detalle-hotel',
     standalone: true,
     templateUrl: './detalle-hotel.component.html',
+    styleUrl: './detalle-hotel.component.scss',
     imports: [MaterialModule, MapaComponent, TranslocoModule, FooterComponent, ImagenesCarruselComponent, BotCotizadorComponent
         //  QRCodeComponent, 
     ],
@@ -62,7 +63,6 @@ export class DetalleHotelComponent {
     intervalId: any;
     mesActual = new Date();
     verMasDescripcion = false;
-    informacionEstanciaExpandida = true;
     dateFilter = (date: Date | null): boolean => {
         if (!date) return false;
 
@@ -117,6 +117,19 @@ export class DetalleHotelComponent {
     selectedTipoId: number = 0;
     trackById = (_: number, item: any) => item.id;
     readonly panelOpenState = signal(false);
+
+    get mostrarPlanTodoIncluido(): boolean {
+        if (!this.hotel?.plan_todo_incluido || this.cargandoRegimenes) return false;
+
+        return this.hotel.regimenes.some((regimen) => {
+            const nombre = String(regimen.es || regimen.descripcion || '')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .trim()
+                .toLowerCase();
+            return /^(?:plan\s+)?todo\s+incluido$/.test(nombre);
+        });
+    }
 
     constructor(private sanitizer: DomSanitizer) {
         const nav = this.router.getCurrentNavigation();
@@ -187,8 +200,11 @@ export class DetalleHotelComponent {
         try {
             const actividades = await this.supabase.infoHotelAmenidades(id, idioma);
             if (version !== this.cargaVersion || !this.hotel) return;
-            this.hotel.actividades = actividades;
-            this.descripcionLista = actividades;
+            const amenidadesOrdenadas = [...actividades].sort((a, b) =>
+                a.descripcion.replace(/[^\p{L}]/gu, '').length - b.descripcion.replace(/[^\p{L}]/gu, '').length
+            );
+            this.hotel.actividades = amenidadesOrdenadas;
+            this.descripcionLista = amenidadesOrdenadas;
         } catch {
             if (version === this.cargaVersion) this.descripcionLista = [];
         } finally {

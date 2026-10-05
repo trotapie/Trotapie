@@ -10,8 +10,9 @@ import { TpSearchInputComponent } from 'app/shared/tp-search-input/tp-search-inp
 import { TpSelectSearchComponent, TpSelectSearchOption } from 'app/shared/tp-select-search/tp-select-search.component';
 import { ResumenCatalogoDestinosComponent } from '../resumen-catalogo-destinos/resumen-catalogo-destinos.component';
 import { TpToastService } from 'app/shared/tp-toast/tp-toast.service';
+import { TpActionsMenuComponent, TpActionMenuItem } from 'app/shared/tp-actions-menu/tp-actions-menu.component';
 
-@Component({ selector: 'app-destinos', standalone: true, imports: [MaterialModule, FormsModule, TpMultiselectComponent, TpSearchInputComponent, TpSelectSearchComponent], templateUrl: './destinos.component.html', styleUrl: './destinos.component.scss' })
+@Component({ selector: 'app-destinos', standalone: true, imports: [MaterialModule, FormsModule, TpMultiselectComponent, TpSearchInputComponent, TpSelectSearchComponent, TpActionsMenuComponent], templateUrl: './destinos.component.html', styleUrl: './destinos.component.scss' })
 export class DestinosComponent implements OnInit {
   private readonly destinosService = inject(DestinosService);
   private readonly route = inject(ActivatedRoute);
@@ -50,6 +51,25 @@ export class DestinosComponent implements OnInit {
   administrarTiposTuristicos() { return this.router.navigate(['/admin/catalogos/tipos-turisticos']); }
   editarPreview(destino: DestinoCatalogoNavegable) { return this.router.navigate(['/admin/destinos/configurar-destinos/preview', destino.destinoId], { queryParams: this.obtenerQueryParamsFiltros() }); }
   verHoteles(destino: DestinoCatalogoNavegable) { return this.router.navigate(['/admin/hoteles'], { queryParams: { catalogoDestinoId: destino.destinoId, divisionAreaId: destino.divisionAreaId, tipo: destino.tipo } }); }
+  accionesDestino(destino: DestinoCatalogoNavegable): TpActionMenuItem[] {
+    return [
+      { id: 'editar', label: 'Editar destino', icon: 'heroicons_outline:pencil' },
+      { id: 'preview', label: 'Configurar preview', icon: 'heroicons_outline:pencil-square' },
+      { id: 'hoteles', label: 'Ver hoteles', icon: 'heroicons_outline:building-office-2' },
+      destino.activo
+        ? { id: 'desactivar', label: 'Desactivar destino', icon: 'heroicons_outline:no-symbol', danger: true, disabled: this.activandoDestinoId !== null }
+        : { id: 'activar', label: 'Activar destino', icon: 'heroicons_outline:check-circle', disabled: this.activandoDestinoId !== null }
+    ];
+  }
+  ejecutarAccionDestino(accion: string, destino: DestinoCatalogoNavegable): void {
+    switch (accion) {
+      case 'editar': void this.editarDestino(destino); break;
+      case 'preview': void this.editarPreview(destino); break;
+      case 'hoteles': void this.verHoteles(destino); break;
+      case 'activar': void this.activarDestino(destino); break;
+      case 'desactivar': void this.desactivarDestino(destino); break;
+    }
+  }
   async activarDestino(destino: DestinoCatalogoNavegable) {
     if (destino.activo || this.activandoDestinoId !== null) return;
     this.activandoDestinoId = destino.destinoId;

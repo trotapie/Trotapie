@@ -14,6 +14,11 @@ Cuando se pidan mejoras de UI/UX, debes mantener la logica existente y aplicar u
 - Mantiene separadas la logica de negocio, el estado de vista y el estilo.
 - Si un cambio visual exige tocar TS, hazlo solo lo necesario y valida que no altere el flujo actual.
 
+### Componentes reutilizables
+- Para toda funcionalidad o interfaz nueva, revisa primero los componentes compartidos existentes y usa los que correspondan en lugar de crear controles o patrones duplicados.
+- Aplica esta regla a formularios, botones, menus de acciones, notificaciones, modales y demas elementos visuales o funcionales reutilizables.
+- Si falta una capacidad, extiende el componente compartido de forma compatible con sus usos actuales antes de implementar una variante local. Crea un componente nuevo solo cuando no exista uno adecuado.
+
 ### Tailwind CSS
 - Usa Tailwind cuando el componente ya lo use o cuando acelere una mejora visual sin duplicar estilos.
 - Evita clases sueltas que generen inconsistencias visuales entre pantallas.

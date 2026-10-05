@@ -44,6 +44,8 @@ export interface Destinos {
     continente?: any;
 }
 
+import { HotelHorarios, HotelPlanTodoIncluido } from './hotel-estancia.interface';
+
 export interface IDetalleHotel {
     id: number;
     nombre_hotel: string;
@@ -53,6 +55,9 @@ export interface IDetalleHotel {
     regimenes: any[],
     actividades: any[];
     destino: any;
+    ubicacion_nombre?: string;
+    horarios?: HotelHorarios | null;
+    plan_todo_incluido?: HotelPlanTodoIncluido | null;
 }
 
 export interface Imagenes {

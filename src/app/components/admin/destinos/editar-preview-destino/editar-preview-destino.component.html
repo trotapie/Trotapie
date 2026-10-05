@@ -193,22 +193,12 @@
                     <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">{{ detalle.get('nombre')?.value }}</td>
                     <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ getControlDetalleRapido(i, 'es')?.value || 'Sin valor' }}</td>
                     <td class="px-4 py-3">
-                      <span [class]="detalle.get('activo')?.value ? 'rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' : 'rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-300'">
-                        {{ detalle.get('activo')?.value ? 'Activo' : 'Inactivo' }}
-                      </span>
+                       <app-status-badge [status]="detalle.get('activo')?.value ? 'ACTIVO' : 'INACTIVO'"></app-status-badge>
                     </td>
                     <td class="px-4 py-3">
-                      <div class="flex justify-end gap-1">
-                        <button mat-icon-button type="button" aria-label="Editar dato rápido" [matTooltip]="'Editar dato rápido'" [disabled]="eliminandoDatoRapidoId === detalle.get('id')?.value" (click)="abrirModalEditarDatoRapido(i)">
-                          <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
-                        </button>
-                        <button mat-icon-button type="button" [attr.aria-label]="detalle.get('activo')?.value ? 'Desactivar dato rápido' : 'Activar dato rápido'" [matTooltip]="detalle.get('activo')?.value ? 'Desactivar dato rápido' : 'Activar dato rápido'" [disabled]="cambiandoActivoDatoRapidoId !== null || eliminandoDatoRapidoId !== null" (click)="alternarActivoDatoRapido(i)">
-                          <mat-icon class="icon-size-5" [svgIcon]="detalle.get('activo')?.value ? 'heroicons_outline:eye-slash' : 'heroicons_outline:eye'"></mat-icon>
-                        </button>
-                        <button mat-icon-button color="warn" type="button" aria-label="Eliminar dato rápido" [matTooltip]="'Eliminar dato rápido'" [disabled]="cambiandoActivoDatoRapidoId !== null || eliminandoDatoRapidoId !== null" (click)="abrirModalConfirmarEliminarDatoRapido(i)">
-                          <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
-                        </button>
-                      </div>
+                       <div class="flex justify-end">
+                         <app-tp-actions-menu [actions]="accionesDatoRapido(i)" [ariaLabel]="'Acciones de ' + detalle.get('nombre')?.value" (actionSelected)="ejecutarAccionDatoRapido($event, i)"></app-tp-actions-menu>
+                       </div>
                     </td>
                   </tr>
                 } @empty {
@@ -225,17 +215,9 @@
                 <div class="min-w-0 flex-1">
                   <p class="font-medium text-gray-800 dark:text-gray-100">{{ detalle.get('nombre')?.value }}</p>
                   <p class="mt-0.5 truncate text-sm text-gray-500 dark:text-gray-400">{{ getControlDetalleRapido(i, 'es')?.value || 'Sin valor en español' }}</p>
-                  <p class="mt-1 text-xs font-semibold" [class.text-emerald-600]="detalle.get('activo')?.value" [class.text-gray-500]="!detalle.get('activo')?.value">{{ detalle.get('activo')?.value ? 'Activo' : 'Inactivo' }}</p>
-                </div>
-                <button mat-icon-button type="button" aria-label="Editar dato rápido" [disabled]="cambiandoActivoDatoRapidoId !== null || eliminandoDatoRapidoId !== null" (click)="abrirModalEditarDatoRapido(i)">
-                  <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
-                </button>
-                <button mat-icon-button type="button" [attr.aria-label]="detalle.get('activo')?.value ? 'Desactivar dato rápido' : 'Activar dato rápido'" [disabled]="cambiandoActivoDatoRapidoId !== null || eliminandoDatoRapidoId !== null" (click)="alternarActivoDatoRapido(i)">
-                  <mat-icon class="icon-size-5" [svgIcon]="detalle.get('activo')?.value ? 'heroicons_outline:eye-slash' : 'heroicons_outline:eye'"></mat-icon>
-                </button>
-                <button mat-icon-button color="warn" type="button" aria-label="Eliminar dato rápido" [disabled]="cambiandoActivoDatoRapidoId !== null || eliminandoDatoRapidoId !== null" (click)="abrirModalConfirmarEliminarDatoRapido(i)">
-                  <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
-                </button>
+                   <div class="mt-1"><app-status-badge [status]="detalle.get('activo')?.value ? 'ACTIVO' : 'INACTIVO'"></app-status-badge></div>
+                 </div>
+                 <app-tp-actions-menu [actions]="accionesDatoRapido(i)" [ariaLabel]="'Acciones de ' + detalle.get('nombre')?.value" (actionSelected)="ejecutarAccionDatoRapido($event, i)"></app-tp-actions-menu>
               </article>
             } @empty {
               <div class="rounded-xl border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">No hay datos rápidos configurados.</div>
@@ -344,22 +326,7 @@
                         <button mat-icon-button type="button" cdkDragHandle aria-label="Arrastrar para reordenar" matTooltip="Arrastrar para reordenar" class="cursor-grab active:cursor-grabbing">
                           <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:bars-3'"></mat-icon>
                         </button>
-                        <button mat-icon-button type="button" aria-label="Editar actividad" [matTooltip]="'Editar actividad'" (click)="abrirPantallaEditarActividad(fila.formIndex)">
-                          <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
-                        </button>
-                        <button mat-icon-button type="button" [attr.aria-label]="fila.control.get('activo')?.value ? 'Desactivar atracción' : 'Activar atracción'" [matTooltip]="fila.control.get('activo')?.value ? 'Ocultar de la ficha pública' : 'Mostrar en la ficha pública'" [disabled]="cambiandoActivoActividadId !== null || eliminandoActividadIndex !== null" (click)="alternarActivoActividad(fila.formIndex)">
-                          <mat-icon class="icon-size-5" [svgIcon]="fila.control.get('activo')?.value ? 'heroicons_outline:eye-slash' : 'heroicons_outline:eye'"></mat-icon>
-                        </button>
-                        <button
-                          mat-icon-button
-                          type="button"
-                          aria-label="Eliminar actividad"
-                          [matTooltip]="'Eliminar actividad'"
-                          [disabled]="eliminandoActividadIndex === fila.formIndex"
-                          (click)="abrirModalConfirmarEliminarActividad(fila.formIndex)"
-                        >
-                          <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
-                        </button>
+                         <app-tp-actions-menu [actions]="accionesActividad(fila.formIndex)" [ariaLabel]="'Acciones de ' + obtenerNombreTipoActividad(fila.control)" (actionSelected)="ejecutarAccionActividad($event, fila.formIndex)"></app-tp-actions-menu>
                       </div>
                     </td>
                   </tr>
@@ -391,14 +358,12 @@
                     <p class="truncate font-semibold text-gray-800 dark:text-gray-100">{{ obtenerNombreTipoActividad(fila.control) }}</p>
                     <div class="mt-2 flex items-center gap-2 text-xs">
                       <span class="text-gray-500 dark:text-gray-400">{{ getImagenesActivasActividad(fila.formIndex).length }} imágenes activas</span>
-                      <span [class]="fila.control.get('activo')?.value ? 'font-semibold text-emerald-600' : 'font-semibold text-gray-500'">{{ fila.control.get('activo')?.value ? 'Activa' : 'Inactiva' }}</span>
+                       <app-status-badge [status]="fila.control.get('activo')?.value ? 'ACTIVO' : 'INACTIVO'"></app-status-badge>
                     </div>
                   </div>
                 </div>
-                <div class="flex border-t border-gray-100 dark:border-gray-800">
-                  <button type="button" class="flex-1 px-4 py-3 text-sm font-semibold text-primary" (click)="abrirPantallaEditarActividad(fila.formIndex)">Editar</button>
-                  <button type="button" class="border-l border-gray-100 px-4 py-3 text-sm font-semibold text-gray-600 dark:border-gray-800 dark:text-gray-300" [disabled]="cambiandoActivoActividadId !== null || eliminandoActividadIndex !== null" (click)="alternarActivoActividad(fila.formIndex)">{{ fila.control.get('activo')?.value ? 'Ocultar' : 'Activar' }}</button>
-                  <button type="button" class="border-l border-gray-100 px-4 py-3 text-sm font-semibold text-red-600 dark:border-gray-800 dark:text-red-400" [disabled]="eliminandoActividadIndex === fila.formIndex" (click)="abrirModalConfirmarEliminarActividad(fila.formIndex)">Eliminar</button>
+                 <div class="flex justify-end border-t border-gray-100 px-3 py-1 dark:border-gray-800">
+                   <app-tp-actions-menu [actions]="accionesActividad(fila.formIndex)" [ariaLabel]="'Acciones de ' + obtenerNombreTipoActividad(fila.control)" (actionSelected)="ejecutarAccionActividad($event, fila.formIndex)"></app-tp-actions-menu>
                 </div>
               </article>
             } @empty {

@@ -31,7 +31,7 @@
           }
         } @else { <p class="tp-select-search__empty">{{ emptyMessage }}</p> }
       </div>
-      @if (valorSeleccionado !== null) {
+      @if (showClear && valorSeleccionado !== null) {
         <button type="button" class="tp-select-search__clear" (click)="limpiar()">Limpiar selección</button>
       }
     </section>

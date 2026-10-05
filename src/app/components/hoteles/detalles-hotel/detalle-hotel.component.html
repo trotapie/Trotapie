@@ -5,8 +5,18 @@
         <div *ngIf="mostrarInfo" class="flex min-w-0 flex-auto flex-col m-6">
             <div class="sticky top-0 z-50  md:flex md:items-center md:justify-between w-full py-2 px-2 md:px-4 transition-all duration-300 backdrop-blur-md"
                 [ngClass]="{'bg-transparent': !scrolled, 'bg-white dark:bg-gray-900 shadow-md': scrolled }">
-                <div class="text-3xl font-semibold leading-tight">
-                    {{hotel.nombre_hotel}}
+                <div>
+                    <div class="text-3xl font-semibold leading-tight">
+                        {{hotel.nombre_hotel}}
+                    </div>
+                    @if (hotel.ubicacion_nombre) {
+                    <div class="mt-1">
+                        <div class="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
+                            <mat-icon class="icon-size-4 text-rose-500" [svgIcon]="'heroicons_solid:map-pin'"></mat-icon>
+                            <span>{{ hotel.ubicacion_nombre }}</span>
+                        </div>
+                    </div>
+                    }
                 </div>
                 <div class="flex items-center gap-6 my-2">
                     <button mat-raised-button color="warn"
@@ -28,23 +38,60 @@
                 [errorCorrectionLevel]="'M'">
                 </qrcode> -->
             <fuse-card class="filter-article flex w-full flex-col p-1">
-                <div class="flex items-start justify-between gap-4 px-4 pt-5 sm:px-6">
-                    <div>
-                        <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">{{ t('detalles-hotel') }}</h2>
-                        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{{ t('detalles-hotel-descripcion') }}</p>
+                <div class="hotel-intro mx-3 mt-3 sm:mx-5 sm:mt-5">
+                    <div class="hotel-intro-content">
+                        <div class="hotel-intro-action">
+                            <h2 class="hotel-intro-title">{{ t('informacion-del-hotel') }}</h2>
+                            <span class="hotel-intro-badge">{{ t('descubre-mas') }}</span>
+                        </div>
+                        <p class="hotel-intro-message">{{ t('hotel-cuidamos-detalles') }}</p>
                     </div>
-                    <button mat-icon-button type="button" class="mt-0.5 shrink-0" (click)="informacionEstanciaExpandida = !informacionEstanciaExpandida"
-                        [attr.aria-expanded]="informacionEstanciaExpandida" aria-controls="informacion-estancia"
-                        [attr.aria-label]="informacionEstanciaExpandida ? t('ocultar-detalles-hotel') : t('mostrar-detalles-hotel')">
-                        <mat-icon [svgIcon]="informacionEstanciaExpandida ? 'heroicons_outline:chevron-up' : 'heroicons_outline:chevron-down'"></mat-icon>
-                    </button>
                 </div>
 
-                @if (informacionEstanciaExpandida) {
                 <div id="informacion-estancia" class="mt-3 min-w-0 overflow-hidden">
-                <mat-tab-group class="hotel-tabs sm:px-2" mat-stretch-tabs="false" [animationDuration]="'0'">
-                    <mat-tab [label]="t('descripcion')">
-                        <div class="mt-4 text-base leading-relaxed whitespace-pre-line">
+                <mat-tab-group class="hotel-tabs sm:px-2" mat-stretch-tabs="true" [animationDuration]="'0'">
+                    @if (hotel.horarios) {
+                    <mat-tab aria-label="Check-in / Horarios">
+                        <ng-template mat-tab-label>
+                            <mat-icon class="hotel-tab-icon" [svgIcon]="'heroicons_outline:clock'"></mat-icon>
+                            <span>{{ t('hotel-horarios') }}</span>
+                        </ng-template>
+                        <div class="hotel-tab-panel">
+                            <h3 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ t('hotel-horarios') }}</h3>
+
+                            <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                                @if (hotel.horarios.check_in_desde || hotel.horarios.check_in_hasta) {
+                                <article class="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 dark:border-slate-700 dark:bg-slate-800/50">
+                                    <h4 class="font-semibold text-gray-900 dark:text-gray-100">Check-in</h4>
+                                    <p class="mt-2 text-2xl font-bold text-primary">{{ hotel.horarios.check_in_desde || '' }}{{ hotel.horarios.check_in_desde && hotel.horarios.check_in_hasta ? ' – ' : '' }}{{ hotel.horarios.check_in_hasta || '' }}</p>
+                                </article>
+                                }
+                                @if (hotel.horarios.check_out) {
+                                <article class="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 dark:border-slate-700 dark:bg-slate-800/50">
+                                    <h4 class="font-semibold text-gray-900 dark:text-gray-100">Check-out</h4>
+                                    <p class="mt-2 text-2xl font-bold text-primary">{{ hotel.horarios.check_out }}</p>
+                                </article>
+                                }
+                                @if (hotel.horarios.desayuno_desde || hotel.horarios.desayuno_hasta) {
+                                <article class="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 dark:border-slate-700 dark:bg-slate-800/50">
+                                    <h4 class="font-semibold text-gray-900 dark:text-gray-100">{{ t('hotel-desayuno') }}</h4>
+                                    <p class="mt-2 text-2xl font-bold text-primary">{{ hotel.horarios.desayuno_desde || '' }}{{ hotel.horarios.desayuno_desde && hotel.horarios.desayuno_hasta ? ' – ' : '' }}{{ hotel.horarios.desayuno_hasta || '' }}</p>
+                                </article>
+                                }
+                            </div>
+                        </div>
+                    </mat-tab>
+                    }
+
+                    <mat-tab [aria-label]="t('descripcion')">
+                        <ng-template mat-tab-label>
+                            <mat-icon class="hotel-tab-icon" [svgIcon]="'heroicons_outline:document-text'"></mat-icon>
+                            <span>{{ t('descripcion') }}</span>
+                        </ng-template>
+                        <div class="hotel-tab-panel text-base leading-relaxed whitespace-pre-line">
+                            <div class="mb-5">
+                                <h3 class="text-2xl font-semibold leading-tight text-gray-900 dark:text-gray-100">{{ t('conoce-un-poco-mas') }}</h3>
+                            </div>
                             <div [class.line-clamp-6]="!verMasDescripcion" class="transition-all duration-300">
                                 {{ descripcionParrafo }}
                             </div>
@@ -58,11 +105,17 @@
 
                                 {{ verMasDescripcion ? t('ver-menos') : t('ver-mas') }}
                             </span>
+
                         </div>
                     </mat-tab>
 
 
-                    <mat-tab [label]="t('amenidades')">
+                    <mat-tab [aria-label]="t('amenidades')">
+                        <ng-template mat-tab-label>
+                            <mat-icon class="hotel-tab-icon" [svgIcon]="'heroicons_outline:star'"></mat-icon>
+                            <span>{{ t('amenidades') }}</span>
+                        </ng-template>
+                        <div class="hotel-tab-panel">
                         <ng-container *ngIf="cargandoAmenidades; else amenidadesCargadas">
                             <div class="grid grid-cols-1 gap-4 p-2 sm:grid-cols-2 md:grid-cols-3" aria-label="Cargando amenidades" aria-busy="true">
                                 <div *ngFor="let item of [1, 2, 3, 4, 5, 6]" class="h-5 animate-pulse rounded bg-slate-200 dark:bg-slate-700"></div>
@@ -94,12 +147,26 @@
                             </p>
                         </ng-template>
 
+                        </div>
+
                     </mat-tab>
+
+                    @if (mostrarPlanTodoIncluido) {
+                    <mat-tab [aria-label]="t('hotel-plan-todo-incluido')">
+                        <ng-template mat-tab-label>
+                            <mat-icon class="hotel-tab-icon" aria-hidden="true">restaurant</mat-icon>
+                            <span>{{ t('hotel-plan-todo-incluido') }}</span>
+                        </ng-template>
+                        <div class="hotel-tab-panel text-base leading-relaxed">
+                            <h3 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ t('hotel-plan-todo-incluido') }}</h3>
+                            <p class="mt-5 whitespace-pre-line text-gray-700 dark:text-gray-300">{{ hotel.plan_todo_incluido.descripcion }}</p>
+                        </div>
+                    </mat-tab>
+                    }
 
                 </mat-tab-group>
                 </div>
-                }
-                <div class="flex flex-col gap-2 px-4 pb-2 pt-5 sm:flex-row sm:flex-wrap sm:px-6">
+                <div class="flex flex-col gap-2 px-4 pb-2 pt-0.5 sm:flex-row sm:flex-wrap sm:px-6">
                     <button mat-raised-button color="primary" class="w-full text-white sm:w-auto" (click)="abrirUbicacion()">
                         <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:map-pin'"></mat-icon>
                         {{t('ubicacion')}}

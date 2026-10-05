@@ -8,6 +8,7 @@ import { TranslocoService } from '@jsverse/transloco';
 import { Observable } from 'rxjs';
 import { ISolicitudCotizacionListado } from 'app/interface/solicitudes-cotizacion.interface';
 import { construirNombreClienteVisible } from './cliente-nombre.util';
+import type { HotelHorarios, HotelPlanTodoIncluido } from 'app/components/hoteles/hotel-estancia.interface';
 
 const ES_ID = 1;
 const CODIGOS_IDIOMA_PREVIEW = ['es', 'en', 'pt', 'de', 'fr'] as const;
@@ -1047,6 +1048,7 @@ export class SupabaseService {
       .select(`
     id,
     ubicacion,
+    horarios,
     fondo,
     estrellas,
     orden,
@@ -1064,7 +1066,8 @@ export class SupabaseService {
     traducciones:hotel_traducciones!hotel_traducciones_hotel_id_fkey (
       idioma_id,
       nombre_hotel,
-      descripcion
+      descripcion,
+      plan_todo_incluido
     ),
 
     imagenes:imagenes_hoteles!imagenes_hoteles_hotel_id_fkey (
@@ -4852,6 +4855,7 @@ export class SupabaseService {
     regimen_ids: number[];
     actividad_ids: number[];
     room_type_ids?: number[];
+    horarios?: HotelHorarios | null;
     imagenes: Array<{
       id?: number | null;
       url_imagen: string;
@@ -4862,6 +4866,7 @@ export class SupabaseService {
       idioma_id: number;
       nombre_hotel: string;
       descripcion: string | null;
+      plan_todo_incluido?: HotelPlanTodoIncluido | null;
     }>;
   }) {
     return this.guardarHotelDetalleAdminRpc(null, payload);
@@ -4882,6 +4887,7 @@ export class SupabaseService {
     regimen_ids: number[];
     actividad_ids: number[];
     room_type_ids?: number[];
+    horarios?: HotelHorarios | null;
     imagenes: Array<{
       id?: number | null;
       url_imagen: string;
@@ -4892,6 +4898,7 @@ export class SupabaseService {
       idioma_id: number;
       nombre_hotel: string;
       descripcion: string | null;
+      plan_todo_incluido?: HotelPlanTodoIncluido | null;
     }>;
   }) {
     const hotelId = Number(payload.hotelId);
@@ -4917,6 +4924,7 @@ export class SupabaseService {
       regimen_ids: number[];
       actividad_ids: number[];
       room_type_ids?: number[];
+      horarios?: HotelHorarios | null;
       imagenes: Array<{
         id?: number | null;
         url_imagen: string;
@@ -4927,6 +4935,7 @@ export class SupabaseService {
         idioma_id: number;
         nombre_hotel: string;
         descripcion: string | null;
+        plan_todo_incluido?: HotelPlanTodoIncluido | null;
       }>;
     }
   ): Promise<number> {
@@ -4978,14 +4987,16 @@ export class SupabaseService {
           {
             idioma_id: ES_ID,
             nombre_hotel: payload.nombre_hotel,
-            descripcion: payload.descripcion
+            descripcion: payload.descripcion,
+            plan_todo_incluido: null
           }
         ]
     )
       .map((item) => ({
         idioma_id: Number(item.idioma_id),
         nombre_hotel: (item.nombre_hotel ?? '').trim(),
-        descripcion: item.descripcion
+        descripcion: item.descripcion,
+        plan_todo_incluido: item.plan_todo_incluido ?? null
       }))
       .filter((item) => Number.isFinite(item.idioma_id) && item.idioma_id > 0 && item.nombre_hotel.length > 0);
 
@@ -5001,11 +5012,14 @@ export class SupabaseService {
       regimen_id: regimenId,
       regimen_ids: regimenesIds,
       actividad_ids: actividadesIds,
+      room_type_ids: roomTypeIds,
+      catalogo_destino_id: payload.catalogo_destino_id ?? null,
+      horarios: payload.horarios ?? null,
       imagenes,
       traducciones
     };
 
-    const { data, error } = await this.client.rpc('guardar_hotel_detalle_admin', {
+    const { data, error } = await this.client.rpc('guardar_hotel_estancia_admin', {
       p_hotel_id: hotelId,
       p_payload: rpcPayload
     });
@@ -5016,34 +5030,7 @@ export class SupabaseService {
       throw new Error('No se pudo guardar el hotel.');
     }
 
-    if (payload.catalogo_destino_id !== undefined) {
-      const { error: errorCatalogoDestino } = await this.client
-        .from('hoteles')
-        .update({ catalogo_destino_id: payload.catalogo_destino_id })
-        .eq('id', hotelIdGuardado);
-
-      if (errorCatalogoDestino) throw errorCatalogoDestino;
-    }
-
-    await this.sincronizarTiposHabitacionHotel(hotelIdGuardado, roomTypeIds);
-
     return hotelIdGuardado;
-  }
-
-  private async sincronizarTiposHabitacionHotel(hotelId: number, tipoIds: number[]): Promise<void> {
-    const { error: deleteError } = await this.client
-      .from('hotel_tipos_habitacion')
-      .delete()
-      .eq('hotel_id', hotelId);
-
-    if (deleteError) throw deleteError;
-    if (!tipoIds.length) return;
-
-    const { error: insertError } = await this.client
-      .from('hotel_tipos_habitacion')
-      .insert(tipoIds.map((tipo_habitacion_id) => ({ hotel_id: hotelId, tipo_habitacion_id })));
-
-    if (insertError) throw insertError;
   }
 
 }
