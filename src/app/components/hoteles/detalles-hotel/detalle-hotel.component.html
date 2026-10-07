@@ -38,15 +38,17 @@
                 [errorCorrectionLevel]="'M'">
                 </qrcode> -->
             <fuse-card class="filter-article flex w-full flex-col p-1">
-                <div class="hotel-intro mx-3 mt-3 sm:mx-5 sm:mt-5">
+                <section class="hotel-intro mx-3 mt-3 sm:mx-5 sm:mt-5" aria-labelledby="hotel-intro-title">
                     <div class="hotel-intro-content">
                         <div class="hotel-intro-action">
-                            <h2 class="hotel-intro-title">{{ t('informacion-del-hotel') }}</h2>
-                            <span class="hotel-intro-badge">{{ t('descubre-mas') }}</span>
+                            <h2 id="hotel-intro-title" class="hotel-intro-title">{{ hotel.textos_encabezado?.titulo || t('informacion-del-hotel') }}</h2>
+                            <span class="hotel-intro-badge">{{ hotel.textos_encabezado?.destacado || t('descubre-mas') }}</span>
                         </div>
-                        <p class="hotel-intro-message">{{ t('hotel-cuidamos-detalles') }}</p>
+                        <div class="hotel-intro-editorial">
+                            <p class="hotel-intro-message">{{ hotel.textos_encabezado?.mensaje || t('hotel-cuidamos-detalles') }}</p>
+                        </div>
                     </div>
-                </div>
+                </section>
 
                 <div id="informacion-estancia" class="mt-3 min-w-0 overflow-hidden">
                 <mat-tab-group class="hotel-tabs sm:px-2" mat-stretch-tabs="true" [animationDuration]="'0'">

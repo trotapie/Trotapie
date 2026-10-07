@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { AuthService } from 'app/core/auth/auth.service';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { PageEvent } from '@angular/material/paginator';
 import { SupabaseService } from 'app/core/supabase.service';
@@ -46,11 +47,12 @@ interface IHotelAdmin {
 @Component({
   selector: 'app-admin-hoteles',
   standalone: true,
-  imports: [FormsModule, MaterialModule, DragDropModule, TpSelectSearchComponent, TpActionsMenuComponent],
+  imports: [FormsModule, MaterialModule, DragDropModule, TpSelectSearchComponent, TpActionsMenuComponent, RouterLink],
   templateUrl: './admin-hoteles.component.html',
   styleUrl: './admin-hoteles.component.scss'
 })
 export class AdminHotelesComponent implements OnInit {
+  readonly auth = inject(AuthService);
   private supabase = inject(SupabaseService);
   private destinosService = inject(DestinosService);
   private route = inject(ActivatedRoute);

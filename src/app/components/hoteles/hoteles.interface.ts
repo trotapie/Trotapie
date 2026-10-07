@@ -45,6 +45,7 @@ export interface Destinos {
 }
 
 import { HotelHorarios, HotelPlanTodoIncluido } from './hotel-estancia.interface';
+import type { HotelTextosEncabezado } from 'app/core/configuracion-hoteles.service';
 
 export interface IDetalleHotel {
     id: number;
@@ -58,6 +59,7 @@ export interface IDetalleHotel {
     ubicacion_nombre?: string;
     regimen_principal?: string;
     horarios?: HotelHorarios | null;
+    textos_encabezado?: HotelTextosEncabezado;
     plan_todo_incluido?: HotelPlanTodoIncluido | null;
 }
 

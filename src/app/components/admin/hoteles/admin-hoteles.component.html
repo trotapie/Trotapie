@@ -25,6 +25,11 @@
         </button>
         <div class="hoteles-switcher__context">
             <div class="hoteles-switcher__actions">
+                @if (auth.isAdmin) {
+                <a mat-stroked-button routerLink="/admin/configuracion/hoteles" class="flex-1 sm:flex-none">
+                    <mat-icon class="mr-1.5 icon-size-4">settings</mat-icon>Configuración global
+                </a>
+                }
                 @if (hayCambiosOrden) {
                 <button mat-raised-button color="accent" class="text-white" [disabled]="actualizandoOrden" (click)="actualizarOrden()">
                     <mat-icon class="mr-2 icon-size-5 text-white" [svgIcon]="'heroicons_outline:arrow-path'"></mat-icon>
