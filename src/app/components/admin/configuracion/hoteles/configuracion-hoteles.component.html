@@ -1,0 +1,76 @@
+<main class="flex min-w-0 flex-auto flex-col bg-slate-50 text-slate-900 dark:bg-gray-900 dark:text-gray-100">
+    <div class="mx-auto w-full max-w-5xl px-4 py-6 sm:px-8 sm:py-8">
+        <a mat-button routerLink="/admin/hoteles" class="mb-5">
+            <mat-icon class="mr-1.5 icon-size-4">arrow_back</mat-icon>Volver a hoteles
+        </a>
+        <header class="mb-7">
+            <p class="mb-2 text-sm font-semibold uppercase tracking-wider text-primary">Configuración global</p>
+            <h1 class="text-3xl font-bold tracking-tight">Horarios y textos de hoteles</h1>
+            <p class="mt-2 max-w-3xl text-slate-500 dark:text-slate-400">Una sola configuración para todas las fichas públicas. Los horarios específicos de cada hotel siempre tienen prioridad.</p>
+        </header>
+
+        @if (cargando) {
+        <div class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-8 dark:border-slate-700 dark:bg-gray-800" role="status">
+            <mat-icon class="animate-spin">sync</mat-icon>Cargando configuración global…
+        </div>
+        } @else if (errorCarga) {
+        <div class="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200" role="alert">
+            <h2 class="font-semibold">No se pudo cargar la configuración</h2>
+            <p class="mt-2">{{ errorCarga }}</p>
+            <button mat-stroked-button class="mt-4" type="button" (click)="cargar()"><mat-icon class="mr-1.5 icon-size-4">refresh</mat-icon>Reintentar</button>
+        </div>
+        } @else {
+        <form [formGroup]="form" (ngSubmit)="guardar()" class="space-y-6" [attr.aria-busy]="guardando">
+            <section class="rounded-2xl border border-slate-200 bg-white p-5 sm:p-7 dark:border-slate-700 dark:bg-gray-800" aria-labelledby="horarios-generales">
+                <div class="mb-6 flex items-start gap-3">
+                    <mat-icon class="mt-1 text-primary">schedule</mat-icon>
+                    <div>
+                        <h2 id="horarios-generales" class="text-xl font-semibold">Horarios generales</h2>
+                        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Todos los campos son opcionales. Se usan únicamente cuando el hotel no tiene ningún horario específico. Las horas corresponden a la hora local del hotel.</p>
+                    </div>
+                </div>
+                <div formGroupName="horarios" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    @for (campo of camposHorario; track campo.clave) {
+                    <app-time-picker [label]="campo.label" [allowEmpty]="true" [formControlName]="campo.clave"></app-time-picker>
+                    }
+                </div>
+                @if (sinHorarios) {
+                <p class="mt-5 rounded-xl bg-slate-50 p-3 text-sm text-slate-500 dark:bg-gray-900 dark:text-slate-400">Sin horarios generales. Los hoteles sin horarios específicos no mostrarán la pestaña Check-in / Horarios hasta que configures alguno.</p>
+                }
+            </section>
+
+            <section class="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 sm:p-7 dark:border-slate-700 dark:bg-gray-800" aria-labelledby="textos-encabezado">
+                <div class="mb-5 flex items-start gap-3">
+                    <mat-icon class="mt-1 text-primary">translate</mat-icon>
+                    <div>
+                        <h2 id="textos-encabezado" class="text-xl font-semibold">Textos del encabezado</h2>
+                        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Se muestran en todos los hoteles según el idioma seleccionado. Son opcionales: si dejas un campo vacío, se usa su texto original en ese idioma.</p>
+                    </div>
+                </div>
+                <mat-tab-group [animationDuration]="'0'" mat-stretch-tabs="false">
+                    @for (grupo of form.controls.textos.controls; track $index; let i = $index) {
+                    <mat-tab [label]="idiomas[i].nombre">
+                        <div [formGroup]="grupo" class="grid grid-cols-1 gap-5 py-5 sm:grid-cols-2">
+                            <app-tp-input label="Título" placeholder="Información del hotel" [maxLength]="120" formControlName="titulo" [error]="errorCampo(grupo.controls.titulo)"></app-tp-input>
+                            <app-tp-input label="Texto destacado" placeholder="Descubre más" [maxLength]="120" formControlName="destacado" [error]="errorCampo(grupo.controls.destacado)"></app-tp-input>
+                            <app-tp-textarea class="sm:col-span-2" label="Frase del encabezado" [rows]="3" [maxLength]="500" formControlName="mensaje" [error]="errorCampo(grupo.controls.mensaje)"></app-tp-textarea>
+                        </div>
+                        <p class="pb-4 text-xs text-slate-500 dark:text-slate-400">Título y destacado: hasta 120 caracteres. Frase: hasta 500 caracteres.</p>
+                    </mat-tab>
+                    }
+                </mat-tab-group>
+            </section>
+
+            <footer class="flex flex-col gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:items-center sm:justify-between dark:border-slate-700">
+                <p class="text-sm text-slate-500 dark:text-slate-400" role="status">{{ hayCambios ? 'Tienes cambios sin guardar.' : 'La configuración está al día.' }}</p>
+                <div class="flex flex-col gap-3 sm:flex-row">
+                    <button mat-stroked-button type="button" [disabled]="guardando || !hayCambios" (click)="cancelar()"><mat-icon class="mr-1.5 icon-size-4">close</mat-icon>Cancelar cambios</button>
+                    <button mat-flat-button color="primary" type="submit" [disabled]="guardando || !hayCambios || form.invalid">
+                        <mat-icon class="mr-1.5 icon-size-4" [class.animate-spin]="guardando">{{ guardando ? 'sync' : 'save' }}</mat-icon>{{ guardando ? 'Guardando…' : 'Guardar configuración' }}
+                    </button>
+                </div>
+            </footer>
+        </form>
+        }
+    </div>
+</main>

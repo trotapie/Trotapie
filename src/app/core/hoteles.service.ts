@@ -4,6 +4,7 @@ import { SupabaseService } from 'app/core/supabase.service';
 import { getDefaultLang } from 'app/lang.utils';
 import { TranslocoService } from '@jsverse/transloco';
 import { normalizarHorarios, normalizarPlan } from 'app/components/hoteles/hotel-estancia.interface';
+import { ConfiguracionHotelesService } from './configuracion-hoteles.service';
 
 const ES_ID = 1;
 
@@ -34,6 +35,7 @@ export interface IHotelAdminCatalogo {
 export class HotelesService {
   private readonly supabase = inject(SupabaseService);
   private readonly transloco = inject(TranslocoService);
+  private readonly configuracionHoteles = inject(ConfiguracionHotelesService);
   private readonly idiomaIds = new Map<string, Promise<number>>();
 
   private get client(): SupabaseClient {
@@ -91,6 +93,11 @@ export class HotelesService {
     if (error) throw error;
     if (!data) return null;
 
+    const configuracion = await this.configuracionHoteles.obtener().catch((error) => {
+      console.warn('No se pudo cargar la configuración global de hoteles.', error);
+      return null;
+    });
+
     const traduccion = data.traducciones?.find((item: any) => item.idioma_id === idiomaId) ??
       data.traducciones?.find((item: any) => item.idioma_id === ES_ID);
     const catalogo = primerRegistro(data.catalogoDestino);
@@ -111,7 +118,8 @@ export class HotelesService {
       regimen_principal: regimenTraduccion?.descripcion ?? '',
       nombre_hotel: traduccion?.nombre_hotel ?? '',
       descripcion: traduccion?.descripcion ?? this.transloco.translate('sin-descripcion'),
-      horarios: normalizarHorarios(data.horarios),
+      horarios: normalizarHorarios(data.horarios) ?? configuracion?.horarios ?? null,
+      textos_encabezado: this.configuracionHoteles.textosParaIdioma(configuracion, lang ?? getDefaultLang()),
       plan_todo_incluido: normalizarPlan(traduccion?.plan_todo_incluido) ??
         normalizarPlan(data.traducciones?.find((item: any) => item.idioma_id === ES_ID)?.plan_todo_incluido),
       imagenes: [],
