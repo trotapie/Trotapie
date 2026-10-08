@@ -190,7 +190,7 @@
                                         @if (slide.efecto_destino !== 'texto') {
                                             <div class="absolute inset-0" [style.background-color]="colorConOpacidad(slide.overlay_color, slide.overlay_opacidad)"></div>
                                         }
-                                        @if ((etiquetaEstaPosicionada(slide) || contenidoEstaPosicionado(slide)) && slide.etiqueta_texto?.trim()) {
+                                        @if ((etiquetaEstaPosicionada(slide) || contenidoEstaPosicionado(slide) || slide.titulo_posicion || slide.descripcion_posicion) && slide.etiqueta_texto?.trim()) {
                                             <div
                                                 [ngStyle]="etiquetaEstaPosicionada(slide) ? getOverlayStyle(slide) : null"
                                                 [class]="'absolute z-20 w-max max-w-full' +
@@ -203,41 +203,53 @@
                                             </div>
                                         }
                                         <div
+                                            [style.visibility]="slide.titulo_posicion && slide.descripcion_posicion ? 'hidden' : null"
                                             [ngStyle]="contenidoEstaPosicionado(slide) ? getContenidoStyle(slide) : null"
                                             [class]="contenidoEstaPosicionado(slide)
-                                                ? 'carousel-content-overlay absolute z-10 max-w-[calc(100%-2rem)] sm:max-w-[calc(100%-4rem)] md:max-w-[calc(100%-7rem)]'
+                                                ? 'carousel-content-overlay absolute z-10'
                                                 : 'absolute inset-0 z-10 flex flex-col justify-end p-4 sm:p-8 md:p-14'">
                                             <div
-                                                [class]="'relative max-w-3xl overflow-hidden' +
-                                                    (slide.oscurecer_fondo || slide.efecto_destino !== 'fondo' ? ' rounded-2xl p-3 sm:p-5 md:p-8' : '') +
-                                                    (slide.oscurecer_fondo ? ' border border-white/20 shadow-[0_24px_80px_rgba(15,23,42,0.18)]' : '')">
-                                                @if (slide.efecto_destino !== 'fondo') {
-                                                    <div class="carousel-text-effect absolute inset-0" [style.background-color]="colorConOpacidad(slide.overlay_color, slide.overlay_opacidad)"
-                                                        [style.--effect-blur]="slide.blur_px + 'px'"></div>
-                                                } @else if (slide.oscurecer_fondo) {
-                                                    <div class="absolute inset-0 bg-white/12 backdrop-blur-xl backdrop-saturate-150"></div>
-                                                }
+                                                [class]="'relative w-max max-w-none' +
+                                                    (slide.contenido_panel_espaciado ? ' p-3 sm:p-5 md:p-8' : '')">
                                                 <div class="relative">
-                                                @if (!etiquetaEstaPosicionada(slide) && !contenidoEstaPosicionado(slide) && slide.etiqueta_texto?.trim()) {
+                                                @if (!etiquetaEstaPosicionada(slide) && !contenidoEstaPosicionado(slide) && !slide.titulo_posicion && !slide.descripcion_posicion && slide.etiqueta_texto?.trim()) {
                                                     <span
                                                         class="carousel-slide__label mb-3 inline-block w-fit rounded-full font-bold uppercase tracking-widest text-white shadow-md"
                                                         [style.--font-size.px]="slide.etiqueta_font_size"
                                                         [style.background-color]="slide.etiqueta_color">{{ slide.etiqueta_texto }}</span>
                                                 }
                                                 @if (slide.nombre) {
-                                                    <h1 class="carousel-slide__title font-black leading-tight mb-2" [style.color]="slide.texto_color"
-                                                        [style.--font-size.px]="slide.titulo_font_size">
-                                                        {{slide.nombre}}
-                                                    </h1>
+                                                    <app-image-text-panel [presentacion]="slide.titulo_presentacion ?? presentacionTextoPredeterminada"
+                                                        [style.visibility]="slide.titulo_posicion ? 'hidden' : null">
+                                                    <h1 class="carousel-slide__title font-black leading-tight mb-2" [style.color]="slide.titulo_color ?? slide.texto_color"
+                                                        [style.--font-size.px]="slide.titulo_font_size">{{slide.nombre}}</h1>
+                                                    </app-image-text-panel>
                                                 }
                                                 @if (slide.descripcion) {
-                                                    <p class="carousel-slide__description font-medium opacity-90" [style.color]="slide.texto_color"
-                                                        [style.--font-size.px]="slide.descripcion_font_size">{{slide.descripcion}}
-                                                    </p>
+                                                    <app-image-text-panel [presentacion]="slide.descripcion_presentacion ?? presentacionTextoPredeterminada"
+                                                        [style.visibility]="slide.descripcion_posicion ? 'hidden' : null">
+                                                    <p class="carousel-slide__description font-medium opacity-90" [style.color]="slide.descripcion_color ?? slide.texto_color"
+                                                        [style.--font-size.px]="slide.descripcion_font_size">{{slide.descripcion}}</p>
+                                                    </app-image-text-panel>
                                                 }
                                                 </div>
                                             </div>
                                         </div>
+                                        @for (texto of textosImagen; track texto) {
+                                            @if ((texto === 'titulo' ? slide.titulo_posicion : slide.descripcion_posicion) && (texto === 'titulo' ? slide.nombre : slide.descripcion)) {
+                                                <div class="carousel-content-overlay absolute z-20" [ngStyle]="getTextoStyle(slide, texto)">
+                                                    <app-image-text-panel [presentacion]="(texto === 'titulo' ? slide.titulo_presentacion : slide.descripcion_presentacion) ?? presentacionTextoPredeterminada">
+                                                    @if (texto === 'titulo') {
+                                                        <h1 class="carousel-slide__title relative font-black leading-tight" [style.color]="slide.titulo_color ?? slide.texto_color"
+                                                            [style.--font-size.px]="slide.titulo_font_size">{{ slide.nombre }}</h1>
+                                                    } @else {
+                                                        <p class="carousel-slide__description relative font-medium opacity-90" [style.color]="slide.descripcion_color ?? slide.texto_color"
+                                                            [style.--font-size.px]="slide.descripcion_font_size">{{ slide.descripcion }}</p>
+                                                    }
+                                                    </app-image-text-panel>
+                                                </div>
+                                            }
+                                        }
                                     </div>
                                     </ng-container>
                                     <ng-template #galleryUnavailable>

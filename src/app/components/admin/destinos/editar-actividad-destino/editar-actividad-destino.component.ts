@@ -1,4 +1,6 @@
 import { CommonModule } from '@angular/common';
+import { EstiloTextosImagen, TextoImagen, PresentacionTextoImagen, PRESENTACION_TEXTO_PREDETERMINADA, normalizarEstiloTextosImagen } from 'app/core/estilo-textos-imagen';
+import { ImageTextPanelComponent } from 'app/shared/image-text-panel/image-text-panel.component';
 import { Component, HostListener, OnDestroy, OnInit, inject } from '@angular/core';
 import { UntypedFormArray, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -50,7 +52,7 @@ type DriveActividadFolderDraft = {
   carpetaDestinoNombre: string;
 };
 
-type ImagenActividadForm = {
+type ImagenActividadForm = EstiloTextosImagen & {
   draft_key?: string | null;
   id: number | null;
   imagen_url: string;
@@ -90,6 +92,17 @@ type ImagenActividadForm = {
 const VALORES_PREDETERMINADOS_ESTILO_IMAGEN = {
   oscurecer_fondo: false,
   texto_color: '#FFFFFF',
+  titulo_color: '#FFFFFF',
+  descripcion_color: '#FFFFFF',
+  titulo_posicion: null,
+  titulo_x: null,
+  titulo_y: null,
+  descripcion_posicion: null,
+  descripcion_x: null,
+  descripcion_y: null,
+  titulo_presentacion: { ...PRESENTACION_TEXTO_PREDETERMINADA },
+  descripcion_presentacion: { ...PRESENTACION_TEXTO_PREDETERMINADA },
+  contenido_panel_espaciado: false,
   titulo_font_size: 48,
   descripcion_font_size: 18,
   overlay_color: '#0F172A',
@@ -127,7 +140,7 @@ const OVERLAY_POSITIONS: Array<{ value: OverlayPosition; label: string; x: numbe
 @Component({
   selector: 'app-editar-actividad-destino',
   standalone: true,
-  imports: [CommonModule, MaterialModule, ReactiveFormsModule, FolderImageManagerComponent, BlockingLoaderComponent, CustomSwitchComponent, ColorPickerComponent, TpInputComponent, TpTextareaComponent, TpSelectSearchComponent],
+  imports: [CommonModule, MaterialModule, ReactiveFormsModule, FolderImageManagerComponent, BlockingLoaderComponent, CustomSwitchComponent, ColorPickerComponent, TpInputComponent, TpTextareaComponent, TpSelectSearchComponent, ImageTextPanelComponent],
   templateUrl: './editar-actividad-destino.component.html',
   styleUrl: './editar-actividad-destino.component.scss',
   animations: [modalScaleFade, backdropFade],
@@ -214,6 +227,12 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   private carpetasTemporalesSecuencia = -1;
   private overlayDragActivo = false;
   private previewArrastre: HTMLElement | null = null;
+  readonly textosImagen: TextoImagen[] = ['titulo', 'descripcion'];
+  textoSeleccionado: TextoImagen = 'titulo';
+  objetivoPresentacion: 'imagen' | TextoImagen = 'titulo';
+  readonly objetivosPresentacion = ['imagen', 'titulo', 'descripcion'] as const;
+  private textoArrastrando: TextoImagen | null = null;
+  private textoDragOffset = { x: 0, y: 0 };
   previewImageRatio: number | null = null;
   previewMediaStyle: Record<string, string> = { inset: '0' };
   readonly posicionesOverlay = OVERLAY_POSITIONS;
@@ -1527,6 +1546,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
               size_formatted: [this.limpiarTexto(imagen.sizeFormatted) ?? this.formatearTamanoArchivo(this.parseNumber(imagen.size))],
               activa: [false],
                oscurecer_fondo: [false],
+               ...this.crearControlesTextoImagen(),
                etiqueta_texto: [null],
                overlay_posicion: ['bottom-left'],
                overlay_x: [null],
@@ -1624,6 +1644,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
         size_formatted: [null],
         activa: [false],
         oscurecer_fondo: [false],
+        ...this.crearControlesTextoImagen(),
         etiqueta_texto: [null],
         overlay_posicion: ['bottom-left'],
         overlay_x: [null],
@@ -2334,6 +2355,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
           activa: [Boolean(imagen?.activa)],
           oscurecer_fondo: [Boolean(imagen?.oscurecer_fondo ?? false)],
           texto_color: [this.normalizarColorHex(imagen?.texto_color, '#FFFFFF')],
+          ...this.crearControlesTextoImagen(imagen),
           titulo_font_size: [this.normalizarNumeroEnRango(imagen?.titulo_font_size, 24, 72, 48)],
           descripcion_font_size: [this.normalizarNumeroEnRango(imagen?.descripcion_font_size, 14, 32, 18)],
           overlay_color: [this.normalizarColorHex(imagen?.overlay_color, '#0F172A')],
@@ -2357,6 +2379,24 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
         })
       )
     );
+  }
+
+  private crearControlesTextoImagen(imagen: EstiloTextosImagen & { texto_color?: string | null } = {}) {
+    return Object.fromEntries(Object.entries(normalizarEstiloTextosImagen(imagen))
+      .map(([campo, valor]) => [campo, campo.endsWith('_presentacion') ? this.fb.group(valor as PresentacionTextoImagen) : this.fb.control(valor)]));
+  }
+
+  getPresentacionTextoPreview(texto: TextoImagen): PresentacionTextoImagen {
+    return this.imagenEditandoControl?.get(`${texto}_presentacion`)?.value ?? PRESENTACION_TEXTO_PREDETERMINADA;
+  }
+
+  getPresentacionControl(campo: keyof PresentacionTextoImagen) {
+    return this.imagenEditandoControl?.get(this.objetivoPresentacion === 'imagen'
+      ? campo : `${this.objetivoPresentacion}_presentacion.${campo}`) ?? null;
+  }
+
+  restablecerPresentacion(campo: keyof PresentacionTextoImagen): void {
+    this.getPresentacionControl(campo)?.setValue(PRESENTACION_TEXTO_PREDETERMINADA[campo]);
   }
 
   private crearTraduccionesImagen(
@@ -2391,6 +2431,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
           activa: Boolean(imagen?.activa),
           oscurecer_fondo: Boolean(imagen?.oscurecer_fondo ?? false),
           texto_color: this.normalizarColorHex(imagen?.texto_color, '#FFFFFF'),
+          ...normalizarEstiloTextosImagen(imagen),
           titulo_font_size: this.normalizarNumeroEnRango(imagen?.titulo_font_size, 24, 72, 48),
           descripcion_font_size: this.normalizarNumeroEnRango(imagen?.descripcion_font_size, 14, 32, 18),
           overlay_color: this.normalizarColorHex(imagen?.overlay_color, '#0F172A'),
@@ -2853,6 +2894,62 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     });
   }
 
+  textoEstaPosicionadoPreview(texto: TextoImagen): boolean {
+    return !!this.imagenEditandoControl?.get(`${texto}_posicion`)?.value;
+  }
+
+  getTextoPreviewStyle(texto: TextoImagen): Record<string, string> {
+    return this.getPreviewPositionStyle(`${texto}_posicion`, `${texto}_x`, `${texto}_y`);
+  }
+
+  seleccionarPosicionTexto(posicion: OverlayPosition): void {
+    const control = this.imagenEditandoControl;
+    if (!control) return;
+    const texto = this.textoSeleccionado;
+    const preset = OVERLAY_POSITIONS.find((item) => item.value === posicion);
+    const elemento = document.querySelector<HTMLElement>(
+      `.image-edit-modal__media-stage [data-texto="${texto}"]${this.textoEstaPosicionadoPreview(texto) ? '.image-text-independent' : ':not(.image-text-independent)'}`
+    );
+    const stage = elemento?.closest<HTMLElement>('.image-edit-modal__media-stage');
+    const rect = elemento?.getBoundingClientRect();
+    const marco = stage?.getBoundingClientRect();
+    control.patchValue({
+      [`${texto}_posicion`]: posicion,
+      [`${texto}_x`]: preset?.x ?? this.normalizarCoordenadaOverlay(rect && marco?.width ? (rect.left + rect.width / 2 - marco.left) / marco.width * 100 : 50),
+      [`${texto}_y`]: preset?.y ?? this.normalizarCoordenadaOverlay(rect && marco?.height ? (rect.top + rect.height / 2 - marco.top) / marco.height * 100 : 50)
+    });
+  }
+
+  restablecerPosicionTexto(): void {
+    const texto = this.textoSeleccionado;
+    this.imagenEditandoControl?.patchValue({
+      [`${texto}_posicion`]: null, [`${texto}_x`]: null, [`${texto}_y`]: null
+    });
+  }
+
+  iniciarArrastreTexto(event: PointerEvent, texto: TextoImagen): void {
+    if (event.button !== 0 || !this.imagenEditandoControl) return;
+    const elemento = event.currentTarget as HTMLElement;
+    const stage = elemento.closest<HTMLElement>('.image-edit-modal__media-stage, .device-sim-container');
+    if (!stage) return;
+    const rect = elemento.getBoundingClientRect();
+    const marco = stage.getBoundingClientRect();
+    if (!marco.width || !marco.height) return;
+    this.textoSeleccionado = texto;
+    this.textoArrastrando = texto;
+    this.previewArrastre = stage;
+    this.textoDragOffset = { x: event.clientX - rect.left - rect.width / 2, y: event.clientY - rect.top - rect.height / 2 };
+    this.imagenEditandoControl.patchValue({
+      [`${texto}_posicion`]: 'custom',
+      [`${texto}_x`]: Math.min(100, Math.max(0, (rect.left + rect.width / 2 - marco.left) / marco.width * 100)),
+      [`${texto}_y`]: Math.min(100, Math.max(0, (rect.top + rect.height / 2 - marco.top) / marco.height * 100))
+    });
+    // Capture on the stable stage: the text switches from grouped to independent DOM.
+    stage.setPointerCapture?.(event.pointerId);
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
   getOverlayPreviewStyle(): Record<string, string> {
     const control = this.imagenEditandoControl;
     const posicion = this.normalizarPosicionOverlay(control?.get('overlay_posicion')?.value);
@@ -2915,11 +3012,19 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
 
   @HostListener('document:pointermove', ['$event'])
   moverOverlayPersonalizado(event: PointerEvent): void {
-    if ((!this.overlayDragActivo && !this.contenidoDragActivo) || !this.imagenEditandoControl) return;
+    if ((!this.overlayDragActivo && !this.contenidoDragActivo && !this.textoArrastrando) || !this.imagenEditandoControl) return;
     const preview = this.previewArrastre
       ?? document.querySelector('.image-edit-modal__media-stage') as HTMLElement | null;
     if (!preview) return;
     const rect = preview.getBoundingClientRect();
+    if (this.textoArrastrando) {
+      const texto = this.textoArrastrando;
+      this.imagenEditandoControl.patchValue({
+        [`${texto}_x`]: Number(Math.min(100, Math.max(0, ((event.clientX - this.textoDragOffset.x - rect.left) / rect.width) * 100)).toFixed(2)),
+        [`${texto}_y`]: Number(Math.min(100, Math.max(0, ((event.clientY - this.textoDragOffset.y - rect.top) / rect.height) * 100)).toFixed(2))
+      });
+      return;
+    }
     const x = Math.min(100, Math.max(0, ((event.clientX - rect.left) / rect.width) * 100));
     const y = Math.min(100, Math.max(0, ((event.clientY - rect.top) / rect.height) * 100));
     const coordenadas = { x: Number(x.toFixed(2)), y: Number(y.toFixed(2)) };
@@ -2946,10 +3051,12 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   }
 
   @HostListener('document:pointerup')
+  @HostListener('document:pointercancel')
   terminarArrastreOverlay(): void {
     this.overlayDragActivo = false;
     this.contenidoDragActivo = false;
     this.previewArrastre = null;
+    this.textoArrastrando = null;
   }
 
   private getPreviewPositionStyle(
@@ -3045,6 +3152,9 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
       : null;
     this.imagenSeleccionadaIndex = index;
     this.imagenEditandoIndex = index;
+    this.textoSeleccionado = 'titulo';
+    this.objetivoPresentacion = 'titulo';
+    this.terminarArrastreOverlay();
     this.editorImagenAbierto = true;
     this.setModalLocked(true);
   }

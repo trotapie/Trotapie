@@ -150,7 +150,7 @@
     align-self: stretch;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     padding: 1.5rem;
     border-right: 1px solid var(--fuse-border);
@@ -158,8 +158,18 @@
     background: transparent;
   }
 
+  .image-edit-modal__image-fields {
+    display: grid;
+    width: 100%;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    flex-shrink: 0;
+  }
+
   .image-edit-modal__canvas {
     width: 100%;
+    flex-shrink: 0;
     border-radius: 1rem;
     overflow: hidden;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
@@ -289,11 +299,15 @@
   }
 
   .image-edit-modal__preview-title {
+    width: max-content;
     font-size: clamp(1.5rem, 5cqw, var(--font-size));
+    white-space: pre;
   }
 
   .image-edit-modal__preview-description {
+    width: max-content;
     font-size: clamp(0.875rem, 2.1cqw, var(--font-size));
+    white-space: pre;
   }
 
   .image-edit-modal__overlay {
@@ -301,8 +315,7 @@
   }
 
   .image-edit-modal__content-overlay {
-    width: fit-content;
-    max-width: calc(100% - 2.5rem);
+    width: max-content;
   }
 
   .image-edit-modal__overlay--default {
@@ -410,8 +423,7 @@
   }
 
   .device-sim-content-overlay {
-    width: fit-content;
-    max-width: calc(100% - 2rem);
+    width: max-content;
   }
 
   .carousel-slide__default-label {
@@ -426,13 +438,17 @@
   }
 
   .carousel-slide__title {
+    width: max-content;
     font-size: clamp(0.85rem, 3.8cqw, var(--font-size));
     line-height: 1.1;
+    white-space: pre;
   }
 
   .carousel-slide__description {
+    width: max-content;
     font-size: clamp(0.6rem, 1.8cqw, var(--font-size));
     line-height: 1.25;
+    white-space: pre;
   }
 
   .device-sim-container--tablet {
@@ -600,6 +616,10 @@
       min-height: 0;
       border-right: 0;
       border-bottom: 1px solid var(--fuse-border);
+    }
+
+    .image-edit-modal__image-fields {
+      grid-template-columns: minmax(0, 1fr);
     }
 
     .image-edit-modal__preview-label {

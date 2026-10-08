@@ -74,7 +74,7 @@ export interface IActividadPreviewAdmin {
     created_at: string | null;
     updated_at: string | null;
   }>;
-  imagenes?: Array<{
+  imagenes?: Array<import('./estilo-textos-imagen').EstiloTextosImagen & {
     id: number;
     imagen_url: string;
     carpeta_id?: number | null;
