@@ -51,7 +51,7 @@ export interface IDetalleHotel {
     id: number;
     nombre_hotel: string;
     descripcion: string;
-    ubicacion: null;
+    ubicacion: string | null;
     imagenes: Imagenes[];
     regimenes: any[],
     actividades: any[];

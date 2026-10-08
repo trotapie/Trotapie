@@ -1,1 +1,10 @@
-<div id="map" class="w-full h-180 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700"></div>
+<ng-container *transloco="let t">
+    <div class="relative h-full min-h-[240px] w-full">
+        <div #mapContainer class="h-full min-h-[240px] w-full rounded-2xl border border-gray-200 dark:border-gray-700" [attr.aria-label]="t('ubicacion')"></div>
+        @if (!cargando && !coordenadas) {
+        <div class="absolute inset-0 flex items-center justify-center rounded-2xl bg-white p-6 text-center text-gray-600 dark:bg-gray-900 dark:text-gray-300" role="status">
+            {{ t('hotel-map-unavailable') }}
+        </div>
+        }
+    </div>
+</ng-container>
