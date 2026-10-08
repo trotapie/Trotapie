@@ -13,9 +13,11 @@ import { MaterialModule } from 'app/shared/material.module';
 import { IDetallesDestino } from './detalle-destino.interface';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { getDefaultLang } from 'app/lang.utils';
+import { EstiloTextosImagen, TextoImagen, PRESENTACION_TEXTO_PREDETERMINADA, normalizarEstiloTextosImagen } from 'app/core/estilo-textos-imagen';
+import { ImageTextPanelComponent } from 'app/shared/image-text-panel/image-text-panel.component';
 import { distinctUntilChanged, filter } from 'rxjs';
 
-interface CarouselSlide {
+interface CarouselSlide extends EstiloTextosImagen {
   imagen_url: string;
   nombre: string;
   descripcion: string;
@@ -40,7 +42,7 @@ interface CarouselSlide {
 
 @Component({
   selector: 'app-detalle-destino',
-  imports: [FooterComponent, MapaComponent, MaterialModule, TranslocoModule],
+  imports: [FooterComponent, MapaComponent, MaterialModule, TranslocoModule, ImageTextPanelComponent],
   templateUrl: './detalle-destino.component.html',
   styleUrl: './detalle-destino.component.scss'
 })
@@ -177,6 +179,7 @@ export class DetalleDestinoComponent implements OnInit {
            descripcion: imagen.descripcion ?? '',
           oscurecer_fondo: Boolean(imagen.oscurecer_fondo ?? false),
           texto_color: imagen.texto_color ?? '#FFFFFF',
+          ...normalizarEstiloTextosImagen(imagen),
           titulo_font_size: Number(imagen.titulo_font_size ?? 48),
           descripcion_font_size: Number(imagen.descripcion_font_size ?? 18),
           overlay_color: imagen.overlay_color ?? '#0F172A',
@@ -210,6 +213,13 @@ export class DetalleDestinoComponent implements OnInit {
 
   getContenidoStyle(slide: CarouselSlide): Record<string, string> {
     return this.getPositionStyle(slide.contenido_posicion, slide.contenido_x, slide.contenido_y);
+  }
+
+  readonly textosImagen: TextoImagen[] = ['titulo', 'descripcion'];
+  readonly presentacionTextoPredeterminada = PRESENTACION_TEXTO_PREDETERMINADA;
+
+  getTextoStyle(slide: CarouselSlide, texto: TextoImagen): Record<string, string> {
+    return this.getPositionStyle(slide[`${texto}_posicion`] ?? 'bottom-left', slide[`${texto}_x`] ?? null, slide[`${texto}_y`] ?? null);
   }
 
   contenidoEstaPosicionado(slide: CarouselSlide): boolean {

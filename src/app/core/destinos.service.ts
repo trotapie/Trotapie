@@ -1,4 +1,5 @@
 import { inject, Injectable } from '@angular/core';
+import { normalizarEstiloTextosImagen } from './estilo-textos-imagen';
 import { SupabaseService, IIdiomaPreviewAdmin, IPreviewDestinoAdmin, IActividadPreviewAdmin, IDetalleRapidoPreviewAdmin, IDriveActividadImportImage, IDriveActividadImportFolder } from './supabase.service';
 import { getDefaultLang } from 'app/lang.utils';
 
@@ -507,6 +508,10 @@ export class DestinosService {
               activa,
               oscurecer_fondo,
               texto_color,
+              titulo_color, descripcion_color, titulo_posicion, titulo_x, titulo_y,
+              titulo_presentacion, descripcion_presentacion,
+              contenido_panel_espaciado,
+              descripcion_posicion, descripcion_x, descripcion_y,
               titulo_font_size,
               descripcion_font_size,
               overlay_color,
@@ -673,6 +678,7 @@ export class DestinosService {
                activa: Boolean(imagen.activa),
                oscurecer_fondo: Boolean(imagen.oscurecer_fondo),
                texto_color: imagen.texto_color ?? '#FFFFFF',
+               ...normalizarEstiloTextosImagen(imagen),
                titulo_font_size: Number(imagen.titulo_font_size ?? 48),
                descripcion_font_size: Number(imagen.descripcion_font_size ?? 18),
                overlay_color: imagen.overlay_color ?? '#0F172A',
@@ -725,6 +731,7 @@ export class DestinosService {
             activa: Boolean(imagen.activa),
             oscurecer_fondo: Boolean(imagen.oscurecer_fondo),
             texto_color: imagen.texto_color ?? '#FFFFFF',
+            ...normalizarEstiloTextosImagen(imagen),
             titulo_font_size: Number(imagen.titulo_font_size ?? 48),
             descripcion_font_size: Number(imagen.descripcion_font_size ?? 18),
             overlay_color: imagen.overlay_color ?? '#0F172A',
@@ -1313,7 +1320,7 @@ export class DestinosService {
 
     const { data: imagenes, error: imagenesError } = await this.client
       .from('atracciones_imagenes')
-      .select('id, atraccion_id, imagen_url, nombre, oscurecer_fondo, texto_color, titulo_font_size, descripcion_font_size, overlay_color, overlay_opacidad, blur_px, efecto_destino, etiqueta_font_size, etiqueta_color, etiqueta_texto, overlay_posicion, overlay_x, overlay_y, contenido_posicion, contenido_x, contenido_y')
+      .select('id, atraccion_id, imagen_url, nombre, oscurecer_fondo, texto_color, titulo_color, descripcion_color, titulo_posicion, titulo_x, titulo_y, descripcion_posicion, descripcion_x, descripcion_y, titulo_presentacion, descripcion_presentacion, contenido_panel_espaciado, titulo_font_size, descripcion_font_size, overlay_color, overlay_opacidad, blur_px, efecto_destino, etiqueta_font_size, etiqueta_color, etiqueta_texto, overlay_posicion, overlay_x, overlay_y, contenido_posicion, contenido_x, contenido_y')
       .in('atraccion_id', actividadIds)
       .eq('activa', true)
       .order('orden', { ascending: true })
@@ -1351,6 +1358,7 @@ export class DestinosService {
           activa: true,
           oscurecer_fondo: Boolean(imagen.oscurecer_fondo),
           texto_color: imagen.texto_color ?? '#FFFFFF',
+          ...normalizarEstiloTextosImagen(imagen),
           titulo_font_size: Number(imagen.titulo_font_size ?? 48),
           descripcion_font_size: Number(imagen.descripcion_font_size ?? 18),
           overlay_color: imagen.overlay_color ?? '#0F172A',
@@ -1457,7 +1465,7 @@ export class DestinosService {
       actividadIds.length
         ? this.client
           .from('atracciones_imagenes')
-          .select('id, atraccion_id, imagen_url, nombre, oscurecer_fondo, texto_color, titulo_font_size, descripcion_font_size, overlay_color, overlay_opacidad, blur_px, efecto_destino, etiqueta_font_size, etiqueta_color, etiqueta_texto, overlay_posicion, overlay_x, overlay_y, contenido_posicion, contenido_x, contenido_y')
+          .select('id, atraccion_id, imagen_url, nombre, oscurecer_fondo, texto_color, titulo_color, descripcion_color, titulo_posicion, titulo_x, titulo_y, descripcion_posicion, descripcion_x, descripcion_y, titulo_presentacion, descripcion_presentacion, contenido_panel_espaciado, titulo_font_size, descripcion_font_size, overlay_color, overlay_opacidad, blur_px, efecto_destino, etiqueta_font_size, etiqueta_color, etiqueta_texto, overlay_posicion, overlay_x, overlay_y, contenido_posicion, contenido_x, contenido_y')
           .in('atraccion_id', actividadIds)
           .eq('activa', true)
           .order('orden', { ascending: true })
@@ -1527,6 +1535,7 @@ export class DestinosService {
             activa: true,
             oscurecer_fondo: Boolean(imagen.oscurecer_fondo),
             texto_color: imagen.texto_color ?? '#FFFFFF',
+            ...normalizarEstiloTextosImagen(imagen),
             titulo_font_size: Number(imagen.titulo_font_size ?? 48),
             descripcion_font_size: Number(imagen.descripcion_font_size ?? 18),
             overlay_color: imagen.overlay_color ?? '#0F172A',
@@ -1586,6 +1595,7 @@ export class DestinosService {
                 imagen_url: imagen.imagen_url,
                 oscurecer_fondo: Boolean(imagen.oscurecer_fondo),
                 texto_color: imagen.texto_color ?? '#FFFFFF',
+                ...normalizarEstiloTextosImagen(imagen),
                 titulo_font_size: Number(imagen.titulo_font_size ?? 48),
                 descripcion_font_size: Number(imagen.descripcion_font_size ?? 18),
                 overlay_color: imagen.overlay_color ?? '#0F172A',
@@ -1613,6 +1623,7 @@ export class DestinosService {
                 imagen_url: imagen.imagen_url,
                 oscurecer_fondo: Boolean(imagen.oscurecer_fondo),
                 texto_color: imagen.texto_color ?? '#FFFFFF',
+                ...normalizarEstiloTextosImagen(imagen),
                 titulo_font_size: Number(imagen.titulo_font_size ?? 48),
                 descripcion_font_size: Number(imagen.descripcion_font_size ?? 18),
                 overlay_color: imagen.overlay_color ?? '#0F172A',

@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.spec.json",
+  "include": [
+    "src/app/core/estilo-textos-imagen.spec.ts",
+    "src/app/shared/image-text-panel/image-text-panel.component.spec.ts",
+    "src/app/components/admin/destinos/editar-actividad-destino/editar-actividad-destino.textos.spec.ts",
+    "src/**/*.d.ts"
+  ]
+}

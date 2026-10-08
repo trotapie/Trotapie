@@ -1,4 +1,5 @@
 import { inject, Injectable } from '@angular/core';
+import { normalizarEstiloTextosImagen, EstiloTextosImagen } from './estilo-textos-imagen';
 import { SupabaseService, IDriveActividadImportImage, IDriveActividadImportFolder } from './supabase.service';
 
 @Injectable({ providedIn: 'root' })
@@ -417,7 +418,7 @@ export class ActividadesService {
 
   private async sincronizarImagenesActividad(
     actividadId: number,
-      imagenes?: Array<{
+      imagenes?: Array<EstiloTextosImagen & {
         id?: number | null;
         imagen_url: string | null;
         carpeta_id?: number | null;
@@ -477,6 +478,7 @@ export class ActividadesService {
         activa: Boolean(imagen?.activa),
         oscurecer_fondo: Boolean(imagen?.oscurecer_fondo ?? false),
         texto_color: this.normalizarColorHex(imagen?.texto_color, '#FFFFFF'),
+        ...normalizarEstiloTextosImagen(imagen),
         titulo_font_size: this.normalizarNumeroEnRango(imagen?.titulo_font_size, 24, 72, 48),
         descripcion_font_size: this.normalizarNumeroEnRango(imagen?.descripcion_font_size, 14, 32, 18),
         overlay_color: this.normalizarColorHex(imagen?.overlay_color, '#0F172A'),
@@ -567,6 +569,7 @@ export class ActividadesService {
             activa: Boolean(imagen.activa),
             oscurecer_fondo: Boolean(imagen.oscurecer_fondo),
             texto_color: imagen.texto_color,
+            ...normalizarEstiloTextosImagen(imagen),
             titulo_font_size: imagen.titulo_font_size,
             descripcion_font_size: imagen.descripcion_font_size,
             overlay_color: imagen.overlay_color,
@@ -610,6 +613,7 @@ export class ActividadesService {
           activa: Boolean(imagen.activa),
           oscurecer_fondo: Boolean(imagen.oscurecer_fondo),
           texto_color: imagen.texto_color,
+          ...normalizarEstiloTextosImagen(imagen),
           titulo_font_size: imagen.titulo_font_size,
           descripcion_font_size: imagen.descripcion_font_size,
           overlay_color: imagen.overlay_color,

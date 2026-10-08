@@ -11,7 +11,7 @@ export interface IDetallesDestino {
 export interface AtraccionesPrincipale {
   id:           number;
   imagen_fondo?: string;
-  imagenes?: Array<{
+  imagenes?: Array<import('app/core/estilo-textos-imagen').EstiloTextosImagen & {
     imagen_url: string;
     nombre: string;
     descripcion: string;

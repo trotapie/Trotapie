@@ -45,8 +45,7 @@
 }
 
 .carousel-content-overlay {
-    width: fit-content;
-    max-width: calc(100% - 2rem);
+    width: max-content;
 }
 
 .carousel-slide__default-label {
@@ -62,13 +61,17 @@
 }
 
 .carousel-slide__title {
+    width: max-content;
     font-size: clamp(0.85rem, 3.8cqw, var(--font-size));
     line-height: 1.1;
+    white-space: pre;
 }
 
 .carousel-slide__description {
+    width: max-content;
     font-size: clamp(0.6rem, 1.8cqw, var(--font-size));
     line-height: 1.25;
+    white-space: pre;
 }
 
 @media (max-width: 767px) {
