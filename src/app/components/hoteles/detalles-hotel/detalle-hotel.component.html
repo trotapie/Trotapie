@@ -2,13 +2,13 @@
     <div #scrollContainer class="absolute inset-0 flex flex-col min-w-0 overflow-y-auto" cdkScrollable>
 
         <ng-container *ngIf="hotel; else detalleSkeleton">
-        <div *ngIf="mostrarInfo" class="flex min-w-0 flex-auto flex-col m-6">
-            <div class="sticky top-0 z-50  md:flex md:items-center md:justify-between w-full py-2 px-2 md:px-4 transition-all duration-300 backdrop-blur-md"
+        <div *ngIf="mostrarInfo" class="hotel-detail flex min-w-0 flex-auto flex-col">
+            <div class="hotel-detail-header sticky top-0 z-50 flex items-center justify-between w-full transition-all duration-300 backdrop-blur-md"
                 [ngClass]="{'bg-transparent': !scrolled, 'bg-white dark:bg-gray-900 shadow-md': scrolled }">
                 <div>
-                    <div class="text-3xl font-semibold leading-tight">
+                    <h1 class="hotel-detail-name font-semibold leading-tight">
                         {{hotel.nombre_hotel}}
-                    </div>
+                    </h1>
                     @if (hotel.ubicacion_nombre) {
                     <div class="mt-1">
                         <div class="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
@@ -18,10 +18,10 @@
                     </div>
                     }
                 </div>
-                <div class="flex items-center gap-6 my-2">
+                <div class="flex shrink-0 items-center">
                     <button mat-raised-button color="warn"
                         class=" text-white ml-auto flex items-center justify-end gap-2" (click)="regresar()">
-                        <mat-icon class="icon-size-5 text-white"
+                        <mat-icon class="mr-1.5 icon-size-4 text-white"
                             [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>{{
                         t('regresar')}}
                     </button>
@@ -37,7 +37,7 @@
                 [width]="3000"
                 [errorCorrectionLevel]="'M'">
                 </qrcode> -->
-            <fuse-card class="filter-article flex w-full flex-col p-1">
+            <fuse-card class="hotel-detail-card filter-article flex w-full flex-col p-1">
                 <section class="hotel-intro mx-3 mt-3 sm:mx-5 sm:mt-5" aria-labelledby="hotel-intro-title">
                     <div class="hotel-intro-content">
                         <div class="hotel-intro-action">
@@ -65,19 +65,19 @@
                                 @if (hotel.horarios.check_in_desde || hotel.horarios.check_in_hasta) {
                                 <article class="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 dark:border-slate-700 dark:bg-slate-800/50">
                                     <h4 class="font-semibold text-gray-900 dark:text-gray-100">Check-in</h4>
-                                    <p class="mt-2 text-2xl font-bold text-primary">{{ hotel.horarios.check_in_desde || '' }}{{ hotel.horarios.check_in_desde && hotel.horarios.check_in_hasta ? ' – ' : '' }}{{ hotel.horarios.check_in_hasta || '' }}</p>
+                                    <p class="hotel-time mt-2 font-bold">{{ hotel.horarios.check_in_desde || '' }}{{ hotel.horarios.check_in_desde && hotel.horarios.check_in_hasta ? ' – ' : '' }}{{ hotel.horarios.check_in_hasta || '' }}</p>
                                 </article>
                                 }
                                 @if (hotel.horarios.check_out) {
                                 <article class="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 dark:border-slate-700 dark:bg-slate-800/50">
                                     <h4 class="font-semibold text-gray-900 dark:text-gray-100">Check-out</h4>
-                                    <p class="mt-2 text-2xl font-bold text-primary">{{ hotel.horarios.check_out }}</p>
+                                    <p class="hotel-time mt-2 font-bold">{{ hotel.horarios.check_out }}</p>
                                 </article>
                                 }
                                 @if (hotel.horarios.desayuno_desde || hotel.horarios.desayuno_hasta) {
                                 <article class="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 dark:border-slate-700 dark:bg-slate-800/50">
                                     <h4 class="font-semibold text-gray-900 dark:text-gray-100">{{ t('hotel-desayuno') }}</h4>
-                                    <p class="mt-2 text-2xl font-bold text-primary">{{ hotel.horarios.desayuno_desde || '' }}{{ hotel.horarios.desayuno_desde && hotel.horarios.desayuno_hasta ? ' – ' : '' }}{{ hotel.horarios.desayuno_hasta || '' }}</p>
+                                    <p class="hotel-time mt-2 font-bold">{{ hotel.horarios.desayuno_desde || '' }}{{ hotel.horarios.desayuno_desde && hotel.horarios.desayuno_hasta ? ' – ' : '' }}{{ hotel.horarios.desayuno_hasta || '' }}</p>
                                 </article>
                                 }
                             </div>
@@ -129,8 +129,8 @@
 
                             <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-2">
                                 <li *ngFor="let punto of descripcionLista" class="flex gap-2">
-                                    <mat-icon class="icon-size-5 text-green-600"
-                                        [svgIcon]="'heroicons_outline:check-badge'">
+                                    <mat-icon class="hotel-amenity-check" aria-hidden="true">
+                                        check
                                     </mat-icon>
                                     <span>{{ punto.descripcion }}</span>
                                 </li>
@@ -166,14 +166,14 @@
 
                 </mat-tab-group>
                 </div>
-                <div class="flex flex-col gap-2 px-4 pb-2 pt-0.5 sm:flex-row sm:flex-wrap sm:px-6">
+                <div class="hotel-detail-actions flex flex-col gap-2 px-4 pb-2 pt-0.5 sm:flex-row sm:flex-wrap sm:px-6">
                     <button mat-raised-button color="primary" class="w-full text-white sm:w-auto" (click)="abrirUbicacion()">
-                        <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:map-pin'"></mat-icon>
+                        <mat-icon class="mr-1.5 icon-size-4" [svgIcon]="'heroicons_outline:map-pin'"></mat-icon>
                         {{t('ubicacion')}}
                     </button>
                     <button id="shareBtn" mat-raised-button color="accent" class="w-full text-white sm:w-auto"
                         (click)="compartirHotel()">
-                        <mat-icon class="icon-size-5 pr-1" [svgIcon]="'heroicons_outline:share'"></mat-icon>
+                        <mat-icon class="mr-1.5 icon-size-4" [svgIcon]="'heroicons_outline:share'"></mat-icon>
                         {{t('compartir-hotel')}}
                     </button>
                     <button mat-raised-button type="button" class="w-full bg-[#F9B44B] text-white hover:bg-[#e0a13a] sm:w-auto"

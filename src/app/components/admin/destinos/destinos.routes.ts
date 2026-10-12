@@ -50,11 +50,27 @@ export default [
         path: 'configurar-destinos/preview/:id',
         component: EditarPreviewDestinoComponent,
         data: DESTINOS_VIEW,
+        children: [
+            {
+                path: 'vista-publica',
+                loadComponent: () => import('./vista-previa-destino/vista-previa-destino.component').then(m => m.VistaPreviaDestinoComponent),
+                data: { ...DESTINOS_VIEW, previewAdmin: true },
+                title: 'Vista previa pública de destino',
+            },
+        ],
     },
     {
         path: 'configurar-destinos/preview/:id/actividad/:actividadId',
         component: EditarActividadDestinoComponent,
         data: DESTINOS_VIEW,
+        children: [
+            {
+                path: 'vista-publica',
+                loadComponent: () => import('./vista-previa-destino/vista-previa-destino.component').then(m => m.VistaPreviaDestinoComponent),
+                data: { ...DESTINOS_VIEW, previewAdmin: true },
+                title: 'Vista previa pública de destino',
+            },
+        ],
     },
     {
         path: 'configurar-destinos/configurar-atracciones',

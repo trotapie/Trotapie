@@ -1,4 +1,5 @@
-<div class="flex min-w-0 flex-auto flex-col bg-gray-50 dark:bg-gray-950">
+<router-outlet />
+<div [class.!hidden]="mostrandoPreviewPublico" class="flex min-w-0 flex-auto flex-col bg-gray-50 dark:bg-gray-950">
   <div class="mx-auto flex w-full max-w-screen-xl flex-col px-4 py-5 sm:px-8 sm:py-7">
     <app-blocking-loader
       [open]="bloqueandoPantalla"
@@ -25,7 +26,12 @@
             <mat-icon class="mr-2 icon-size-5" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
             Regresar
           </button>
-          <button mat-flat-button color="primary" class="text-white" type="submit" form="form-editar-preview" [disabled]="guardando || traduciendoTextoPreview">
+          <button mat-stroked-button color="primary" type="button" (click)="verPreview()"
+            [disabled]="bloqueandoPantalla || guardandoUbicacion || traduciendoTextoPreview" matTooltip="Guardar la información y abrir la vista previa pública">
+            <mat-icon class="mr-2 icon-size-5" [class.animate-spin]="abriendoPreview">{{ abriendoPreview ? 'sync' : 'visibility' }}</mat-icon>
+            {{ abriendoPreview ? 'Guardando...' : 'Ver preview' }}
+          </button>
+          <button mat-flat-button color="primary" class="text-white" type="submit" form="form-editar-preview" [disabled]="guardando || traduciendoTextoPreview || abriendoPreview">
             <mat-icon class="mr-2 icon-size-5 text-white">save</mat-icon>
             @if (guardando) {
               Guardando...

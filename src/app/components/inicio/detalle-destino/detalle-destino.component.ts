@@ -55,6 +55,7 @@ export class DetalleDestinoComponent implements OnInit {
   private _translocoService = inject(TranslocoService);
   private route = inject(ActivatedRoute)
   private destroyRef = inject(DestroyRef);
+  readonly previewAdmin = this.route.snapshot.data['previewAdmin'] === true;
 
 
 
@@ -72,17 +73,34 @@ export class DetalleDestinoComponent implements OnInit {
   cargandoGaleria = true;
   errorDatosRapidos = '';
   errorGaleria = '';
+  errorCargaPreview = '';
 
   async ngOnInit() {
-    const catalogoDestinoId = Number(this.route.snapshot.paramMap.get('id'));
+    const catalogoDestinoId = Number(this.route.snapshot.paramMap.get('id')
+      ?? (this.previewAdmin ? this.route.parent?.snapshot.paramMap.get('id') : null));
     if (!Number.isInteger(catalogoDestinoId) || catalogoDestinoId <= 0) {
+      if (this.previewAdmin) {
+        this.errorCargaPreview = 'No se encontró el destino de esta vista previa.';
+        return;
+      }
       this.cargarInfo();
       return;
     }
 
     const idiomaInicial = getDefaultLang();
-    const informacionDestino = await this.supabase.obtenerDetalleBasicoDestino(catalogoDestinoId, idiomaInicial);
+    let informacionDestino: Awaited<ReturnType<DestinosService['obtenerDetalleBasicoDestino']>>;
+    try {
+      informacionDestino = await this.supabase.obtenerDetalleBasicoDestino(catalogoDestinoId, idiomaInicial);
+    } catch (error) {
+      if (!this.previewAdmin) throw error;
+      this.errorCargaPreview = 'No se pudo cargar la vista previa. Regresa al editor e inténtalo de nuevo.';
+      return;
+    }
     if (!informacionDestino?.[0]) {
+      if (this.previewAdmin) {
+        this.errorCargaPreview = 'Este destino aún no tiene contenido guardado para mostrar en la ficha pública.';
+        return;
+      }
       this.cargarInfo();
       return;
     }
@@ -116,7 +134,9 @@ export class DetalleDestinoComponent implements OnInit {
       void this.recargarPorIdioma(catalogoDestinoId, activeLang);
     });
 
-    sessionStorage.setItem('hotel', JSON.stringify(datosHotel))
+    if (!this.previewAdmin) {
+      sessionStorage.setItem('hotel', JSON.stringify(datosHotel));
+    }
   }
 
   abrirUbicacion() {
@@ -322,10 +342,15 @@ export class DetalleDestinoComponent implements OnInit {
   }
 
   cargarInfo() {
+    if (this.previewAdmin) return;
     this.router.navigate(['/hoteles']);
   }
 
   regresar() {
+    if (this.previewAdmin) {
+      void this.router.navigate(['..'], { relativeTo: this.route, queryParams: this.route.snapshot.queryParams });
+      return;
+    }
     this.router.navigate(['/inicio']);
   }
 

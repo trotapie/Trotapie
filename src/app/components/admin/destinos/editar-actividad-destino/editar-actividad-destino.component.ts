@@ -3,7 +3,7 @@ import { EstiloTextosImagen, TextoImagen, PresentacionTextoImagen, PRESENTACION_
 import { ImageTextPanelComponent } from 'app/shared/image-text-panel/image-text-panel.component';
 import { Component, HostListener, OnDestroy, OnInit, inject } from '@angular/core';
 import { UntypedFormArray, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
 import {
   IDriveActividadImportFolder,
   IDriveActividadImportImage,
@@ -140,7 +140,7 @@ const OVERLAY_POSITIONS: Array<{ value: OverlayPosition; label: string; x: numbe
 @Component({
   selector: 'app-editar-actividad-destino',
   standalone: true,
-  imports: [CommonModule, MaterialModule, ReactiveFormsModule, FolderImageManagerComponent, BlockingLoaderComponent, CustomSwitchComponent, ColorPickerComponent, TpInputComponent, TpTextareaComponent, TpSelectSearchComponent, ImageTextPanelComponent],
+  imports: [CommonModule, MaterialModule, ReactiveFormsModule, FolderImageManagerComponent, BlockingLoaderComponent, CustomSwitchComponent, ColorPickerComponent, TpInputComponent, TpTextareaComponent, TpSelectSearchComponent, ImageTextPanelComponent, RouterOutlet],
   templateUrl: './editar-actividad-destino.component.html',
   styleUrl: './editar-actividad-destino.component.scss',
   animations: [modalScaleFade, backdropFade],
@@ -163,6 +163,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   ];
 
   cargando = true;
+  abriendoPreview = false;
   guardandoImagenes = false;
   ordenImagenesPendiente = false;
   guardandoTraducciones = false;
@@ -651,6 +652,43 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   onWindowResize(): void {
     this.actualizarModoDrawer();
     requestAnimationFrame(() => this.actualizarMarcoImagenPreview());
+  }
+
+  async verPreview(): Promise<void> {
+    if (this.abriendoPreview || this.cargando || this.guardandoImagenes || this.guardandoTraducciones
+      || this.traduciendoActividad || this.consultandoDriveActividad || this.aplicandoCargaDriveActividad) return;
+
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.toast.show({
+        title: 'Revisa los datos de la actividad',
+        message: 'Completa los campos obligatorios antes de guardar y abrir el preview.',
+        variant: 'error'
+      });
+      return;
+    }
+
+    this.abriendoPreview = true;
+    try {
+      if (!await this.guardar()) return;
+      if (this.imagenesArray.length > 0) {
+        if (!await this.guardarImagenes()) return;
+        this.ordenImagenesPendiente = false;
+      }
+      await this.router.navigate([
+        '/admin/destinos/configurar-destinos/preview', this.destinoId,
+        'actividad', this.actividadId, 'vista-publica'
+      ], { queryParams: this.route.snapshot.queryParams });
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudo guardar la actividad antes de abrir el preview.';
+      this.toast.show({ title: 'No se pudo abrir el preview', message: this.error, variant: 'error' });
+    } finally {
+      this.abriendoPreview = false;
+    }
+  }
+
+  get mostrandoPreviewPublico(): boolean {
+    return this.route.firstChild?.snapshot.data['previewAdmin'] === true;
   }
 
   regresar() {

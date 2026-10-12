@@ -1,6 +1,6 @@
 import { AfterViewInit, Component, DoCheck, ElementRef, ViewChild, inject, OnDestroy, OnInit } from '@angular/core';
 import { UntypedFormArray, UntypedFormBuilder, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { Subscription } from 'rxjs';
 import {
@@ -31,7 +31,7 @@ interface ILangConfig {
 @Component({
   selector: 'app-editar-preview-destino',
   standalone: true,
-  imports: [MaterialModule, DragDropModule, BlockingLoaderComponent, TpInputComponent, TpSelectSearchComponent, DriveImageAssignmentDialogComponent, EstatusComponent, TpActionsMenuComponent],
+  imports: [MaterialModule, DragDropModule, BlockingLoaderComponent, TpInputComponent, TpSelectSearchComponent, DriveImageAssignmentDialogComponent, EstatusComponent, TpActionsMenuComponent, RouterOutlet],
   templateUrl: './editar-preview-destino.component.html',
   styleUrl: './editar-preview-destino.component.scss'
 })
@@ -58,6 +58,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
   destinoNombre = '';
   cargando = true;
   guardando = false;
+  abriendoPreview = false;
   guardandoUbicacion = false;
   actualizandoOrden = false;
   ordenActividadesPendiente = false;
@@ -153,7 +154,8 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     const tipoSeleccionado = this.parseNumber(this.formActividad.get('catalogo_atraccion_id')?.value);
     return this.catalogoAtracciones
       .filter((tipo) => !this.tipoYaRegistrado(tipo.id) || tipo.id === tipoSeleccionado)
-      .map((tipo) => ({ value: tipo.id, label: tipo.nombre }));
+      .map((tipo) => ({ value: tipo.id, label: tipo.nombre }))
+      .sort((a, b) => a.label.localeCompare(b.label, 'es', { sensitivity: 'base' }));
   }
 
   get actividadesFiltradas(): Array<{ control: any; formIndex: number }> {
@@ -235,6 +237,7 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
   get bloqueandoPantalla(): boolean {
     return (
       this.cargando ||
+      this.abriendoPreview ||
       this.guardando ||
       this.actualizandoOrden ||
       this.guardandoActividad ||
@@ -382,6 +385,32 @@ export class EditarPreviewDestinoComponent implements OnInit, AfterViewInit {
     } finally {
       this.guardando = false;
     }
+  }
+
+  async verPreview(): Promise<void> {
+    if (this.bloqueandoPantalla || this.guardandoUbicacion || this.traduciendoTextoPreview) return;
+
+    this.abriendoPreview = true;
+    try {
+      if (!await this.guardar(false)) {
+        if (this.error) {
+          this.toast.show({ title: 'No se pudo abrir el preview', message: this.error, variant: 'error' });
+        }
+        return;
+      }
+      await this.router.navigate(['/admin/destinos/configurar-destinos/preview', this.destinoId, 'vista-publica'], {
+        queryParams: this.route.snapshot.queryParams
+      });
+    } catch (error: any) {
+      this.error = error?.message ?? 'No se pudo guardar la información antes de abrir el preview.';
+      this.toast.show({ title: 'No se pudo abrir el preview', message: this.error, variant: 'error' });
+    } finally {
+      this.abriendoPreview = false;
+    }
+  }
+
+  get mostrandoPreviewPublico(): boolean {
+    return this.route.firstChild?.snapshot.data['previewAdmin'] === true;
   }
 
   regresar() {

@@ -1,6 +1,7 @@
-<div class="flex min-w-0 flex-auto flex-col bg-gray-50">
+<router-outlet />
+<div [class.!hidden]="mostrandoPreviewPublico" class="flex min-w-0 flex-auto flex-col bg-gray-50">
   <app-blocking-loader
-    [open]="cargando || consultandoDriveActividad || aplicandoCargaDriveActividad || guardandoImagenes || guardandoTraducciones || traduciendoActividad"
+    [open]="cargando || abriendoPreview || consultandoDriveActividad || aplicandoCargaDriveActividad || guardandoImagenes || guardandoTraducciones || traduciendoActividad"
     [title]="cargando ? 'Cargando actividad' : consultandoDriveActividad ? 'Consultando Drive' : aplicandoCargaDriveActividad ? 'Cargando imágenes' : guardandoImagenes ? 'Guardando imágenes' : guardandoTraducciones ? 'Guardando actividad' : 'Traduciendo actividad'"
     [message]="cargando ? 'Estamos cargando los datos para que puedas editarlos.' : consultandoDriveActividad ? 'Estamos consultando las carpetas e imágenes disponibles.' : aplicandoCargaDriveActividad ? 'Estamos preparando y guardando las imágenes seleccionadas.' : guardandoImagenes ? 'No cierres la pantalla mientras guardamos las imágenes.' : guardandoTraducciones ? 'No cierres la pantalla mientras guardamos los cambios.' : 'Estamos generando las traducciones automaticamente.'" />
 
@@ -72,10 +73,16 @@
               <p class="mt-1 text-sm text-gray-500">{{ destinoNombre }} · {{ actividadNombre }}</p>
             </div>
 
-            <div class="my-2 flex items-center gap-3 md:my-0">
+            <div class="my-2 flex flex-wrap items-center gap-3 md:my-0">
               <button mat-raised-button color="warn" class="text-white" type="button" (click)="regresar()">
                 <mat-icon class="mr-2 icon-size-5" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
                 Regresar
+              </button>
+              <button mat-stroked-button color="primary" type="button" (click)="verPreview()"
+                [disabled]="abriendoPreview || cargando || guardandoImagenes || guardandoTraducciones || traduciendoActividad || consultandoDriveActividad || aplicandoCargaDriveActividad"
+                matTooltip="Guardar la actividad y abrir la vista previa pública">
+                <mat-icon class="mr-2 icon-size-5" [class.animate-spin]="abriendoPreview">{{ abriendoPreview ? 'sync' : 'visibility' }}</mat-icon>
+                {{ abriendoPreview ? 'Guardando...' : 'Ver preview' }}
               </button>
             </div>
           </div>
