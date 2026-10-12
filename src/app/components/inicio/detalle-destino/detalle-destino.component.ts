@@ -14,6 +14,7 @@ import { IDetallesDestino } from './detalle-destino.interface';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { getDefaultLang } from 'app/lang.utils';
 import { EstiloTextosImagen, TextoImagen, PRESENTACION_TEXTO_PREDETERMINADA, normalizarEstiloTextosImagen } from 'app/core/estilo-textos-imagen';
+import { estiloEncuadreImagen } from 'app/core/encuadre-imagen';
 import { ImageTextPanelComponent } from 'app/shared/image-text-panel/image-text-panel.component';
 import { distinctUntilChanged, filter } from 'rxjs';
 
@@ -69,6 +70,7 @@ export class DetalleDestinoComponent implements OnInit {
   currentIndex = 0;
   intervalId: any;
   slides: CarouselSlide[] = [];
+  readonly estiloEncuadreImagen = estiloEncuadreImagen;
   cargandoDatosRapidos = true;
   cargandoGaleria = true;
   errorDatosRapidos = '';

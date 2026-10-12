@@ -145,6 +145,8 @@
   }
 
   .image-edit-modal__preview {
+    max-height: min(66vh, 42rem);
+    overflow-y: auto;
     flex-shrink: 0;
     min-height: 0;
     align-self: stretch;
@@ -604,6 +606,7 @@
 
     .image-edit-modal__workspace {
       display: block;
+      overflow-y: auto;
     }
 
     .image-edit-modal__content {
@@ -612,6 +615,8 @@
     }
 
     .image-edit-modal__preview {
+      max-height: none;
+      overflow: visible;
       height: auto;
       min-height: 0;
       border-right: 0;
@@ -635,7 +640,8 @@
     }
 
     .image-edit-modal__content {
-      max-height: calc(100vh - 28rem);
+      max-height: none;
+      overflow: visible;
     }
 
     ::ng-deep .image-edit-modal__stepper .mat-vertical-content {

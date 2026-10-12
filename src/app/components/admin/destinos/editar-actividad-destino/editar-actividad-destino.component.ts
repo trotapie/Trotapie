@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
+import { estiloEncuadreImagen, ENCUADRE_IMAGEN_PREDETERMINADO, normalizarEncuadreImagen } from 'app/core/encuadre-imagen';
 import { EstiloTextosImagen, TextoImagen, PresentacionTextoImagen, PRESENTACION_TEXTO_PREDETERMINADA, normalizarEstiloTextosImagen } from 'app/core/estilo-textos-imagen';
 import { ImageTextPanelComponent } from 'app/shared/image-text-panel/image-text-panel.component';
 import { Component, HostListener, OnDestroy, OnInit, inject } from '@angular/core';
-import { UntypedFormArray, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { AbstractControl, UntypedFormArray, UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
 import {
   IDriveActividadImportFolder,
@@ -90,6 +91,7 @@ type ImagenActividadForm = EstiloTextosImagen & {
 };
 
 const VALORES_PREDETERMINADOS_ESTILO_IMAGEN = {
+  ...ENCUADRE_IMAGEN_PREDETERMINADO,
   oscurecer_fondo: false,
   texto_color: '#FFFFFF',
   titulo_color: '#FFFFFF',
@@ -234,7 +236,6 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   readonly objetivosPresentacion = ['imagen', 'titulo', 'descripcion'] as const;
   private textoArrastrando: TextoImagen | null = null;
   private textoDragOffset = { x: 0, y: 0 };
-  previewImageRatio: number | null = null;
   previewMediaStyle: Record<string, string> = { inset: '0' };
   readonly posicionesOverlay = OVERLAY_POSITIONS;
   readonly dispositivosPrevisualizacion = [
@@ -658,11 +659,16 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     if (this.abriendoPreview || this.cargando || this.guardandoImagenes || this.guardandoTraducciones
       || this.traduciendoActividad || this.consultandoDriveActividad || this.aplicandoCargaDriveActividad) return;
 
+    this.actualizarValidezFormulario();
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      const imagenesInvalidas = this.imagenesArray.controls
+        .flatMap((control, index) => control.invalid ? [index + 1] : []);
       this.toast.show({
-        title: 'Revisa los datos de la actividad',
-        message: 'Completa los campos obligatorios antes de guardar y abrir el preview.',
+        title: imagenesInvalidas.length ? 'Revisa las imágenes de la galería' : 'Revisa los datos de la actividad',
+        message: imagenesInvalidas.length
+          ? `Completa los campos obligatorios de las imágenes ${imagenesInvalidas.join(', ')} antes de guardar y abrir el preview.`
+          : 'Completa los campos obligatorios antes de guardar y abrir el preview.',
         variant: 'error'
       });
       return;
@@ -689,6 +695,25 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
 
   get mostrandoPreviewPublico(): boolean {
     return this.route.firstChild?.snapshot.data['previewAdmin'] === true;
+  }
+
+  actualizarValidezFormulario(): void {
+    // Modal directives remove their validators without refreshing cached errors.
+    // Recalculate children first, retaining every validator still registered.
+    const actualizar = (control: AbstractControl): void => {
+      if (control instanceof UntypedFormArray || control instanceof UntypedFormGroup) {
+        Object.values(control.controls).forEach(actualizar);
+      }
+      control.updateValueAndValidity({ onlySelf: true, emitEvent: false });
+    };
+    actualizar(this.form);
+  }
+
+  alVolverDelPreview(): void {
+    this.actualizarValidezFormulario();
+    if (typeof document !== 'undefined' && !document.querySelector('.modal-blocker, .fm-modal-backdrop')) {
+      this.setModalLocked(false);
+    }
   }
 
   regresar() {
@@ -1866,26 +1891,19 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   }
 
   editarImagenDesdeGestor(image: FolderImageManagerImage): void {
-    const index = (this.imagenesArray.controls as any[]).findIndex(
-      (control) =>
-        this.parseNumber(control.get('id')?.value) === this.parseNumber(image.id)
-        || this.limpiarTexto(control.get('draft_key')?.value) === (image.draftKey ?? String(image.id))
-    );
-    if (!Number.isFinite(index)) {
-      return;
-    }
-
-    this.abrirEditorImagen(index);
+    const index = this.obtenerIndiceImagen(image);
+    if (index !== null) this.abrirEditorImagen(index);
   }
 
   async alternarImagenActivaDesdeGestor(evento: { image: FolderImageManagerImage; checked: boolean }): Promise<void> {
+    if (this.guardandoImagenes || this.abriendoPreview) return;
     const { image, checked } = evento;
     const index = (this.imagenesArray.controls as any[]).findIndex(
       (control) =>
         this.parseNumber(control.get('id')?.value) === this.parseNumber(image.id)
         || this.limpiarTexto(control.get('draft_key')?.value) === (image.draftKey ?? String(image.id))
     );
-    if (!Number.isFinite(index)) {
+    if (index < 0) {
       return;
     }
 
@@ -1893,8 +1911,25 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     const valorAnterior = Boolean(control.get('activa')?.value);
     this.imagenSeleccionadaIndex = index;
     control.get('activa')?.setValue(Boolean(checked), { emitEvent: false });
-    if (!await this.guardarImagenes()) {
+    const imagenId = this.parseNumber(control.get('id')?.value);
+    if (imagenId === null) {
+      if (!await this.guardarImagenes()) control.get('activa')?.setValue(valorAnterior, { emitEvent: false });
+      return;
+    }
+
+    this.guardandoImagenes = true;
+    this.error = '';
+    try {
+      await this.actividadesService.actualizarEstadoImagenActividadAdmin({
+        destino_id: this.destinoId, actividad_id: this.actividadId,
+        imagen_id: imagenId, activa: Boolean(checked)
+      });
+    } catch (error: any) {
       control.get('activa')?.setValue(valorAnterior, { emitEvent: false });
+      this.error = error?.message ?? 'No se pudo cambiar el estado de la imagen.';
+      this.toast.show({ title: 'No se pudo cambiar el estado de la imagen', message: this.error, variant: 'error' });
+    } finally {
+      this.guardandoImagenes = false;
     }
   }
 
@@ -2036,6 +2071,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   }
 
   cerrarEditorImagen(descartarCambios = true) {
+    this.terminarArrastreOverlay();
     const control = this.imagenEditandoControl;
     if (descartarCambios && control && this.imagenEditandoOriginal) {
       control.reset(structuredClone(this.imagenEditandoOriginal), { emitEvent: false });
@@ -2932,6 +2968,62 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
     });
   }
 
+  get zoomImagenPreview(): number {
+    return normalizarEncuadreImagen(this.imagenEditandoControl?.value).imagen_zoom;
+  }
+
+  get encuadreImagenPreviewStyle(): Record<string, string> {
+    const imagen = this.imagenEditandoControl?.value;
+    return estiloEncuadreImagen(imagen, imagen?.efecto_destino !== 'texto' && !!imagen?.blur_px);
+  }
+
+  cambiarZoomImagen(incremento: number): void {
+    this.imagenEditandoControl?.get('imagen_zoom')?.setValue(
+      Number(Math.min(3, Math.max(0.1, this.zoomImagenPreview + incremento)).toFixed(2))
+    );
+  }
+
+  restablecerEncuadreImagen(): void {
+    this.imagenEditandoControl?.patchValue(ENCUADRE_IMAGEN_PREDETERMINADO);
+  }
+
+  private arrastreImagen: {
+    pointerId: number; inicioX: number; inicioY: number; x: number; y: number;
+    recorridoX: number; recorridoY: number;
+  } | null = null;
+
+  iniciarArrastreImagen(event: PointerEvent): void {
+    if (event.button !== 0 || !this.imagenEditandoControl) return;
+    const imagen = event.currentTarget as HTMLImageElement;
+    const marco = imagen.parentElement?.getBoundingClientRect();
+    if (!marco?.width || !marco.height || !imagen.naturalWidth || !imagen.naturalHeight) return;
+    const encuadre = normalizarEncuadreImagen(this.imagenEditandoControl.value);
+    const escalaCover = Math.max(marco.width / imagen.naturalWidth, marco.height / imagen.naturalHeight);
+    const escala = encuadre.imagen_zoom * (this.imagenEditandoControl.value.efecto_destino !== 'texto'
+      && this.imagenEditandoControl.value.blur_px ? 1.05 : 1);
+    this.arrastreImagen = {
+      pointerId: event.pointerId, inicioX: event.clientX, inicioY: event.clientY,
+      x: encuadre.imagen_x, y: encuadre.imagen_y,
+      recorridoX: imagen.naturalWidth * escalaCover * escala - marco.width,
+      recorridoY: imagen.naturalHeight * escalaCover * escala - marco.height
+    };
+    imagen.setPointerCapture?.(event.pointerId);
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  @HostListener('document:pointermove', ['$event'])
+  moverEncuadreImagen(event: PointerEvent): void {
+    const arrastre = this.arrastreImagen;
+    if (!arrastre || arrastre.pointerId !== event.pointerId || !this.imagenEditandoControl) return;
+    const coordenada = (inicio: number, delta: number, recorrido: number) => Math.abs(recorrido) > 0.5
+      ? Number(Math.min(100, Math.max(0, inicio - delta / recorrido * 100)).toFixed(2)) : inicio;
+    this.imagenEditandoControl.patchValue({
+      imagen_x: coordenada(arrastre.x, event.clientX - arrastre.inicioX, arrastre.recorridoX),
+      imagen_y: coordenada(arrastre.y, event.clientY - arrastre.inicioY, arrastre.recorridoY)
+    });
+  }
+
   textoEstaPosicionadoPreview(texto: TextoImagen): boolean {
     return !!this.imagenEditandoControl?.get(`${texto}_posicion`)?.value;
   }
@@ -3072,14 +3164,6 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   }
 
   actualizarMarcoImagenPreview(event?: Event): void {
-    const image = event?.target as HTMLImageElement | undefined;
-    const ratio = image?.naturalWidth && image?.naturalHeight
-      ? image.naturalWidth / image.naturalHeight
-      : this.previewImageRatio;
-    if (ratio) {
-      this.previewImageRatio = ratio;
-    }
-
     this.previewMediaStyle = {
       width: '100%',
       height: '100%',
@@ -3091,6 +3175,7 @@ export class EditarActividadDestinoComponent implements OnInit, OnDestroy {
   @HostListener('document:pointerup')
   @HostListener('document:pointercancel')
   terminarArrastreOverlay(): void {
+    this.arrastreImagen = null;
     this.overlayDragActivo = false;
     this.contenidoDragActivo = false;
     this.previewArrastre = null;

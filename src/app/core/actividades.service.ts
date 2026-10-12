@@ -920,6 +920,31 @@ export class ActividadesService {
     if (error) throw error;
   }
 
+  async actualizarEstadoImagenActividadAdmin(payload: {
+    destino_id: number;
+    actividad_id: number;
+    imagen_id: number;
+    activa: boolean;
+  }): Promise<void> {
+    const { data: actividad, error: actividadError } = await this.client
+      .from('atracciones_principales')
+      .select('id, detalles_destinos!inner(catalogo_destino_id)')
+      .eq('id', payload.actividad_id)
+      .eq('detalles_destinos.catalogo_destino_id', payload.destino_id)
+      .maybeSingle();
+    if (actividadError) throw actividadError;
+    if (!actividad) throw new Error('No se encontró la actividad en este destino.');
+
+    const { error } = await this.client
+      .from('atracciones_imagenes')
+      .update({ activa: payload.activa })
+      .eq('id', payload.imagen_id)
+      .eq('atraccion_id', payload.actividad_id)
+      .select('id')
+      .single();
+    if (error) throw error;
+  }
+
   async guardarTraduccionesActividadAdmin(payload: {
     destino_id: number;
     actividad_id: number;

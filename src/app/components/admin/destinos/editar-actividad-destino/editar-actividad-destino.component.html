@@ -1,4 +1,4 @@
-<router-outlet />
+<router-outlet (deactivate)="alVolverDelPreview()" />
 <div [class.!hidden]="mostrandoPreviewPublico" class="flex min-w-0 flex-auto flex-col bg-gray-50">
   <app-blocking-loader
     [open]="cargando || abriendoPreview || consultandoDriveActividad || aplicandoCargaDriveActividad || guardandoImagenes || guardandoTraducciones || traduciendoActividad"
@@ -224,14 +224,16 @@
           </mat-form-field>
         </section>
         <div class="image-edit-modal__canvas relative overflow-hidden"
-          [style.aspect-ratio]="previewImageRatio || '16 / 9'">
+          style="aspect-ratio: 12 / 5;">
           <div class="image-edit-modal__media-stage absolute inset-0 overflow-hidden" [ngStyle]="previewMediaStyle">
             <img class="h-full w-full object-cover" [src]="imagenEditandoControl.get('imagen_url')?.value"
               [alt]="imagenEditandoTitulo" (load)="actualizarMarcoImagenPreview($event)"
+              draggable="false" style="touch-action: none; cursor: grab;"
+              (pointerdown)="iniciarArrastreImagen($event)" [ngStyle]="encuadreImagenPreviewStyle"
               [style.filter]="imagenEditandoControl.get('efecto_destino')?.value !== 'texto' ? 'blur(' + imagenEditandoControl.get('blur_px')?.value + 'px)' : null"
-              [style.transform]="imagenEditandoControl.get('efecto_destino')?.value !== 'texto' && imagenEditandoControl.get('blur_px')?.value ? 'scale(1.05)' : null" />
+              />
             @if (imagenEditandoControl.get('efecto_destino')?.value !== 'texto') {
-            <div class="absolute inset-0"
+            <div class="pointer-events-none absolute inset-0"
               [style.background-color]="colorConOpacidad(imagenEditandoControl.get('overlay_color')?.value, imagenEditandoControl.get('overlay_opacidad')?.value)">
             </div>
             }
@@ -303,6 +305,33 @@
             }
           </div>
         </div>
+        <section class="mt-4 w-full shrink-0 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900" aria-label="Encuadre de la imagen">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Zoom y encuadre</h4>
+              <p class="mt-1 text-xs text-gray-500 dark:text-gray-300">Reduce o amplía la imagen del 10% al 300% y arrástrala para ajustar el encuadre. Los textos mantienen su posición.</p>
+            </div>
+            <div class="flex items-center gap-1" role="group" aria-label="Zoom de la imagen">
+              <button mat-icon-button type="button" matTooltip="Alejar imagen" aria-label="Alejar imagen"
+                [disabled]="zoomImagenPreview <= 0.1" (click)="cambiarZoomImagen(-0.1)">
+                <mat-icon>zoom_out</mat-icon>
+              </button>
+              <span class="min-w-14 text-center text-sm font-semibold tabular-nums">{{ zoomImagenPreview * 100 | number:'1.0-0' }}%</span>
+              <button mat-icon-button type="button" matTooltip="Acercar imagen" aria-label="Acercar imagen"
+                [disabled]="zoomImagenPreview >= 3" (click)="cambiarZoomImagen(0.1)">
+                <mat-icon>zoom_in</mat-icon>
+              </button>
+              <button mat-icon-button type="button" matTooltip="Restablecer encuadre" aria-label="Restablecer zoom y posición de la imagen"
+                (click)="restablecerEncuadreImagen()"><mat-icon>restart_alt</mat-icon></button>
+            </div>
+          </div>
+          <div class="mt-3 grid gap-3 sm:grid-cols-2">
+            <app-tp-input label="Posición horizontal (%)" type="number" [min]="0" [max]="100" [step]="1"
+              [formControl]="imagenEditandoControl.get('imagen_x')"></app-tp-input>
+            <app-tp-input label="Posición vertical (%)" type="number" [min]="0" [max]="100" [step]="1"
+              [formControl]="imagenEditandoControl.get('imagen_y')"></app-tp-input>
+          </div>
+        </section>
       </div>
 
       <div class="image-edit-modal__content px-6 py-5" [formGroup]="imagenEditandoControl">
@@ -669,7 +698,7 @@
             [src]="imagenEditandoControl.get('imagen_url')?.value"
             [alt]="imagenEditandoTitulo"
             [style.filter]="imagenEditandoControl.get('efecto_destino')?.value !== 'texto' ? 'blur(' + imagenEditandoControl.get('blur_px')?.value + 'px)' : null"
-            [style.transform]="imagenEditandoControl.get('efecto_destino')?.value !== 'texto' && imagenEditandoControl.get('blur_px')?.value ? 'scale(1.05)' : null"
+            [ngStyle]="encuadreImagenPreviewStyle"
           />
 
           @if (imagenEditandoControl.get('efecto_destino')?.value !== 'texto') {

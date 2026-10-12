@@ -18,6 +18,9 @@ describe('Guardado obligatorio antes del preview público', () => {
       route: { snapshot: { queryParams: { tipo: 'NACIONAL' } } },
       toast: { show: toast }
     });
+    if (editor instanceof EditarActividadDestinoComponent) {
+      spyOn(editor, 'actualizarValidezFormulario');
+    }
     return editor;
   }
 
@@ -57,10 +60,14 @@ describe('Guardado obligatorio antes del preview público', () => {
     const editor = prepararEditor(EditarActividadDestinoComponent.prototype);
     const markAllAsTouched = jasmine.createSpy('markAllAsTouched');
     Object.defineProperty(editor, 'form', { value: { invalid: true, markAllAsTouched } });
+    Object.defineProperty(editor, 'imagenesArray', { get: () => ({ controls: [{ invalid: true }] }) });
     const guardar = spyOn(editor, 'guardar');
     await editor.verPreview();
     expect(markAllAsTouched).toHaveBeenCalled();
-    expect(toast).toHaveBeenCalled();
+    expect(toast).toHaveBeenCalledWith(jasmine.objectContaining({
+      title: 'Revisa las imágenes de la galería',
+      message: 'Completa los campos obligatorios de las imágenes 1 antes de guardar y abrir el preview.'
+    }));
     expect(guardar).not.toHaveBeenCalled();
     expect(navigate).not.toHaveBeenCalled();
   });
