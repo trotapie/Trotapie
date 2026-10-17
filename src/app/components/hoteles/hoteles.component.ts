@@ -15,13 +15,17 @@ import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { FooterComponent } from 'app/footer/footer.component';
 import { getDefaultLang } from 'app/lang.utils';
 import { FuseMediaWatcherService } from '@fuse/services/media-watcher/public-api';
-import { DestinosService } from 'app/core/destinos.service';
+import { DestinosService, TipoTuristicoCatalogo } from 'app/core/destinos.service';
+import { TpSelectSearchComponent, TpSelectSearchOption } from 'app/shared/tp-select-search/tp-select-search.component';
+
+type DestinoExperiencia = Destinos & { tipo_turistico_id: number | null };
 
 @Component({
     selector: 'hoteles',
     templateUrl: './hoteles.component.html',
+    styleUrl: './hoteles.component.scss',
     imports: [MaterialModule, FormsModule,
-        TranslocoModule, FooterComponent],
+        TranslocoModule, FooterComponent, TpSelectSearchComponent],
     encapsulation: ViewEncapsulation.None,
     standalone: true
 })
@@ -53,6 +57,8 @@ export class HotelesComponent {
     private readonly hotelesPorPagina = 10;
     private siguienteHotelOffset = 0;
     private hotelesObserver?: IntersectionObserver;
+    private hotelesRequestId = 0;
+    private destinosRequestId = 0;
     hotel: Hotel;
     rating: Number;
     descuentoEstilos = ['descuento-rect', 'descuento-estrella', 'descuento-circulo'];
@@ -83,6 +89,11 @@ export class HotelesComponent {
     mostrarInfo: boolean = false;
     destinos: Destinos[] = [];
     destinosNacionales: Destinos[] = [];
+    destinosPorExperiencia: Destinos[] = [];
+    tiposTuristicos: TipoTuristicoCatalogo[] = [];
+    selectedTipoTuristicoId: number | null = null;
+    cargandoDestinos = false;
+    errorDestinos = '';
     tipoDestino: number = 1;
     gruposDestinos: GrupoDestino[] = [];
 
@@ -130,10 +141,14 @@ export class HotelesComponent {
             this.hotelesForm = this.formBuilder.group({
                 hotelSeleccionado: ['']
             });
-            this.hotelesForm.get('hotelSeleccionado')?.valueChanges.subscribe(valor => {
+            this.hotelesForm.get('hotelSeleccionado')?.valueChanges.pipe(
+                takeUntilDestroyed(this.destroyRef)
+            ).subscribe(valor => {
                 void this.cargarHotelesIniciales();
-                if (valor !== null) {
+                if (valor) {
                     sessionStorage.setItem('ciudad', valor.toString());
+                } else {
+                    sessionStorage.removeItem('ciudad');
                 }
             });
             await this.obtenerDestinos();
@@ -143,7 +158,7 @@ export class HotelesComponent {
                 filter((activeLang) => activeLang !== idiomaInicial),
                 takeUntilDestroyed(this.destroyRef)
             ).subscribe((activeLang) => {
-                void this.cargarHotelesIniciales(activeLang);
+                void this.obtenerDestinos(this.tipoDestino, true, activeLang);
             });
         }
         this._fuseMediaWatcherService.onMediaChange$
@@ -180,6 +195,8 @@ export class HotelesComponent {
     }
 
     ngOnDestroy(): void {
+        this.hotelesRequestId++;
+        this.destinosRequestId++;
         if (this.intervalId) clearInterval(this.intervalId);
         this.hotelesObserver?.disconnect();
         this._unsubscribeAll.next(null);
@@ -199,42 +216,126 @@ export class HotelesComponent {
 
     }
 
-    async obtenerDestinos(tipoDestino?: number) {
+    async obtenerDestinos(tipoDestino?: number, conservarSeleccion = false, idioma = getDefaultLang()) {
+        const requestId = ++this.destinosRequestId;
         this.tipoDestino = tipoDestino ?? (sessionStorage.getItem('tipoDestino') !== null
             ? +sessionStorage.getItem('tipoDestino')
             : this.tipoDestino);
 
+        this.cargandoDestinos = true;
+        this.errorDestinos = '';
         try {
             if (this.tipoDestino === 1) {
-                this.destinos = await this.destinosService.obtenerDestinosCatalogoPublicables('NACIONAL') as Destinos[];
+                const [destinos, tipos] = await Promise.all([
+                    this.destinosService.obtenerDestinosCatalogoPublicables('NACIONAL', true),
+                    this.destinosService.obtenerTiposTuristicosCatalogo(false, idioma)
+                ]);
+                if (requestId !== this.destinosRequestId) return;
+                this.destinos = destinos as DestinoExperiencia[];
+                this.tiposTuristicos = tipos;
+                const ciudadId = Number(this.hotelesForm.get('hotelSeleccionado')?.value || sessionStorage.getItem('ciudad'));
+                const destinoActual = destinos.find(destino => destino.id === ciudadId);
+                const tipoActual = destinoActual?.tipo_turistico_id;
+                if (!conservarSeleccion || !this.experiencias.some(tipo => tipo.id === this.selectedTipoTuristicoId)) {
+                    const tipoGuardado = Number(sessionStorage.getItem('tipoTuristicoHoteles'));
+                    this.selectedTipoTuristicoId = tipos.some(tipo => tipo.id === tipoActual)
+                        ? tipoActual
+                        : this.experiencias.some(tipo => tipo.id === tipoGuardado)
+                            ? tipoGuardado
+                            : this.experiencias[0]?.id ?? null;
+                }
+                this.filtrarDestinosPorExperiencia();
             } else {
                 const { data, error } = await this.supabase.obtenerDestinos(this.tipoDestino);
+                if (requestId !== this.destinosRequestId) return;
                 if (error) throw error;
                 this.destinos = data;
             }
         } catch (error: any) {
-            this.error = error?.message ?? 'No se pudieron cargar los destinos.';
+            if (requestId !== this.destinosRequestId) return;
+            this.errorDestinos = error?.message ?? 'No se pudieron cargar los destinos.';
             return;
+        } finally {
+            if (requestId === this.destinosRequestId) this.cargandoDestinos = false;
         }
 
-        const ciudadGuardada = Number(sessionStorage.getItem('ciudad'));
-        const destinoSeleccionado = this.destinos.find(destino => destino.id === ciudadGuardada)
-            ?? this.destinos[0];
+        const ciudadGuardada = Number(this.hotelesForm.get('hotelSeleccionado')?.value || sessionStorage.getItem('ciudad'));
+        const opciones = this.tipoDestino === 1 ? this.destinosPorExperiencia : this.destinos;
+        const destinoSeleccionado = opciones.find(destino => destino.id === ciudadGuardada)
+            ?? (conservarSeleccion ? undefined : opciones[0]);
 
         this.hotelesForm.patchValue({ hotelSeleccionado: destinoSeleccionado?.id ?? null }, { emitEvent: false });
+        if (destinoSeleccionado) sessionStorage.setItem('ciudad', String(destinoSeleccionado.id));
+        else sessionStorage.removeItem('ciudad');
 
-        await this.cargarHotelesIniciales();
+        await this.cargarHotelesIniciales(idioma);
+    }
+
+    get opcionesDestinosExperiencia(): TpSelectSearchOption[] {
+        return this.destinosPorExperiencia.map(destino => ({ value: destino.id, label: destino.nombre }));
+    }
+
+    trackByExperienciaId(_: number, tipo: { id: number }): number {
+        return tipo.id;
+    }
+
+    get experiencias(): Array<{ id: number; nombre: string; icono: string }> {
+        const tiposConDestinos = new Set((this.destinos as DestinoExperiencia[]).map(destino => destino.tipo_turistico_id));
+        const tipos = this.tiposTuristicos
+            .filter(tipo => tiposConDestinos.has(tipo.id) || ['cabin', 'local_offer'].includes(this.iconoExperiencia(tipo.slug)))
+            .map(tipo => ({ ...tipo, icono: this.iconoExperiencia(tipo.slug) }));
+        if (!this.tiposTuristicos.some(tipo => this.iconoExperiencia(tipo.slug) === 'cabin')) {
+            tipos.push({ id: -1, nombre: '', slug: '', orden: 0, activo: true, icono: 'cabin' });
+        }
+        if (!this.tiposTuristicos.some(tipo => this.iconoExperiencia(tipo.slug) === 'local_offer')) {
+            tipos.push({ id: -2, nombre: '', slug: '', orden: 0, activo: true, icono: 'local_offer' });
+        }
+        return tipos;
+    }
+
+    private iconoExperiencia(slug: string): string {
+        if (/caban|cabin/.test(slug)) return 'cabin';
+        if (/promoc|oferta/.test(slug)) return 'local_offer';
+        if (/playa/.test(slug)) return 'beach_access';
+        return 'location_city';
+    }
+
+    private filtrarDestinosPorExperiencia(): void {
+        this.destinosPorExperiencia = (this.destinos as DestinoExperiencia[])
+            .filter(destino => destino.tipo_turistico_id === this.selectedTipoTuristicoId && this.selectedTipoTuristicoId !== null);
+    }
+
+    seleccionarExperiencia(tipoId: number): void {
+        if (this.selectedTipoTuristicoId === tipoId || this.cargandoDestinos) return;
+        this.selectedTipoTuristicoId = tipoId;
+        sessionStorage.setItem('tipoTuristicoHoteles', String(tipoId));
+        this.filtrarDestinosPorExperiencia();
+        const control = this.hotelesForm.get('hotelSeleccionado');
+        control?.setValue(this.destinosPorExperiencia[0]?.id ?? null);
+    }
+
+    get primeraExperienciaDisponible(): number | null {
+        const tiposConDestinos = new Set((this.destinos as DestinoExperiencia[]).map(destino => destino.tipo_turistico_id));
+        return this.experiencias.find(tipo => tiposConDestinos.has(tipo.id))?.id ?? null;
+    }
+
+    explorarOtraExperiencia(): void {
+        const tipoId = this.primeraExperienciaDisponible;
+        if (tipoId !== null) this.seleccionarExperiencia(tipoId);
     }
 
     private async cargarHotelesIniciales(idioma = getDefaultLang()): Promise<void> {
+        const requestId = ++this.hotelesRequestId;
         const hotelId = Number(this.hotelesForm.get('hotelSeleccionado')?.value);
         this.hotelesObserver?.disconnect();
         this.cargando = true;
         this.cargandoMasHoteles = false;
-        this.hayMasHoteles = true;
+        this.hayMasHoteles = false;
         this.siguienteHotelOffset = 0;
         this.hotelesPorCiudad = [];
         this.listaHoteles = [];
+        this.gruposDestinos = [];
+        this.ciudadSeleccionada = !!hotelId;
         this.error = '';
 
         try {
@@ -242,6 +343,7 @@ export class HotelesComponent {
 
             if (this.tipoDestino === 2) {
                 const hoteles = await this.supabase.listHotelesAllPorDestinoPadre(hotelId, idioma);
+                if (requestId !== this.hotelesRequestId) return;
                 const hotelesPreparados = this.prepararHoteles(hoteles ?? []);
                 this.gruposDestinos = this.agruparHotelesPorDestino(hotelesPreparados);
                 this.listaHoteles = hotelesPreparados;
@@ -255,6 +357,7 @@ export class HotelesComponent {
 
             this.destinoSelected = this.destinos.find(item => item.id === hotelId);
             const hoteles = await this.supabase.listHotelesTarjeta(hotelId, idioma, 0, this.hotelesPorPagina);
+            if (requestId !== this.hotelesRequestId) return;
             this.hotelesPorCiudad = this.prepararHoteles(hoteles);
             this.listaHoteles = this.hotelesPorCiudad;
             this.siguienteHotelOffset = this.hotelesPorCiudad.length;
@@ -262,9 +365,10 @@ export class HotelesComponent {
             this.destinoSeleccionado(this.hotelesPorCiudad);
             this.mostrarInfo = true;
         } catch (error: any) {
+            if (requestId !== this.hotelesRequestId) return;
             this.error = error?.message ?? 'No se pudieron cargar los hoteles.';
         } finally {
-            this.cargando = false;
+            if (requestId === this.hotelesRequestId) this.cargando = false;
         }
     }
 
@@ -273,6 +377,8 @@ export class HotelesComponent {
         if (this.cargando || this.cargandoMasHoteles || !this.hayMasHoteles || !hotelId || this.tipoDestino !== 1) return;
 
         this.cargandoMasHoteles = true;
+        this.error = '';
+        const requestId = this.hotelesRequestId;
         try {
             const hoteles = await this.supabase.listHotelesTarjeta(
                 hotelId,
@@ -280,16 +386,23 @@ export class HotelesComponent {
                 this.siguienteHotelOffset,
                 this.hotelesPorPagina
             );
+            if (requestId !== this.hotelesRequestId) return;
             const nuevosHoteles = this.prepararHoteles(hoteles);
             this.hotelesPorCiudad = [...this.hotelesPorCiudad, ...nuevosHoteles];
             this.listaHoteles = this.hotelesPorCiudad;
             this.siguienteHotelOffset += nuevosHoteles.length;
             this.hayMasHoteles = nuevosHoteles.length === this.hotelesPorPagina;
         } catch (error: any) {
+            if (requestId !== this.hotelesRequestId) return;
             this.error = error?.message ?? 'No se pudieron cargar más hoteles.';
         } finally {
-            this.cargandoMasHoteles = false;
+            if (requestId === this.hotelesRequestId) this.cargandoMasHoteles = false;
         }
+    }
+
+    reintentarHoteles(): void {
+        if (this.hotelesPorCiudad.length) void this.cargarMasHoteles();
+        else void this.cargarHotelesIniciales();
     }
 
     private prepararHoteles(hoteles: any[]): any[] {

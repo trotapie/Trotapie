@@ -19,7 +19,45 @@
         <div class="-mt-px flex-auto border-t ">
             <div class="mx-auto w-full max-w-screen-xl">
                 <section #anclaNacionales class="relative">
-                    <div class="sticky top-0 z-30 shadow py-2 transition duration-300"
+                    <div *ngIf="tipoDestino === 1 && hotelesForm" class="hoteles-experiencias sticky top-0 z-30"
+                        [attr.aria-busy]="cargandoDestinos">
+                        <div class="hoteles-experiencias__heading">
+                            <h2>{{ t('destinos-nacionales') }}</h2>
+                            <span aria-live="polite">{{ cargandoDestinos ? t('cargando-destinos') : t('cantidad-destinos', { cantidad: destinosPorExperiencia.length }) }}</span>
+                        </div>
+                        <div class="hoteles-experiencias__controls">
+                            <div class="hoteles-experiencias__categories">
+                                <span id="hoteles-experiencia-label" class="hoteles-experiencias__label">{{ t('explora-por-experiencia') }}</span>
+                                <div class="hoteles-experiencias__tabs" role="group" aria-labelledby="hoteles-experiencia-label">
+                                    <button *ngFor="let tipo of experiencias; trackBy: trackByExperienciaId" type="button"
+                                        [attr.aria-pressed]="selectedTipoTuristicoId === tipo.id"
+                                        [class.is-active]="selectedTipoTuristicoId === tipo.id"
+                                        [disabled]="cargandoDestinos" (click)="seleccionarExperiencia(tipo.id)">
+                                        <mat-icon class="mr-1.5 icon-size-4" aria-hidden="true">{{ tipo.icono }}</mat-icon>
+                                        {{ tipo.id === -1 ? t('cabanas') : tipo.id === -2 ? t('promociones') : tipo.nombre }}
+                                    </button>
+                                </div>
+                            </div>
+                            <form [formGroup]="hotelesForm" class="hoteles-experiencias__destination">
+                                <app-tp-select-search formControlName="hotelSeleccionado"
+                                    [label]="t('seleccionar-destino')"
+                                    [placeholder]="t('seleccionar-destino')"
+                                    [searchPlaceholder]="t('buscar-destinos')"
+                                    [emptyMessage]="t('destino-no-encontrado')"
+                                    [options]="opcionesDestinosExperiencia"
+                                    [showClear]="false"
+                                    [disabled]="cargandoDestinos || !!errorDestinos || destinosPorExperiencia.length === 0">
+                                </app-tp-select-search>
+                            </form>
+                        </div>
+                        <div *ngIf="errorDestinos" class="hoteles-experiencias__error" role="alert">
+                            <span>{{ t('error-cargar-destinos') }}. {{ t('revisa-conexion') }}</span>
+                            <button mat-stroked-button type="button" (click)="obtenerDestinos(tipoDestino, true)">
+                                <mat-icon class="mr-1.5 icon-size-4">refresh</mat-icon>{{ t('hoteles-reintentar') }}
+                            </button>
+                        </div>
+                    </div>
+                    <div *ngIf="tipoDestino === 2" class="sticky top-0 z-30 shadow py-2 transition duration-300"
                         [ngClass]="tipoDestino === 1
                             ? 'bg-[#F0FDF4] dark:bg-emerald-950/80'
                             : 'bg-[#FEF7EC] dark:bg-amber-950/70'">
@@ -137,12 +175,35 @@
                     </div>
 
                     <div *ngIf="tipoDestino === 1" class="flex min-w-0 flex-auto flex-col mt-2">
-                        <div class="flex-auto p-3 sm:p-5">
+                        <div class="hoteles-content flex-auto p-3 sm:p-5">
 
-                            <div *ngIf="cargando" class="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 md:grid-cols-3" aria-live="polite" aria-label="Cargando hoteles">
+                            <div *ngIf="error && !cargandoDestinos" class="hoteles-experiencias__error m-6" role="alert">
+                                <span>{{ t('hoteles-error-carga') }}. {{ t('revisa-conexion') }}</span>
+                                <button mat-stroked-button type="button" (click)="reintentarHoteles()" [disabled]="cargando || cargandoMasHoteles">
+                                    <mat-icon class="mr-1.5 icon-size-4" [class.animate-spin]="cargando || cargandoMasHoteles">{{ cargando || cargandoMasHoteles ? 'sync' : 'refresh' }}</mat-icon>{{ t('hoteles-reintentar') }}
+                                </button>
+                            </div>
+                            <p *ngIf="!cargandoDestinos && !errorDestinos && !cargando && !ciudadSeleccionada && destinosPorExperiencia.length > 0"
+                                class="hoteles-experiencias__hint px-6 py-10 text-center" role="status">{{ t('hoteles-selecciona-destino') }}</p>
+                            <section *ngIf="!cargandoDestinos && !errorDestinos && !cargando && destinosPorExperiencia.length === 0"
+                                class="hoteles-empty-experiencia" aria-labelledby="hoteles-empty-title">
+                                <div class="hoteles-empty-experiencia__icon" aria-hidden="true">
+                                    <mat-icon>travel_explore</mat-icon>
+                                </div>
+                                <div role="status">
+                                    <h3 id="hoteles-empty-title">{{ t('hoteles-experiencia-vacia-titulo') }}</h3>
+                                    <p>{{ t('experiencia-proximamente') }}</p>
+                                </div>
+                                <button *ngIf="primeraExperienciaDisponible !== null" mat-stroked-button type="button"
+                                    (click)="explorarOtraExperiencia()">
+                                    <mat-icon class="mr-1.5 icon-size-4">explore</mat-icon>
+                                    {{ t('hoteles-explorar-experiencias') }}
+                                </button>
+                            </section>
+                            <div *ngIf="cargando" class="hoteles-grid grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 md:grid-cols-3" aria-live="polite" aria-label="Cargando hoteles">
                                 <div *ngFor="let item of [1, 2, 3]" class="h-48 animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-700"></div>
                             </div>
-                            <div *ngIf="!cargando && hotelesPorCiudad.length === 0 && ciudadSeleccionada"
+                            <div *ngIf="!cargando && !error && !errorDestinos && hotelesPorCiudad.length === 0 && ciudadSeleccionada"
                                 class="mt-12 flex min-h-64 items-center justify-center text-center animate-fadeIn">
 
                                 <div class="flex flex-col items-center justify-center rounded-2xl border border-red-400/40 bg-red-100/20 p-6 max-w-md shadow-lg backdrop-blur-sm">
@@ -165,15 +226,15 @@
 
                                 </div>
                             </div>
-                            <div *ngIf="!cargando && hotelesPorCiudad.length > 0" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 p-6">
+                            <div *ngIf="!cargando && hotelesPorCiudad.length > 0" class="hoteles-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 p-6">
                                 <div *ngFor="let hotel of hotelesPorCiudad">
 
                                     <fuse-card
-                                        class="cursor-pointer filter-listing relative flex w-full h-48 flex-col bg-cover bg-center text-white rounded-2xl overflow-hidden transition duration-200 hover:scale-105 card-animada"
+                                        class="hoteles-card cursor-pointer filter-listing relative flex w-full h-48 flex-col bg-cover bg-center text-white rounded-2xl overflow-hidden transition duration-200 hover:scale-105 card-animada"
                                         [ngStyle]="{ 'background-image': 'url(' + (hotel.fondo || fallback) + ')' }"
                                         (click)="verDetalleHotel(hotel)">
 
-                                        <div class="absolute inset-0 bg-black/25 z-0"></div>
+                                        <div class="hoteles-card__overlay absolute inset-0 bg-black/25 z-0"></div>
                                         <div *ngIf="hotel?.descuento" class="absolute top-2 right-2 z-20">
                                             <div [ngClass]="getDescuentoClass(hotel)"
                                                 class="text-xs font-bold px-2 py-1">
@@ -199,8 +260,8 @@
                                             </div>
                                         </div>
 
-                                        <div class="relative z-10 m-8 mb-4">
-                                            <div class="text-2xl font-semibold leading-tight">{{ hotel.nombre_hotel }}
+                                        <div class="hoteles-card__content relative z-10 m-8 mb-4">
+                                            <div class="hoteles-card__title text-2xl font-semibold leading-tight">{{ hotel.nombre_hotel }}
                                             </div>
 
                                             <div class="-ml-1 mt-2 flex items-center leading-none">
@@ -220,7 +281,7 @@
                                                 </div>
                                                 <div class="ml-2">{{ hotel?.estrellas }}</div>
                                             </div>
-                                            <div class="w-3/5">
+                                            <div class="hoteles-card__regimen w-3/5">
 
                                                 {{hotel?.regimen?.descripcion}}
                                             </div>
@@ -240,7 +301,7 @@
                                     </fuse-card>
                                 </div>
                             </div>
-                            <div *ngIf="!cargando && hotelesPorCiudad.length > 0" class="grid grid-cols-1 gap-6 px-6 pb-6 sm:grid-cols-2 md:grid-cols-3" aria-live="polite">
+                            <div *ngIf="!cargando && hotelesPorCiudad.length > 0" class="hoteles-grid hoteles-grid--more grid grid-cols-1 gap-6 px-6 pb-6 sm:grid-cols-2 md:grid-cols-3" aria-live="polite">
                                 <div *ngIf="cargandoMasHoteles" class="h-48 animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-700"></div>
                                 <div *ngIf="cargandoMasHoteles" class="h-48 animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-700"></div>
                                 <div *ngIf="cargandoMasHoteles" class="h-48 animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-700"></div>

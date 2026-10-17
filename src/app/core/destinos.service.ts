@@ -2174,7 +2174,7 @@ export class DestinosService {
     return [...tipos.values()].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
   }
 
-  async obtenerDestinosCatalogoPublicables(tipo: 'NACIONAL' | 'INTERNACIONAL') {
+  async obtenerDestinosCatalogoPublicables(tipo: 'NACIONAL' | 'INTERNACIONAL', soloConfigurados = false) {
     const vista = tipo === 'NACIONAL'
       ? 'v_catalogo_nacionales_destinos_admin'
       : 'v_catalogo_internacional_destinos_admin';
@@ -2203,6 +2203,14 @@ export class DestinosService {
       continente: { nombre: String(item.region_nombre ?? '') },
       pais_nombre: String(item.pais_nombre ?? '')
     }));
+    if (soloConfigurados && datos.length) {
+      const { data: configurados, error: configuradosError } = await this.client
+        .from('v_catalogo_destinos_configurados')
+        .select('destino_id');
+      if (configuradosError) throw configuradosError;
+      const permitidos = new Set((configurados ?? []).map((item: any) => Number(item.destino_id)));
+      return datos.filter((destino) => permitidos.has(destino.id));
+    }
     return datos;
   }
 
