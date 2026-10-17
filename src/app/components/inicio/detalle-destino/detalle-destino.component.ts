@@ -12,12 +12,11 @@ import { IClima } from 'app/interface/clima.interface';
 import { MaterialModule } from 'app/shared/material.module';
 import { IDetallesDestino } from './detalle-destino.interface';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
-import { getDefaultLang } from 'app/lang.utils';
 import { EstiloTextosImagen, TextoImagen, PRESENTACION_TEXTO_PREDETERMINADA, normalizarEstiloTextosImagen } from 'app/core/estilo-textos-imagen';
 import { estiloEncuadreImagen } from 'app/core/encuadre-imagen';
 import { ImageTextPanelComponent } from 'app/shared/image-text-panel/image-text-panel.component';
 import { ImageFramingDirective } from 'app/shared/directives/image-framing.directive';
-import { distinctUntilChanged, filter } from 'rxjs';
+import { distinctUntilChanged } from 'rxjs';
 
 interface CarouselSlide extends EstiloTextosImagen {
   imagen_url: string;
@@ -77,8 +76,11 @@ export class DetalleDestinoComponent implements OnInit {
   errorDatosRapidos = '';
   errorGaleria = '';
   errorCargaPreview = '';
+  private versionCarga = 0;
+  private destruido = false;
+  private contextoInicializado = false;
 
-  async ngOnInit() {
+  ngOnInit() {
     const catalogoDestinoId = Number(this.route.snapshot.paramMap.get('id')
       ?? (this.previewAdmin ? this.route.parent?.snapshot.paramMap.get('id') : null));
     if (!Number.isInteger(catalogoDestinoId) || catalogoDestinoId <= 0) {
@@ -90,27 +92,21 @@ export class DetalleDestinoComponent implements OnInit {
       return;
     }
 
-    const idiomaInicial = getDefaultLang();
-    let informacionDestino: Awaited<ReturnType<DestinosService['obtenerDetalleBasicoDestino']>>;
-    try {
-      informacionDestino = await this.supabase.obtenerDetalleBasicoDestino(catalogoDestinoId, idiomaInicial);
-    } catch (error) {
-      if (!this.previewAdmin) throw error;
-      this.errorCargaPreview = 'No se pudo cargar la vista previa. Regresa al editor e inténtalo de nuevo.';
-      return;
-    }
-    if (!informacionDestino?.[0]) {
-      if (this.previewAdmin) {
-        this.errorCargaPreview = 'Este destino aún no tiene contenido guardado para mostrar en la ficha pública.';
-        return;
-      }
-      this.cargarInfo();
-      return;
-    }
-    this.asignarDetalleBasico(informacionDestino[0]);
-    this.cargarSeccionesSecundarias(idiomaInicial);
+    // Subscribe before starting any request, including the initial load. Transloco
+    // emits the active language immediately and also when returning to it later.
+    this._translocoService.langChanges$.pipe(
+      distinctUntilChanged(),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((activeLang) => {
+      void this.recargarPorIdioma(catalogoDestinoId, activeLang);
+    });
+  }
 
-    this.ipQueryService.getCurrentIpInfo().subscribe((response) => {
+  private inicializarContexto(): void {
+    if (this.contextoInicializado) return;
+    this.contextoInicializado = true;
+
+    this.ipQueryService.getCurrentIpInfo().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((response) => {
       this.ipPublica = response.ip;
       this.paisCode = response.location.country_code;
       this.tempUnit = this.temperatureUnitsService.getUnit(this.paisCode);
@@ -118,7 +114,7 @@ export class DetalleDestinoComponent implements OnInit {
 
     const coordenadas = this.extraerCoordenadasDesdeUrl(this.detallesDestino?.ubicacion);
     if (coordenadas) {
-      this.datosService.getWeather(coordenadas?.lat, coordenadas?.lng).subscribe(weather => {
+      this.datosService.getWeather(coordenadas?.lat, coordenadas?.lng).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(weather => {
         this.datosClima = weather;
       });
     }
@@ -128,14 +124,6 @@ export class DetalleDestinoComponent implements OnInit {
       nombre_hotel: this.detallesDestino?.nombre,
       vistaLejana: true,
     }
-
-    this._translocoService.langChanges$.pipe(
-      distinctUntilChanged(),
-      filter((activeLang) => activeLang !== idiomaInicial),
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe((activeLang) => {
-      void this.recargarPorIdioma(catalogoDestinoId, activeLang);
-    });
 
     if (!this.previewAdmin) {
       sessionStorage.setItem('hotel', JSON.stringify(datosHotel));
@@ -227,6 +215,8 @@ export class DetalleDestinoComponent implements OnInit {
   }
 
   ngOnDestroy() {
+    this.destruido = true;
+    this.versionCarga++;
     clearInterval(this.intervalId);
   }
 
@@ -284,15 +274,40 @@ export class DetalleDestinoComponent implements OnInit {
   }
 
   private async recargarPorIdioma(catalogoDestinoId: number, idioma: string): Promise<void> {
+    const version = ++this.versionCarga;
+    clearInterval(this.intervalId);
+    this.detallesDestino = undefined;
+    this.slides = [];
+    this.currentIndex = 0;
+    this.errorCargaPreview = '';
     try {
       const informacionDestino = await this.supabase.obtenerDetalleBasicoDestino(catalogoDestinoId, idioma);
-      if (!informacionDestino?.[0]) return;
+      if (!this.esCargaActual(version)) return;
+      if (!informacionDestino?.[0]) {
+        if (this.previewAdmin) {
+          this.errorCargaPreview = 'Este destino aún no tiene contenido guardado para mostrar en la ficha pública.';
+        } else {
+          this.cargarInfo();
+        }
+        return;
+      }
 
       this.asignarDetalleBasico(informacionDestino[0]);
-      this.cargarSeccionesSecundarias(idioma);
+      this.cargarSeccionesSecundarias(idioma, version);
+      this.inicializarContexto();
     } catch (error) {
+      if (!this.esCargaActual(version)) return;
+      if (this.previewAdmin) {
+        this.errorCargaPreview = 'No se pudo cargar la vista previa. Regresa al editor e inténtalo de nuevo.';
+      } else {
+        this.cargarInfo();
+      }
       console.error('No se pudo actualizar el detalle del destino.', error);
     }
+  }
+
+  private esCargaActual(version: number): boolean {
+    return version === this.versionCarga && !this.destruido;
   }
 
   private asignarDetalleBasico(detalle: Omit<IDetallesDestino, 'datos_rapidos' | 'atracciones_principales'>): void {
@@ -305,42 +320,49 @@ export class DetalleDestinoComponent implements OnInit {
     this.currentIndex = 0;
   }
 
-  private cargarSeccionesSecundarias(idioma: string): void {
+  private cargarSeccionesSecundarias(idioma: string, version: number): void {
     this.cargandoDatosRapidos = true;
     this.cargandoGaleria = true;
     this.errorDatosRapidos = '';
     this.errorGaleria = '';
 
-    void this.cargarDatosRapidos(idioma);
-    void this.cargarGaleria(idioma);
+    const detalleId = this.detallesDestino.detalle_id;
+    void this.cargarDatosRapidos(detalleId, idioma, version);
+    void this.cargarGaleria(detalleId, idioma, version);
   }
 
-  private async cargarDatosRapidos(idioma: string): Promise<void> {
+  private async cargarDatosRapidos(detalleId: number, idioma: string, version: number): Promise<void> {
     try {
-      this.detallesDestino.datos_rapidos = await this.supabase.obtenerDatosRapidosDestino(
-        this.detallesDestino.detalle_id,
+      const datosRapidos = await this.supabase.obtenerDatosRapidosDestino(
+        detalleId,
         idioma
       ) as IDetallesDestino['datos_rapidos'];
+      if (!this.esCargaActual(version)) return;
+      this.detallesDestino.datos_rapidos = datosRapidos;
     } catch (error) {
+      if (!this.esCargaActual(version)) return;
       this.errorDatosRapidos = 'No se pudieron cargar los datos rápidos.';
       console.error(this.errorDatosRapidos, error);
     } finally {
-      this.cargandoDatosRapidos = false;
+      if (this.esCargaActual(version)) this.cargandoDatosRapidos = false;
     }
   }
 
-  private async cargarGaleria(idioma: string): Promise<void> {
+  private async cargarGaleria(detalleId: number, idioma: string, version: number): Promise<void> {
     try {
-      this.detallesDestino.atracciones_principales = await this.supabase.obtenerGaleriaDestino(
-        this.detallesDestino.detalle_id,
+      const galeria = await this.supabase.obtenerGaleriaDestino(
+        detalleId,
         idioma
       ) as IDetallesDestino['atracciones_principales'];
+      if (!this.esCargaActual(version)) return;
+      this.detallesDestino.atracciones_principales = galeria;
       this.construirSlidesCarrusel();
     } catch (error) {
+      if (!this.esCargaActual(version)) return;
       this.errorGaleria = 'No se pudieron cargar las imágenes.';
       console.error(this.errorGaleria, error);
     } finally {
-      this.cargandoGaleria = false;
+      if (this.esCargaActual(version)) this.cargandoGaleria = false;
     }
   }
 
