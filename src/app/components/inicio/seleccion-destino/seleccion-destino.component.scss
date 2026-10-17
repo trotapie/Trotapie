@@ -340,7 +340,7 @@
   padding: 0.25rem;
   border: 1px solid #b8ccc2;
   border-radius: 0.8rem;
-  background: #fff;
+  background: #176a4b;
   scrollbar-width: none;
 }
 
@@ -354,7 +354,7 @@
   border: 1px solid transparent;
   border-radius: 0.55rem;
   background: transparent;
-  color: #176a4b;
+  color: #fff;
   font-size: 0.9rem;
   font-weight: 700;
   text-align: center;
@@ -362,18 +362,18 @@
 }
 
 .category-list button:hover {
-  background: #f1f5f2;
-  color: #294f42;
+  background: #125b40;
+  color: #fff;
 }
 
 .category-list .category-active {
-  border-color: #176a4b;
-  background: #176a4b;
-  color: #fff;
+  border-color: #fff;
+  background: #fff;
+  color: #176a4b;
   box-shadow: 0 2px 7px rgba(23, 106, 75, 0.18);
 }
 
-.category-list .category-active:hover { background: #125b40; color: #fff; }
+.category-list .category-active:hover { background: #f1f5f2; color: #176a4b; }
 .category-list button:active { transform: scale(0.98); }
 
 .destination-view-toggle {
