@@ -16,6 +16,7 @@ import { getDefaultLang } from 'app/lang.utils';
 import { EstiloTextosImagen, TextoImagen, PRESENTACION_TEXTO_PREDETERMINADA, normalizarEstiloTextosImagen } from 'app/core/estilo-textos-imagen';
 import { estiloEncuadreImagen } from 'app/core/encuadre-imagen';
 import { ImageTextPanelComponent } from 'app/shared/image-text-panel/image-text-panel.component';
+import { ImageFramingDirective } from 'app/shared/directives/image-framing.directive';
 import { distinctUntilChanged, filter } from 'rxjs';
 
 interface CarouselSlide extends EstiloTextosImagen {
@@ -43,7 +44,7 @@ interface CarouselSlide extends EstiloTextosImagen {
 
 @Component({
   selector: 'app-detalle-destino',
-  imports: [FooterComponent, MapaComponent, MaterialModule, TranslocoModule, ImageTextPanelComponent],
+  imports: [FooterComponent, MapaComponent, MaterialModule, TranslocoModule, ImageTextPanelComponent, ImageFramingDirective],
   templateUrl: './detalle-destino.component.html',
   styleUrl: './detalle-destino.component.scss'
 })

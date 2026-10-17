@@ -197,7 +197,7 @@
                                     <ng-container *ngIf="!cargandoGaleria; else gallerySkeleton">
                                     <ng-container *ngIf="slides[currentIndex] as slide; else galleryUnavailable">
                                     <div class="absolute inset-0 transition-opacity duration-1000 ease-in-out">
-                                        <img [src]="slide.imagen_url" class="w-full h-full object-cover"
+                                        <img tpImageFraming [src]="slide.imagen_url"
                                             [style.filter]="slide.efecto_destino !== 'texto' ? 'blur(' + slide.blur_px + 'px)' : null"
                                             [ngStyle]="estiloEncuadreImagen(slide, slide.efecto_destino !== 'texto' && !!slide.blur_px)"
                                             alt="carousel image" fetchpriority="high" />

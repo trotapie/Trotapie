@@ -4,7 +4,7 @@ import { normalizarEstiloTextosImagen } from './estilo-textos-imagen';
 describe('Encuadre de imagen', () => {
   it('conserva el encuadre original para imágenes anteriores sin configuración', () => {
     expect(normalizarEncuadreImagen()).toEqual({ imagen_zoom: 1, imagen_x: 50, imagen_y: 50 });
-    expect(estiloEncuadreImagen().transform).toBe('scale(1)');
+    expect(estiloEncuadreImagen().transform).toBe('translate(-50%, -50%) scale(1)');
   });
 
   it('limita valores inválidos antes de guardar o renderizar', () => {
@@ -19,14 +19,16 @@ describe('Encuadre de imagen', () => {
     const guardada = normalizarEstiloTextosImagen(imagen);
     const leida = normalizarEstiloTextosImagen(guardada);
     expect(normalizarEncuadreImagen(leida)).toEqual({ imagen_zoom: 0.5, imagen_x: 15, imagen_y: 80 });
-    expect(estiloEncuadreImagen(leida).transform).toBe('scale(0.5)');
+    expect(estiloEncuadreImagen(leida).transform).toBe('translate(-15%, -80%) scale(0.5)');
     expect(leida.titulo_x).toBe(30);
     expect(leida.titulo_y).toBe(40);
   });
 
   it('combina el zoom con el margen del desenfoque sin perder la posición', () => {
     const estilo = estiloEncuadreImagen({ imagen_zoom: 2, imagen_x: 20, imagen_y: 70 }, true);
-    expect(estilo.transform).toBe('scale(2.1)');
+    expect(estilo.transform).toBe('translate(-20%, -70%) scale(2.1)');
+    expect(estilo.left).toBe('20%');
+    expect(estilo.top).toBe('70%');
     expect(estilo.objectPosition).toBe('20% 70%');
     expect(estilo.transformOrigin).toBe('20% 70%');
   });

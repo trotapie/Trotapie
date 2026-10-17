@@ -25,8 +25,13 @@ export function estiloEncuadreImagen(imagen: EncuadreImagen = {}, ampliarPorBlur
   const encuadre = normalizarEncuadreImagen(imagen);
   const posicion = `${encuadre.imagen_x}% ${encuadre.imagen_y}%`;
   return {
+    position: 'absolute',
+    maxWidth: 'none',
+    maxHeight: 'none',
+    left: `${encuadre.imagen_x}%`,
+    top: `${encuadre.imagen_y}%`,
     objectPosition: posicion,
     transformOrigin: posicion,
-    transform: `scale(${encuadre.imagen_zoom * (ampliarPorBlur ? 1.05 : 1)})`
+    transform: `translate(${-encuadre.imagen_x}%, ${-encuadre.imagen_y}%) scale(${encuadre.imagen_zoom * (ampliarPorBlur ? 1.05 : 1)})`
   };
 }

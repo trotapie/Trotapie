@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { estiloEncuadreImagen, ENCUADRE_IMAGEN_PREDETERMINADO, normalizarEncuadreImagen } from 'app/core/encuadre-imagen';
 import { EstiloTextosImagen, TextoImagen, PresentacionTextoImagen, PRESENTACION_TEXTO_PREDETERMINADA, normalizarEstiloTextosImagen } from 'app/core/estilo-textos-imagen';
 import { ImageTextPanelComponent } from 'app/shared/image-text-panel/image-text-panel.component';
+import { ImageFramingDirective } from 'app/shared/directives/image-framing.directive';
 import { Component, HostListener, OnDestroy, OnInit, inject } from '@angular/core';
 import { AbstractControl, UntypedFormArray, UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
@@ -142,7 +143,7 @@ const OVERLAY_POSITIONS: Array<{ value: OverlayPosition; label: string; x: numbe
 @Component({
   selector: 'app-editar-actividad-destino',
   standalone: true,
-  imports: [CommonModule, MaterialModule, ReactiveFormsModule, FolderImageManagerComponent, BlockingLoaderComponent, CustomSwitchComponent, ColorPickerComponent, TpInputComponent, TpTextareaComponent, TpSelectSearchComponent, ImageTextPanelComponent, RouterOutlet],
+  imports: [CommonModule, MaterialModule, ReactiveFormsModule, FolderImageManagerComponent, BlockingLoaderComponent, CustomSwitchComponent, ColorPickerComponent, TpInputComponent, TpTextareaComponent, TpSelectSearchComponent, ImageTextPanelComponent, ImageFramingDirective, RouterOutlet],
   templateUrl: './editar-actividad-destino.component.html',
   styleUrl: './editar-actividad-destino.component.scss',
   animations: [modalScaleFade, backdropFade],

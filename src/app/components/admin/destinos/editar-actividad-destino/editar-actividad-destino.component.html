@@ -226,7 +226,7 @@
         <div class="image-edit-modal__canvas relative overflow-hidden"
           style="aspect-ratio: 12 / 5;">
           <div class="image-edit-modal__media-stage absolute inset-0 overflow-hidden" [ngStyle]="previewMediaStyle">
-            <img class="h-full w-full object-cover" [src]="imagenEditandoControl.get('imagen_url')?.value"
+            <img tpImageFraming [src]="imagenEditandoControl.get('imagen_url')?.value"
               [alt]="imagenEditandoTitulo" (load)="actualizarMarcoImagenPreview($event)"
               draggable="false" style="touch-action: none; cursor: grab;"
               (pointerdown)="iniciarArrastreImagen($event)" [ngStyle]="encuadreImagenPreviewStyle"
@@ -693,8 +693,7 @@
           [class.device-sim-container--tablet]="dispositivoSeleccionado === 'tablet'"
           [class.device-sim-container--phone]="dispositivoSeleccionado === 'phone'"
         >
-          <img
-            class="w-full h-full object-cover"
+          <img tpImageFraming
             [src]="imagenEditandoControl.get('imagen_url')?.value"
             [alt]="imagenEditandoTitulo"
             [style.filter]="imagenEditandoControl.get('efecto_destino')?.value !== 'texto' ? 'blur(' + imagenEditandoControl.get('blur_px')?.value + 'px)' : null"
