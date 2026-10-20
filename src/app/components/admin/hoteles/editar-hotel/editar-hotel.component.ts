@@ -101,6 +101,8 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
   private static readonly DRIVE_FONDO_RESPALDO_ENDPOINT =
     'https://script.google.com/macros/s/AKfycbxpFsRZUQ__79EVqF07MWc_-UgymAQPtVcoxhU8uQ5jxeIldPRP2fkd09r6yK76zqu-uA/exec';
   private static readonly DRIVE_CARGA_CREACION_ENDPOINT =
+    EditarHotelComponent.DRIVE_IMAGENES_ENDPOINT;
+  private static readonly DRIVE_CARGA_CREACION_RESPALDO_ENDPOINT =
     'https://script.google.com/macros/s/AKfycbwSHnOPFkhBq2YMRXwjyixD1-ZaKyChszLeZLRPTeZlvr2IXxkPWruOeJrn-bYduBT1/exec';
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -221,11 +223,11 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
       return false;
     }
 
-    const destinoId = Number(this.form.get('destino_id')?.value);
-    const catalogoDestinoId = Number(this.form.get('catalogo_destino_id')?.value);
+    const destinoId = this.parseNumber(this.form.get('destino_id')?.value);
+    const catalogoDestinoId = this.parseNumber(this.form.get('catalogo_destino_id')?.value);
     return this.esCreacion
-      ? Number.isFinite(catalogoDestinoId)
-      : Number.isFinite(destinoId) || Number.isFinite(catalogoDestinoId);
+      ? catalogoDestinoId !== null && catalogoDestinoId > 0
+      : (destinoId !== null && destinoId > 0) || (catalogoDestinoId !== null && catalogoDestinoId > 0);
   }
 
   get estrellasSeleccionadas(): number {
@@ -893,8 +895,25 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async obtenerCargaDriveCreacionHotel(carpetaId: string): Promise<{ fondo: string; imagenes: string[] }> {
+    try {
+      const resultado = await this.consultarCargaDriveCreacionEnEndpoint(
+        carpetaId, EditarHotelComponent.DRIVE_CARGA_CREACION_ENDPOINT
+      );
+      if (resultado.fondo || resultado.imagenes.length) return resultado;
+    } catch {
+      // Si el principal falla, se consulta el endpoint anterior como respaldo.
+    }
+
+    return this.consultarCargaDriveCreacionEnEndpoint(
+      carpetaId, EditarHotelComponent.DRIVE_CARGA_CREACION_RESPALDO_ENDPOINT
+    );
+  }
+
+  private async consultarCargaDriveCreacionEnEndpoint(
+    carpetaId: string, endpoint: string
+  ): Promise<{ fondo: string; imagenes: string[] }> {
     const url =
-      `${EditarHotelComponent.DRIVE_CARGA_CREACION_ENDPOINT}?carpetaId=${encodeURIComponent(carpetaId)}`;
+      `${endpoint}?carpetaId=${encodeURIComponent(carpetaId)}`;
 
     const response = await fetch(url);
     if (!response.ok) {
@@ -907,9 +926,11 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     const fondoRaw = Array.isArray(result?.data?.fondo) ? result.data.fondo : [];
-    const imagenesRaw = Array.isArray(result?.data?.imagenes) ? result.data.imagenes : [];
+    const imagenesRaw = Array.isArray(result?.data)
+      ? result.data
+      : Array.isArray(result?.data?.imagenes) ? result.data.imagenes : [];
 
-    const fondo =
+    let fondo =
       fondoRaw
         .map((item: any) => (typeof item === 'string' ? item.trim() : ''))
         .find((url: string) => /^https?:\/\//i.test(url)) ?? '';
@@ -917,6 +938,15 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
     const imagenes = imagenesRaw
       .map((item: any) => (typeof item === 'string' ? item.trim() : ''))
       .filter((url: string) => /^https?:\/\//i.test(url));
+
+    if (Array.isArray(result?.data) && imagenes.length) {
+      try {
+        const fondos = await this.obtenerImagenesHotel(carpetaId, EditarHotelComponent.DRIVE_FONDO_ENDPOINT);
+        fondo = fondos[0] ?? '';
+      } catch {
+        // La portada se puede asignar manualmente sin perder las imagenes obtenidas.
+      }
+    }
 
     return { fondo, imagenes };
   }
@@ -1165,13 +1195,15 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    const destinoId = Number(this.form.get('destino_id')?.value);
-    const catalogoDestinoId = Number(this.form.get('catalogo_destino_id')?.value);
-    if (this.esCreacion && !Number.isFinite(catalogoDestinoId)) {
+    const destinoId = this.parseNumber(this.form.get('destino_id')?.value);
+    const catalogoDestinoId = this.parseNumber(this.form.get('catalogo_destino_id')?.value);
+    const tieneDestino = destinoId !== null && destinoId > 0;
+    const tieneCatalogoDestino = catalogoDestinoId !== null && catalogoDestinoId > 0;
+    if (this.esCreacion && !tieneCatalogoDestino) {
       this.error = 'Selecciona un destino valido.';
       return;
     }
-    if (!this.esCreacion && !Number.isFinite(destinoId) && !Number.isFinite(catalogoDestinoId)) {
+    if (!this.esCreacion && !tieneDestino && !tieneCatalogoDestino) {
       this.error = 'Selecciona un destino valido.';
       return;
     }
@@ -1229,8 +1261,8 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
         fondo: this.limpiarTexto(raw.fondo),
         ubicacion: this.limpiarTexto(raw.ubicacion),
         horarios,
-        destino_id: this.esCreacion ? null : destinoId,
-        catalogo_destino_id: Number.isFinite(catalogoDestinoId) ? catalogoDestinoId : undefined,
+        destino_id: !this.esCreacion && tieneDestino ? destinoId : null,
+        catalogo_destino_id: tieneCatalogoDestino ? catalogoDestinoId : null,
         descuento_id: descuentoId,
         regimen_id: regimenPrincipalId,
         regimen_ids: Array.from(this.regimenesSeleccionados.values()),
