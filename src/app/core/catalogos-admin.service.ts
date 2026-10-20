@@ -123,6 +123,11 @@ export class CatalogosAdminService {
   }
 
   async obtenerCatalogoAdmin(catalogo: CatalogoAdminKey): Promise<any[]> {
+    return this.supabase.cachedRead(`catalogos-admin:${catalogo}`, 15 * 60_000,
+      () => this.cargarCatalogoAdmin(catalogo));
+  }
+
+  private async cargarCatalogoAdmin(catalogo: CatalogoAdminKey): Promise<any[]> {
     switch (catalogo) {
       case 'actividades': {
         const pageSize = 1000;

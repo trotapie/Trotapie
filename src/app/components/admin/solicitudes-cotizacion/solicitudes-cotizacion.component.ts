@@ -104,10 +104,10 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
         this.cotizacionesService.obtenerSolicitudesCotizacion(),
         this.supabaseClient.obtenerCotizacionesMultiples(),
       ]);
-      const [solicitudesVisibles, comparativasVisibles] = await Promise.all([
-        this.filtrarSolicitudesPorUsuario(solicitudes ?? []),
-        this.filtrarSolicitudesPorUsuario(comparativas ?? []),
-      ]);
+      // Resolve identity once per load, not once for each list.
+      const empleadoId = this.authService.isAdmin ? null : await this.obtenerEmpleadoActualId();
+      const solicitudesVisibles = this.filtrarSolicitudesPorUsuario(solicitudes ?? [], empleadoId);
+      const comparativasVisibles = this.filtrarSolicitudesPorUsuario(comparativas ?? [], empleadoId);
       const alternativasIds = new Set(
         comparativasVisibles.flatMap((comparativa) =>
           (comparativa.solicitudes ?? []).map((solicitud) => String(solicitud.public_id ?? solicitud.id))
@@ -136,18 +136,10 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
     }
   }
 
-  private async filtrarSolicitudesPorUsuario(
-    solicitudes: ISolicitudCotizacionListado[]
-  ): Promise<ISolicitudCotizacionListado[]> {
-    if (this.authService.isAdmin) {
-      return solicitudes;
-    }
-
-    const solicitudesActivas = solicitudes.filter((solicitud) => !this.estaEliminada(solicitud));
-
+  private async obtenerEmpleadoActualId(): Promise<number | null> {
     const { data, error } = await this.supabaseClient.getClient().auth.getUser();
     if (error || !data?.user?.id) {
-      return [];
+      return null;
     }
 
     const { data: empleado, error: empleadoError } = await this.supabaseClient
@@ -158,15 +150,24 @@ export class SolicitudesCotizacionComponent implements OnInit, AfterViewInit {
       .maybeSingle();
 
     if (empleadoError || !empleado?.id) {
-      return [];
+      return null;
     }
 
     const empleadoId = Number(empleado.id);
     if (!Number.isFinite(empleadoId) || empleadoId <= 0) {
-      return [];
+      return null;
     }
 
-    return solicitudesActivas
+    return empleadoId;
+  }
+
+  private filtrarSolicitudesPorUsuario(
+    solicitudes: ISolicitudCotizacionListado[], empleadoId: number | null
+  ): ISolicitudCotizacionListado[] {
+    if (this.authService.isAdmin) return solicitudes;
+    if (empleadoId === null) return [];
+
+    return solicitudes.filter((solicitud) => !this.estaEliminada(solicitud))
       .filter((solicitud) => Number(solicitud.empleado_id) === empleadoId)
       .map((solicitud) => ({
         ...solicitud,

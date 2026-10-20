@@ -18,6 +18,10 @@ export class ConfiguracionHotelesService {
   private readonly supabase = inject(SupabaseService);
 
   async obtener(): Promise<ConfiguracionHoteles> {
+    return this.supabase.cachedRead('configuracion-hoteles', 5 * 60_000, () => this.cargar());
+  }
+
+  private async cargar(): Promise<ConfiguracionHoteles> {
     const { data, error } = await this.supabase.getClient()
       .from('configuracion_hoteles').select('horarios, textos').eq('id', 1).maybeSingle();
     if (error) throw error;

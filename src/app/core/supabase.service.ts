@@ -6,6 +6,7 @@ import { environment } from '../../environments/environment';
 import { getDefaultLang } from 'app/lang.utils';
 import { TranslocoService } from '@jsverse/transloco';
 import { Observable } from 'rxjs';
+import { QueryCache } from './utils/query-cache';
 import { ISolicitudCotizacionListado } from 'app/interface/solicitudes-cotizacion.interface';
 import { construirNombreClienteVisible } from './cliente-nombre.util';
 import type { HotelHorarios, HotelPlanTodoIncluido } from 'app/components/hoteles/hotel-estancia.interface';
@@ -148,6 +149,7 @@ export class SupabaseService {
   private readonly adminSessionValidationInterval = 60_000;
   private adminSessionValidation: Promise<void> | null = null;
   private lastAdminSessionValidationAt = 0;
+  private readonly queryCache = new QueryCache();
 
   constructor() {
     this.client = createClient(environment.supabaseUrl, environment.supabaseAnonKey, {
@@ -156,12 +158,31 @@ export class SupabaseService {
         fetch: async (url, init) => {
           await this.ensureActiveAdminSession(url);
 
+          // Only these existing listing RPCs are known reads. Unknown POSTs,
+          // including RPCs and Edge Functions, conservatively invalidate reads.
+          const requestUrl = new URL(typeof url === 'string' ? url : url instanceof URL ? url.href : url.url);
+          const method = (init?.method ?? (url instanceof Request ? url.method : 'GET')).toUpperCase();
+          const readRpc = ['/rest/v1/rpc/obtener_solicitudes_cotizacion', '/rest/v1/rpc/obtener_cotizaciones_multiples']
+            .includes(requestUrl.pathname);
+          const invalidatesCache = !['GET', 'HEAD', 'OPTIONS'].includes(method) && !readRpc;
+          if (invalidatesCache) this.queryCache.clear();
+
           const controller = new AbortController();
+          const externalSignal = init?.signal ?? (url instanceof Request ? url.signal : null);
+          const abortFromCaller = () => controller.abort(externalSignal?.reason);
+          if (externalSignal?.aborted) abortFromCaller();
+          else externalSignal?.addEventListener('abort', abortFromCaller, { once: true });
           const timeoutId = setTimeout(() => controller.abort(), 30_000);
           const response = await fetch(url, { ...init, signal: controller.signal })
-            .finally(() => clearTimeout(timeoutId));
+            .finally(() => {
+              clearTimeout(timeoutId);
+              externalSignal?.removeEventListener('abort', abortFromCaller);
+              // Also discard reads started while a mutation was in flight.
+              if (invalidatesCache) this.queryCache.clear();
+            });
 
           if (response.status === 401 && this.isAdminSupabaseRequest(url)) {
+            this.queryCache.clear();
             this.lastAdminSessionValidationAt = 0;
             this.showMissingSessionDialog();
           }
@@ -170,6 +191,22 @@ export class SupabaseService {
         },
       },
     });
+    this.client.auth.onAuthStateChange(() => {
+      this.queryCache.clear();
+      this.lastAdminSessionValidationAt = 0;
+    });
+  }
+
+  /** Opt-in cache for reference data, never for editable quotes or auth checks. */
+  async cachedRead<T>(key: string, ttlMs: number, load: () => Promise<T>): Promise<T> {
+    // A cache hit must not bypass the existing administrative session check.
+    await this.ensureActiveAdminSession(`${environment.supabaseUrl}/rest/v1/`);
+    const scope = this.injector.get(Router).url.startsWith('/admin') ? 'admin' : 'public';
+    return this.queryCache.read(`${scope}:${getDefaultLang()}:${key}`, ttlMs, load);
+  }
+
+  invalidateCachedReads(): void {
+    this.queryCache.clear();
   }
 
   private isAdminSupabaseRequest(url: RequestInfo | URL): boolean {

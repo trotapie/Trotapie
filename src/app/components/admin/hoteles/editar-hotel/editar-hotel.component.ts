@@ -11,6 +11,7 @@ import { TimePickerComponent } from 'app/shared/time-picker/time-picker.componen
 import { TpSelectDirective } from 'app/shared/directives/tp-select.directive';
 import { TpToastService } from 'app/shared/tp-toast/tp-toast.service';
 import { SupabaseService } from 'app/core/supabase.service';
+import { driveThumbnailUrl } from 'app/core/utils/drive-thumbnail';
 import { HotelPlanTodoIncluido, normalizarHorarios, normalizarPlan } from 'app/components/hoteles/hotel-estancia.interface';
 import { DestinosService, DestinoCatalogo, PaisCatalogo, RegionCatalogo } from 'app/core/destinos.service';
 import {
@@ -176,6 +177,7 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
   private snapshotEstadoInicial = '';
   readonly seccionesHotel: SeccionHotel[] = ['datos-generales', 'ubicacion-portada', 'estancia', 'traducciones', 'servicios', 'galeria'];
   seccionActiva: SeccionHotel = 'datos-generales';
+  galeriaInicializada = false;
 
   regimenesSeleccionados = new Set<number>();
   actividadesSeleccionadas = new Set<number>();
@@ -253,6 +255,7 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
 
   activarSeccion(seccion: SeccionHotel): void {
     this.seccionActiva = seccion;
+    if (seccion === 'galeria') this.galeriaInicializada = true;
     if (seccion === 'ubicacion-portada') {
       this.actualizarPreviewUbicacion();
       setTimeout(() => this.mapaUbicacion?.invalidateSize(), 100);
@@ -824,6 +827,7 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
         draftKey: imagen.key,
         name: `Imagen ${index + 1}`,
         imageUrl: imagen.url_imagen,
+        thumbnailUrl: driveThumbnailUrl(imagen.url_imagen),
         folderId: carpetaId,
         folderName: nombreCarpeta,
         typeLabel: nombreCarpeta,
@@ -1588,17 +1592,13 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!catalogoDestinoId) return;
     this.cargandoDestinos = true;
     try {
-      const destinos = await this.destinosService.obtenerCatalogoInternacionalDestinos();
-      const destino = destinos.find((item) => item.id === catalogoDestinoId);
-      if (!destino) return;
-
-      const pais = (await this.destinosService.obtenerCatalogoInternacionalPaises([destino.pais_id]))
-        .find((item) => item.id === destino.pais_id);
-      if (!pais) return;
-
-      this.form.patchValue({ continente_id: pais.region_id, pais_id: pais.id }, { emitEvent: false });
-      this.paisesInternacionales = await this.destinosService.obtenerCatalogoInternacionalPaises([pais.region_id]);
-      this.destinosInternacionales = await this.destinosService.obtenerCatalogoInternacionalDestinosPorPais(pais.id);
+      const ubicacion = await this.destinosService.obtenerUbicacionDestinoInternacional(catalogoDestinoId);
+      if (!ubicacion) return;
+      this.form.patchValue({ continente_id: ubicacion.regionId, pais_id: ubicacion.paisId }, { emitEvent: false });
+      [this.paisesInternacionales, this.destinosInternacionales] = await Promise.all([
+        this.destinosService.obtenerCatalogoInternacionalPaises([ubicacion.regionId]),
+        this.destinosService.obtenerCatalogoInternacionalDestinosPorPais(ubicacion.paisId)
+      ]);
     } finally {
       this.cargandoDestinos = false;
     }

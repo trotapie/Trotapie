@@ -189,7 +189,7 @@
                             <p class="text-sm font-medium text-gray-700">Vista previa de imagen</p>
                         </div>
 
-                        @if (form.get('fondo')?.value) {
+                        @if (seccionActiva === 'ubicacion-portada' && form.get('fondo')?.value) {
                         <div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
                             <img [src]="form.get('fondo')?.value" alt="Imagen de fondo del hotel"
                                 class="h-72 w-full object-cover object-center" />
@@ -383,6 +383,7 @@
                     </div>
                 </div>
 
+                @if (galeriaInicializada) {
                 <app-folder-image-manager
                     title="Galería del hotel"
                     subtitle="Las imágenes se organizan visualmente por tipo. Clasifica las pendientes desde Sin tipo asignado."
@@ -402,6 +403,7 @@
                     (imageTypeChanged)="cambiarTipoImagenDesdeDetalle($event)"
                     (bulkPrimaryAction)="abrirModalAsignarTipoImagenes($event)">
                 </app-folder-image-manager>
+                }
             </section>
 
         </form>

@@ -9,6 +9,8 @@ export interface FolderImageManagerImage {
   draftKey?: string | null;
   name: string;
   imageUrl: string;
+  /** Optional lightweight preview. Original URL remains available for editing. */
+  thumbnailUrl?: string;
   folderId?: string | number | null;
   folderName?: string | null;
   subtitle?: string | null;

@@ -164,6 +164,10 @@ export class DestinosService {
   }
 
   async obtenerTiposDestinoAdmin() {
+    return this.supabase.cachedRead('destinos:tipos', 15 * 60_000, () => this.cargarTiposDestinoAdmin());
+  }
+
+  private async cargarTiposDestinoAdmin() {
     const { data, error } = await this.client
       .from('tipo_destinos')
       .select('id, nombre')
@@ -1766,6 +1770,11 @@ export class DestinosService {
   }
 
   async obtenerTiposTuristicosCatalogo(incluirInactivos = false, idioma = getDefaultLang()): Promise<TipoTuristicoCatalogo[]> {
+    return this.supabase.cachedRead(`destinos:tipos-turisticos:${incluirInactivos}:${idioma.toLowerCase()}`,
+      15 * 60_000, () => this.cargarTiposTuristicosCatalogo(incluirInactivos, idioma));
+  }
+
+  private async cargarTiposTuristicosCatalogo(incluirInactivos: boolean, idioma: string): Promise<TipoTuristicoCatalogo[]> {
     const idiomaActivo = idioma.toLowerCase();
     let query = this.client
       .from('catalogo_tipos_turisticos')
@@ -1777,7 +1786,8 @@ export class DestinosService {
       query,
       this.client
         .from('catalogo_tipos_turisticos_traducciones')
-        .select('tipo_turistico_id, nombre, idioma:idiomas(codigo)')
+        .select('tipo_turistico_id, nombre, idioma:idiomas!inner(codigo)')
+        .eq('idioma.codigo', idiomaActivo)
     ]);
     const { data, error } = tiposResultado;
     if (error) throw error;
@@ -1943,91 +1953,62 @@ export class DestinosService {
   }
 
   async obtenerCatalogoInternacionalDestinosPorPais(paisId: number): Promise<DestinoCatalogo[]> {
-    const items: DestinoCatalogoNavegable[] = [];
-    let page = 0;
-    let total = 0;
-
-    do {
-      const pagina = await this.buscarDestinosCatalogo({
-        tipo: 'INTERNACIONAL',
-        paisIds: [paisId],
-        page,
-        pageSize: 1000
-      });
-      items.push(...pagina.items);
-      total = pagina.total;
-      page++;
-    } while (items.length < total);
-
-    return items.map((item) => ({
-      id: item.destinoId,
-      pais_id: item.paisId,
-      division_area_id: item.divisionAreaId,
-      nombre: item.destinoNombre,
-      orden: item.orden,
-      prioridad: item.prioridad,
-      tipo_turistico_id: item.tipoTuristicoId,
-      tipo_turistico_nombre: item.tipoTuristicoNombre,
-      slug: item.slug,
-      activo: item.activo
-    }));
+    return this.supabase.cachedRead(`catalogo-destinos:INTERNACIONAL:pais:${paisId}`, 5 * 60_000,
+      () => this.cargarOpcionesDestinosCatalogo('INTERNACIONAL', paisId));
   }
 
   async obtenerCatalogoNacionalDestinos(): Promise<DestinoCatalogo[]> {
-    const items: DestinoCatalogoNavegable[] = [];
-    let page = 0;
-    let total = 0;
-
-    do {
-      const pagina = await this.buscarDestinosCatalogo({
-        tipo: 'NACIONAL',
-        page,
-        pageSize: 1000
-      });
-      items.push(...pagina.items);
-      total = pagina.total;
-      page++;
-    } while (items.length < total);
-
-    return items.map((item) => ({
-      id: item.destinoId,
-      pais_id: item.paisId,
-      division_area_id: item.divisionAreaId,
-      nombre: item.destinoNombre,
-      orden: item.orden,
-      prioridad: item.prioridad,
-      tipo_turistico_id: item.tipoTuristicoId,
-      tipo_turistico_nombre: item.tipoTuristicoNombre,
-      slug: item.slug,
-      activo: item.activo
-    }));
+    return this.supabase.cachedRead('catalogo-destinos:NACIONAL', 5 * 60_000,
+      () => this.cargarOpcionesDestinosCatalogo('NACIONAL'));
   }
 
   async obtenerCatalogoInternacionalDestinos(): Promise<DestinoCatalogo[]> {
     // Compatibilidad: este método ya no debe usarse para poblar listas globales.
-    const items: DestinoCatalogoNavegable[] = [];
-    let page = 0;
-    let total = 0;
+    return this.supabase.cachedRead('catalogo-destinos:INTERNACIONAL', 5 * 60_000,
+      () => this.cargarOpcionesDestinosCatalogo('INTERNACIONAL'));
+  }
 
+  async obtenerUbicacionDestinoInternacional(destinoId: number): Promise<{ paisId: number; regionId: number } | null> {
+    const { data, error } = await this.client.from('v_catalogo_internacional_destinos_admin')
+      .select('pais_id, region_id').eq('destino_id', destinoId).maybeSingle();
+    if (error) throw error;
+    return data ? { paisId: Number(data.pais_id), regionId: Number(data.region_id) } : null;
+  }
+
+  /** Select options have a separate batch size; table pages remain capped at 100. */
+  private async cargarOpcionesDestinosCatalogo(tipo: 'NACIONAL' | 'INTERNACIONAL', paisId?: number): Promise<DestinoCatalogo[]> {
+    const vista = tipo === 'NACIONAL'
+      ? 'v_catalogo_nacionales_destinos_admin' : 'v_catalogo_internacional_destinos_admin';
+    const items: DestinoCatalogo[] = [];
+    let total: number | null = null;
     do {
-      const pagina = await this.buscarDestinosCatalogo({ tipo: 'INTERNACIONAL', page, pageSize: 1000 });
-      items.push(...pagina.items);
-      total = pagina.total;
-      page++;
+      let query = this.client.from(vista)
+        .select('destino_id, pais_id, division_area_id, destino_nombre, destino_orden, destino_prioridad, tipo_turistico_id, tipo_turistico_nombre, destino_slug, activo',
+          items.length === 0 ? { count: 'exact' } : {})
+        .order('destino_prioridad', { ascending: true })
+        .order('destino_nombre', { ascending: true })
+        .order('destino_id', { ascending: true });
+      if (paisId !== undefined) query = query.eq('pais_id', paisId);
+      const { data, error, count } = await query.range(items.length, items.length + 999);
+      if (error) throw error;
+      if (total === null) {
+        if (count === null) throw new Error('No se pudo determinar el total del catálogo de destinos.');
+        total = count;
+      }
+      // Advance by actual rows, respecting projects with a lower API row limit.
+      if (!data?.length && items.length < total) {
+        throw new Error('El catálogo de destinos cambió durante la carga. Intenta nuevamente.');
+      }
+      items.push(...(data ?? []).map((item: any): DestinoCatalogo => ({
+        id: Number(item.destino_id), pais_id: Number(item.pais_id), division_area_id: Number(item.division_area_id),
+        nombre: String(item.destino_nombre ?? ''), orden: Number(item.destino_orden ?? 0),
+        prioridad: Number(item.destino_prioridad) === 1 ? 1 : 2,
+        tipo_turistico_id: item.tipo_turistico_id ? Number(item.tipo_turistico_id) : null,
+        tipo_turistico_nombre: item.tipo_turistico_nombre ?? null,
+        slug: String(item.destino_slug ?? ''), activo: Boolean(item.activo)
+      })));
     } while (items.length < total);
-
-    return items.map((item) => ({
-      id: item.destinoId,
-      pais_id: item.paisId,
-      division_area_id: item.divisionAreaId,
-      nombre: item.destinoNombre,
-      orden: item.orden,
-      prioridad: item.prioridad,
-      tipo_turistico_id: item.tipoTuristicoId,
-      tipo_turistico_nombre: item.tipoTuristicoNombre,
-      slug: item.slug,
-      activo: item.activo
-    }));
+    return items;
   }
 
   async contarDestinosCatalogoAdmin(): Promise<number> {
@@ -2107,7 +2088,7 @@ export class DestinosService {
     };
   }
 
-  async buscarDestinosCatalogo(filtros: FiltrosDestinoCatalogo): Promise<PaginaDestinoCatalogo> {
+  async buscarDestinosCatalogo(filtros: FiltrosDestinoCatalogo, signal?: AbortSignal): Promise<PaginaDestinoCatalogo> {
     const page = Math.max(0, Math.floor(filtros.page ?? 0));
     const pageSize = Math.min(100, Math.max(1, Math.floor(filtros.pageSize ?? 25)));
     // Administración: incluye activos e inactivos para poder auditar el
@@ -2143,16 +2124,19 @@ export class DestinosService {
       .toLowerCase();
     if (busqueda) query = query.ilike('destino_nombre_normalizado', `%${busqueda}%`);
 
+    if (signal) query = query.abortSignal(signal);
     const { data, error, count } = await query.range(page * pageSize, (page + 1) * pageSize - 1);
     if (error) throw error;
 
     let items = (data ?? []).map((item: any) => this.mapearDestinoCatalogo(item, filtros.tipo));
     if (filtros.soloConfigurados && items.length) {
       const ids = items.map((item) => item.destinoId);
-      const { data: configurados, error: configuradosError } = await this.client
+      let configuradosQuery = this.client
         .from('v_catalogo_destinos_configurados')
         .select('destino_id')
         .in('destino_id', ids);
+      if (signal) configuradosQuery = configuradosQuery.abortSignal(signal);
+      const { data: configurados, error: configuradosError } = await configuradosQuery;
       if (configuradosError) throw configuradosError;
       const permitidos = new Set((configurados ?? []).map((item: any) => Number(item.destino_id)));
       items = items.filter((item) => permitidos.has(item.destinoId));

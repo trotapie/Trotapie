@@ -15,6 +15,7 @@ import { TpDonutChartComponent, TpDonutSegment } from 'app/shared/charts/tp-donu
 import { TpBarChartComponent, TpBarItem } from 'app/shared/charts/tp-bar-chart/tp-bar-chart.component';
 import { TpActionMenuItem, TpActionsMenuComponent } from 'app/shared/tp-actions-menu/tp-actions-menu.component';
 import { Subject, takeUntil } from 'rxjs';
+import { DOCUMENT } from '@angular/common';
 
 type RankingItem = { nombre: string; total: number };
 type SerieUltimosDias = { labels: string[]; series: number[]; fechas: string[] };
@@ -37,7 +38,16 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
   private _unsubscribeAll = new Subject<void>();
   private _solicitudesActuales: ISolicitudCotizacionListado[] = [];
   private _tooltipObserver: MutationObserver | null = null;
-  private _refreshInterval: ReturnType<typeof setInterval> | null = null;
+  private readonly _document = inject(DOCUMENT);
+  private readonly _refreshMs = 2 * 60_000;
+  private _refreshTimer: ReturnType<typeof setTimeout> | null = null;
+  private _destroyed = false;
+  private _lastRefreshFinishedAt = 0;
+  private _failedRefreshes = 0;
+  private readonly _visibilityListener = () => {
+    this._cancelRefresh();
+    if (!this._document.hidden) this._scheduleRefresh();
+  };
 
   isLoading = false;
   isInitialLoading = true;
@@ -136,17 +146,14 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
         }
     });
 
-    void this.recargarDashboard();
-    this._refreshInterval = setInterval(() => {
-      if (!this.isLoading) void this.recargarDashboard();
-    }, 30 * 1000);
+    this._document.addEventListener('visibilitychange', this._visibilityListener);
+    if (!this._document.hidden) void this.recargarDashboard(true);
   }
 
   ngOnDestroy(): void {
-    if (this._refreshInterval) {
-      clearInterval(this._refreshInterval);
-      this._refreshInterval = null;
-    }
+    this._destroyed = true;
+    this._cancelRefresh();
+    this._document.removeEventListener('visibilitychange', this._visibilityListener);
     this._tooltipObserver?.disconnect();
     this._unsubscribeAll.next();
     this._unsubscribeAll.complete();
@@ -171,7 +178,30 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
     this._removerTooltipsNativosTendencia();
   }
 
-  async recargarDashboard(): Promise<void> {
+  private _cancelRefresh(): void {
+    if (this._refreshTimer !== null) clearTimeout(this._refreshTimer);
+    this._refreshTimer = null;
+  }
+
+  private _scheduleRefresh(): void {
+    this._cancelRefresh();
+    if (this._destroyed || this._document.hidden || this.isLoading) return;
+    const interval = Math.min(this._refreshMs * 2 ** this._failedRefreshes, 10 * 60_000);
+    const remaining = Math.max(0, this._lastRefreshFinishedAt + interval - Date.now());
+    this._refreshTimer = setTimeout(() => {
+      if (!this._document.hidden) void this.recargarDashboard(true);
+    }, remaining);
+  }
+
+  private _referenceCall<T>(name: string, load: () => Promise<T>, fallback: T): Promise<T> {
+    return this._safeCall(name,
+      () => this._supabase.cachedRead(`dashboard:${name}`, 15 * 60_000, load), fallback);
+  }
+
+  async recargarDashboard(automatic = false): Promise<void> {
+    if (this.isLoading || this._destroyed) return;
+    this._cancelRefresh();
+    if (!automatic) this._supabase.invalidateCachedReads();
     this.isInitialLoading = !this.updatedAt;
     this.isLoading = true;
     this.errorMessage = '';
@@ -201,21 +231,21 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
           tiposHabitacion,
           hotelesCount
         ] = await Promise.all([
-          this._safeCall('destinos', () => this._destinosService.contarDestinosCatalogoAdmin(), 0),
-          this._safeCall('tipos de destino', () => this._destinosService.obtenerTiposDestinoAdmin(), [] as any[]),
-          this._safeCall('tipos turísticos', () => this._destinosService.obtenerTiposTuristicosCatalogo(true), [] as any[]),
-          this._safeCall('empleados', async () => {
-            const { data, error } = await this._empleadosService.empleados({ incluirInhabilitados: true });
+          this._referenceCall('destinos', () => this._destinosService.contarDestinosCatalogoAdmin(), 0),
+          this._referenceCall('tipos de destino', () => this._destinosService.obtenerTiposDestinoAdmin(), [] as any[]),
+          this._referenceCall('tipos turísticos', () => this._destinosService.obtenerTiposTuristicosCatalogo(true), [] as any[]),
+          this._referenceCall('empleados', async () => {
+            const { data, error } = await this._supabase.getClient().from('empleados').select('id');
             if (error) throw error;
             return data ?? [];
           }, [] as any[]),
-          this._safeCall('continentes', async () => {
+          this._referenceCall('continentes', async () => {
             const { data, error } = await this._supabase.continentes();
             if (error) throw error;
             return data ?? [];
           }, [] as any[]),
-          this._safeCall('idiomas', () => this._catalogosAdmin.obtenerCatalogoAdmin('idiomas'), [] as any[]),
-          this._safeCall('atracciones', async () => {
+          this._referenceCall('idiomas', () => this._catalogosAdmin.obtenerCatalogoAdmin('idiomas'), [] as any[]),
+          this._referenceCall('atracciones', async () => {
             const { count, error } = await this._supabase
               .getClient()
               .from('atracciones_principales')
@@ -224,8 +254,8 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
             if (error) throw error;
             return count ?? 0;
           }, 0),
-          this._safeCall('tipos de habitacion', () => this._catalogosAdmin.obtenerCatalogoAdmin('tipos_habitacion'), [] as any[]),
-          this._safeCall('hoteles', async () => {
+          this._referenceCall('tipos de habitacion', () => this._catalogosAdmin.obtenerCatalogoAdmin('tipos_habitacion'), [] as any[]),
+          this._referenceCall('hoteles', async () => {
             const { count, error } = await this._supabase
               .getClient()
               .from('hoteles')
@@ -297,6 +327,9 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
     } finally {
       this.isLoading = false;
       this.isInitialLoading = false;
+      this._lastRefreshFinishedAt = Date.now();
+      this._failedRefreshes = this.errorMessage || this.warnings.length ? Math.min(this._failedRefreshes + 1, 3) : 0;
+      this._scheduleRefresh();
     }
   }
 

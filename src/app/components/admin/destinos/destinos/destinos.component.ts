@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { PageEvent } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
@@ -13,12 +13,20 @@ import { TpToastService } from 'app/shared/tp-toast/tp-toast.service';
 import { TpActionsMenuComponent, TpActionMenuItem } from 'app/shared/tp-actions-menu/tp-actions-menu.component';
 
 @Component({ selector: 'app-destinos', standalone: true, imports: [MaterialModule, FormsModule, TpMultiselectComponent, TpSearchInputComponent, TpSelectSearchComponent, TpActionsMenuComponent], templateUrl: './destinos.component.html', styleUrl: './destinos.component.scss' })
-export class DestinosComponent implements OnInit {
+export class DestinosComponent implements OnInit, OnDestroy {
   private readonly destinosService = inject(DestinosService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
   private readonly toast = inject(TpToastService);
+  private consultaDestinos?: AbortController;
+  private consultaDestinosKey = '';
+  private destruido = false;
+
+  ngOnDestroy(): void {
+    this.destruido = true;
+    this.consultaDestinos?.abort();
+  }
   readonly displayedColumns = ['destino', 'clasificacion', 'ubicacion', 'estado', 'acciones'];
   tipoVisible: 'NACIONAL' | 'INTERNACIONAL' = 'NACIONAL';
   regiones: RegionCatalogo[] = []; paises: PaisCatalogo[] = []; divisiones: DivisionAreaCatalogo[] = []; clasificaciones: TipoTuristicoCatalogo[] = [];
@@ -117,7 +125,40 @@ export class DestinosComponent implements OnInit {
   private async cargarFiltros() { if (this.tipoVisible === 'NACIONAL') { this.divisiones = await this.destinosService.obtenerCatalogoNacionalesDivisionAreas(); this.regiones = []; this.paises = []; return; } this.regiones = await this.destinosService.obtenerCatalogoInternacionalRegiones(); await this.cargarPaises(); this.divisiones = []; }
   private async cargarPaises() { this.paises = this.tipoVisible === 'INTERNACIONAL' ? await this.destinosService.obtenerCatalogoInternacionalPaises(this.regionIds) : []; }
   private async cargarClasificaciones() { this.clasificaciones = await this.destinosService.obtenerTiposTuristicosConfigurados({ tipo: this.tipoVisible, regionIds: this.regionIds, paisIds: this.paisIds, divisionAreaIds: this.divisionAreaIds, soloActivos: this.soloActivos }); if (this.tipoTuristicoId && !this.clasificaciones.some((item) => item.id === this.tipoTuristicoId)) this.tipoTuristicoId = null; }
-  private async cargarDestinos() { this.cargando = true; this.error = ''; try { const pagina = await this.destinosService.buscarDestinosCatalogo({ tipo: this.tipoVisible, page: this.pageIndex, pageSize: this.pageSize, regionIds: this.regionIds, paisIds: this.paisIds, divisionAreaIds: this.divisionAreaIds, busqueda: this.busqueda, tipoTuristicoId: this.tipoTuristicoId, soloActivos: this.soloActivos }); this.destinos = pagina.items; this.total = pagina.total; this.actualizarEjemploBusqueda(); } catch (error: any) { this.error = error?.message ?? 'No se pudieron cargar los destinos del catálogo.'; this.destinos = []; this.total = 0; this.actualizarEjemploBusqueda(); } finally { this.cargando = false; } }
+  private async cargarDestinos() {
+    if (this.destruido) return;
+    const filtros = {
+      tipo: this.tipoVisible, page: this.pageIndex, pageSize: this.pageSize,
+      regionIds: [...this.regionIds], paisIds: [...this.paisIds], divisionAreaIds: [...this.divisionAreaIds],
+      busqueda: this.busqueda, tipoTuristicoId: this.tipoTuristicoId, soloActivos: this.soloActivos
+    };
+    const key = JSON.stringify(filtros);
+    if (this.consultaDestinos && this.consultaDestinosKey === key) return;
+    this.consultaDestinos?.abort();
+    const controller = new AbortController();
+    this.consultaDestinos = controller;
+    this.consultaDestinosKey = key;
+    this.cargando = true;
+    this.error = '';
+    try {
+      const pagina = await this.destinosService.buscarDestinosCatalogo(filtros, controller.signal);
+      if (controller.signal.aborted) return;
+      this.destinos = pagina.items;
+      this.total = pagina.total;
+      this.actualizarEjemploBusqueda();
+    } catch (error: any) {
+      if (controller.signal.aborted) return;
+      this.error = error?.message ?? 'No se pudieron cargar los destinos del catálogo.';
+      this.destinos = [];
+      this.total = 0;
+      this.actualizarEjemploBusqueda();
+    } finally {
+      if (this.consultaDestinos === controller) {
+        this.consultaDestinos = undefined;
+        this.cargando = false;
+      }
+    }
+  }
   private actualizarEjemploBusqueda(): void { const destino = this.destinos[Math.floor(Math.random() * this.destinos.length)]?.destinoNombre; const respaldo = this.tipoVisible === 'NACIONAL' ? ['Acapulco de Juárez', 'San Miguel de Allende', 'Puerto Vallarta'] : ['París', 'Nueva York', 'Buenos Aires']; this.ejemploBusqueda = `Ej. ${destino ?? respaldo[Math.floor(Math.random() * respaldo.length)]}`; }
   private normalizarIds(ids: Array<string | number>): number[] { return ids.map((id) => Number(id)).filter((id) => Number.isFinite(id) && id > 0); }
   private restaurarEstadoDesdeUrl(): void {

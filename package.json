@@ -11,6 +11,7 @@
         "build": "node scripts/generate-environment.mjs && ng build",
         "watch": "node scripts/generate-environment.mjs && ng build --watch --configuration development",
         "test": "ng test",
+        "test:queries": "ng test --watch=false --browsers=ChromeHeadless --ts-config=tsconfig.query-optimization.spec.json --include=src/app/core/utils/query-cache.spec.ts --include=src/app/core/utils/drive-thumbnail.spec.ts --include=src/app/core/destinos-query.spec.ts --include=src/app/components/admin/admin.component.spec.ts",
         "deploy": "npm run build -- --configuration production && npx angular-cli-ghpages --dir=dist/fuse/browser",
         "analyze": "ng build --stats-json && npx source-map-explorer dist/fuse/browser/*.js"
     },

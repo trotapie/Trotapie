@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.spec.json",
+  "include": [
+    "src/app/core/utils/query-cache.spec.ts",
+    "src/app/core/utils/drive-thumbnail.spec.ts",
+    "src/app/core/destinos-query.spec.ts",
+    "src/app/components/admin/admin.component.spec.ts",
+    "src/**/*.d.ts"
+  ]
+}
