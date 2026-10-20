@@ -4996,7 +4996,7 @@ export class SupabaseService {
         idioma_id: Number(item.idioma_id),
         nombre_hotel: (item.nombre_hotel ?? '').trim(),
         descripcion: item.descripcion,
-        plan_todo_incluido: item.plan_todo_incluido ?? null
+        plan_todo_incluido: item.plan_todo_incluido ?? {}
       }))
       .filter((item) => Number.isFinite(item.idioma_id) && item.idioma_id > 0 && item.nombre_hotel.length > 0);
 
@@ -5014,7 +5014,7 @@ export class SupabaseService {
       actividad_ids: actividadesIds,
       room_type_ids: roomTypeIds,
       catalogo_destino_id: payload.catalogo_destino_id ?? null,
-      horarios: payload.horarios ?? null,
+      horarios: payload.horarios ?? {},
       imagenes,
       traducciones
     };

@@ -2,6 +2,7 @@ import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
+import { StartupUpdateService } from './core/startup-update.service';
 
 declare global {
     interface Window {
@@ -16,6 +17,7 @@ declare global {
     imports: [RouterOutlet],
 })
 export class AppComponent {
+    readonly startupUpdate = inject(StartupUpdateService);
     private readonly router = inject(Router);
     private readonly destroyRef = inject(DestroyRef);
 
