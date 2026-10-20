@@ -97,6 +97,8 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
   private static readonly DRIVE_IMAGENES_RESPALDO_ENDPOINT =
     'https://script.google.com/macros/s/AKfycbwLioRXwoAhPfZMrHnlTPBfkMEaitAHrrkqbd6PFZdX9NoxNpTuZMW0OpzPdISheiTT/exec';
   private static readonly DRIVE_FONDO_ENDPOINT =
+    'https://script.google.com/macros/s/AKfycbzKwNQDTEo-q0Yb6YLNI1kAQIWhsbBJK7dC-tqMJm0qPraqKoTIKFGwXM0K6MRoMVET/exec';
+  private static readonly DRIVE_FONDO_RESPALDO_ENDPOINT =
     'https://script.google.com/macros/s/AKfycbxpFsRZUQ__79EVqF07MWc_-UgymAQPtVcoxhU8uQ5jxeIldPRP2fkd09r6yK76zqu-uA/exec';
   private static readonly DRIVE_CARGA_CREACION_ENDPOINT =
     'https://script.google.com/macros/s/AKfycbwSHnOPFkhBq2YMRXwjyixD1-ZaKyChszLeZLRPTeZlvr2IXxkPWruOeJrn-bYduBT1/exec';
@@ -847,14 +849,20 @@ export class EditarHotelComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async obtenerImagenesHotel(carpetaId: string, endpoint = EditarHotelComponent.DRIVE_IMAGENES_ENDPOINT): Promise<string[]> {
-    if (endpoint === EditarHotelComponent.DRIVE_IMAGENES_ENDPOINT) {
+    const endpointRespaldo = endpoint === EditarHotelComponent.DRIVE_FONDO_ENDPOINT
+      ? EditarHotelComponent.DRIVE_FONDO_RESPALDO_ENDPOINT
+      : endpoint === EditarHotelComponent.DRIVE_IMAGENES_ENDPOINT
+        ? EditarHotelComponent.DRIVE_IMAGENES_RESPALDO_ENDPOINT
+        : null;
+
+    if (endpointRespaldo) {
       try {
         const imagenes = await this.consultarImagenesHotelEnEndpoint(carpetaId, endpoint);
         if (imagenes.length) return imagenes;
       } catch {
         // Si el script principal falla, se consulta el anterior como respaldo.
       }
-      return this.consultarImagenesHotelEnEndpoint(carpetaId, EditarHotelComponent.DRIVE_IMAGENES_RESPALDO_ENDPOINT);
+      return this.consultarImagenesHotelEnEndpoint(carpetaId, endpointRespaldo);
     }
 
     return this.consultarImagenesHotelEnEndpoint(carpetaId, endpoint);
