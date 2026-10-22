@@ -1,7 +1,7 @@
 @if (startupUpdate.ready()) {
     <router-outlet></router-outlet>
 } @else {
-    <div class="flex min-h-screen items-center justify-center p-6" role="status" aria-live="polite">
+    <div class="sr-only" role="status" aria-live="polite">
         <p>Comprobando actualizaciones…</p>
     </div>
 }

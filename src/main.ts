@@ -16,6 +16,9 @@ import { bootstrapApplication } from '@angular/platform-browser';
 import { AppComponent } from 'app/app.component';
 import { appConfig } from 'app/app.config';
 import { injectSpeedInsights } from '@vercel/speed-insights';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { filter, firstValueFrom } from 'rxjs';
+import { StartupUpdateService } from 'app/core/startup-update.service';
 
 const unlockAppScroll = (): void => {
   if (typeof document === 'undefined') {
@@ -48,8 +51,8 @@ const wireAppSkeleton = (): (() => void) => {
     unlockAppScroll();
   };
 
-  // Keep a safety net for a failed bootstrap, but do not hide the app before
-  // Angular has mounted the router outlet.
+  // Keep a safety net for a failed bootstrap. Normally the logo stays visible
+  // until Angular has mounted and the startup update check has finished.
   window.setTimeout(releaseScroll, 10_000);
 
   return releaseScroll;
@@ -62,7 +65,15 @@ if (typeof window !== 'undefined') {
 }
 
 bootstrapApplication(AppComponent, appConfig)
-  .then(() => releaseSkeleton())
+  .then(async (appRef) => {
+    const startupUpdate = appRef.injector.get(StartupUpdateService);
+    await firstValueFrom(
+      toObservable(startupUpdate.ready, { injector: appRef.injector }).pipe(
+        filter(Boolean),
+      ),
+    );
+    releaseSkeleton();
+  })
   .catch((err) => {
     releaseSkeleton();
     console.error('No se pudo iniciar la aplicacion.', err);
