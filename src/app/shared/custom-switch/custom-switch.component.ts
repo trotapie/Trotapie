@@ -9,7 +9,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
       @if (label) {
         <span class="switch-label">{{ label }}</span>
       }
-      <button type="button" class="switch" [class.switch--checked]="value" [disabled]="disabled" [attr.aria-label]="label" [attr.aria-checked]="value" role="switch" (click)="update(!value)">
+      <button type="button" class="switch" [class.switch--checked]="value" [disabled]="disabled" [attr.aria-label]="ariaLabel || label" [attr.aria-checked]="value" role="switch" (click)="update(!value)">
         <div class="slider">
           <div class="circle">
             <svg class="cross" viewBox="0 0 365.696 365.696" aria-hidden="true"><path fill="currentColor" d="M243.188 182.86 356.32 69.726c12.5-12.5 12.5-32.766 0-45.247L341.238 9.398c-12.504-12.503-32.77-12.503-45.25 0L182.86 122.528 69.727 9.374c-12.5-12.5-32.766-12.5-45.247 0L9.375 24.457c-12.5 12.504-12.5 32.77 0 45.25l113.152 113.152L9.398 295.99c-12.503 12.503-12.503 32.769 0 45.25L24.48 356.32c12.5 12.5 32.766 12.5 45.247 0l113.132-113.132L295.99 356.32c12.503 12.5 32.769 12.5 45.25 0l15.081-15.082c12.5-12.504 12.5-32.77 0-45.25z" /></svg>
@@ -36,12 +36,15 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
      .switch--checked .slider::before { left: calc(100% - var(--circle-diameter) / 2 - var(--circle-diameter) / 4 - var(--switch-offset)); }
      .switch--checked .slider .circle { left: calc(100% - var(--circle-diameter) - var(--switch-offset)); box-shadow: var(--circle-checked-shadow); }
      .switch:focus-visible .slider { outline: 2px solid #2563eb; outline-offset: 2px; }
-     .switch:disabled .slider { cursor: not-allowed; opacity: .55; }
+      .switch:disabled .slider { cursor: not-allowed; opacity: .55; }
+      :host-context(.dark) .switch-label { color: #e2e8f0; }
+      @media (prefers-reduced-motion: reduce) { .switch * { transition: none !important; } }
   `],
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => CustomSwitchComponent), multi: true }],
 })
 export class CustomSwitchComponent implements ControlValueAccessor {
   @Input() label = '';
+  @Input() ariaLabel = '';
   @Input() disabled = false;
   @Input() set checked(checked: boolean) { this.value = Boolean(checked); }
   @Output() change = new EventEmitter<boolean>();

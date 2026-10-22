@@ -109,6 +109,8 @@
 }
 
 .fm-tab {
+  display: inline-flex;
+  align-items: center;
   border: 0;
   border-radius: 999px;
   background: transparent;
@@ -760,6 +762,8 @@
     align-items: stretch;
   }
 
+  .fm-search { min-width:0; flex:0 1 auto; }
+
   .fm-summary {
     margin-left: 0;
     width: 100%;
@@ -776,6 +780,7 @@
 }
 
 :host-context(.dark) {
+  .fm-toolbar { background:#111c2d; }
   .fm-shell {
     border-color: rgba(71, 85, 105, 0.7);
     background:
@@ -828,7 +833,7 @@
   }
 
   .fm-search input::placeholder {
-    color: #64748b;
+    color: #94a3b8;
   }
 
   .fm-tab--active {

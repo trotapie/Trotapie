@@ -11,6 +11,7 @@
             class="fm-active-info-button"
             [matMenuTriggerFor]="activeImageInfoMenu"
             aria-label="Ver imagen activa"
+            matTooltip="Ver imagen activa"
           >
             <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:information-circle'"></mat-icon>
           </button>
@@ -27,26 +28,28 @@
           [value]="searchTerm"
           (input)="setSearchTerm($any($event.target).value)"
           placeholder="Buscar"
+          aria-label="Buscar imágenes"
         />
       </label>
 
-      <div class="fm-tabs" role="tablist" aria-label="Filtros de galeria">
-        @if (showFolders) {
+      <div class="fm-tabs" role="group" aria-label="Filtros de galería">
         <button
           type="button"
           class="fm-tab"
           [class.fm-tab--active]="activeView === 'all'"
+          [attr.aria-pressed]="activeView === 'all'"
           (click)="setActiveView('all')"
         >
-          Todos
+          <mat-icon class="mr-1.5 icon-size-4">apps</mat-icon>{{ showFolders ? 'Todos' : 'Todas' }}
         </button>
+        @if (showFolders) {
         <button
           type="button"
           class="fm-tab"
           [class.fm-tab--active]="activeView === 'folders'"
           (click)="setActiveView('folders')"
         >
-          Carpetas
+          <mat-icon class="mr-1.5 icon-size-4">folder</mat-icon>Carpetas
         </button>
         }
         @if (showActiveView) {
@@ -54,17 +57,19 @@
           type="button"
           class="fm-tab"
           [class.fm-tab--active]="activeView === 'images'"
+          [attr.aria-pressed]="activeView === 'images'"
           (click)="setActiveView('images')"
         >
-          Imagenes
+          <mat-icon class="mr-1.5 icon-size-4">image</mat-icon>Imágenes
         </button>
         <button
           type="button"
           class="fm-tab"
           [class.fm-tab--active]="activeView === 'favorites'"
+          [attr.aria-pressed]="activeView === 'favorites'"
           (click)="setActiveView('favorites')"
         >
-          Activas
+          <mat-icon class="mr-1.5 icon-size-4">visibility</mat-icon>Activas
         </button>
         }
       </div>
@@ -77,17 +82,24 @@
           [class.fm-selection-toggle--active]="selectionModeActive"
           (click)="toggleSelectionMode()"
           [attr.aria-pressed]="selectionModeActive"
+          [disabled]="isSaving"
         >
           <mat-icon class="mr-2 icon-size-4" [svgIcon]="selectionModeActive ? 'heroicons_outline:x-mark' : 'heroicons_outline:check'"></mat-icon>
           {{ selectionModeActive ? 'Salir selección' : 'Seleccionar' }}
         </button>
+        @if (selectionModeActive && activeImages.length) {
+          <button mat-stroked-button type="button" [disabled]="isSaving" (click)="toggleAllVisibleImages()">
+            <mat-icon class="mr-1.5 icon-size-4">{{ allVisibleImagesSelected ? 'deselect' : 'select_all' }}</mat-icon>
+            {{ allVisibleImagesSelected ? 'Quitar visibles' : 'Seleccionar visibles' }}
+          </button>
+        }
         @if (showFolderManagement) {
         <button mat-stroked-button type="button" (click)="openCreateFolder()">
           <mat-icon class="mr-2 icon-size-4" [svgIcon]="'heroicons_outline:plus'"></mat-icon>
           Nueva carpeta
         </button>
         }
-        <button mat-flat-button color="primary" type="button" (click)="emitAddImage()">
+        <button mat-flat-button color="primary" type="button" [disabled]="isSaving" (click)="emitAddImage()">
           <mat-icon class="mr-2 icon-size-4 text-white" [svgIcon]="'heroicons_outline:photo'"></mat-icon>
           Agregar imagen
         </button>
@@ -99,8 +111,8 @@
             </button>
           }
           <button mat-stroked-button color="warn" type="button" (click)="deleteAllImages.emit()" [disabled]="isDeletingAllImages">
-            <mat-icon class="mr-2 icon-size-4" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
-            Eliminar todas
+            <mat-icon class="mr-2 icon-size-4" [class.animate-spin]="isDeletingAllImages" [svgIcon]="isDeletingAllImages ? 'heroicons_outline:arrow-path' : 'heroicons_outline:trash'"></mat-icon>
+            {{ isDeletingAllImages ? 'Procesando…' : 'Eliminar todas' }}
           </button>
         }
       </div>
@@ -115,19 +127,21 @@
 
         <div class="fm-bulk-bar__actions">
           @if (bulkPrimaryActionLabel) {
-          <button mat-flat-button color="primary" type="button" (click)="requestBulkPrimaryAction()">
+          <button mat-flat-button color="primary" type="button" [disabled]="isSaving" (click)="requestBulkPrimaryAction()">
+            <mat-icon class="mr-1.5 icon-size-4">check_circle</mat-icon>
             {{ bulkPrimaryActionLabel }}
           </button>
           } @else if (showImageActiveControls) {
-          <button mat-flat-button [color]="areAllSelectedImagesActive ? 'warn' : 'primary'" type="button" (click)="requestToggleSelectedImagesActive()">
+          <button mat-flat-button [color]="areAllSelectedImagesActive ? 'warn' : 'primary'" type="button" [disabled]="isSaving" (click)="requestToggleSelectedImagesActive()">
+            <mat-icon class="mr-1.5 icon-size-4" [class.animate-spin]="isSaving">{{ isSaving ? 'sync' : areAllSelectedImagesActive ? 'visibility_off' : 'visibility' }}</mat-icon>
             {{ selectedImagesActionLabel }}
           </button>
           }
-          <button mat-stroked-button color="warn" type="button" (click)="deleteSelectedImages.emit(selectedImages)">
-            <mat-icon class="mr-2 icon-size-4" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
-            Eliminar seleccionadas
+          <button mat-stroked-button color="warn" type="button" [disabled]="isSaving" (click)="deleteSelectedImages.emit(selectedImages)">
+            <mat-icon class="mr-2 icon-size-4" [class.animate-spin]="isSaving" [svgIcon]="isSaving ? 'heroicons_outline:arrow-path' : 'heroicons_outline:trash'"></mat-icon>
+            {{ isSaving ? 'Procesando…' : 'Eliminar seleccionadas' }}
           </button>
-          <button mat-stroked-button type="button" (click)="clearBulkSelection()">Limpiar selección</button>
+          <button mat-stroked-button type="button" [disabled]="isSaving" (click)="clearBulkSelection()"><mat-icon class="mr-1.5 icon-size-4">close</mat-icon>Limpiar selección</button>
         </div>
       </div>
     }
@@ -226,7 +240,9 @@
             <div class="fm-section-head">
               <h4>Archivos</h4>
               <p>
-                @if (activeFolder) {
+                @if (!showFolders) {
+                  {{ getFileCountLabel(activeImages.length) }}
+                } @else if (activeFolder) {
                   {{ activeFolder.name }} · {{ getFileCountLabel(activeImages.length) }}
                 } @else {
                   Selecciona una carpeta para ver sus archivos.
@@ -243,7 +259,10 @@
                     [class.fm-image-card--selected]="isSelected(image)"
                     [class.fm-image-card--bulk-selected]="isBulkSelected(image)"
                     [class.fm-image-card--selection-mode]="selectionModeActive"
-                    [draggable]="!selectionModeActive"
+                    [draggable]="allowImageReorder && !selectionModeActive && !isSaving"
+                    [disabled]="isSaving"
+                    [attr.aria-label]="(selectionModeActive ? 'Seleccionar ' : 'Ver detalles de ') + image.name"
+                    [attr.aria-pressed]="selectionModeActive ? isBulkSelected(image) : isSelected(image)"
                     (dragstart)="onImageDragStart(image, $event)"
                     (dragend)="onImageDragEnd()"
                     (dragover)="onImageDragOver(image, $event)"
@@ -309,10 +328,12 @@
                 <dt>Titulo</dt>
                 <dd>{{ detailImage.name }}</dd>
               </div>
+              @if (showFolders) {
               <div class="fm-detail-item">
                 <dt>Carpeta</dt>
                 <dd>{{ detailFolderName }}</dd>
               </div>
+              }
               <div class="fm-detail-item">
                 <dt>Estado</dt>
                 <dd>{{ detailStatusLabel }}</dd>
@@ -369,11 +390,11 @@
               }
 
             <div class="fm-detail-actions">
-              <button mat-flat-button color="primary" type="button" (click)="requestEditImage(detailImage)">
-                Editar
+              <button mat-flat-button color="primary" type="button" [disabled]="isSaving" (click)="requestEditImage(detailImage)">
+                <mat-icon class="mr-1.5 icon-size-4">edit</mat-icon>Editar
               </button>
-              <button mat-stroked-button color="warn" type="button" (click)="requestDeleteImage(detailImage)">
-                Eliminar
+              <button mat-stroked-button color="warn" type="button" [disabled]="isSaving" (click)="requestDeleteImage(detailImage)">
+                <mat-icon class="mr-1.5 icon-size-4" [class.animate-spin]="isSaving">{{ isSaving ? 'sync' : 'delete' }}</mat-icon>{{ isSaving ? 'Procesando…' : 'Eliminar' }}
               </button>
             </div>
           } @else {

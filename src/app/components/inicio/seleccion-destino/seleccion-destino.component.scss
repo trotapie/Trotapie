@@ -1,3 +1,16 @@
+.home-background-transition {
+  animation: home-background-fade 500ms ease-out both;
+}
+
+@keyframes home-background-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-background-transition { animation: none; }
+}
+
 .catalog-landing-hidden {
   display: none !important;
 }

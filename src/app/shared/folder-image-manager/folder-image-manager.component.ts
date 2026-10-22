@@ -63,6 +63,7 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
   @Input() showDeleteAllImages = false;
   @Input() isDeletingAllImages = false;
   @Input() showUpdateOrder = false;
+  @Input() allowImageReorder = true;
   @Input() isUpdatingOrder = false;
 
   @Output() imageSelected = new EventEmitter<FolderImageManagerImage>();
@@ -281,7 +282,7 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
       return 'No encontramos resultados para esta busqueda.';
     }
 
-    return 'No hay archivos dentro de esta carpeta.';
+    return this.showFolders ? 'No hay archivos dentro de esta carpeta.' : 'Aún no hay imágenes. Agrega la primera imagen para comenzar.';
   }
 
   isSelected(image: FolderImageManagerImage): boolean {
@@ -537,6 +538,16 @@ export class FolderImageManagerComponent implements OnChanges, OnDestroy {
     this.dragOverImageId = null;
     this.dragPreview?.remove();
     this.dragPreview = null;
+  }
+
+  get allVisibleImagesSelected(): boolean {
+    return this.activeImages.length > 0 && this.activeImages.every(image => this.isBulkSelected(image));
+  }
+
+  toggleAllVisibleImages(): void {
+    if (this.isSaving) return;
+    const remove = this.allVisibleImagesSelected;
+    this.activeImages.forEach(image => remove ? this.selectedImageIds.delete(String(image.id)) : this.selectedImageIds.add(String(image.id)));
   }
 
   onImageDragOver(target: FolderImageManagerImage, event: DragEvent): void {

@@ -4,11 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { MaterialModule } from 'app/shared/material.module';
 import { SupabaseService } from 'app/core/supabase.service';
 import { TraduccionesService } from 'app/core/traducciones.service';
-import { EstatusComponent } from 'app/shared/estatus/estatus.component';
 import { TpToastService } from 'app/shared/tp-toast/tp-toast.service';
 import { FuseConfirmationService } from '@fuse/services/confirmation';
-import { TpActionMenuItem, TpActionsMenuComponent } from 'app/shared/tp-actions-menu/tp-actions-menu.component';
+import { TpActionMenuItem } from 'app/shared/tp-actions-menu/tp-actions-menu.component';
 import { BlockingLoaderComponent } from 'app/shared/blocking-loader/blocking-loader.component';
+import { FolderImageManagerComponent, FolderImageManagerFolder, FolderImageManagerImage } from 'app/shared/folder-image-manager/folder-image-manager.component';
+import { ImageVisualEditorComponent, ImagenVisualDraft } from 'app/shared/image-visual-editor/image-visual-editor.component';
+import { ConfiguracionFondo, normalizarConfiguracionFondo, nuevaConfiguracionFondo } from 'app/core/imagen-fondo-visual';
 
 interface Idioma {
   id: number;
@@ -22,6 +24,7 @@ interface ImagenFondo {
   nombre_destino: string;
   activo: boolean;
   traducciones: Record<string, string>;
+  configuracion_visual: ConfiguracionFondo;
 }
 
 interface ImagenFondoForm {
@@ -29,12 +32,13 @@ interface ImagenFondoForm {
   url_imagen: string;
   activo: boolean;
   traducciones: Record<string, string>;
+  configuracion_visual: ConfiguracionFondo;
 }
 
 @Component({
   selector: 'app-imagenes-fondo',
   standalone: true,
-  imports: [CommonModule, FormsModule, MaterialModule, EstatusComponent, TpActionsMenuComponent, BlockingLoaderComponent],
+  imports: [CommonModule, FormsModule, MaterialModule, BlockingLoaderComponent, FolderImageManagerComponent, ImageVisualEditorComponent],
   templateUrl: './imagenes-fondo.component.html',
   styleUrl: './imagenes-fondo.component.scss'
 })
@@ -55,13 +59,86 @@ export class ImagenesFondoComponent implements OnInit {
   error = '';
   modalAbierto = false;
   form: ImagenFondoForm = this.nuevoFormulario();
+  galeriaCarpetas: FolderImageManagerFolder[] = [];
+  imagenesActivasIds: number[] = [];
+  imagenSeleccionadaId: number | null = null;
+  selectionResetKey = 0;
+  editorValue!: ImagenVisualDraft;
+
+  private actualizarGaleria(): void {
+    this.galeriaCarpetas = [{ id: 'inicio', name: 'Carrusel de inicio', images: this.imagenes.map(imagen => ({
+      id: imagen.id, name: imagen.nombre_destino, imageUrl: imagen.url_imagen,
+      typeLabel: 'Carrusel de inicio', oscurecerFondo: imagen.configuracion_visual.oscurecer_fondo
+    })) }];
+    this.imagenesActivasIds = this.imagenes.filter(imagen => imagen.activo).map(imagen => imagen.id);
+    if (!this.imagenes.some(imagen => imagen.id === this.imagenSeleccionadaId)) this.imagenSeleccionadaId = this.imagenes[0]?.id ?? null;
+  }
+
+  editarDesdeGaleria(image: FolderImageManagerImage): void {
+    const imagen = this.imagenes.find(imagen => imagen.id === Number(image.id));
+    if (imagen) this.editar(imagen);
+  }
+
+  eliminarDesdeGaleria(image: FolderImageManagerImage): void {
+    const imagen = this.imagenes.find(imagen => imagen.id === Number(image.id));
+    if (imagen) this.eliminar(imagen);
+  }
+
+  cambiarEstadoDesdeGaleria(event: { image: FolderImageManagerImage; checked: boolean }): void {
+    const imagen = this.imagenes.find(imagen => imagen.id === Number(event.image.id));
+    if (imagen && imagen.activo !== event.checked) void this.alternarEstado(imagen);
+  }
+
+  seleccionarDesdeGaleria(images: FolderImageManagerImage[], accion: 'estado' | 'eliminar'): void {
+    this.idsSeleccionados = new Set(images.map(image => Number(image.id)));
+    if (accion === 'eliminar') this.eliminarSeleccionadas();
+    else this.cambiarEstadoSeleccionadas(!images.every(image => this.imagenesActivasIds.includes(Number(image.id))));
+  }
+
+  eliminarTodas(): void {
+    this.idsSeleccionados = new Set(this.imagenes.map(imagen => imagen.id));
+    this.eliminarSeleccionadas();
+  }
+
+  async cambiarOscurecimiento(event: { image: FolderImageManagerImage; checked: boolean }): Promise<void> {
+    if (this.guardando || this.procesandoSeleccion) return;
+    const imagen = this.imagenes.find(imagen => imagen.id === Number(event.image.id));
+    if (!imagen) return;
+    this.procesandoSeleccion = true;
+    const anterior = imagen.configuracion_visual;
+    const config = { ...imagen.configuracion_visual, oscurecer_fondo: event.checked };
+    imagen.configuracion_visual = config;
+    this.actualizarGaleria();
+    try {
+      await this.supabase.actualizarConfiguracionImagenFondoAdmin(imagen.id, config);
+      imagen.configuracion_visual = config;
+      this.actualizarGaleria();
+      this.mostrarToast('Presentación actualizada', 'El cambio ya se aplica al carrusel de inicio.', 'success');
+    } catch (error: any) {
+      imagen.configuracion_visual = anterior;
+      this.actualizarGaleria();
+      this.mostrarToast('No se pudo actualizar', error?.message ?? 'Intenta nuevamente.', 'error');
+    } finally { this.procesandoSeleccion = false; }
+  }
+
+  guardarDesdeEditor(draft: ImagenVisualDraft): void {
+    this.form = { ...this.form, url_imagen: draft.url, activo: draft.activo,
+      traducciones: { ...this.form.traducciones, es: draft.nombre }, configuracion_visual: draft.config };
+    void this.guardar();
+  }
+
+  private prepararEditor(): void {
+    this.editorValue = { url: this.form.url_imagen, nombre: this.form.traducciones.es ?? '', activo: this.form.activo,
+      config: normalizarConfiguracionFondo(this.form.configuracion_visual) };
+    this.modalAbierto = true;
+  }
 
   async ngOnInit(): Promise<void> {
     await this.cargarDatos();
   }
 
-  async cargarDatos(): Promise<void> {
-    this.cargando = true;
+  async cargarDatos(mostrarCarga = true): Promise<void> {
+    if (mostrarCarga) this.cargando = true;
     this.error = '';
     try {
       const [idiomas, imagenes] = await Promise.all([
@@ -75,6 +152,7 @@ export class ImagenesFondoComponent implements OnInit {
         nombre: idioma.nombre ?? idioma.codigo
       }));
       this.imagenes = imagenes.map((imagen: any) => this.normalizarImagen(imagen));
+      this.actualizarGaleria();
     } catch (error: any) {
       this.error = error?.message ?? 'No se pudieron cargar las imágenes de fondo.';
     } finally {
@@ -84,7 +162,7 @@ export class ImagenesFondoComponent implements OnInit {
 
   abrirNueva(): void {
     this.form = this.nuevoFormulario();
-    this.modalAbierto = true;
+    this.prepararEditor();
   }
 
   editar(imagen: ImagenFondo): void {
@@ -92,9 +170,10 @@ export class ImagenesFondoComponent implements OnInit {
       id: imagen.id,
       url_imagen: imagen.url_imagen,
       activo: imagen.activo,
-      traducciones: { ...imagen.traducciones }
+      traducciones: { ...imagen.traducciones },
+      configuracion_visual: normalizarConfiguracionFondo(imagen.configuracion_visual)
     };
-    this.modalAbierto = true;
+    this.prepararEditor();
   }
 
   cerrarModal(): void {
@@ -102,6 +181,7 @@ export class ImagenesFondoComponent implements OnInit {
   }
 
   async guardar(): Promise<void> {
+    if (this.guardando) return;
     const textoEspanol = this.form.traducciones.es?.trim();
     if (!this.form.url_imagen.trim() || !textoEspanol) {
       this.mostrarToast('Datos incompletos', 'La URL de imagen y el texto en español son obligatorios.', 'error');
@@ -111,6 +191,7 @@ export class ImagenesFondoComponent implements OnInit {
     this.guardando = true;
     try {
       const resultado = await this.traducirNombreEspanol(textoEspanol);
+      const config = this.form.configuracion_visual;
 
       this.idiomas.forEach((idioma) => {
         if (idioma.codigo === 'es') return;
@@ -120,11 +201,12 @@ export class ImagenesFondoComponent implements OnInit {
         }
       });
 
-      await this.supabase.guardarImagenFondoAdmin({
+      const imagenId = await this.supabase.guardarImagenFondoAdmin({
         id: this.form.id,
         url_imagen: this.form.url_imagen.trim(),
         activo: this.form.activo,
         nombre_destino: textoEspanol,
+        configuracion_visual: normalizarConfiguracionFondo(config),
         traducciones: this.idiomas.map((idioma) => ({
           idioma_id: idioma.id,
           nombre_destino: this.form.traducciones[idioma.codigo] ?? ''
@@ -132,7 +214,8 @@ export class ImagenesFondoComponent implements OnInit {
       });
       this.mostrarToast('Cambios guardados', this.form.id ? 'Imagen actualizada correctamente.' : 'Imagen agregada correctamente.', 'success');
       this.modalAbierto = false;
-      await this.cargarDatos();
+      this.imagenSeleccionadaId = imagenId;
+      await this.cargarDatos(false);
     } catch (error: any) {
       this.mostrarToast('No se pudo guardar', error?.message ?? 'No se pudo guardar la imagen de fondo.', 'error');
     } finally {
@@ -210,12 +293,16 @@ export class ImagenesFondoComponent implements OnInit {
   }
 
   private async confirmarEliminacion(imagen: ImagenFondo): Promise<void> {
+    if (this.procesandoSeleccion) return;
+    this.procesandoSeleccion = true;
     try {
       await this.supabase.eliminarImagenFondoAdmin(imagen.id);
       this.mostrarToast('Imagen eliminada', 'La imagen se eliminó correctamente.', 'success');
-      await this.cargarDatos();
+      await this.cargarDatos(false);
     } catch (error: any) {
       this.mostrarToast('No se pudo eliminar', error?.message ?? 'No se pudo eliminar la imagen de fondo.', 'error');
+    } finally {
+      this.procesandoSeleccion = false;
     }
   }
 
@@ -223,11 +310,15 @@ export class ImagenesFondoComponent implements OnInit {
     if (this.cambiandoEstadoId) return;
 
     this.cambiandoEstadoId = imagen.id;
+    const anterior = imagen.activo;
+    imagen.activo = !anterior;
+    this.actualizarGaleria();
     try {
-      await this.supabase.actualizarEstadoImagenFondoAdmin(imagen.id, !imagen.activo);
-      imagen.activo = !imagen.activo;
+      await this.supabase.actualizarEstadoImagenFondoAdmin(imagen.id, imagen.activo);
       this.mostrarToast('Estado actualizado', imagen.activo ? 'La imagen ahora aparece en el carrusel.' : 'La imagen ya no aparece en el carrusel.', 'success');
     } catch (error: any) {
+      imagen.activo = anterior;
+      this.actualizarGaleria();
       this.mostrarToast('No se pudo actualizar el estado', error?.message ?? 'Intenta nuevamente.', 'error');
     } finally {
       this.cambiandoEstadoId = null;
@@ -274,6 +365,7 @@ export class ImagenesFondoComponent implements OnInit {
   }
 
   private async confirmarCambioEstadoSeleccionadas(ids: number[], activo: boolean): Promise<void> {
+    if (this.procesandoSeleccion) return;
     this.procesandoSeleccion = true;
     try {
       await this.supabase.actualizarEstadoImagenesFondoAdmin(ids, activo);
@@ -282,6 +374,8 @@ export class ImagenesFondoComponent implements OnInit {
       });
       this.limpiarSeleccion();
       this.modoSeleccion = false;
+      this.selectionResetKey++;
+      this.actualizarGaleria();
       this.mostrarToast('Estado actualizado', `${ids.length} ${ids.length === 1 ? 'imagen fue' : 'imágenes fueron'} ${activo ? 'activada' : 'inactivada'}${ids.length === 1 ? '' : 's'} correctamente.`, 'success');
     } catch (error: any) {
       this.mostrarToast('No se pudo actualizar el estado', error?.message ?? 'Intenta nuevamente.', 'error');
@@ -306,10 +400,13 @@ export class ImagenesFondoComponent implements OnInit {
   }
 
   private async confirmarEliminacionSeleccionadas(ids: number[]): Promise<void> {
+    if (this.procesandoSeleccion) return;
     this.procesandoSeleccion = true;
     try {
       await this.supabase.eliminarImagenesFondoAdmin(ids);
       this.imagenes = this.imagenes.filter((imagen) => !ids.includes(imagen.id));
+      this.selectionResetKey++;
+      this.actualizarGaleria();
       this.limpiarSeleccion();
       this.modoSeleccion = false;
       this.mostrarToast('Imágenes eliminadas', `${ids.length} ${ids.length === 1 ? 'imagen fue eliminada' : 'imágenes fueron eliminadas'} correctamente.`, 'success');
@@ -325,6 +422,7 @@ export class ImagenesFondoComponent implements OnInit {
       id: null,
       url_imagen: '',
       activo: true,
+      configuracion_visual: nuevaConfiguracionFondo(),
       traducciones: { es: '', en: '', pt: '', fr: '', de: '' }
     };
   }
@@ -342,6 +440,7 @@ export class ImagenesFondoComponent implements OnInit {
       url_imagen: imagen.url_imagen ?? '',
       nombre_destino: traducciones.es,
       activo: Boolean(imagen.activo),
+      configuracion_visual: normalizarConfiguracionFondo(imagen.configuracion_visual),
       traducciones
     };
   }

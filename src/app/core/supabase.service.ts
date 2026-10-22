@@ -10,6 +10,7 @@ import { QueryCache } from './utils/query-cache';
 import { ISolicitudCotizacionListado } from 'app/interface/solicitudes-cotizacion.interface';
 import { construirNombreClienteVisible } from './cliente-nombre.util';
 import type { HotelHorarios, HotelPlanTodoIncluido } from 'app/components/hoteles/hotel-estancia.interface';
+import type { ConfiguracionFondo } from './imagen-fondo-visual';
 
 const ES_ID = 1;
 const CODIGOS_IDIOMA_PREVIEW = ['es', 'en', 'pt', 'de', 'fr'] as const;
@@ -3698,9 +3699,7 @@ export class SupabaseService {
     const { data, error } = await this.client
       .from('imagenes_fondo')
       .select(`
-        id,
-        url_imagen,
-        nombre_destino,
+        *,
         traducciones:imagenes_fondo_traducciones (
           nombre_destino,
           idioma:idioma_id ( codigo )
@@ -3723,6 +3722,7 @@ export class SupabaseService {
       return {
         id: imagen.id,
         url_imagen: imagen.url_imagen,
+        configuracion_visual: imagen.configuracion_visual,
         nombre_destino: traduccionActiva?.nombre_destino ?? traduccionEspanol?.nombre_destino ?? imagen.nombre_destino ?? ''
       };
     });
@@ -3732,10 +3732,7 @@ export class SupabaseService {
     const { data, error } = await this.client
       .from('imagenes_fondo')
       .select(`
-        id,
-        url_imagen,
-        nombre_destino,
-        activo,
+        *,
         traducciones:imagenes_fondo_traducciones (
           idioma_id,
           nombre_destino,
@@ -3764,12 +3761,14 @@ export class SupabaseService {
     url_imagen: string;
     activo: boolean;
     nombre_destino: string;
+    configuracion_visual?: ConfiguracionFondo;
     traducciones: Array<{ idioma_id: number; nombre_destino: string }>;
   }) {
     const imagenPayload = {
       url_imagen: payload.url_imagen,
       activo: payload.activo,
-      nombre_destino: payload.nombre_destino
+      nombre_destino: payload.nombre_destino,
+      ...(payload.configuracion_visual ? { configuracion_visual: payload.configuracion_visual } : {})
     };
 
     let imagenId: number;
@@ -3780,8 +3779,8 @@ export class SupabaseService {
         .eq('id', payload.id)
         .select('id, activo')
         .maybeSingle();
-      if (error) throw error;
-      if (!data) throw new Error('No tienes permisos para actualizar esta imagen de fondo.');
+      if (error) throw this.errorGuardadoImagenFondo(error);
+      if (!data) throw await this.diagnosticarActualizacionImagenFondo(payload.id);
       imagenId = payload.id;
     } else {
       const { data, error } = await this.client
@@ -3789,7 +3788,7 @@ export class SupabaseService {
         .insert(imagenPayload)
         .select('id')
         .single();
-      if (error) throw error;
+      if (error) throw this.errorGuardadoImagenFondo(error);
       imagenId = Number(data.id);
     }
 
@@ -3825,6 +3824,47 @@ export class SupabaseService {
     if (error) throw error;
   }
 
+  async actualizarConfiguracionImagenFondoAdmin(id: number, configuracion: ConfiguracionFondo): Promise<void> {
+    const { data, error } = await this.client.from('imagenes_fondo')
+      .update({ configuracion_visual: configuracion }).eq('id', id).select('id').maybeSingle();
+    if (error) throw this.errorGuardadoImagenFondo(error);
+    if (!data) throw await this.diagnosticarActualizacionImagenFondo(id);
+  }
+
+  /** An empty UPDATE can mean expired session, deleted row or RLS, not just a missing role. */
+  private async diagnosticarActualizacionImagenFondo(id: number): Promise<Error> {
+    const { data: usuario, error: sesionError } = await this.client.auth.getUser();
+    if (sesionError || !usuario.user) {
+      return new Error('Tu sesión ha expirado. Vuelve a iniciar sesión antes de guardar.');
+    }
+
+    const { data: imagen, error: lecturaError } = await this.client.from('imagenes_fondo')
+      .select('id').eq('id', id).maybeSingle();
+    if (lecturaError) {
+      return new Error('No se pudo comprobar la imagen después del rechazo de guardado. Intenta nuevamente.');
+    }
+    if (!imagen) {
+      return new Error('La imagen ya no está disponible. Actualiza la galería antes de volver a editarla.');
+    }
+
+    const { data: puedeGestionar, error: permisoError } = await this.client.rpc('puede_gestionar_imagenes_fondo');
+    if (!permisoError && puedeGestionar === false) {
+      return new Error('Tu cuenta no tiene el permiso destinos.edit para modificar imágenes de fondo. Solicítalo a un administrador.');
+    }
+    if (permisoError && !['PGRST202', '42883', '42501'].includes(permisoError.code)) {
+      return new Error('No se pudieron comprobar los permisos de guardado. Intenta nuevamente.');
+    }
+
+    return new Error('La base de datos bloqueó la actualización. Aplica la migración 20261017130000_imagenes_fondo_destinos_edit_rls.sql en Supabase para sincronizar los permisos de esta pantalla.');
+  }
+
+  private errorGuardadoImagenFondo(error: { message: string; code?: string }): Error {
+    if (error.message.includes('configuracion_visual') && ['42703', 'PGRST204'].includes(error.code ?? '')) {
+      return new Error('Falta actualizar la base de datos del editor visual. Aplica la migración del editor antes de guardar.');
+    }
+    return new Error(error.message);
+  }
+
   async eliminarImagenesFondoAdmin(ids: number[]) {
     if (!ids.length) return;
 
@@ -3844,7 +3884,7 @@ export class SupabaseService {
       .maybeSingle();
 
     if (error) throw error;
-    if (!data) throw new Error('No tienes permisos para actualizar esta imagen de fondo.');
+    if (!data) throw await this.diagnosticarActualizacionImagenFondo(id);
   }
 
   async actualizarEstadoImagenesFondoAdmin(ids: number[], activo: boolean) {

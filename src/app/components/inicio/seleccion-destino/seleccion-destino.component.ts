@@ -14,10 +14,12 @@ import { FooterComponent } from 'app/footer/footer.component';
 import { DatosService } from 'app/components/hoteles/hoteles.service';
 import { Destinos, GrupoDestino, Hotel, IHoteles } from 'app/components/hoteles/hoteles.interface';
 import { IImagenesFondo } from './imagenes-fondo.interface';
+import { ImageVisualPreviewComponent } from 'app/shared/image-visual-preview/image-visual-preview.component';
+import { normalizarConfiguracionFondo, nuevaConfiguracionFondo } from 'app/core/imagen-fondo-visual';
 
 @Component({
   selector: 'app-seleccion-destino',
-  imports: [MaterialModule, TranslocoModule, FormsModule, FooterComponent],
+  imports: [MaterialModule, TranslocoModule, FormsModule, FooterComponent, ImageVisualPreviewComponent],
   templateUrl: './seleccion-destino.component.html',
   styleUrl: './seleccion-destino.component.scss',
   encapsulation: ViewEncapsulation.None,
@@ -68,8 +70,23 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
   index = Math.floor(Math.random() * this.imagenesFondo.length)
   currentText = this.imagenesFondo[this.index]?.nombre_destino;
   currentImage = this.imagenesFondo[this.index]?.url_imagen;
+  currentSlide: IImagenesFondo | null = null;
+  overlaySlide: IImagenesFondo | null = null;
+  currentConfig = nuevaConfiguracionFondo();
+  overlayConfig = nuevaConfiguracionFondo();
   overlayImage: string | null = null;
   isTransitioning = false;
+  private carouselLoading = false;
+  private carouselDestroyed = false;
+  private carouselTransitionTimer?: ReturnType<typeof setTimeout>;
+
+  get captionSlide(): IImagenesFondo | null {
+    return this.isTransitioning && this.overlaySlide ? this.overlaySlide : this.currentSlide;
+  }
+
+  get captionConfig() {
+    return this.isTransitioning && this.overlaySlide ? this.overlayConfig : this.currentConfig;
+  }
 
   previousIndex = -1;
   intervalId: any;
@@ -138,6 +155,8 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
 
 
   ngOnDestroy(): void {
+    this.carouselDestroyed = true;
+    clearTimeout(this.carouselTransitionTimer);
     if (this.intervalId) clearInterval(this.intervalId);
     this.languageChangesSubscription?.unsubscribe();
     this.transition?.kill();
@@ -166,33 +185,42 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
       this.previousIndex = (this.previousIndex + 1) % this.imagenesFondo.length;
       const nuevaUrl = this.imagenesFondo[this.previousIndex];
 
-      this.cambiarFondoConTransicion(nuevaUrl.url_imagen, nuevaUrl.nombre_destino);
+      this.cambiarFondoConTransicion(nuevaUrl.url_imagen, nuevaUrl.nombre_destino, nuevaUrl);
 
     }, 3000); // 5 segundos
   }
 
-  cambiarFondoConTransicion(url: string, text): void {
-    if (this.isTransitioning) {
+  cambiarFondoConTransicion(url: string, text: string, slide?: IImagenesFondo): void {
+    if (this.isTransitioning || this.carouselLoading || this.carouselDestroyed) {
       return;
     }
 
+    this.carouselLoading = true;
     const img = new Image();
     img.onload = () => {
+      this.carouselLoading = false;
+      if (this.carouselDestroyed) return;
       // Nueva imagen lista en memoria
       this.overlayImage = url;
+      this.overlaySlide = slide ?? this.imagenesFondo.find(imagen => imagen.url_imagen === url) ?? null;
+      this.overlayConfig = normalizarConfiguracionFondo(this.overlaySlide?.configuracion_visual);
       this.isTransitioning = true;
 
       // Duración debe coincidir con la del CSS (500ms)
       this.currentText = text
-      setTimeout(() => {
+      this.carouselTransitionTimer = setTimeout(() => {
         this.currentImage = url;      // Actualizamos el fondo base
+        this.currentSlide = this.overlaySlide;
+        this.currentConfig = this.overlayConfig;
         this.currentText = text
         this.isTransitioning = false; // Fin de transición
         this.overlayImage = null;     // Quitamos la capa extra
+        this.overlaySlide = null;
       }, 500);
     };
 
     img.onerror = () => {
+      this.carouselLoading = false;
       console.warn('Error cargando imagen de fondo', url);
     };
 
@@ -250,7 +278,7 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
 
       await this.preloadImage(firstUrl.url_imagen);
 
-      this.cambiarFondoConTransicion(firstUrl.url_imagen, firstUrl.nombre_destino);
+      this.cambiarFondoConTransicion(firstUrl.url_imagen, firstUrl.nombre_destino, firstUrl);
 
       this.startRandomCarousel();
     } catch (error) {
@@ -266,9 +294,15 @@ export class SeleccionDestinoComponent implements OnInit, AfterViewInit {
       const imagenes = await this.supabase.getImagenesFondo(idioma);
       this.imagenesFondo = imagenes;
 
-      const imagenActual = imagenes.find((imagen) => imagen.url_imagen === this.currentImage);
+      const imagenActual = imagenes.find((imagen) => this.currentSlide ? imagen.id === this.currentSlide.id : imagen.url_imagen === this.currentImage);
       if (imagenActual) {
         this.currentText = imagenActual.nombre_destino;
+        this.currentSlide = imagenActual;
+        this.currentConfig = normalizarConfiguracionFondo(imagenActual.configuracion_visual);
+      }
+      if (this.overlaySlide) {
+        this.overlaySlide = imagenes.find(imagen => imagen.id === this.overlaySlide.id) ?? this.overlaySlide;
+        this.overlayConfig = normalizarConfiguracionFondo(this.overlaySlide.configuracion_visual);
       }
     } catch (error) {
       console.error('No se pudieron actualizar los textos de las imágenes de fondo.', error);

@@ -47,15 +47,24 @@
                     <div class="flex flex-col max-w-xl w-full md:w-[600px] h-[70vh] sm:h-[80vh] md:h-[70vh]" #heroCard>
                             <div class="relative w-full h-full rounded-3xl overflow-hidden shadow-lg
                     flex items-center justify-center text-white bg-cover bg-center"
-                                [ngStyle]="{ 'background-image': currentImage ? 'url(' + currentImage + ')' : 'none' }"
                                 >
-
+                                @if (currentSlide) {
+                                  <app-image-visual-preview [url]="currentSlide.url_imagen" [titulo]="currentSlide.nombre_destino"
+                                    [showText]="false" [config]="currentConfig" />
+                                }
                                 <div *ngIf="overlayImage"
-                                    class="absolute inset-0 bg-cover bg-center transition-opacity duration-500 pointer-events-none"
-                                    [ngStyle]="{ 'background-image': 'url(' + overlayImage + ')' }"
-                                    [class.opacity-0]="!isTransitioning" [class.opacity-100]="isTransitioning"></div>
+                                    class="home-background-transition absolute inset-0 pointer-events-none">
+                                    @if (overlaySlide) {
+                                      <app-image-visual-preview [url]="overlaySlide.url_imagen" [titulo]="overlaySlide.nombre_destino"
+                                        [showText]="false" [config]="overlayConfig" />
+                                    }
+                                </div>
 
-                                <div class="absolute inset-0 bg-black/40 z-0 pointer-events-none"></div>
+                                @if (captionSlide; as caption) {
+                                  <div class="absolute inset-0 z-10 pointer-events-none">
+                                    <app-image-visual-preview [titulo]="caption.nombre_destino" [config]="captionConfig" [showMedia]="false" />
+                                  </div>
+                                }
 
                                 <div class="absolute top-1 transform flex flex-col gap-4 z-20"
                                     (click)="closeDropdown()">
@@ -155,10 +164,6 @@
                                     </div>
                                 </div>
 
-                                <div
-                                    class="absolute bottom-5 transform flex flex-col gap-4 z-20 text-3xl text-[#f7be07]">
-                                    <strong>{{currentText}}</strong>
-                                </div>
                             </div>
                     </div>
                 </div>
