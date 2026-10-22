@@ -1,0 +1,135 @@
+<div class="visual-editor-backdrop">
+  <section class="visual-editor" role="dialog" aria-modal="true" aria-labelledby="visual-editor-title"
+    cdkTrapFocus [cdkTrapFocusAutoCapture]="true">
+    <header>
+      <div><p class="kicker">Editor visual</p><h2 id="visual-editor-title">{{ value.url ? 'Editar imagen de fondo' : 'Agregar imagen de fondo' }}</h2>
+        <p>{{ nameOnly ? 'Configura la imagen y su nombre para el carrusel de inicio.' : 'Configura la imagen y sus textos para el carrusel de inicio.' }}</p></div>
+      <button mat-icon-button matTooltip="Cerrar editor" aria-label="Cerrar editor" [disabled]="saving" (click)="solicitarCerrar()"><mat-icon>close</mat-icon></button>
+    </header>
+
+    <div class="workspace" [attr.inert]="saving ? '' : null">
+      <div class="preview-column">
+        <app-tp-input label="URL de la imagen" type="url" placeholder="https://..." [required]="true" [(ngModel)]="draft.url"></app-tp-input>
+        <p>Usa una URL pública que comience con https:// o http://.</p>
+        <div class="preview-frame">
+          <app-image-visual-preview [url]="draft.url" [titulo]="draft.nombre" [descripcion]="nameOnly ? '' : config.descripciones.es || ''"
+            [etiqueta]="nameOnly ? '' : config.etiqueta_texto" [config]="config" [editable]="true" [allowTextDrag]="!nameOnly" (dragStart)="iniciarArrastre($event)" />
+        </div>
+        <section class="framing" aria-label="Zoom y encuadre">
+          <h3>Zoom y encuadre</h3><p>{{ nameOnly ? 'Arrastra la imagen en la vista previa o usa los controles para ajustar el encuadre.' : 'Arrastra la imagen o los textos en la vista previa. También puedes usar los controles.' }}</p>
+          <div class="zoom-controls">
+            <button mat-icon-button matTooltip="Alejar" aria-label="Alejar imagen" [disabled]="config.imagen_zoom <= 0.1" (click)="cambiarZoom(-0.1)"><mat-icon>zoom_out</mat-icon></button>
+            <span>{{ config.imagen_zoom * 100 | number:'1.0-0' }}%</span>
+            <button mat-icon-button matTooltip="Acercar" aria-label="Acercar imagen" [disabled]="config.imagen_zoom >= 3" (click)="cambiarZoom(0.1)"><mat-icon>zoom_in</mat-icon></button>
+            <button mat-icon-button matTooltip="Restablecer encuadre" aria-label="Restablecer encuadre" (click)="restablecerEncuadre()"><mat-icon>restart_alt</mat-icon></button>
+          </div>
+          <div class="two-cols">
+            <app-tp-input label="Posición horizontal (%)" type="number" [min]="0" [max]="100" [(ngModel)]="config.imagen_x" />
+            <app-tp-input label="Posición vertical (%)" type="number" [min]="0" [max]="100" [(ngModel)]="config.imagen_y" />
+          </div>
+        </section>
+      </div>
+
+      <div class="settings-column">
+        <mat-vertical-stepper [linear]="false">
+          <mat-step><ng-template matStepLabel>Contenido</ng-template>
+            <section class="settings-section">
+              <app-tp-input label="Nombre en español" placeholder="Ej. Roma, Italia" [required]="true" [(ngModel)]="draft.nombre" />
+              @if (!nameOnly) {
+              <app-tp-textarea label="Descripción" placeholder="Describe esta imagen" [rows]="3" [(ngModel)]="config.descripciones.es" />
+              <app-tp-input label="Texto de etiqueta" placeholder="Opcional" [(ngModel)]="config.etiqueta_texto" />
+              }
+              <div class="switch-row"><div><h3>Mostrar en el carrusel</h3><p>Las imágenes inactivas se conservan.</p></div><app-custom-switch [(ngModel)]="draft.activo" label="Activo" /></div>
+              <p class="hint">{{ nameOnly ? 'El nombre se traduce automáticamente al guardar. Español se usa como respaldo.' : 'El nombre, la descripción y la etiqueta se traducen automáticamente al guardar. Español se usa como respaldo.' }}</p>
+            </section>
+          </mat-step>
+          @if (!nameOnly) {
+          <mat-step><ng-template matStepLabel>Posicionamiento de textos</ng-template>
+            <section class="settings-section">
+              @if (!nameOnly) {
+              <div class="target-buttons" role="group" aria-label="Texto a posicionar">
+                @for (texto of textos; track texto) {
+                  <button mat-stroked-button [attr.aria-pressed]="textoSeleccionado === texto" [class.selected]="textoSeleccionado === texto" (click)="textoSeleccionado = texto"><mat-icon class="mr-1.5 icon-size-4">{{ texto === 'titulo' ? 'title' : texto === 'descripcion' ? 'notes' : 'label' }}</mat-icon>{{ nombreElemento(texto) }}</button>
+                }
+              </div>
+              }
+              <p>{{ nameOnly ? 'Arrastra el nombre en la vista previa o elige una posición.' : 'Cada texto tiene su propia posición y se puede arrastrar por separado.' }}</p>
+              <div class="position-grid" role="group" aria-label="Posiciones predefinidas">
+                @for (posicion of posiciones; track posicion.value) {
+                  <button mat-stroked-button [matTooltip]="posicion.label" [attr.aria-label]="posicion.label"
+                    [class.selected]="config[textoSeleccionado + '_x'] === posicion.x && config[textoSeleccionado + '_y'] === posicion.y"
+                    (click)="seleccionarPosicion(posicion.x, posicion.y)"><mat-icon class="icon-size-3">fiber_manual_record</mat-icon></button>
+                }
+              </div>
+              <div class="two-cols">
+                <app-tp-input label="Horizontal (X %)" type="number" [min]="0" [max]="100" [step]="0.01" [(ngModel)]="config[textoSeleccionado + '_x']" />
+                <app-tp-input label="Vertical (Y %)" type="number" [min]="0" [max]="100" [step]="0.01" [(ngModel)]="config[textoSeleccionado + '_y']" />
+              </div>
+            </section>
+          </mat-step>
+          <mat-step><ng-template matStepLabel>Presentación</ng-template>
+            <section class="settings-section">
+              <div class="target-buttons" role="group" aria-label="Elemento a configurar">
+                @for (target of objetivos; track target) {
+                  <button mat-stroked-button [class.selected]="objetivo === target" [attr.aria-pressed]="objetivo === target" (click)="objetivo = target"><mat-icon class="mr-1.5 icon-size-4">{{ target === 'imagen' ? 'image' : target === 'titulo' ? 'title' : 'notes' }}</mat-icon>{{ nombreElemento(target) }}</button>
+                }
+              </div>
+              <p>Estos ajustes solo afectan {{ objetivo === 'imagen' ? 'al fondo de la imagen.' : 'al panel detrás del texto seleccionado.' }}</p>
+              <div class="switch-row"><div><h3>Oscurecer fondo</h3><p>{{ objetivo === 'imagen' ? 'Mejora la legibilidad del contenido.' : 'Añade un panel translúcido detrás del texto.' }}</p></div>
+                <app-custom-switch [(ngModel)]="presentacion.oscurecer_fondo" ariaLabel="Oscurecer fondo del elemento seleccionado" />
+                <button mat-icon-button matTooltip="Restablecer presentación" aria-label="Restablecer presentación" (click)="restablecerPresentacion()"><mat-icon>restart_alt</mat-icon></button>
+              </div>
+              <mat-form-field appearance="outline" class="w-full"><mat-label>Aplicar velo y difuminado</mat-label>
+                <mat-select tpSelect [(ngModel)]="presentacion.efecto_activo"><mat-option [value]="true">{{ objetivo === 'imagen' ? 'Fondo de la imagen' : 'Panel detrás del texto' }}</mat-option><mat-option [value]="false">Sin efecto</mat-option></mat-select>
+              </mat-form-field>
+              <app-color-picker label="Color del velo" [(ngModel)]="presentacion.overlay_color" />
+              <label class="range-label">Oscurecimiento: {{ presentacion.overlay_opacidad * 100 | number:'1.0-0' }}%<input type="range" min="0" max="1" step="0.05" [(ngModel)]="presentacion.overlay_opacidad" /></label>
+              <label class="range-label">Difuminado: {{ presentacion.blur_px }} px<input type="range" min="0" max="24" step="1" [(ngModel)]="presentacion.blur_px" /></label>
+            </section>
+          </mat-step>
+          }
+          <mat-step><ng-template matStepLabel>Tipografía</ng-template>
+            <section class="settings-section">
+              @for (texto of textos; track texto) {
+                <span class="text-sm font-medium">{{ nameOnly ? 'Color del nombre' : 'Color: ' + nombreElemento(texto) }}</span>
+                <app-color-picker [label]="'Color: ' + nombreElemento(texto)" [(ngModel)]="config[texto + '_color']" />
+                @if (!nameOnly) {
+                <label class="range-label">{{ nombreElemento(texto) }}: {{ config[texto + '_font_size'] }} px<input type="range" [min]="texto === 'titulo' ? 12 : 8" [max]="texto === 'titulo' ? 72 : texto === 'descripcion' ? 40 : 32" step="1" [(ngModel)]="config[texto + '_font_size']" /></label>
+                }
+              }
+            </section>
+          </mat-step>
+        </mat-vertical-stepper>
+      </div>
+    </div>
+
+    <footer>
+      <button mat-stroked-button [disabled]="saving" (click)="vistaDispositivos = true"><mat-icon class="mr-1.5 icon-size-4">devices</mat-icon>Ver en dispositivos</button>
+      <div class="footer-actions">
+        <button mat-stroked-button [disabled]="saving" (click)="restablecer()"><mat-icon class="mr-1.5 icon-size-4">restart_alt</mat-icon>Restablecer</button>
+        <button mat-stroked-button [disabled]="saving" (click)="solicitarCerrar()"><mat-icon class="mr-1.5 icon-size-4">close</mat-icon>Cancelar</button>
+        <button mat-flat-button color="primary" [disabled]="!valid || saving" (click)="guardar()"><mat-icon class="mr-1.5 icon-size-4" [class.animate-spin]="saving">{{ saving ? 'sync' : 'check' }}</mat-icon>{{ saving ? 'Traduciendo y guardando…' : 'Guardar' }}</button>
+      </div>
+    </footer>
+
+    @if (confirmarSalida) {
+      <div class="local-overlay"><section role="alertdialog" aria-modal="true" aria-labelledby="discard-title" class="discard-dialog" cdkTrapFocus [cdkTrapFocusAutoCapture]="true">
+        <h2 id="discard-title">¿Descartar los cambios?</h2><p>Los cambios de esta imagen todavía no se han guardado.</p>
+        <div class="footer-actions"><button mat-stroked-button (click)="confirmarSalida = false"><mat-icon class="mr-1.5 icon-size-4">edit</mat-icon>Seguir editando</button><button mat-flat-button color="warn" (click)="cancel.emit()"><mat-icon class="mr-1.5 icon-size-4">delete</mat-icon>Descartar</button></div>
+      </section></div>
+    }
+    @if (vistaDispositivos) {
+      <div class="local-overlay"><section class="devices-dialog" role="dialog" aria-modal="true" aria-labelledby="devices-title" cdkTrapFocus [cdkTrapFocusAutoCapture]="true">
+        <header><div><h2 id="devices-title">Vista previa del carrusel</h2><p>El encuadre se adapta al tamaño de cada dispositivo.</p></div><button mat-icon-button matTooltip="Cerrar vista previa" aria-label="Cerrar vista previa" (click)="vistaDispositivos = false"><mat-icon>close</mat-icon></button></header>
+        <div class="target-buttons device-buttons" role="group" aria-label="Dispositivo">
+          @for (item of dispositivos; track item.key) {
+            <button mat-stroked-button [class.selected]="dispositivo.key === item.key" [attr.aria-pressed]="dispositivo.key === item.key" (click)="dispositivo = item"><mat-icon class="mr-1.5 icon-size-4">{{ item.icon }}</mat-icon>{{ item.label }}</button>
+          }
+        </div>
+        <div class="device-stage"><div class="device-frame" [style.max-width.px]="dispositivo.width" [style.aspect-ratio]="dispositivo.ratio">
+          <app-image-visual-preview [url]="draft.url" [titulo]="draft.nombre" [descripcion]="nameOnly ? '' : config.descripciones.es || ''" [etiqueta]="nameOnly ? '' : config.etiqueta_texto" [config]="config" />
+        </div></div>
+      </section></div>
+    }
+  </section>
+</div>
